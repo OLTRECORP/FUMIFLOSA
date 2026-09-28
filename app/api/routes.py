@@ -20,10 +20,14 @@ from app.schemas import (
     UserCreate, UserUpdate, UserResponse,
     ClientCreate, ClientUpdate, ClientResponse,
     BranchCreate, BranchUpdate, BranchResponse,
-    ChemicalCreate, ChemicalUpdate, ChemicalResponse
+    ChemicalCreate, ChemicalUpdate, ChemicalResponse,
+    DuplicateServiceOrderRequest, MonthlyBatchGenerationRequest,
+    MonthlyBatchGenerationResponse, SendEmailRequest, SendEmailResponse
 )
 from app.services.data_import import HistoricalDataImporter
 from app.services.pdf_service import OfficialCertificatePDFGenerator
+from app.services.email_service import OfficialCertificateEmailService
+from app.services.duplication_service import ServiceDuplicationService
 
 router = APIRouter(prefix="/api/v1", tags=["FUMIFLOSA Core"])
 
@@ -396,6 +400,140 @@ def create_service_order_with_certificate(
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Error al crear el servicio: {str(e)}")
+
+
+# ============================================================================
+# 5.1 DUPLICACIÓN DE ORDEN / CERTIFICADO PARA EL MES
+# ============================================================================
+@router.post("/services/{service_id}/duplicate", response_model=ServiceOrderResponse, status_code=status.HTTP_201_CREATED)
+def duplicate_service_order(
+    service_id: uuid.UUID,
+    payload: DuplicateServiceOrderRequest = DuplicateServiceOrderRequest(),
+    db: Session = Depends(get_db)
+):
+    """
+    Duplica una orden de servicio existente con su certificado NOM-256 y químicos dosificados,
+    actualizando la fecha de aplicación y calculando automáticamente la nueva vigencia a 30 días.
+    Opcionalmente envía el nuevo certificado por correo electrónico.
+    """
+    duplication_service = ServiceDuplicationService(db)
+    try:
+        new_order = duplication_service.duplicate_single_service(
+            source_service_id=service_id,
+            new_service_start_date=payload.new_service_start_date,
+            new_service_end_date=payload.new_service_end_date,
+            technician_id=payload.technician_id,
+            folio_prefix=payload.folio_prefix,
+            observations=payload.observations,
+            send_email=payload.send_email,
+            recipient_email=payload.recipient_email,
+            additional_notes=payload.additional_notes
+        )
+        return new_order
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al duplicar el servicio: {str(e)}")
+
+
+# ============================================================================
+# 5.2 ENVÍO DE CERTIFICADO POR CORREO ELECTRÓNICO
+# ============================================================================
+@router.post("/services/{service_id}/send-email", response_model=SendEmailResponse)
+def send_certificate_email(
+    service_id: uuid.UUID,
+    payload: SendEmailRequest = SendEmailRequest(),
+    db: Session = Depends(get_db)
+):
+    """
+    Genera el PDF del Certificado Oficial NOM-256 y lo envía por correo electrónico
+    al contacto responsable de la sucursal o a un correo destinatario personalizado.
+    """
+    order = db.query(ServiceOrder).options(
+        joinedload(ServiceOrder.branch).joinedload(Branch.client),
+        joinedload(ServiceOrder.technician),
+        joinedload(ServiceOrder.certificate).joinedload(Certificate.applied_chemicals).joinedload(CertificateChemical.chemical)
+    ).filter(ServiceOrder.id == service_id, ServiceOrder.is_deleted == False).first()
+
+    if not order or not order.certificate:
+        raise HTTPException(status_code=404, detail="Orden o Certificado no encontrado.")
+
+    recipient = payload.recipient_email
+    if not recipient and order.branch and order.branch.responsible_contact_email:
+        recipient = order.branch.responsible_contact_email
+
+    if not recipient:
+        raise HTTPException(
+            status_code=400, 
+            detail="No se encontró un correo destinatario en la sucursal. Por favor ingrese un correo válido."
+        )
+
+    try:
+        pdf_bytes = OfficialCertificatePDFGenerator.generate(order, order.certificate)
+        result = OfficialCertificateEmailService.send_certificate_email(
+            order=order,
+            cert=order.certificate,
+            pdf_bytes=pdf_bytes,
+            recipient_email=str(recipient),
+            additional_notes=payload.additional_notes
+        )
+        return SendEmailResponse(**result)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al procesar el envío de correo: {str(e)}")
+
+
+# ============================================================================
+# 5.3 GENERACIÓN MASIVA MENSUAL POR CLIENTE MATRIZ (CONTRATOS MULTI-SUCURSAL)
+# ============================================================================
+@router.post("/clients/{client_id}/generate-monthly-batch", response_model=MonthlyBatchGenerationResponse, status_code=status.HTTP_201_CREATED)
+def generate_client_monthly_batch(
+    client_id: uuid.UUID,
+    payload: MonthlyBatchGenerationRequest,
+    db: Session = Depends(get_db)
+):
+    """
+    Genera en lote mensual órdenes de servicio y certificados NOM-256 para
+    todas o una selección de sucursales de un Cliente Matriz (ej. IMSS con 100+ unidades).
+    Clona la configuración previa de cada sucursal o aplica una plantilla base.
+    """
+    duplication_service = ServiceDuplicationService(db)
+    try:
+        result = duplication_service.generate_monthly_batch_for_client(
+            client_id=client_id,
+            target_date=payload.target_date,
+            service_start_time=payload.service_start_time or "09:00:00",
+            service_duration_hours=payload.service_duration_hours,
+            technician_id=payload.technician_id,
+            branch_ids=payload.branch_ids,
+            mode=payload.mode,
+            folio_prefix=payload.folio_prefix,
+            observations=payload.observations,
+            send_emails=payload.send_emails,
+            template_pest_crawling=payload.template_pest_crawling,
+            template_pest_rodents=payload.template_pest_rodents,
+            template_pest_flying=payload.template_pest_flying,
+            template_proc_aspersion=payload.template_proc_aspersion,
+            template_proc_baits=payload.template_proc_baits,
+            template_proc_gels=payload.template_proc_gels,
+            template_chemical_id=payload.template_chemical_id,
+            template_dose=payload.template_dose,
+            template_zones=payload.template_zones,
+            template_method=payload.template_method
+        )
+        return result
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al generar lote mensual: {str(e)}")
+
+
+@router.post("/batch/generate-monthly", response_model=MonthlyBatchGenerationResponse, status_code=status.HTTP_201_CREATED)
+def generate_monthly_batch_generic(
+    payload: MonthlyBatchGenerationRequest,
+    db: Session = Depends(get_db)
+):
+    """Ruta directa para invocación de generación masiva mensual."""
+    return generate_client_monthly_batch(client_id=payload.client_id, payload=payload, db=db)
 
 
 # ============================================================================

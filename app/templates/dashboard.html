@@ -94,6 +94,9 @@
                     <button onclick="switchTab('tab-vencimientos')" id="btn-tab-vencimientos" class="tab-btn py-3.5 px-3 border-b-2 border-brand-600 font-bold text-xs text-brand-700 flex items-center gap-1.5">
                         <i class="fa-solid fa-clock"></i> Calendario Vencimientos
                     </button>
+                    <button onclick="switchTab('tab-masivo')" id="btn-tab-masivo" class="tab-btn py-3.5 px-3 border-b-2 border-transparent font-medium text-xs text-slate-500 hover:text-slate-800 flex items-center gap-1.5">
+                        <i class="fa-solid fa-layer-group text-purple-600"></i> Generación Mensual B2B
+                    </button>
                     <button onclick="switchTab('tab-nuevo-servicio')" id="btn-tab-nuevo-servicio" class="tab-btn py-3.5 px-3 border-b-2 border-transparent font-medium text-xs text-slate-500 hover:text-slate-800 flex items-center gap-1.5">
                         <i class="fa-solid fa-file-circle-plus text-brand-600"></i> Registrar Servicio (NOM-256)
                     </button>
@@ -134,7 +137,124 @@
             </div>
 
             <!-- ============================================================= -->
-            <!-- 2. PESTAÑA: REGISTRAR SERVICIO NUEVO (ORDEN + CERTIFICADO) -->
+            <!-- 2. PESTAÑA: GENERACIÓN MASIVA MENSUAL B2B -->
+            <!-- ============================================================= -->
+            <div id="tab-masivo" class="p-6 space-y-6 hidden">
+                <div class="bg-gradient-to-r from-purple-900 to-indigo-900 rounded-xl p-6 text-white space-y-2">
+                    <div class="flex items-center gap-2">
+                        <span class="bg-purple-500/30 text-purple-200 text-xs font-bold px-2.5 py-0.5 rounded-full border border-purple-400/30">
+                            <i class="fa-solid fa-bolt"></i> Contratos Mensuales Multi-Sucursal
+                        </span>
+                    </div>
+                    <h2 class="text-lg font-bold">Generador Automático de Órdenes y Certificados Mensuales</h2>
+                    <p class="text-xs text-purple-200 max-w-3xl leading-relaxed">
+                        Diseñado para contratos recurrentes con decenas o cientos de unidades (ej. IMSS con 100+ unidades, OXXO, hospitales). Clona automáticamente la última configuración registrada de cada sucursal (químicos, dosis, plagas, procedimientos) actualizando las fechas de aplicación, vigencia a 30 días, y generando folios únicos consecutivos. Opcionalmente envía los certificados oficiales en PDF por correo electrónico.
+                    </p>
+                </div>
+
+                <form id="form-monthly-batch" onsubmit="handleMonthlyBatch(event)" class="space-y-6 text-xs">
+                    <!-- Configuración Principal -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 bg-slate-50 p-5 rounded-xl border border-slate-200">
+                        <div>
+                            <label class="block font-semibold text-slate-700 mb-1">Cliente Matriz *</label>
+                            <select id="batch-client-id" required onchange="onBatchClientChanged()" class="w-full bg-white border border-slate-300 rounded-lg p-2.5 font-medium"></select>
+                            <p id="batch-branch-count-badge" class="text-[11px] text-indigo-600 mt-1 font-semibold"></p>
+                        </div>
+                        <div>
+                            <label class="block font-semibold text-slate-700 mb-1">Fecha de Aplicación para este Mes *</label>
+                            <input type="date" id="batch-target-date" required class="w-full bg-white border border-slate-300 rounded-lg p-2.5" />
+                        </div>
+                        <div>
+                            <label class="block font-semibold text-slate-700 mb-1">Hora y Duración Estimada</label>
+                            <div class="grid grid-cols-2 gap-2">
+                                <input type="time" id="batch-start-time" value="09:00" class="w-full bg-white border border-slate-300 rounded-lg p-2.5" />
+                                <select id="batch-duration" class="w-full bg-white border border-slate-300 rounded-lg p-2.5">
+                                    <option value="1">1 hora</option>
+                                    <option value="2" selected>2 horas</option>
+                                    <option value="4">4 horas</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Modo de Generación y Técnico -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 bg-slate-50 p-5 rounded-xl border border-slate-200">
+                        <div>
+                            <label class="block font-semibold text-slate-700 mb-1">Modo de Generación</label>
+                            <select id="batch-mode" class="w-full bg-white border border-slate-300 rounded-lg p-2.5">
+                                <option value="clone_last_service" selected>🔁 Clonar último servicio de cada sucursal (Recomendado)</option>
+                                <option value="use_template">📄 Aplicar plantilla uniforme a todas</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block font-semibold text-slate-700 mb-1">Técnico Asignado</label>
+                            <select id="batch-tech-id" class="w-full bg-white border border-slate-300 rounded-lg p-2.5">
+                                <option value="">(Conservar técnico previo por sucursal)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block font-semibold text-slate-700 mb-1">Prefijo de Folio</label>
+                            <input type="text" id="batch-prefix" value="MENS" placeholder="MENS / IMSS" class="w-full bg-white border border-slate-300 rounded-lg p-2.5 uppercase font-mono" />
+                        </div>
+                    </div>
+
+                    <!-- Opciones de Envío y Notificación -->
+                    <div class="bg-indigo-50 border border-indigo-200 rounded-xl p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                        <div class="space-y-1">
+                            <label class="flex items-center gap-2 font-bold text-indigo-950 cursor-pointer">
+                                <input type="checkbox" id="batch-send-emails" class="w-4 h-4 text-purple-600 rounded">
+                                Enviar automáticamente los certificados oficiales en PDF por correo a los contactos de cada sucursal
+                            </label>
+                            <p class="text-[11px] text-indigo-700">Se enviará el documento con formato NOM-256 adjunto a los correos registrados de cada encargado.</p>
+                        </div>
+                    </div>
+
+                    <!-- Botón de Ejecución -->
+                    <div class="flex justify-end gap-3 pt-2">
+                        <button type="submit" id="btn-submit-batch" class="bg-purple-700 hover:bg-purple-800 text-white font-bold py-3 px-8 rounded-xl text-xs flex items-center gap-2 shadow-lg shadow-purple-900/20 transition">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i> Ejecutar Generación Masiva Mensual
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Panel de Resultados de Lote -->
+                <div id="batch-results-panel" class="hidden space-y-4 bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 pb-3 border-b border-slate-200">
+                        <div>
+                            <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                                <i class="fa-solid fa-circle-check text-emerald-600"></i> Lote Mensual Generado con Éxito
+                            </h3>
+                            <p id="batch-results-summary-text" class="text-xs text-slate-500 mt-0.5"></p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <a id="btn-batch-download-zip" href="#" class="bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold px-3 py-2 rounded-lg flex items-center gap-1.5 transition">
+                                <i class="fa-solid fa-file-zipper"></i> Descargar Todo en ZIP
+                            </a>
+                            <button onclick="switchTab('tab-ordenes')" class="bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold px-3 py-2 rounded-lg flex items-center gap-1.5 transition">
+                                <i class="fa-solid fa-list-check"></i> Ver en Órdenes
+                            </button>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto max-h-72 overflow-y-auto border border-slate-200 rounded-lg">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-slate-50 text-slate-600 font-bold uppercase text-[10px] sticky top-0 border-b border-slate-200">
+                                <tr>
+                                    <th class="p-2.5">Folio Orden</th>
+                                    <th class="p-2.5">Folio Certificado</th>
+                                    <th class="p-2.5">Sucursal</th>
+                                    <th class="p-2.5">Técnico</th>
+                                    <th class="p-2.5">Vigencia (30 Días)</th>
+                                    <th class="p-2.5 text-right">PDF</th>
+                                </tr>
+                            </thead>
+                            <tbody id="batch-orders-tbody" class="divide-y divide-slate-100"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================================= -->
+            <!-- 3. PESTAÑA: REGISTRAR SERVICIO NUEVO (ORDEN + CERTIFICADO) -->
             <!-- ============================================================= -->
             <div id="tab-nuevo-servicio" class="p-6 space-y-6 hidden">
                 <div>
@@ -155,7 +275,7 @@
                         </div>
                         <div>
                             <label class="block font-semibold text-slate-700 mb-1">Prefijo de Folio Institucional</label>
-                            <input type="text" id="srv-prefix" value="IMSS" placeholder="ej. IMSS, OXXO, SRV" class="w-full bg-white border border-slate-300 rounded-lg p-2 uppercase" />
+                            <input type="text" id="srv-prefix" value="IMSS" placeholder="ej. IMSS, OXXO, SRV" class="w-full bg-white border border-slate-300 rounded-lg p-2 uppercase font-mono" />
                         </div>
                     </div>
 
@@ -244,13 +364,13 @@
             </div>
 
             <!-- ============================================================= -->
-            <!-- 3. PESTAÑA: LISTA DE ÓRDENES Y CERTIFICADOS PDF -->
+            <!-- 4. PESTAÑA: LISTA DE ÓRDENES Y CERTIFICADOS PDF -->
             <!-- ============================================================= -->
             <div id="tab-ordenes" class="p-6 space-y-4 hidden">
-                <div class="flex justify-between items-center">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                     <div>
                         <h2 class="text-base font-bold text-slate-900">Historial de Órdenes y Certificados</h2>
-                        <p class="text-xs text-slate-500">Consulta los folios generados y descarga el Certificado Oficial NOM-256 en PDF.</p>
+                        <p class="text-xs text-slate-500">Duplica órdenes para renovación mensual, envía certificados por correo o imprime en PDF.</p>
                     </div>
                     <button onclick="loadOrders()" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg font-semibold flex items-center gap-1.5">
                         <i class="fa-solid fa-rotate"></i> Actualizar
@@ -266,7 +386,7 @@
                                 <th class="p-3">Técnico</th>
                                 <th class="p-3">Fecha Servicio</th>
                                 <th class="p-3">Vigencia (30 Días)</th>
-                                <th class="p-3 text-right">PDF Oficial</th>
+                                <th class="p-3 text-right">Acciones Rápidas</th>
                             </tr>
                         </thead>
                         <tbody id="orders-tbody" class="divide-y divide-slate-100"></tbody>
@@ -275,7 +395,7 @@
             </div>
 
             <!-- ============================================================= -->
-            <!-- 4. PESTAÑA: CLIENTES MATRIZ Y SUCURSALES -->
+            <!-- 5. PESTAÑA: CLIENTES MATRIZ Y SUCURSALES -->
             <!-- ============================================================= -->
             <div id="tab-clientes" class="p-6 space-y-6 hidden">
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -339,164 +459,171 @@
                                 <label class="block text-slate-700 font-semibold mb-1">Dirección Completa *</label>
                                 <input type="text" id="br-addr" required placeholder="Av. Gabriel Mancera 222, Benito Juárez, CDMX" class="w-full bg-white border border-slate-300 rounded-lg p-2" />
                             </div>
-                            <div>
-                                <label class="block text-slate-700 font-semibold mb-1">Responsable en Sitio *</label>
-                                <input type="text" id="br-resp" required placeholder="Dr. Juan Pérez" class="w-full bg-white border border-slate-300 rounded-lg p-2" />
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-slate-700 font-semibold mb-1">Responsable en Sitio *</label>
+                                    <input type="text" id="br-resp" required placeholder="Dr. Juan Pérez" class="w-full bg-white border border-slate-300 rounded-lg p-2" />
+                                </div>
+                                <div>
+                                    <label class="block text-slate-700 font-semibold mb-1">Correo Responsable</label>
+                                    <input type="email" id="br-email" placeholder="responsable@unidad.gob.mx" class="w-full bg-white border border-slate-300 rounded-lg p-2" />
+                                </div>
                             </div>
                             <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 rounded-lg text-xs">Guardar Sucursal</button>
                         </form>
                     </div>
                 </div>
 
-                <!-- Tabla de Matrices y Sucursales -->
-                <div class="border border-slate-200 rounded-xl overflow-hidden">
-                    <div class="bg-slate-50 p-3 border-b border-slate-200 font-bold text-xs text-slate-700">Directorios de Clientes y Sucursales</div>
-                    <table class="w-full text-left text-xs">
-                        <thead class="bg-slate-100 text-slate-600 font-bold uppercase text-[10px]">
-                            <tr>
-                                <th class="p-3">Matriz</th>
-                                <th class="p-3">RFC</th>
-                                <th class="p-3">Sucursal / Unidad</th>
-                                <th class="p-3">Clasificación</th>
-                                <th class="p-3">Contacto</th>
-                                <th class="p-3 text-right">ZIP Matriz</th>
-                            </tr>
-                        </thead>
-                        <tbody id="clients-branches-tbody" class="divide-y divide-slate-100"></tbody>
-                    </table>
+                <div class="space-y-3">
+                    <h3 class="font-bold text-slate-900 text-sm">Directorio de Sucursales y Acciones B2B</h3>
+                    <div class="overflow-x-auto border border-slate-200 rounded-xl">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-slate-50 text-slate-600 font-bold uppercase text-[10px] border-b border-slate-200">
+                                <tr>
+                                    <th class="p-3">Cliente Matriz</th>
+                                    <th class="p-3">RFC</th>
+                                    <th class="p-3">Sucursal / Unidad</th>
+                                    <th class="p-3">Tipo</th>
+                                    <th class="p-3">Contacto / Correo</th>
+                                    <th class="p-3 text-right">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="clients-branches-tbody" class="divide-y divide-slate-100"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
             <!-- ============================================================= -->
-            <!-- 5. PESTAÑA: CATÁLOGO DE QUÍMICOS -->
+            <!-- 6. PESTAÑA: CATÁLOGO DE QUÍMICOS -->
             <!-- ============================================================= -->
             <div id="tab-quimicos" class="p-6 space-y-6 hidden">
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div class="bg-slate-50 p-5 rounded-xl border border-slate-200 space-y-3">
-                        <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2">
-                            <i class="fa-solid fa-flask-vial text-teal-600"></i> Registrar Químico
-                        </h3>
-                        <form onsubmit="handleCreateChemical(event)" class="space-y-3 text-xs">
+                <div class="bg-slate-50 p-5 rounded-xl border border-slate-200 space-y-3">
+                    <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2">
+                        <i class="fa-solid fa-flask-vial text-teal-600"></i> Registrar Químico / Plaguicida (COFEPRIS)
+                    </h3>
+                    <form onsubmit="handleCreateChemical(event)" class="space-y-3 text-xs">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                             <div>
                                 <label class="block text-slate-700 font-semibold mb-1">Nombre Comercial *</label>
-                                <input type="text" id="chem-name" required placeholder="Biothrine Flow" class="w-full bg-white border border-slate-300 rounded-lg p-2" />
+                                <input type="text" id="chem-name" required placeholder="ej. Biothrine Flow" class="w-full bg-white border border-slate-300 rounded-lg p-2" />
                             </div>
                             <div>
                                 <label class="block text-slate-700 font-semibold mb-1">Ingrediente Activo *</label>
-                                <input type="text" id="chem-active" required placeholder="Deltametrina 2.5%" class="w-full bg-white border border-slate-300 rounded-lg p-2" />
+                                <input type="text" id="chem-active" required placeholder="ej. Deltametrina 2.5%" class="w-full bg-white border border-slate-300 rounded-lg p-2" />
                             </div>
                             <div>
                                 <label class="block text-slate-700 font-semibold mb-1">Registro CICOPLAFEST *</label>
                                 <input type="text" id="chem-cico" required placeholder="RSCO-URB-INAC-111-2020" class="w-full bg-white border border-slate-300 rounded-lg p-2 uppercase font-mono" />
                             </div>
-                            <div class="grid grid-cols-2 gap-2">
-                                <div>
-                                    <label class="block text-slate-700 font-semibold mb-1">Dosis / Litro *</label>
-                                    <input type="text" id="chem-dose" required placeholder="10 ml / 1 L" class="w-full bg-white border border-slate-300 rounded-lg p-2" />
-                                </div>
-                                <div>
-                                    <label class="block text-slate-700 font-semibold mb-1">Reentrada (Hrs) *</label>
-                                    <input type="number" id="chem-hours" value="2" min="0" required class="w-full bg-white border border-slate-300 rounded-lg p-2" />
-                                </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+                            <div>
+                                <label class="block text-slate-700 font-semibold mb-1">Dosis Autorizada *</label>
+                                <input type="text" id="chem-dose" required placeholder="10 ml / 1 Litro" value="10 ml / Litro" class="w-full bg-white border border-slate-300 rounded-lg p-2" />
+                            </div>
+                            <div>
+                                <label class="block text-slate-700 font-semibold mb-1">Reentrada (Horas) *</label>
+                                <input type="number" id="chem-hours" required value="2" min="0" class="w-full bg-white border border-slate-300 rounded-lg p-2" />
                             </div>
                             <div>
                                 <label class="block text-slate-700 font-semibold mb-1">Métodos Compatibles *</label>
-                                <input type="text" id="chem-methods" required placeholder="Aspersión Manual, UBV" class="w-full bg-white border border-slate-300 rounded-lg p-2" />
+                                <input type="text" id="chem-methods" required placeholder="Aspersión, Nebulización" value="Aspersión Manual" class="w-full bg-white border border-slate-300 rounded-lg p-2" />
                             </div>
                             <div>
                                 <label class="block text-slate-700 font-semibold mb-1">Categoría Toxicológica *</label>
-                                <input type="text" id="chem-tox" required placeholder="Banda Verde / Precaución" class="w-full bg-white border border-slate-300 rounded-lg p-2" />
+                                <input type="text" id="chem-tox" required placeholder="Precaución (Banda Verde)" value="Precaución" class="w-full bg-white border border-slate-300 rounded-lg p-2" />
                             </div>
-                            <button type="submit" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-2 rounded-lg text-xs">Guardar Químico</button>
-                        </form>
-                    </div>
+                        </div>
+                        <button type="submit" class="bg-teal-700 hover:bg-teal-800 text-white font-bold py-2 px-6 rounded-lg text-xs">Guardar Químico en Catálogo</button>
+                    </form>
+                </div>
 
-                    <div class="lg:col-span-2 border border-slate-200 rounded-xl overflow-hidden">
-                        <div class="bg-slate-50 p-3 border-b border-slate-200 font-bold text-xs text-slate-700">Catálogo Regulado por COFEPRIS</div>
-                        <table class="w-full text-left text-xs">
-                            <thead class="bg-slate-100 text-slate-600 font-bold uppercase text-[10px]">
-                                <tr>
-                                    <th class="p-3">Producto</th>
-                                    <th class="p-3">Ingrediente Activo</th>
-                                    <th class="p-3">CICOPLAFEST</th>
-                                    <th class="p-3">Dosis</th>
-                                    <th class="p-3">Reentrada</th>
-                                </tr>
-                            </thead>
-                            <tbody id="chemicals-tbody" class="divide-y divide-slate-100"></tbody>
-                        </table>
-                    </div>
+                <div class="overflow-x-auto border border-slate-200 rounded-xl">
+                    <table class="w-full text-left text-xs">
+                        <thead class="bg-slate-50 text-slate-600 font-bold uppercase text-[10px] border-b border-slate-200">
+                            <tr>
+                                <th class="p-3">Nombre Comercial</th>
+                                <th class="p-3">Ingrediente Activo</th>
+                                <th class="p-3">Registro CICOPLAFEST</th>
+                                <th class="p-3">Dosis Autorizada</th>
+                                <th class="p-3">Tiempo Reentrada</th>
+                            </tr>
+                        </thead>
+                        <tbody id="chemicals-tbody" class="divide-y divide-slate-100"></tbody>
+                    </table>
                 </div>
             </div>
 
             <!-- ============================================================= -->
-            <!-- 6. PESTAÑA: USUARIOS Y ROLES (STPS DC-3) -->
+            <!-- 7. PESTAÑA: USUARIOS Y TÉCNICOS STPS DC-3 -->
             <!-- ============================================================= -->
             <div id="tab-usuarios" class="p-6 space-y-6 hidden">
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div class="bg-slate-50 p-5 rounded-xl border border-slate-200 space-y-3">
-                        <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2">
-                            <i class="fa-solid fa-user-plus text-blue-600"></i> Registrar Usuario / Técnico
-                        </h3>
-                        <form onsubmit="handleCreateUser(event)" class="space-y-3 text-xs">
+                <div class="bg-slate-50 p-5 rounded-xl border border-slate-200 space-y-3">
+                    <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2">
+                        <i class="fa-solid fa-user-plus text-blue-600"></i> Registrar Personal Técnico o Administrativo
+                    </h3>
+                    <form onsubmit="handleCreateUser(event)" class="space-y-3 text-xs">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                             <div>
                                 <label class="block text-slate-700 font-semibold mb-1">Nombre Completo *</label>
-                                <input type="text" id="usr-name" required placeholder="Ing. Alejandro Morales" class="w-full bg-white border border-slate-300 rounded-lg p-2" />
+                                <input type="text" id="usr-name" required placeholder="Ing. Carlos Mendoza Silva" class="w-full bg-white border border-slate-300 rounded-lg p-2" />
                             </div>
                             <div>
                                 <label class="block text-slate-700 font-semibold mb-1">Correo Electrónico *</label>
-                                <input type="email" id="usr-email" required placeholder="tecnico@fumiflosa.mx" class="w-full bg-white border border-slate-300 rounded-lg p-2" />
+                                <input type="email" id="usr-email" required placeholder="carlos.mendoza@fumiflosa.mx" class="w-full bg-white border border-slate-300 rounded-lg p-2" />
                             </div>
                             <div>
                                 <label class="block text-slate-700 font-semibold mb-1">Rol en el Sistema *</label>
                                 <select id="usr-role" class="w-full bg-white border border-slate-300 rounded-lg p-2">
-                                    <option value="TecnicoCampo">TecnicoCampo (Aplicador)</option>
-                                    <option value="SuperAdmin">SuperAdmin</option>
-                                    <option value="ClienteMatriz">ClienteMatriz (B2B)</option>
-                                    <option value="ClienteSucursal">ClienteSucursal (B2B)</option>
+                                    <option value="TecnicoCampo">Técnico de Campo</option>
+                                    <option value="SuperAdmin">Super Administrador</option>
+                                    <option value="ClienteMatriz">Cliente Matriz (B2B)</option>
+                                    <option value="ClienteSucursal">Cliente Sucursal</option>
                                 </select>
                             </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                             <div>
-                                <label class="block text-slate-700 font-semibold mb-1">Registro STPS (Para Técnicos)</label>
-                                <input type="text" id="usr-stps-num" placeholder="STPS-DC3-88291" class="w-full bg-white border border-slate-300 rounded-lg p-2 font-mono" />
+                                <label class="block text-slate-700 font-semibold mb-1">No. Registro STPS (Técnicos)</label>
+                                <input type="text" id="usr-stps-num" placeholder="ej. STPS-AGP-99120" class="w-full bg-white border border-slate-300 rounded-lg p-2 uppercase font-mono" />
                             </div>
                             <div>
-                                <label class="block text-slate-700 font-semibold mb-1">URL Constancia DC-3 (Archivo)</label>
-                                <input type="url" id="usr-stps-url" placeholder="https://almacen.com/dc3-morales.pdf" class="w-full bg-white border border-slate-300 rounded-lg p-2" />
+                                <label class="block text-slate-700 font-semibold mb-1">URL / Enlace Archivo DC-3</label>
+                                <input type="text" id="usr-stps-url" placeholder="https://cloud.fumiflosa.mx/dc3/carlos.pdf" class="w-full bg-white border border-slate-300 rounded-lg p-2" />
                             </div>
-                            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-lg text-xs">Guardar Usuario</button>
-                        </form>
-                    </div>
+                        </div>
+                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg text-xs">Guardar Usuario</button>
+                    </form>
+                </div>
 
-                    <div class="lg:col-span-2 border border-slate-200 rounded-xl overflow-hidden">
-                        <div class="bg-slate-50 p-3 border-b border-slate-200 font-bold text-xs text-slate-700">Usuarios y Técnicos de Campo Certificados</div>
-                        <table class="w-full text-left text-xs">
-                            <thead class="bg-slate-100 text-slate-600 font-bold uppercase text-[10px]">
-                                <tr>
-                                    <th class="p-3">Nombre</th>
-                                    <th class="p-3">Email</th>
-                                    <th class="p-3">Rol</th>
-                                    <th class="p-3">Registro STPS</th>
-                                    <th class="p-3 text-right">Constancia DC-3</th>
-                                </tr>
-                            </thead>
-                            <tbody id="users-tbody" class="divide-y divide-slate-100"></tbody>
-                        </table>
-                    </div>
+                <div class="overflow-x-auto border border-slate-200 rounded-xl">
+                    <table class="w-full text-left text-xs">
+                        <thead class="bg-slate-50 text-slate-600 font-bold uppercase text-[10px] border-b border-slate-200">
+                            <tr>
+                                <th class="p-3">Nombre</th>
+                                <th class="p-3">Correo</th>
+                                <th class="p-3">Rol</th>
+                                <th class="p-3">Registro STPS</th>
+                                <th class="p-3 text-right">Constancia DC-3</th>
+                            </tr>
+                        </thead>
+                        <tbody id="users-tbody" class="divide-y divide-slate-100"></tbody>
+                    </table>
                 </div>
             </div>
 
             <!-- ============================================================= -->
-            <!-- 7. PESTAÑA: INGESTA MASIVA CSV -->
+            <!-- 8. PESTAÑA: INGESTA MASIVA HISTÓRICA CSV -->
             <!-- ============================================================= -->
             <div id="tab-importacion" class="p-6 space-y-6 hidden">
                 <div>
-                    <h2 class="text-base font-bold text-slate-900">Migración Masiva de Históricos y Sucursales</h2>
-                    <p class="text-xs text-slate-500">Carga un archivo CSV con las unidades de clientes corporativos (ej. IMSS con 100+ hospitales).</p>
+                    <h2 class="text-base font-bold text-slate-900">Migración Masiva de Históricos (CSV)</h2>
+                    <p class="text-xs text-slate-500">Carga miles de servicios históricos en una transacción atómica con validaciones.</p>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-                    <div class="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center hover:border-brand-500 transition bg-slate-50/50">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="border-2 border-dashed border-slate-300 rounded-2xl p-6 text-center hover:border-brand-500 transition bg-slate-50">
                         <div class="w-14 h-14 bg-brand-100 text-brand-700 rounded-full flex items-center justify-center mx-auto text-2xl mb-3">
                             <i class="fa-solid fa-cloud-arrow-up"></i>
                         </div>
@@ -530,12 +657,128 @@
         </div>
     </main>
 
+    <!-- ============================================================= -->
+    <!-- MODAL 1: DUPLICAR ORDEN PARA NUEVO MES -->
+    <!-- ============================================================= -->
+    <div id="modal-duplicate" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden border border-slate-200">
+            <div class="bg-gradient-to-r from-purple-900 to-indigo-900 p-4 text-white flex justify-between items-center">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 bg-purple-500/30 rounded-lg flex items-center justify-center font-bold">
+                        <i class="fa-solid fa-clone"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-sm">Duplicar Servicio para Renovación Mensual</h3>
+                        <p id="dup-source-title" class="text-[11px] text-purple-200">Orden Origen</p>
+                    </div>
+                </div>
+                <button onclick="closeDuplicateModal()" class="text-white/80 hover:text-white text-base">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <form id="form-duplicate" onsubmit="handleDuplicateSubmit(event)" class="p-5 space-y-4 text-xs">
+                <input type="hidden" id="dup-source-id" />
+                
+                <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 space-y-1">
+                    <p class="font-bold text-slate-700">Detalles de la Unidad:</p>
+                    <p id="dup-source-info" class="text-slate-600"></p>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Nueva Fecha y Hora *</label>
+                        <input type="datetime-local" id="dup-start-date" required class="w-full bg-white border border-slate-300 rounded-lg p-2" />
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Técnico Asignado</label>
+                        <select id="dup-tech-id" class="w-full bg-white border border-slate-300 rounded-lg p-2"></select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Prefijo de Folio</label>
+                    <input type="text" id="dup-prefix" value="SRV" class="w-full bg-white border border-slate-300 rounded-lg p-2 uppercase font-mono" />
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Observaciones para el nuevo mes</label>
+                    <textarea id="dup-obs" rows="2" class="w-full bg-white border border-slate-300 rounded-lg p-2" placeholder="Observaciones o recomendaciones específicas..."></textarea>
+                </div>
+
+                <div class="bg-indigo-50 border border-indigo-200 p-3 rounded-lg space-y-2">
+                    <label class="flex items-center gap-2 font-bold text-indigo-900 cursor-pointer">
+                        <input type="checkbox" id="dup-send-email" onchange="toggleDupEmailInput()" class="rounded text-purple-600">
+                        Enviar Certificado PDF automáticamente por correo
+                    </label>
+                    <div id="dup-email-box" class="hidden">
+                        <input type="email" id="dup-email-input" placeholder="correo@destinatario.com" class="w-full bg-white border border-indigo-300 rounded p-1.5 text-xs" />
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-2 pt-2 border-t border-slate-100">
+                    <button type="button" onclick="closeDuplicateModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-lg">Cancelar</button>
+                    <button type="submit" id="btn-submit-dup" class="px-5 py-2 bg-purple-700 hover:bg-purple-800 text-white font-bold rounded-lg flex items-center gap-1.5 shadow">
+                        <i class="fa-solid fa-check"></i> Duplicar y Generar Certificado
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ============================================================= -->
+    <!-- MODAL 2: ENVIAR CERTIFICADO POR CORREO -->
+    <!-- ============================================================= -->
+    <div id="modal-email" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-200">
+            <div class="bg-slate-900 p-4 text-white flex justify-between items-center">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 bg-brand-600 rounded-lg flex items-center justify-center font-bold">
+                        <i class="fa-solid fa-envelope"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-sm">Enviar Certificado NOM-256 por Email</h3>
+                        <p id="email-modal-folio" class="text-[11px] text-slate-400">Folio</p>
+                    </div>
+                </div>
+                <button onclick="closeEmailModal()" class="text-white/80 hover:text-white text-base">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <form id="form-send-email" onsubmit="handleSendEmailSubmit(event)" class="p-5 space-y-4 text-xs">
+                <input type="hidden" id="email-service-id" />
+
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Correo Electrónico Destinatario *</label>
+                    <input type="email" id="email-recipient" required placeholder="contacto@cliente.com" class="w-full bg-white border border-slate-300 rounded-lg p-2.5" />
+                    <p class="text-[10px] text-slate-400 mt-1">El archivo PDF oficial del certificado irá adjunto en el correo.</p>
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Nota adicional en el mensaje (Opcional)</label>
+                    <textarea id="email-notes" rows="3" class="w-full bg-white border border-slate-300 rounded-lg p-2" placeholder="ej. Adjuntamos el certificado correspondiente al servicio mensual de fumigación."></textarea>
+                </div>
+
+                <div id="email-status-msg" class="hidden p-3 rounded-lg text-xs"></div>
+
+                <div class="flex justify-end gap-2 pt-2 border-t border-slate-100">
+                    <button type="button" onclick="closeEmailModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-lg">Cancelar</button>
+                    <button type="submit" id="btn-submit-send-email" class="px-5 py-2 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-lg flex items-center gap-1.5 shadow">
+                        <i class="fa-solid fa-paper-plane"></i> Enviar Correo
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- SCRIPT JS DE CONTROL COMPLETO -->
     <script>
         let cachedBranches = [];
         let cachedTechnicians = [];
         let cachedChemicals = [];
         let cachedClients = [];
+        let cachedOrders = [];
 
         function switchTab(tabId) {
             document.querySelectorAll('[id^="tab-"]').forEach(el => el.classList.add('hidden'));
@@ -546,10 +789,13 @@
 
             document.getElementById(tabId).classList.remove('hidden');
             const activeBtn = document.getElementById('btn-' + tabId);
-            activeBtn.classList.remove('border-transparent', 'text-slate-500', 'font-medium');
-            activeBtn.classList.add('border-brand-600', 'text-brand-700', 'font-bold');
+            if(activeBtn) {
+                activeBtn.classList.remove('border-transparent', 'text-slate-500', 'font-medium');
+                activeBtn.classList.add('border-brand-600', 'text-brand-700', 'font-bold');
+            }
 
             if(tabId === 'tab-vencimientos') loadDashboardData();
+            if(tabId === 'tab-masivo') prepareMonthlyBatchForm();
             if(tabId === 'tab-ordenes') loadOrders();
             if(tabId === 'tab-clientes') loadClientsAndBranches();
             if(tabId === 'tab-quimicos') loadChemicals();
@@ -583,7 +829,7 @@
                         <div class="text-center py-10 bg-slate-50 rounded-xl border border-slate-200">
                             <i class="fa-solid fa-folder-open text-3xl text-slate-300 mb-2"></i>
                             <p class="text-sm font-semibold text-slate-600">No hay certificados registrados aún</p>
-                            <p class="text-xs text-slate-400 mt-1">Usa la pestaña "Registrar Servicio" o "Ingesta Masiva CSV".</p>
+                            <p class="text-xs text-slate-400 mt-1">Usa la pestaña "Generación Mensual B2B", "Registrar Servicio" o "Ingesta Masiva CSV".</p>
                         </div>
                     `;
                     return;
@@ -594,14 +840,19 @@
                     const allExp = [...client.expiring_7_days, ...client.expiring_15_days, ...client.expiring_30_days];
                     html += `
                         <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
-                            <div class="flex justify-between items-center pb-3 border-b border-slate-100">
+                            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-3 border-b border-slate-100">
                                 <div>
                                     <h3 class="font-bold text-slate-900 text-sm">${client.legal_name}</h3>
                                     <p class="text-xs text-slate-400">RFC: ${client.rfc}</p>
                                 </div>
-                                <a href="/api/v1/portal/matrix/${client.client_id}/certificates/zip" class="text-xs bg-slate-900 hover:bg-slate-800 text-white font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition">
-                                    <i class="fa-solid fa-file-zipper"></i> Descargar Todo en ZIP
-                                </a>
+                                <div class="flex items-center gap-2">
+                                    <button onclick="goToBatchForClient('${client.client_id}')" class="text-xs bg-purple-700 hover:bg-purple-800 text-white font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition shadow-sm">
+                                        <i class="fa-solid fa-wand-magic-sparkles"></i> Renovar Mes B2B
+                                    </button>
+                                    <a href="/api/v1/portal/matrix/${client.client_id}/certificates/zip" class="text-xs bg-slate-900 hover:bg-slate-800 text-white font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition">
+                                        <i class="fa-solid fa-file-zipper"></i> ZIP
+                                    </a>
+                                </div>
                             </div>
                             <div class="mt-3 overflow-x-auto">
                                 <table class="w-full text-left text-xs">
@@ -611,7 +862,7 @@
                                             <th class="py-2 px-3">Folio Certificado</th>
                                             <th class="py-2 px-3">Vencimiento (30 Días)</th>
                                             <th class="py-2 px-3">Estado</th>
-                                            <th class="py-2 px-3 text-right">Acción</th>
+                                            <th class="py-2 px-3 text-right">Acciones</th>
                                         </tr>
                                     </thead>
                                     <tbody class="divide-y divide-slate-100">
@@ -625,9 +876,12 @@
                                                     <td class="py-2 px-3 font-mono text-slate-600">${item.certificate_folio}</td>
                                                     <td class="py-2 px-3 text-slate-600">${item.validity_end_date}</td>
                                                     <td class="py-2 px-3">${badge}</td>
-                                                    <td class="py-2 px-3 text-right">
-                                                        <a href="/api/v1/services/${item.service_order_id}/pdf" target="_blank" class="text-brand-600 hover:text-brand-800 font-bold flex items-center justify-end gap-1">
-                                                            <i class="fa-solid fa-file-pdf"></i> Ver PDF
+                                                    <td class="py-2 px-3 text-right flex items-center justify-end gap-2">
+                                                        <button onclick="openDuplicateModal('${item.service_order_id}', '${item.certificate_folio}', '${item.branch_name}')" class="text-purple-700 hover:text-purple-900 font-bold flex items-center gap-1">
+                                                            <i class="fa-solid fa-clone"></i> Renovar
+                                                        </button>
+                                                        <a href="/api/v1/services/${item.service_order_id}/pdf" target="_blank" class="text-brand-600 hover:text-brand-800 font-bold flex items-center gap-1">
+                                                            <i class="fa-solid fa-file-pdf"></i> PDF
                                                         </a>
                                                     </td>
                                                 </tr>
@@ -646,28 +900,286 @@
         async function loadOrders() {
             try {
                 const res = await fetch('/api/v1/services?limit=100');
-                const orders = await res.json();
+                cachedOrders = await res.json();
                 const tbody = document.getElementById('orders-tbody');
-                if(!orders.length) {
+                if(!cachedOrders.length) {
                     tbody.innerHTML = '<tr><td colspan="7" class="p-6 text-center text-slate-400">No hay órdenes registradas.</td></tr>';
                     return;
                 }
-                tbody.innerHTML = orders.map(o => `
+                tbody.innerHTML = cachedOrders.map(o => {
+                    const branchName = o.branch ? o.branch.name : 'N/A';
+                    const branchEmail = o.branch && o.branch.responsible_contact_email ? o.branch.responsible_contact_email : '';
+                    const certFolio = o.certificate ? o.certificate.certificate_folio : 'N/A';
+                    return `
+                        <tr class="hover:bg-slate-50">
+                            <td class="p-3 font-mono font-bold text-slate-900">${o.folio}</td>
+                            <td class="p-3 font-mono text-slate-600">${certFolio}</td>
+                            <td class="p-3 font-medium text-slate-800">${branchName}</td>
+                            <td class="p-3 text-slate-600">${o.technician ? o.technician.full_name : 'N/A'}</td>
+                            <td class="p-3 text-slate-600">${new Date(o.service_start_date).toLocaleDateString()}</td>
+                            <td class="p-3 text-slate-600">${o.certificate ? o.certificate.validity_end_date : 'N/A'}</td>
+                            <td class="p-3 text-right">
+                                <div class="inline-flex items-center gap-1.5">
+                                    <button onclick="openDuplicateModal('${o.id}', '${o.folio}', '${branchName.replace(/'/g, "\\'")}', '${branchEmail}')" title="Duplicar para nuevo mes" class="bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold px-2 py-1 rounded border border-purple-200 flex items-center gap-1">
+                                        <i class="fa-solid fa-clone"></i> Duplicar Mes
+                                    </button>
+                                    <button onclick="openEmailModal('${o.id}', '${certFolio}', '${branchEmail}')" title="Enviar Certificado por Correo" class="bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold px-2 py-1 rounded border border-blue-200 flex items-center gap-1">
+                                        <i class="fa-solid fa-envelope"></i> Email
+                                    </button>
+                                    <a href="/api/v1/services/${o.id}/pdf" target="_blank" title="Imprimir / Ver PDF" class="bg-brand-50 hover:bg-brand-100 text-brand-700 font-bold px-2 py-1 rounded border border-brand-200 flex items-center gap-1">
+                                        <i class="fa-solid fa-print"></i> PDF
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            } catch(e) { console.error(e); }
+        }
+
+        async function prepareMonthlyBatchForm() {
+            await Promise.all([loadClientsAndBranches(), loadUsers()]);
+            const clientSelect = document.getElementById('batch-client-id');
+            clientSelect.innerHTML = cachedClients.map(c => `<option value="${c.id}">${c.legal_name} (${c.rfc})</option>`).join('');
+
+            const techSelect = document.getElementById('batch-tech-id');
+            techSelect.innerHTML = '<option value="">(Conservar técnico previo por sucursal)</option>' + 
+                cachedTechnicians.map(t => `<option value="${t.id}">${t.full_name} (${t.role})</option>`).join('');
+
+            // Poner fecha de hoy por defecto
+            const todayStr = new Date().toISOString().slice(0, 10);
+            document.getElementById('batch-target-date').value = todayStr;
+
+            onBatchClientChanged();
+        }
+
+        function onBatchClientChanged() {
+            const clientId = document.getElementById('batch-client-id').value;
+            const branchCount = cachedBranches.filter(b => b.client_id === clientId).length;
+            const badge = document.getElementById('batch-branch-count-badge');
+            badge.innerText = `🏢 ${branchCount} sucursal(es) / unidad(es) asociadas para procesar`;
+        }
+
+        function goToBatchForClient(clientId) {
+            switchTab('tab-masivo');
+            setTimeout(() => {
+                const sel = document.getElementById('batch-client-id');
+                if(sel) {
+                    sel.value = clientId;
+                    onBatchClientChanged();
+                }
+            }, 100);
+        }
+
+        async function handleMonthlyBatch(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btn-submit-batch');
+            const resultsPanel = document.getElementById('batch-results-panel');
+            const summaryText = document.getElementById('batch-results-summary-text');
+            const tbody = document.getElementById('batch-orders-tbody');
+            const downloadZipBtn = document.getElementById('btn-batch-download-zip');
+
+            const clientId = document.getElementById('batch-client-id').value;
+            const targetDate = document.getElementById('batch-target-date').value;
+            const startTime = document.getElementById('batch-start-time').value + ":00";
+            const durationHours = parseInt(document.getElementById('batch-duration').value) || 2;
+            const techId = document.getElementById('batch-tech-id').value || null;
+            const mode = document.getElementById('batch-mode').value;
+            const prefix = document.getElementById('batch-prefix').value || "MENS";
+            const sendEmails = document.getElementById('batch-send-emails').checked;
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generando Lote Masivo...';
+
+            const payload = {
+                client_id: clientId,
+                target_date: targetDate,
+                service_start_time: startTime,
+                service_duration_hours: durationHours,
+                technician_id: techId,
+                mode: mode,
+                folio_prefix: prefix,
+                send_emails: sendEmails
+            };
+
+            try {
+                const res = await fetch('/api/v1/batch/generate-monthly', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if(!res.ok) throw new Error(data.detail || 'Error en lote');
+
+                summaryText.innerText = `Se procesaron ${data.total_branches_processed} sucursales de "${data.client_name}". Creadas ${data.orders_created_count} órdenes y ${data.certificates_created_count} certificados NOM-256.` + 
+                    (sendEmails ? ` Correos enviados: ${data.emails_sent_count}.` : '');
+
+                downloadZipBtn.href = `/api/v1/portal/matrix/${data.client_id}/certificates/zip`;
+
+                tbody.innerHTML = data.created_orders.map(o => `
                     <tr class="hover:bg-slate-50">
-                        <td class="p-3 font-mono font-bold text-slate-900">${o.folio}</td>
-                        <td class="p-3 font-mono text-slate-600">${o.certificate ? o.certificate.certificate_folio : 'N/A'}</td>
-                        <td class="p-3 font-medium text-slate-800">${o.branch ? o.branch.name : 'N/A'}</td>
-                        <td class="p-3 text-slate-600">${o.technician ? o.technician.full_name : 'N/A'}</td>
-                        <td class="p-3 text-slate-600">${new Date(o.service_start_date).toLocaleDateString()}</td>
-                        <td class="p-3 text-slate-600">${o.certificate ? o.certificate.validity_end_date : 'N/A'}</td>
-                        <td class="p-3 text-right">
-                            <a href="/api/v1/services/${o.id}/pdf" target="_blank" class="inline-flex items-center gap-1 bg-brand-50 hover:bg-brand-100 text-brand-700 font-bold px-2.5 py-1 rounded border border-brand-200">
-                                <i class="fa-solid fa-file-pdf"></i> PDF Oficial
+                        <td class="p-2.5 font-mono font-bold text-slate-900">${o.order_folio}</td>
+                        <td class="p-2.5 font-mono text-purple-700 font-semibold">${o.certificate_folio}</td>
+                        <td class="p-2.5 font-medium text-slate-800">${o.branch_name}</td>
+                        <td class="p-2.5 text-slate-600">${o.technician_name}</td>
+                        <td class="p-2.5 text-slate-600">${o.validity_start_date} al ${o.validity_end_date}</td>
+                        <td class="p-2.5 text-right">
+                            <a href="/api/v1/services/${o.service_order_id}/pdf" target="_blank" class="text-brand-600 hover:text-brand-800 font-bold">
+                                <i class="fa-solid fa-file-pdf"></i> Ver PDF
                             </a>
                         </td>
                     </tr>
                 `).join('');
-            } catch(e) { console.error(e); }
+
+                resultsPanel.classList.remove('hidden');
+                loadSummaryStats();
+            } catch(err) {
+                alert('Error al generar lote mensual: ' + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> Ejecutar Generación Masiva Mensual';
+            }
+        }
+
+        // =============================================================
+        // CONTROL DEL MODAL DE DUPLICACIÓN
+        // =============================================================
+        function openDuplicateModal(serviceId, folio, branchName, defaultEmail = '') {
+            document.getElementById('dup-source-id').value = serviceId;
+            document.getElementById('dup-source-title').innerText = `Duplicando desde Orden: ${folio}`;
+            document.getElementById('dup-source-info').innerText = `Sucursal: ${branchName}`;
+
+            // Poner técnico opciones
+            const techSelect = document.getElementById('dup-tech-id');
+            techSelect.innerHTML = '<option value="">(Conservar técnico de la orden original)</option>' +
+                cachedTechnicians.map(t => `<option value="${t.id}">${t.full_name} (${t.role})</option>`).join('');
+
+            // Nueva fecha: hoy con misma hora actual
+            const now = new Date();
+            const nowIso = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+            document.getElementById('dup-start-date').value = nowIso;
+            document.getElementById('dup-email-input').value = defaultEmail || '';
+            document.getElementById('dup-send-email').checked = false;
+            document.getElementById('dup-email-box').classList.add('hidden');
+
+            document.getElementById('modal-duplicate').classList.remove('hidden');
+        }
+
+        function closeDuplicateModal() {
+            document.getElementById('modal-duplicate').classList.add('hidden');
+        }
+
+        function toggleDupEmailInput() {
+            const chk = document.getElementById('dup-send-email').checked;
+            const box = document.getElementById('dup-email-box');
+            if(chk) box.classList.remove('hidden');
+            else box.classList.add('hidden');
+        }
+
+        async function handleDuplicateSubmit(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btn-submit-dup');
+            const serviceId = document.getElementById('dup-source-id').value;
+            const startDate = document.getElementById('dup-start-date').value;
+            const techId = document.getElementById('dup-tech-id').value || null;
+            const prefix = document.getElementById('dup-prefix').value || "SRV";
+            const obs = document.getElementById('dup-obs').value || null;
+            const sendEmail = document.getElementById('dup-send-email').checked;
+            const recEmail = document.getElementById('dup-email-input').value || null;
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Duplicando...';
+
+            const payload = {
+                new_service_start_date: new Date(startDate).toISOString(),
+                technician_id: techId,
+                folio_prefix: prefix,
+                observations: obs,
+                send_email: sendEmail,
+                recipient_email: recEmail
+            };
+
+            try {
+                const res = await fetch(`/api/v1/services/${serviceId}/duplicate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if(!res.ok) throw new Error(data.detail || 'Error al duplicar');
+
+                closeDuplicateModal();
+                alert(`¡Servicio duplicado exitosamente!\nNueva Orden: ${data.folio}\nNuevo Certificado NOM-256: ${data.certificate.certificate_folio}`);
+                window.open(`/api/v1/services/${data.id}/pdf`, '_blank');
+                loadOrders();
+                loadSummaryStats();
+            } catch(err) {
+                alert('Error al duplicar orden: ' + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-check"></i> Duplicar y Generar Certificado';
+            }
+        }
+
+        // =============================================================
+        // CONTROL DEL MODAL DE ENVÍO DE EMAIL
+        // =============================================================
+        function openEmailModal(serviceId, folio, defaultEmail = '') {
+            document.getElementById('email-service-id').value = serviceId;
+            document.getElementById('email-modal-folio').innerText = `Folio Certificado: ${folio}`;
+            document.getElementById('email-recipient').value = defaultEmail;
+            document.getElementById('email-notes').value = '';
+            const statusMsg = document.getElementById('email-status-msg');
+            statusMsg.classList.add('hidden');
+            statusMsg.innerText = '';
+            document.getElementById('modal-email').classList.remove('hidden');
+        }
+
+        function closeEmailModal() {
+            document.getElementById('modal-email').classList.add('hidden');
+        }
+
+        async function handleSendEmailSubmit(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btn-submit-send-email');
+            const serviceId = document.getElementById('email-service-id').value;
+            const recipient = document.getElementById('email-recipient').value;
+            const notes = document.getElementById('email-notes').value || null;
+            const statusMsg = document.getElementById('email-status-msg');
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Enviando...';
+            statusMsg.classList.add('hidden');
+
+            const payload = {
+                recipient_email: recipient,
+                additional_notes: notes
+            };
+
+            try {
+                const res = await fetch(`/api/v1/services/${serviceId}/send-email`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if(!res.ok) throw new Error(data.detail || 'Error al enviar correo');
+
+                statusMsg.className = "p-3 rounded-lg text-xs bg-emerald-50 text-emerald-800 border border-emerald-200";
+                statusMsg.innerText = data.message || 'Correo enviado exitosamente.';
+                statusMsg.classList.remove('hidden');
+
+                setTimeout(() => {
+                    closeEmailModal();
+                }, 2000);
+            } catch(err) {
+                statusMsg.className = "p-3 rounded-lg text-xs bg-rose-50 text-rose-800 border border-rose-200";
+                statusMsg.innerText = 'Error: ' + err.message;
+                statusMsg.classList.remove('hidden');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Enviar Correo';
+            }
         }
 
         async function loadChemicals() {
@@ -713,21 +1225,30 @@
                 cachedBranches = await resB.json();
 
                 const selectClientInBranchForm = document.getElementById('br-client-id');
-                selectClientInBranchForm.innerHTML = cachedClients.map(c => `<option value="${c.id}">${c.legal_name} (${c.rfc})</option>`).join('');
+                if(selectClientInBranchForm) {
+                    selectClientInBranchForm.innerHTML = cachedClients.map(c => `<option value="${c.id}">${c.legal_name} (${c.rfc})</option>`).join('');
+                }
 
                 const tbody = document.getElementById('clients-branches-tbody');
-                tbody.innerHTML = cachedBranches.map(b => `
-                    <tr class="hover:bg-slate-50">
-                        <td class="p-3 font-bold text-slate-800">${b.client ? b.client.legal_name : 'N/A'}</td>
-                        <td class="p-3 font-mono text-slate-600">${b.client ? b.client.rfc : 'N/A'}</td>
-                        <td class="p-3 font-medium text-slate-800">${b.name}</td>
-                        <td class="p-3"><span class="bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded text-[10px] font-semibold">${b.classification}</span></td>
-                        <td class="p-3 text-slate-600">${b.responsible_contact_name} (${b.phone})</td>
-                        <td class="p-3 text-right">
-                            ${b.client ? `<a href="/api/v1/portal/matrix/${b.client_id}/certificates/zip" class="text-xs bg-slate-900 text-white px-2 py-1 rounded hover:bg-slate-800"><i class="fa-solid fa-file-zipper"></i> ZIP</a>` : ''}
-                        </td>
-                    </tr>
-                `).join('');
+                if(tbody) {
+                    tbody.innerHTML = cachedBranches.map(b => `
+                        <tr class="hover:bg-slate-50">
+                            <td class="p-3 font-bold text-slate-800">${b.client ? b.client.legal_name : 'N/A'}</td>
+                            <td class="p-3 font-mono text-slate-600">${b.client ? b.client.rfc : 'N/A'}</td>
+                            <td class="p-3 font-medium text-slate-800">${b.name}</td>
+                            <td class="p-3"><span class="bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded text-[10px] font-semibold">${b.classification}</span></td>
+                            <td class="p-3 text-slate-600">${b.responsible_contact_name} ${b.responsible_contact_email ? `<br/><span class="text-slate-400 text-[10px]">${b.responsible_contact_email}</span>` : ''}</td>
+                            <td class="p-3 text-right">
+                                <div class="inline-flex items-center gap-1.5">
+                                    <button onclick="goToBatchForClient('${b.client_id}')" title="Generar Mes para todas las sucursales" class="text-xs bg-purple-100 hover:bg-purple-200 text-purple-800 px-2 py-1 rounded font-semibold">
+                                        <i class="fa-solid fa-wand-magic-sparkles"></i> Lote Mes
+                                    </button>
+                                    ${b.client ? `<a href="/api/v1/portal/matrix/${b.client_id}/certificates/zip" class="text-xs bg-slate-900 text-white px-2 py-1 rounded hover:bg-slate-800"><i class="fa-solid fa-file-zipper"></i> ZIP</a>` : ''}
+                                </div>
+                            </td>
+                        </tr>
+                    `).join('');
+                }
             } catch(e) { console.error(e); }
         }
 
@@ -859,6 +1380,7 @@
                 alert('Cliente Matriz registrado.');
                 e.target.reset();
                 loadClientsAndBranches();
+                loadSummaryStats();
             } catch(err) { alert('Error: ' + err.message); }
         }
 
@@ -870,7 +1392,8 @@
                 address: document.getElementById('br-addr').value,
                 phone: document.getElementById('br-phone').value,
                 classification: document.getElementById('br-class').value,
-                responsible_contact_name: document.getElementById('br-resp').value
+                responsible_contact_name: document.getElementById('br-resp').value,
+                responsible_contact_email: document.getElementById('br-email').value || null
             };
             try {
                 const res = await fetch('/api/v1/branches', {
@@ -882,6 +1405,7 @@
                 alert('Sucursal registrada.');
                 e.target.reset();
                 loadClientsAndBranches();
+                loadSummaryStats();
             } catch(err) { alert('Error: ' + err.message); }
         }
 
@@ -906,6 +1430,7 @@
                 alert('Químico registrado en catálogo.');
                 e.target.reset();
                 loadChemicals();
+                loadSummaryStats();
             } catch(err) { alert('Error: ' + err.message); }
         }
 
@@ -928,6 +1453,7 @@
                 alert('Usuario registrado.');
                 e.target.reset();
                 loadUsers();
+                loadSummaryStats();
             } catch(err) { alert('Error: ' + err.message); }
         }
 

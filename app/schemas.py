@@ -264,3 +264,79 @@ class DashboardSummaryStats(BaseModel):
     total_chemicals: int
     expiring_7_days: int
     expiring_30_days: int
+
+
+# ----------------------------------------------------------------------------
+# 7. Duplicación y Generación Masiva Mensual B2B
+# ----------------------------------------------------------------------------
+class DuplicateServiceOrderRequest(BaseModel):
+    new_service_start_date: Optional[datetime] = None
+    new_service_end_date: Optional[datetime] = None
+    technician_id: Optional[uuid.UUID] = None
+    folio_prefix: Optional[str] = "SRV"
+    observations: Optional[str] = None
+    send_email: bool = False
+    recipient_email: Optional[EmailStr] = None
+    additional_notes: Optional[str] = None
+
+
+class MonthlyBatchGenerationRequest(BaseModel):
+    client_id: uuid.UUID
+    target_date: Optional[date] = None
+    service_start_time: Optional[str] = "09:00:00"
+    service_duration_hours: int = 2
+    technician_id: Optional[uuid.UUID] = None
+    branch_ids: Optional[List[uuid.UUID]] = None
+    mode: str = "clone_last_service"  # "clone_last_service" | "use_template"
+    folio_prefix: Optional[str] = "MENS"
+    observations: Optional[str] = None
+    send_emails: bool = False
+    
+    # Parámetros opcionales para modo plantilla (si una sucursal no tiene orden previa)
+    template_pest_crawling: bool = True
+    template_pest_rodents: bool = True
+    template_pest_flying: bool = False
+    template_proc_aspersion: bool = True
+    template_proc_baits: bool = False
+    template_proc_gels: bool = False
+    template_chemical_id: Optional[uuid.UUID] = None
+    template_dose: str = "10 ml / Litro"
+    template_zones: str = "Áreas interiores, sanitarios y perímetros"
+    template_method: str = "Aspersión Manual"
+
+
+class BatchOrderSummary(BaseModel):
+    service_order_id: str
+    order_folio: str
+    certificate_id: str
+    certificate_folio: str
+    branch_id: str
+    branch_name: str
+    unit_code: Optional[str] = None
+    technician_name: str
+    validity_start_date: str
+    validity_end_date: str
+
+
+class MonthlyBatchGenerationResponse(BaseModel):
+    client_id: uuid.UUID
+    client_name: str
+    total_branches_processed: int
+    orders_created_count: int
+    certificates_created_count: int
+    emails_sent_count: int
+    created_orders: List[BatchOrderSummary]
+
+
+class SendEmailRequest(BaseModel):
+    recipient_email: Optional[EmailStr] = None
+    additional_notes: Optional[str] = None
+
+
+class SendEmailResponse(BaseModel):
+    success: bool
+    recipient: Optional[str] = None
+    folio: Optional[str] = None
+    mode: Optional[str] = None
+    message: Optional[str] = None
+    error: Optional[str] = None
