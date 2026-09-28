@@ -2,9 +2,9 @@ import io
 import uuid
 import zipfile
 from datetime import datetime, date, timedelta, timezone
-from typing import List
+from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, status
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, status, Query
 from fastapi.responses import Response, StreamingResponse
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import select, func
@@ -12,11 +12,15 @@ from sqlalchemy import select, func
 from app.database import get_db
 from app.models import (
     ServiceOrder, Certificate, CertificateChemical, Branch, Client, 
-    Chemical, User
+    Chemical, User, UserRole
 )
 from app.schemas import (
     ServiceOrderCreate, ServiceOrderResponse, DashboardExpirationsResponse,
-    ClientExpirationsGroup, ExpirationDetail
+    ClientExpirationsGroup, ExpirationDetail, DashboardSummaryStats,
+    UserCreate, UserUpdate, UserResponse,
+    ClientCreate, ClientUpdate, ClientResponse,
+    BranchCreate, BranchUpdate, BranchResponse,
+    ChemicalCreate, ChemicalUpdate, ChemicalResponse
 )
 from app.services.data_import import HistoricalDataImporter
 from app.services.pdf_service import OfficialCertificatePDFGenerator
@@ -25,8 +29,287 @@ router = APIRouter(prefix="/api/v1", tags=["FUMIFLOSA Core"])
 
 
 # ============================================================================
-# 1. CREACIÓN ATÓMICA DE ORDEN + CERTIFICADO
+# 0. DASHBOARD SUMMARY STATS
 # ============================================================================
+@router.get("/dashboard/summary", response_model=DashboardSummaryStats)
+def get_dashboard_summary(db: Session = Depends(get_db)):
+    """Devuelve estadísticas generales para el panel principal."""
+    total_clients = db.query(func.count(Client.id)).filter(Client.is_deleted == False).scalar() or 0
+    total_branches = db.query(func.count(Branch.id)).filter(Branch.is_deleted == False).scalar() or 0
+    total_technicians = db.query(func.count(User.id)).filter(User.is_deleted == False, User.role == UserRole.TECNICO_CAMPO).scalar() or 0
+    total_orders = db.query(func.count(ServiceOrder.id)).filter(ServiceOrder.is_deleted == False).scalar() or 0
+    total_chemicals = db.query(func.count(Chemical.id)).filter(Chemical.is_deleted == False).scalar() or 0
+
+    today = date.today()
+    limit_7 = today + timedelta(days=7)
+    limit_30 = today + timedelta(days=30)
+
+    exp_7 = db.query(func.count(Certificate.id)).filter(
+        Certificate.is_deleted == False,
+        Certificate.validity_end_date >= today,
+        Certificate.validity_end_date <= limit_7
+    ).scalar() or 0
+
+    exp_30 = db.query(func.count(Certificate.id)).filter(
+        Certificate.is_deleted == False,
+        Certificate.validity_end_date >= today,
+        Certificate.validity_end_date <= limit_30
+    ).scalar() or 0
+
+    return DashboardSummaryStats(
+        total_clients=total_clients,
+        total_branches=total_branches,
+        total_technicians=total_technicians,
+        total_orders=total_orders,
+        total_chemicals=total_chemicals,
+        expiring_7_days=exp_7,
+        expiring_30_days=exp_30
+    )
+
+
+# ============================================================================
+# 1. USUARIOS Y ROLES (CRUD + STPS DC-3)
+# ============================================================================
+@router.get("/users", response_model=List[UserResponse])
+def get_users(role: Optional[UserRole] = None, db: Session = Depends(get_db)):
+    query = db.query(User).filter(User.is_deleted == False)
+    if role:
+        query = query.filter(User.role == role)
+    return query.order_by(User.full_name).all()
+
+
+@router.post("/users", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+def create_user(payload: UserCreate, db: Session = Depends(get_db)):
+    existing = db.query(User).filter(User.email == payload.email, User.is_deleted == False).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="El correo electrónico ya está registrado.")
+
+    user = User(
+        email=payload.email,
+        full_name=payload.full_name,
+        hashed_password=f"hash_{payload.password}",
+        role=payload.role,
+        is_active=payload.is_active,
+        stps_dc3_file_url=payload.stps_dc3_file_url,
+        stps_registration_number=payload.stps_registration_number,
+        client_id=payload.client_id,
+        branch_id=payload.branch_id
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return user
+
+
+@router.put("/users/{user_id}", response_model=UserResponse)
+def update_user(user_id: uuid.UUID, payload: UserUpdate, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.id == user_id, User.is_deleted == False).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado.")
+
+    update_data = payload.model_dump(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(user, key, value)
+
+    db.commit()
+    db.refresh(user)
+    return user
+
+
+@router.delete("/users/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_user(user_id: uuid.UUID, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.id == user_id, User.is_deleted == False).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado.")
+    user.soft_delete()
+    db.commit()
+    return None
+
+
+# ============================================================================
+# 2. CLIENTES MATRIZ (CRUD)
+# ============================================================================
+@router.get("/clients", response_model=List[ClientResponse])
+def get_clients(db: Session = Depends(get_db)):
+    return db.query(Client).filter(Client.is_deleted == False).order_by(Client.legal_name).all()
+
+
+@router.post("/clients", response_model=ClientResponse, status_code=status.HTTP_201_CREATED)
+def create_client(payload: ClientCreate, db: Session = Depends(get_db)):
+    existing = db.query(Client).filter(Client.rfc == payload.rfc, Client.is_deleted == False).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="El RFC ya se encuentra registrado.")
+
+    client = Client(
+        legal_name=payload.legal_name,
+        rfc=payload.rfc,
+        master_contract_number=payload.master_contract_number,
+        tax_regime=payload.tax_regime
+    )
+    db.add(client)
+    db.commit()
+    db.refresh(client)
+    return client
+
+
+@router.put("/clients/{client_id}", response_model=ClientResponse)
+def update_client(client_id: uuid.UUID, payload: ClientUpdate, db: Session = Depends(get_db)):
+    client = db.query(Client).filter(Client.id == client_id, Client.is_deleted == False).first()
+    if not client:
+        raise HTTPException(status_code=404, detail="Cliente no encontrado.")
+
+    update_data = payload.model_dump(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(client, key, value)
+
+    db.commit()
+    db.refresh(client)
+    return client
+
+
+@router.delete("/clients/{client_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_client(client_id: uuid.UUID, db: Session = Depends(get_db)):
+    client = db.query(Client).filter(Client.id == client_id, Client.is_deleted == False).first()
+    if not client:
+        raise HTTPException(status_code=404, detail="Cliente no encontrado.")
+    client.soft_delete()
+    db.commit()
+    return None
+
+
+# ============================================================================
+# 3. SUCURSALES (CRUD)
+# ============================================================================
+@router.get("/branches", response_model=List[BranchResponse])
+def get_branches(client_id: Optional[uuid.UUID] = None, db: Session = Depends(get_db)):
+    query = db.query(Branch).options(joinedload(Branch.client)).filter(Branch.is_deleted == False)
+    if client_id:
+        query = query.filter(Branch.client_id == client_id)
+    return query.order_by(Branch.name).all()
+
+
+@router.post("/branches", response_model=BranchResponse, status_code=status.HTTP_201_CREATED)
+def create_branch(payload: BranchCreate, db: Session = Depends(get_db)):
+    client = db.query(Client).filter(Client.id == payload.client_id, Client.is_deleted == False).first()
+    if not client:
+        raise HTTPException(status_code=404, detail="Cliente Matriz no encontrado.")
+
+    branch = Branch(
+        client_id=payload.client_id,
+        name=payload.name,
+        unit_code=payload.unit_code,
+        address=payload.address,
+        phone=payload.phone,
+        classification=payload.classification,
+        responsible_contact_name=payload.responsible_contact_name,
+        responsible_contact_email=payload.responsible_contact_email
+    )
+    db.add(branch)
+    db.commit()
+    db.refresh(branch)
+    return branch
+
+
+@router.put("/branches/{branch_id}", response_model=BranchResponse)
+def update_branch(branch_id: uuid.UUID, payload: BranchUpdate, db: Session = Depends(get_db)):
+    branch = db.query(Branch).filter(Branch.id == branch_id, Branch.is_deleted == False).first()
+    if not branch:
+        raise HTTPException(status_code=404, detail="Sucursal no encontrada.")
+
+    update_data = payload.model_dump(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(branch, key, value)
+
+    db.commit()
+    db.refresh(branch)
+    return branch
+
+
+@router.delete("/branches/{branch_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_branch(branch_id: uuid.UUID, db: Session = Depends(get_db)):
+    branch = db.query(Branch).filter(Branch.id == branch_id, Branch.is_deleted == False).first()
+    if not branch:
+        raise HTTPException(status_code=404, detail="Sucursal no encontrada.")
+    branch.soft_delete()
+    db.commit()
+    return None
+
+
+# ============================================================================
+# 4. CATÁLOGO DE QUÍMICOS (CRUD)
+# ============================================================================
+@router.get("/chemicals", response_model=List[ChemicalResponse])
+def get_chemicals(db: Session = Depends(get_db)):
+    return db.query(Chemical).filter(Chemical.is_deleted == False).order_by(Chemical.commercial_name).all()
+
+
+@router.post("/chemicals", response_model=ChemicalResponse, status_code=status.HTTP_201_CREATED)
+def create_chemical(payload: ChemicalCreate, db: Session = Depends(get_db)):
+    existing = db.query(Chemical).filter(Chemical.cicoplafest_number == payload.cicoplafest_number, Chemical.is_deleted == False).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="El número de registro CICOPLAFEST ya existe.")
+
+    chem = Chemical(
+        commercial_name=payload.commercial_name,
+        active_ingredient=payload.active_ingredient,
+        cicoplafest_number=payload.cicoplafest_number,
+        authorized_dose_per_liter=payload.authorized_dose_per_liter,
+        safety_interval_hours=payload.safety_interval_hours,
+        compatible_methods=payload.compatible_methods,
+        toxicological_category=payload.toxicological_category
+    )
+    db.add(chem)
+    db.commit()
+    db.refresh(chem)
+    return chem
+
+
+@router.put("/chemicals/{chemical_id}", response_model=ChemicalResponse)
+def update_chemical(chemical_id: uuid.UUID, payload: ChemicalUpdate, db: Session = Depends(get_db)):
+    chem = db.query(Chemical).filter(Chemical.id == chemical_id, Chemical.is_deleted == False).first()
+    if not chem:
+        raise HTTPException(status_code=404, detail="Químico no encontrado.")
+
+    update_data = payload.model_dump(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(chem, key, value)
+
+    db.commit()
+    db.refresh(chem)
+    return chem
+
+
+@router.delete("/chemicals/{chemical_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_chemical(chemical_id: uuid.UUID, db: Session = Depends(get_db)):
+    chem = db.query(Chemical).filter(Chemical.id == chemical_id, Chemical.is_deleted == False).first()
+    if not chem:
+        raise HTTPException(status_code=404, detail="Químico no encontrado.")
+    chem.soft_delete()
+    db.commit()
+    return None
+
+
+# ============================================================================
+# 5. ÓRDENES DE SERVICIO Y CERTIFICADOS (Creación Atómica y Listado)
+# ============================================================================
+@router.get("/services", response_model=List[ServiceOrderResponse])
+def get_service_orders(
+    branch_id: Optional[uuid.UUID] = None, 
+    limit: int = 50, 
+    db: Session = Depends(get_db)
+):
+    query = db.query(ServiceOrder).options(
+        joinedload(ServiceOrder.branch).joinedload(Branch.client),
+        joinedload(ServiceOrder.technician),
+        joinedload(ServiceOrder.certificate).joinedload(Certificate.applied_chemicals).joinedload(CertificateChemical.chemical)
+    ).filter(ServiceOrder.is_deleted == False)
+    
+    if branch_id:
+        query = query.filter(ServiceOrder.branch_id == branch_id)
+        
+    return query.order_by(ServiceOrder.service_start_date.desc()).limit(limit).all()
+
+
 @router.post("/services", response_model=ServiceOrderResponse, status_code=status.HTTP_201_CREATED)
 def create_service_order_with_certificate(
     payload: ServiceOrderCreate,
@@ -36,7 +319,6 @@ def create_service_order_with_certificate(
     Crea atómicamente la Orden de Servicio y el Certificado NOM-256 enlazado
     junto con sus químicos dosificados bajo una sola transacción segura.
     """
-    # 1. Validar existencia de sucursal y técnico
     branch = db.query(Branch).filter(Branch.id == payload.branch_id, Branch.is_deleted == False).first()
     if not branch:
         raise HTTPException(status_code=404, detail="Sucursal no encontrada.")
@@ -45,7 +327,6 @@ def create_service_order_with_certificate(
     if not technician:
         raise HTTPException(status_code=404, detail="Técnico no encontrado o inactivo.")
 
-    # 2. Generar Folios Consecutivos
     prefix = payload.folio_prefix or "SRV"
     count = db.execute(
         select(func.count(ServiceOrder.id)).where(ServiceOrder.folio.like(f"{prefix}-%"))
@@ -56,7 +337,6 @@ def create_service_order_with_certificate(
     cert_folio = f"{prefix}-CERT-{next_num:06d}"
 
     try:
-        # 3. Instanciar Orden de Servicio
         service_order = ServiceOrder(
             folio=order_folio,
             branch_id=payload.branch_id,
@@ -80,7 +360,6 @@ def create_service_order_with_certificate(
         db.add(service_order)
         db.flush()
 
-        # 4. Instanciar Certificado Oficial (Vigencia 30 días calculada)
         start_date = payload.service_start_date.date()
         certificate = Certificate(
             service_order_id=service_order.id,
@@ -95,7 +374,6 @@ def create_service_order_with_certificate(
         db.add(certificate)
         db.flush()
 
-        # 5. Asociar Químicos Aplicados
         for item in payload.chemicals_applied:
             chem = db.query(Chemical).filter(Chemical.id == item.chemical_id).first()
             if not chem:
@@ -121,7 +399,7 @@ def create_service_order_with_certificate(
 
 
 # ============================================================================
-# 2. GENERACIÓN Y DESCARGA DE PDF OFICIAL
+# 6. GENERACIÓN Y DESCARGA DE PDF OFICIAL (NOM-256 / SINTOX)
 # ============================================================================
 @router.get("/services/{service_id}/pdf")
 def export_service_certificate_pdf(service_id: uuid.UUID, db: Session = Depends(get_db)):
@@ -141,12 +419,12 @@ def export_service_certificate_pdf(service_id: uuid.UUID, db: Session = Depends(
     return Response(
         content=pdf_bytes,
         media_type="application/pdf",
-        headers={"Content-Disposition": f'attachment; filename="{filename}"'}
+        headers={"Content-Disposition": f'inline; filename="{filename}"'}
     )
 
 
 # ============================================================================
-# 3. DASHBOARD B2B: MONITOREO DE EXPIRACIONES (7, 15, 30 DÍAS)
+# 7. DASHBOARD B2B: MONITOREO DE EXPIRACIONES (7, 15, 30 DÍAS)
 # ============================================================================
 @router.get("/dashboard/expirations", response_model=DashboardExpirationsResponse)
 def get_dashboard_expirations(db: Session = Depends(get_db)):
@@ -182,6 +460,7 @@ def get_dashboard_expirations(db: Session = Depends(get_db)):
         exp_detail = ExpirationDetail(
             certificate_id=cert.id,
             certificate_folio=cert.certificate_folio,
+            service_order_id=cert.service_order_id,
             branch_id=branch.id,
             branch_name=branch.name,
             branch_unit_code=branch.unit_code,
@@ -203,12 +482,16 @@ def get_dashboard_expirations(db: Session = Depends(get_db)):
 
 
 # ============================================================================
-# 4. PORTAL CLIENTE MATRIZ: HISTORIAL Y DESCARGA MASIVA ZIP
+# 8. PORTAL CLIENTE MATRIZ: HISTORIAL Y DESCARGA MASIVA ZIP
 # ============================================================================
 @router.get("/portal/matrix/{client_id}/services", response_model=List[ServiceOrderResponse])
 def get_matrix_services_history(client_id: uuid.UUID, db: Session = Depends(get_db)):
     """Devuelve el historial consolidado de todas las sucursales de la matriz."""
-    orders = db.query(ServiceOrder).join(Branch).filter(
+    orders = db.query(ServiceOrder).options(
+        joinedload(ServiceOrder.branch).joinedload(Branch.client),
+        joinedload(ServiceOrder.technician),
+        joinedload(ServiceOrder.certificate).joinedload(Certificate.applied_chemicals).joinedload(CertificateChemical.chemical)
+    ).join(Branch).filter(
         Branch.client_id == client_id,
         ServiceOrder.is_deleted == False
     ).order_by(ServiceOrder.service_start_date.desc()).all()
@@ -251,7 +534,7 @@ def download_matrix_certificates_zip(client_id: uuid.UUID, db: Session = Depends
 
 
 # ============================================================================
-# 5. IMPORTACIÓN HISTÓRICA CSV
+# 9. IMPORTACIÓN HISTÓRICA CSV CON PANDAS
 # ============================================================================
 @router.post("/import/historical-csv")
 async def import_historical_csv(file: UploadFile = File(...), db: Session = Depends(get_db)):
