@@ -1,0 +1,26 @@
+services:
+  # 1. Aplicación Backend Web FastAPI
+  - type: web
+    name: fumiflosa-saas-api
+    runtime: python
+    region: oregon
+    plan: starter
+    buildCommand: "pip install --upgrade pip && pip install -r requirements.txt && alembic upgrade head"
+    startCommand: "uvicorn app.main:app --host 0.0.0.0 --port $PORT --workers 4"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.8
+      - key: DATABASE_URL
+        fromDatabase:
+          name: fumiflosa-db
+          property: connectionString
+      - key: ENVIRONMENT
+        value: production
+
+databases:
+  # 2. Base de Datos Gestionada PostgreSQL
+  - name: fumiflosa-db
+    region: oregon
+    plan: starter
+    databaseName: fumiflosa_prod
+    user: fumiflosa_admin
