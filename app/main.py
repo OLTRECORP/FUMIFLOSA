@@ -1,4 +1,7 @@
+import os
+from pathlib import Path
 from fastapi import FastAPI
+from fastapi.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
@@ -12,7 +15,7 @@ app = FastAPI(
     redoc_url="/redoc"
 )
 
-# CORS
+# Configuración de CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -21,8 +24,21 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Incluir Rutas Principales
+# Incluir Rutas Principales de la API
 app.include_router(api_router)
+
+# Ruta del archivo HTML del dashboard
+DASHBOARD_HTML_PATH = Path(__file__).parent / "templates" / "dashboard.html"
+
+
+@app.get("/", response_class=HTMLResponse, tags=["Dashboard"])
+@app.get("/dashboard", response_class=HTMLResponse, tags=["Dashboard"])
+def get_dashboard():
+    """Sirve la interfaz web visual del Panel de Control de FUMIFLOSA."""
+    if DASHBOARD_HTML_PATH.exists():
+        with open(DASHBOARD_HTML_PATH, "r", encoding="utf-8") as f:
+            return f.read()
+    return "<h1>FUMIFLOSA SaaS - Panel no disponible</h1>"
 
 
 @app.get("/health", tags=["Health"])
@@ -31,12 +47,4 @@ def health_check():
         "status": "healthy",
         "service": settings.PROJECT_NAME,
         "environment": settings.ENVIRONMENT
-    }
-
-
-@app.get("/", tags=["Root"])
-def root():
-    return {
-        "message": "Bienvenido a la API de FUMIFLOSA SaaS - Control de Plagas",
-        "documentation": "/docs"
     }
