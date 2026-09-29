@@ -27,8 +27,10 @@ app.add_middleware(
 # Incluir Rutas Principales de la API
 app.include_router(api_router)
 
-# Ruta del archivo HTML del dashboard
-DASHBOARD_HTML_PATH = Path(__file__).parent / "templates" / "dashboard.html"
+# Rutas de los archivos HTML
+TEMPLATES_DIR = Path(__file__).parent / "templates"
+DASHBOARD_HTML_PATH = TEMPLATES_DIR / "dashboard.html"
+CLIENT_PORTAL_HTML_PATH = TEMPLATES_DIR / "client_portal.html"
 
 
 @app.get("/", response_class=HTMLResponse, tags=["Dashboard"])
@@ -39,6 +41,15 @@ def get_dashboard():
         with open(DASHBOARD_HTML_PATH, "r", encoding="utf-8") as f:
             return f.read()
     return "<h1>FUMIFLOSA SaaS - Panel no disponible</h1>"
+
+
+@app.get("/portal/c/{portal_slug}", response_class=HTMLResponse, tags=["Client Portal"])
+def get_client_portal_page(portal_slug: str):
+    """Sirve el portal público/privado con enlace permanente para un cliente institucional."""
+    if CLIENT_PORTAL_HTML_PATH.exists():
+        with open(CLIENT_PORTAL_HTML_PATH, "r", encoding="utf-8") as f:
+            return f.read()
+    return "<h1>Portal de Cliente no disponible</h1>"
 
 
 @app.get("/health", tags=["Health"])

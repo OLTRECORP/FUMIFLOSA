@@ -2,25 +2,27 @@ import io
 import uuid
 import zipfile
 from datetime import datetime, date, timedelta, timezone
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, status, Query
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, status, Header
 from fastapi.responses import Response, StreamingResponse
 from sqlalchemy.orm import Session, joinedload
-from sqlalchemy import select, func
+from sqlalchemy import select, func, or_, and_, desc
 
 from app.database import get_db
 from app.models import (
     ServiceOrder, Certificate, CertificateChemical, Branch, Client, 
-    Chemical, User, UserRole
+    Chemical, User, UserRole, CompanyConfig
 )
 from app.schemas import (
     ServiceOrderCreate, ServiceOrderResponse, DashboardExpirationsResponse,
     ClientExpirationsGroup, ExpirationDetail, DashboardSummaryStats,
     UserCreate, UserUpdate, UserResponse,
-    ClientCreate, ClientUpdate, ClientResponse,
+    ClientCreate, ClientUpdate, ClientResponse, ClientPortalConfigUpdate,
     BranchCreate, BranchUpdate, BranchResponse,
-    ChemicalCreate, ChemicalUpdate, ChemicalResponse
+    ChemicalCreate, ChemicalUpdate, ChemicalResponse,
+    CompanyConfigResponse, CompanyConfigUpdate,
+    AdvancedAnalyticsResponse, ClientPortalAuthRequest, ClientPortalDataResponse
 )
 from app.services.data_import import HistoricalDataImporter
 from app.services.pdf_service import OfficialCertificatePDFGenerator
@@ -28,8 +30,312 @@ from app.services.pdf_service import OfficialCertificatePDFGenerator
 router = APIRouter(prefix="/api/v1", tags=["FUMIFLOSA Core"])
 
 
+def get_or_create_company_config(db: Session) -> CompanyConfig:
+    """Obtiene o inicializa la configuración base de la empresa de fumigación."""
+    config = db.query(CompanyConfig).first()
+    if not config:
+        config = CompanyConfig(
+            company_name="FUMIFLOSA S.A. DE C.V.",
+            trade_name="FUMIFLOSA - Control de Plagas Urbanas",
+            rfc="FUM200101XYZ",
+            tax_regime="601 - General de Ley Personas Morales",
+            fiscal_address="Av. Insurgentes Sur 1200, Benito Juárez, CDMX, C.P. 03100",
+            phone="55-1234-5678",
+            email="contacto@fumiflosa.mx",
+            website="https://fumiflosa.mx",
+            sanitary_license_number="2023-15A-099",
+            sanitary_responsible_name="Biól. Roberto Sánchez Martínez",
+            sanitary_responsible_id="CED-8849201",
+            stps_registration_number="FUM-STPS-DC3-2023",
+            sintox_emergency_phones="01-800-0092800 / 800-009-2800 / CDMX 55-5598-6659",
+            default_reentry_hours=2,
+            default_validity_days=30
+        )
+        db.add(config)
+        db.commit()
+        db.refresh(config)
+    return config
+
+
 # ============================================================================
-# 0. DASHBOARD SUMMARY STATS
+# 0. CONFIGURACIÓN DE LA EMPRESA BASE Y DATOS FISCALES
+# ============================================================================
+@router.get("/company-config", response_model=CompanyConfigResponse)
+def get_company_configuration(db: Session = Depends(get_db)):
+    """Devuelve la configuración y datos fiscales de la empresa de fumigación."""
+    return get_or_create_company_config(db)
+
+
+@router.put("/company-config", response_model=CompanyConfigResponse)
+def update_company_configuration(payload: CompanyConfigUpdate, db: Session = Depends(get_db)):
+    """Actualiza los datos fiscales, licencia sanitaria, STPS y SINTOX de la empresa."""
+    config = get_or_create_company_config(db)
+    update_data = payload.model_dump(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(config, key, value)
+    db.commit()
+    db.refresh(config)
+    return config
+
+
+# ============================================================================
+# 1. ANALYTICS & MÉTRICAS DETALLADAS DEL PORTAL
+# ============================================================================
+@router.get("/analytics/detailed", response_model=AdvancedAnalyticsResponse)
+def get_detailed_analytics(db: Session = Depends(get_db)):
+    """Genera las métricas avanzadas y estadísticas de servicios de fumigación."""
+    total_services = db.query(func.count(ServiceOrder.id)).filter(ServiceOrder.is_deleted == False).scalar() or 0
+    total_clients = db.query(func.count(Client.id)).filter(Client.is_deleted == False).scalar() or 0
+    total_branches = db.query(func.count(Branch.id)).filter(Branch.is_deleted == False).scalar() or 0
+
+    # 1. Desglose de Plagas
+    pest_crawling = db.query(func.count(ServiceOrder.id)).filter(ServiceOrder.is_deleted == False, ServiceOrder.pest_crawling_insects == True).scalar() or 0
+    pest_rodents = db.query(func.count(ServiceOrder.id)).filter(ServiceOrder.is_deleted == False, ServiceOrder.pest_rodents == True).scalar() or 0
+    pest_flying = db.query(func.count(ServiceOrder.id)).filter(ServiceOrder.is_deleted == False, ServiceOrder.pest_flying_insects == True).scalar() or 0
+    pest_others = db.query(func.count(ServiceOrder.id)).filter(ServiceOrder.is_deleted == False, ServiceOrder.pest_others.isnot(None), ServiceOrder.pest_others != "").scalar() or 0
+
+    # 2. Desglose de Procedimientos
+    proc_asp = db.query(func.count(ServiceOrder.id)).filter(ServiceOrder.is_deleted == False, ServiceOrder.proc_aspersion == True).scalar() or 0
+    proc_baits = db.query(func.count(ServiceOrder.id)).filter(ServiceOrder.is_deleted == False, ServiceOrder.proc_baits == True).scalar() or 0
+    proc_traps = db.query(func.count(ServiceOrder.id)).filter(ServiceOrder.is_deleted == False, ServiceOrder.proc_traps == True).scalar() or 0
+    proc_gels = db.query(func.count(ServiceOrder.id)).filter(ServiceOrder.is_deleted == False, ServiceOrder.proc_gels == True).scalar() or 0
+    proc_ulv = db.query(func.count(ServiceOrder.id)).filter(ServiceOrder.is_deleted == False, ServiceOrder.proc_ulv_fogging == True).scalar() or 0
+    proc_thermo = db.query(func.count(ServiceOrder.id)).filter(ServiceOrder.is_deleted == False, ServiceOrder.proc_thermofogging == True).scalar() or 0
+
+    # 3. Químicos más utilizados
+    top_chems_query = db.query(
+        Chemical.commercial_name,
+        Chemical.active_ingredient,
+        func.count(CertificateChemical.id).label("total_uses")
+    ).join(CertificateChemical, CertificateChemical.chemical_id == Chemical.id)\
+     .filter(Chemical.is_deleted == False)\
+     .group_by(Chemical.commercial_name, Chemical.active_ingredient)\
+     .order_by(desc("total_uses")).limit(5).all()
+
+    top_chemicals = [
+        {"name": c[0], "ingredient": c[1], "count": c[2]} for c in top_chems_query
+    ]
+
+    # 4. Clasificación de Sucursales
+    classes_query = db.query(Branch.classification, func.count(Branch.id))\
+        .filter(Branch.is_deleted == False)\
+        .group_by(Branch.classification).all()
+    classification_breakdown = {str(c[0].value if hasattr(c[0], 'value') else c[0]): c[1] for c in classes_query}
+
+    # 5. Estado de Vigencias Sanitarias (Calculadas)
+    today = date.today()
+    limit_7 = today + timedelta(days=7)
+    limit_15 = today + timedelta(days=15)
+    
+    critico_7d = db.query(func.count(Certificate.id)).filter(
+        Certificate.is_deleted == False, Certificate.validity_end_date >= today, Certificate.validity_end_date <= limit_7
+    ).scalar() or 0
+
+    proximo_15d = db.query(func.count(Certificate.id)).filter(
+        Certificate.is_deleted == False, Certificate.validity_end_date > limit_7, Certificate.validity_end_date <= limit_15
+    ).scalar() or 0
+
+    vigente = db.query(func.count(Certificate.id)).filter(
+        Certificate.is_deleted == False, Certificate.validity_end_date > limit_15
+    ).scalar() or 0
+
+    vencido = db.query(func.count(Certificate.id)).filter(
+        Certificate.is_deleted == False, Certificate.validity_end_date < today
+    ).scalar() or 0
+
+    # 6. Tendencia Mensual (Últimos meses)
+    monthly_orders = db.query(
+        func.to_char(ServiceOrder.service_start_date, 'YYYY-MM').label('month_key'),
+        func.count(ServiceOrder.id).label('count')
+    ).filter(ServiceOrder.is_deleted == False)\
+     .group_by('month_key')\
+     .order_by('month_key').limit(12).all()
+
+    monthly_trend = [{"month": m[0], "count": m[1]} for m in monthly_orders]
+    if not monthly_trend:
+        monthly_trend = [{"month": today.strftime('%Y-%m'), "count": total_services}]
+
+    # 7. Top Clientes
+    top_clients_query = db.query(
+        Client.legal_name,
+        func.count(ServiceOrder.id).label("services_count"),
+        func.count(func.distinct(Branch.id)).label("branches_count")
+    ).join(Branch, Branch.client_id == Client.id)\
+     .join(ServiceOrder, ServiceOrder.branch_id == Branch.id)\
+     .filter(Client.is_deleted == False, ServiceOrder.is_deleted == False)\
+     .group_by(Client.legal_name)\
+     .order_by(desc("services_count")).limit(5).all()
+
+    top_clients = [
+        {"name": tc[0], "count": tc[1], "branches_count": tc[2]} for tc in top_clients_query
+    ]
+
+    total_valid = vigente + proximo_15d + critico_7d
+    compliance_rate = round((total_valid / total_services * 100), 1) if total_services > 0 else 100.0
+
+    return AdvancedAnalyticsResponse(
+        total_services=total_services,
+        total_clients=total_clients,
+        total_branches=total_branches,
+        compliance_rate=compliance_rate,
+        monthly_trend=monthly_trend,
+        pest_breakdown={
+            "Insectos Rastreros": pest_crawling,
+            "Roedores": pest_rodents,
+            "Insectos Voladores": pest_flying,
+            "Otras Plagas": pest_others
+        },
+        procedure_breakdown={
+            "Aspersión": proc_asp,
+            "Cebos": proc_baits,
+            "Trampas": proc_traps,
+            "Geles": proc_gels,
+            "Nebulización UBV": proc_ulv,
+            "Termonebulización": proc_thermo
+        },
+        top_chemicals=top_chemicals,
+        classification_breakdown=classification_breakdown,
+        validity_health={
+            "vigente": vigente,
+            "proximo_15d": proximo_15d,
+            "critico_7d": critico_7d,
+            "vencido": vencido
+        },
+        top_clients=top_clients
+    )
+
+
+# ============================================================================
+# 2. ENLACE PERMANENTE Y PORTAL PRIVADO PARA CLIENTES
+# ============================================================================
+@router.get("/clients/{client_id}/portal-config")
+def get_client_portal_config(client_id: uuid.UUID, db: Session = Depends(get_db)):
+    """Obtiene la configuración del enlace permanente y estado de contraseña de un cliente."""
+    client = db.query(Client).filter(Client.id == client_id, Client.is_deleted == False).first()
+    if not client:
+        raise HTTPException(status_code=404, detail="Cliente no encontrado.")
+
+    return {
+        "client_id": client.id,
+        "legal_name": client.legal_name,
+        "rfc": client.rfc,
+        "portal_slug": client.portal_slug,
+        "portal_is_enabled": client.portal_is_enabled,
+        "has_password": bool(client.portal_password and client.portal_password.strip()),
+        "portal_url": f"/portal/c/{client.portal_slug}"
+    }
+
+
+@router.put("/clients/{client_id}/portal-config")
+def update_client_portal_config(
+    client_id: uuid.UUID, 
+    payload: ClientPortalConfigUpdate, 
+    db: Session = Depends(get_db)
+):
+    """Configura o actualiza el enlace permanente (slug estático) y contraseña opcional."""
+    client = db.query(Client).filter(Client.id == client_id, Client.is_deleted == False).first()
+    if not client:
+        raise HTTPException(status_code=404, detail="Cliente no encontrado.")
+
+    # Validar unicidad de slug si se cambia
+    if payload.portal_slug and payload.portal_slug != client.portal_slug:
+        existing = db.query(Client).filter(Client.portal_slug == payload.portal_slug, Client.id != client_id).first()
+        if existing:
+            raise HTTPException(status_code=400, detail="El identificador de enlace (slug) ya está en uso. Elige otro.")
+        client.portal_slug = payload.portal_slug
+
+    if payload.portal_password is not None:
+        client.portal_password = payload.portal_password.strip() if payload.portal_password.strip() else None
+
+    client.portal_is_enabled = payload.portal_is_enabled
+    db.commit()
+    db.refresh(client)
+
+    return {
+        "status": "success",
+        "portal_slug": client.portal_slug,
+        "portal_url": f"/portal/c/{client.portal_slug}",
+        "has_password": bool(client.portal_password),
+        "portal_is_enabled": client.portal_is_enabled
+    }
+
+
+@router.post("/portal/verify/{portal_slug}")
+def verify_portal_access(
+    portal_slug: str, 
+    payload: ClientPortalAuthRequest, 
+    db: Session = Depends(get_db)
+):
+    """Verifica si el slug es válido y valida la contraseña si está protegida."""
+    client = db.query(Client).filter(Client.portal_slug == portal_slug, Client.is_deleted == False).first()
+    if not client:
+        raise HTTPException(status_code=404, detail="Portal no encontrado o enlace inválido.")
+
+    if not client.portal_is_enabled:
+        raise HTTPException(status_code=403, detail="El portal para este cliente ha sido deshabilitado temporalmente.")
+
+    has_pw = bool(client.portal_password and client.portal_password.strip())
+    if has_pw:
+        if not payload.password or payload.password != client.portal_password:
+            raise HTTPException(status_code=401, detail="Contraseña incorrecta.")
+
+    return {
+        "authenticated": True,
+        "client_id": client.id,
+        "legal_name": client.legal_name,
+        "rfc": client.rfc
+    }
+
+
+@router.get("/portal/data/{portal_slug}", response_model=ClientPortalDataResponse)
+def get_client_portal_data(
+    portal_slug: str,
+    x_portal_password: Optional[str] = Header(None),
+    db: Session = Depends(get_db)
+):
+    """Devuelve todo el historial, sucursales y certificados para el portal del cliente."""
+    client = db.query(Client).filter(Client.portal_slug == portal_slug, Client.is_deleted == False).first()
+    if not client:
+        raise HTTPException(status_code=404, detail="Portal no encontrado.")
+
+    if not client.portal_is_enabled:
+        raise HTTPException(status_code=403, detail="El portal está desactivado.")
+
+    has_pw = bool(client.portal_password and client.portal_password.strip())
+    if has_pw:
+        if not x_portal_password or x_portal_password != client.portal_password:
+            raise HTTPException(status_code=401, detail="Acceso no autorizado. Se requiere contraseña válida.")
+
+    branches = db.query(Branch).filter(Branch.client_id == client.id, Branch.is_deleted == False).order_by(Branch.name).all()
+    
+    services = db.query(ServiceOrder).options(
+        joinedload(ServiceOrder.branch),
+        joinedload(ServiceOrder.technician),
+        joinedload(ServiceOrder.certificate).joinedload(Certificate.applied_chemicals).joinedload(CertificateChemical.chemical)
+    ).join(Branch).filter(
+        Branch.client_id == client.id,
+        ServiceOrder.is_deleted == False
+    ).order_by(ServiceOrder.service_start_date.desc()).all()
+
+    company = get_or_create_company_config(db)
+
+    return ClientPortalDataResponse(
+        client_id=client.id,
+        legal_name=client.legal_name,
+        rfc=client.rfc,
+        master_contract_number=client.master_contract_number,
+        portal_slug=client.portal_slug,
+        portal_has_password=has_pw,
+        total_branches=len(branches),
+        total_services=len(services),
+        branches=branches,
+        services=services,
+        company_info=company
+    )
+
+
+# ============================================================================
+# 3. RESUMEN DASHBOARD METRICS (HEADLINES)
 # ============================================================================
 @router.get("/dashboard/summary", response_model=DashboardSummaryStats)
 def get_dashboard_summary(db: Session = Depends(get_db)):
@@ -68,7 +374,7 @@ def get_dashboard_summary(db: Session = Depends(get_db)):
 
 
 # ============================================================================
-# 1. USUARIOS Y ROLES (CRUD + STPS DC-3)
+# 4. USUARIOS Y ROLES (CRUD + STPS DC-3)
 # ============================================================================
 @router.get("/users", response_model=List[UserResponse])
 def get_users(role: Optional[UserRole] = None, db: Session = Depends(get_db)):
@@ -127,11 +433,15 @@ def delete_user(user_id: uuid.UUID, db: Session = Depends(get_db)):
 
 
 # ============================================================================
-# 2. CLIENTES MATRIZ (CRUD)
+# 5. CLIENTES MATRIZ (CRUD & PORTAL CONFIG)
 # ============================================================================
 @router.get("/clients", response_model=List[ClientResponse])
 def get_clients(db: Session = Depends(get_db)):
-    return db.query(Client).filter(Client.is_deleted == False).order_by(Client.legal_name).all()
+    clients = db.query(Client).filter(Client.is_deleted == False).order_by(Client.legal_name).all()
+    # Mapear portal_has_password
+    for c in clients:
+        c.portal_has_password = bool(c.portal_password and c.portal_password.strip())
+    return clients
 
 
 @router.post("/clients", response_model=ClientResponse, status_code=status.HTTP_201_CREATED)
@@ -140,15 +450,20 @@ def create_client(payload: ClientCreate, db: Session = Depends(get_db)):
     if existing:
         raise HTTPException(status_code=400, detail="El RFC ya se encuentra registrado.")
 
+    slug = payload.portal_slug.strip() if payload.portal_slug else uuid.uuid4().hex[:10]
+    
     client = Client(
         legal_name=payload.legal_name,
         rfc=payload.rfc,
         master_contract_number=payload.master_contract_number,
-        tax_regime=payload.tax_regime
+        tax_regime=payload.tax_regime,
+        portal_slug=slug,
+        portal_password=payload.portal_password
     )
     db.add(client)
     db.commit()
     db.refresh(client)
+    client.portal_has_password = bool(client.portal_password)
     return client
 
 
@@ -164,6 +479,7 @@ def update_client(client_id: uuid.UUID, payload: ClientUpdate, db: Session = Dep
 
     db.commit()
     db.refresh(client)
+    client.portal_has_password = bool(client.portal_password)
     return client
 
 
@@ -178,7 +494,7 @@ def delete_client(client_id: uuid.UUID, db: Session = Depends(get_db)):
 
 
 # ============================================================================
-# 3. SUCURSALES (CRUD)
+# 6. SUCURSALES (CRUD)
 # ============================================================================
 @router.get("/branches", response_model=List[BranchResponse])
 def get_branches(client_id: Optional[uuid.UUID] = None, db: Session = Depends(get_db)):
@@ -236,7 +552,7 @@ def delete_branch(branch_id: uuid.UUID, db: Session = Depends(get_db)):
 
 
 # ============================================================================
-# 4. CATÁLOGO DE QUÍMICOS (CRUD)
+# 7. CATÁLOGO DE QUÍMICOS (CRUD)
 # ============================================================================
 @router.get("/chemicals", response_model=List[ChemicalResponse])
 def get_chemicals(db: Session = Depends(get_db)):
@@ -290,12 +606,12 @@ def delete_chemical(chemical_id: uuid.UUID, db: Session = Depends(get_db)):
 
 
 # ============================================================================
-# 5. ÓRDENES DE SERVICIO Y CERTIFICADOS (Creación Atómica y Listado)
+# 8. ÓRDENES DE SERVICIO Y CERTIFICADOS
 # ============================================================================
 @router.get("/services", response_model=List[ServiceOrderResponse])
 def get_service_orders(
     branch_id: Optional[uuid.UUID] = None, 
-    limit: int = 50, 
+    limit: int = 100, 
     db: Session = Depends(get_db)
 ):
     query = db.query(ServiceOrder).options(
@@ -326,6 +642,8 @@ def create_service_order_with_certificate(
     technician = db.query(User).filter(User.id == payload.technician_id, User.is_active == True).first()
     if not technician:
         raise HTTPException(status_code=404, detail="Técnico no encontrado o inactivo.")
+
+    company = get_or_create_company_config(db)
 
     prefix = payload.folio_prefix or "SRV"
     count = db.execute(
@@ -361,15 +679,17 @@ def create_service_order_with_certificate(
         db.flush()
 
         start_date = payload.service_start_date.date()
+        validity_days = company.default_validity_days or 30
+
         certificate = Certificate(
             service_order_id=service_order.id,
             certificate_folio=cert_folio,
             issue_date=start_date,
             validity_start_date=start_date,
-            validity_end_date=start_date + timedelta(days=30),
-            sanitary_license_number=payload.sanitary_license_number,
-            sanitary_responsible_name=payload.sanitary_responsible_name,
-            sanitary_responsible_id=payload.sanitary_responsible_id
+            validity_end_date=start_date + timedelta(days=validity_days),
+            sanitary_license_number=payload.sanitary_license_number or company.sanitary_license_number,
+            sanitary_responsible_name=payload.sanitary_responsible_name or company.sanitary_responsible_name,
+            sanitary_responsible_id=payload.sanitary_responsible_id or company.sanitary_responsible_id
         )
         db.add(certificate)
         db.flush()
@@ -399,7 +719,7 @@ def create_service_order_with_certificate(
 
 
 # ============================================================================
-# 6. GENERACIÓN Y DESCARGA DE PDF OFICIAL (NOM-256 / SINTOX)
+# 9. GENERACIÓN Y DESCARGA DE PDF OFICIAL (NOM-256 / SINTOX)
 # ============================================================================
 @router.get("/services/{service_id}/pdf")
 def export_service_certificate_pdf(service_id: uuid.UUID, db: Session = Depends(get_db)):
@@ -413,7 +733,8 @@ def export_service_certificate_pdf(service_id: uuid.UUID, db: Session = Depends(
     if not order or not order.certificate:
         raise HTTPException(status_code=404, detail="Orden o Certificado no encontrado.")
 
-    pdf_bytes = OfficialCertificatePDFGenerator.generate(order, order.certificate)
+    company = get_or_create_company_config(db)
+    pdf_bytes = OfficialCertificatePDFGenerator.generate(order, order.certificate, company=company)
     
     filename = f"Certificado_{order.certificate.certificate_folio}.pdf"
     return Response(
@@ -424,7 +745,7 @@ def export_service_certificate_pdf(service_id: uuid.UUID, db: Session = Depends(
 
 
 # ============================================================================
-# 7. DASHBOARD B2B: MONITOREO DE EXPIRACIONES (7, 15, 30 DÍAS)
+# 10. DASHBOARD B2B: MONITOREO DE EXPIRACIONES (7, 15, 30 DÍAS)
 # ============================================================================
 @router.get("/dashboard/expirations", response_model=DashboardExpirationsResponse)
 def get_dashboard_expirations(db: Session = Depends(get_db)):
@@ -454,7 +775,8 @@ def get_dashboard_expirations(db: Session = Depends(get_db)):
             clients_map[client.id] = ClientExpirationsGroup(
                 client_id=client.id,
                 legal_name=client.legal_name,
-                rfc=client.rfc
+                rfc=client.rfc,
+                portal_slug=client.portal_slug
             )
 
         exp_detail = ExpirationDetail(
@@ -482,7 +804,7 @@ def get_dashboard_expirations(db: Session = Depends(get_db)):
 
 
 # ============================================================================
-# 8. PORTAL CLIENTE MATRIZ: HISTORIAL Y DESCARGA MASIVA ZIP
+# 11. PORTAL CLIENTE MATRIZ: HISTORIAL Y DESCARGA MASIVA ZIP
 # ============================================================================
 @router.get("/portal/matrix/{client_id}/services", response_model=List[ServiceOrderResponse])
 def get_matrix_services_history(client_id: uuid.UUID, db: Session = Depends(get_db)):
@@ -515,11 +837,13 @@ def download_matrix_certificates_zip(client_id: uuid.UUID, db: Session = Depends
         ServiceOrder.is_deleted == False
     ).all()
 
+    company = get_or_create_company_config(db)
+
     zip_buffer = io.BytesIO()
     with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
         for order in orders:
             if order.certificate:
-                pdf_data = OfficialCertificatePDFGenerator.generate(order, order.certificate)
+                pdf_data = OfficialCertificatePDFGenerator.generate(order, order.certificate, company=company)
                 file_name = f"{order.branch.name.replace(' ', '_')}_{order.certificate.certificate_folio}.pdf"
                 zip_file.writestr(file_name, pdf_data)
 
@@ -534,7 +858,7 @@ def download_matrix_certificates_zip(client_id: uuid.UUID, db: Session = Depends
 
 
 # ============================================================================
-# 9. IMPORTACIÓN HISTÓRICA CSV CON PANDAS
+# 12. IMPORTACIÓN HISTÓRICA CSV CON PANDAS
 # ============================================================================
 @router.post("/import/historical-csv")
 async def import_historical_csv(file: UploadFile = File(...), db: Session = Depends(get_db)):

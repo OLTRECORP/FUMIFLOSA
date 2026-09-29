@@ -3,11 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FUMIFLOSA - Panel Integral de Control de Plagas SaaS (NOM-256)</title>
+    <title>FUMIFLOSA - Panel SaaS de Control de Plagas (NOM-256 / COFEPRIS / STPS)</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js para Métricas y Analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -30,6 +32,69 @@
 </head>
 <body class="bg-slate-100 text-slate-800 font-sans min-h-screen flex flex-col antialiased">
 
+    <!-- MODAL DE CONFIGURACIÓN DE ENLACE PERMANENTE / PORTAL CLIENTE -->
+    <div id="modal-portal-config" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 space-y-4 border border-slate-200">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 bg-brand-100 text-brand-700 rounded-lg flex items-center justify-center text-sm font-bold">
+                        <i class="fa-solid fa-link"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-900">Enlace Permanente para Cliente</h3>
+                        <p id="portal-modal-client-name" class="text-[11px] text-slate-500">Configuración de acceso B2B</p>
+                    </div>
+                </div>
+                <button onclick="closePortalModal()" class="text-slate-400 hover:text-slate-600 p-1"><i class="fa-solid fa-xmark text-base"></i></button>
+            </div>
+
+            <form onsubmit="savePortalConfig(event)" class="space-y-4 text-xs">
+                <input type="hidden" id="modal-portal-client-id" />
+                
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Identificador Único Permanente (Slug en URL):</label>
+                    <div class="flex rounded-lg shadow-sm border border-slate-300 bg-slate-50 overflow-hidden">
+                        <span class="inline-flex items-center px-3 text-slate-500 bg-slate-100 text-[11px] border-r border-slate-300">/portal/c/</span>
+                        <input type="text" id="modal-portal-slug" required class="flex-1 bg-white p-2 text-xs font-mono font-bold text-slate-900 focus:outline-none" />
+                    </div>
+                    <p class="text-[10px] text-slate-400 mt-1">Este enlace es fijo e invariable. Puedes personalizarlo (ej. <span class="font-mono">imss-nacional</span>).</p>
+                </div>
+
+                <div class="bg-amber-50/70 p-3.5 rounded-xl border border-amber-200 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <label class="font-bold text-amber-900 flex items-center gap-1.5">
+                            <i class="fa-solid fa-key text-amber-600"></i> Contraseña de Protección (Opcional):
+                        </label>
+                        <span id="badge-has-pwd" class="text-[10px] bg-amber-200 text-amber-800 font-semibold px-2 py-0.5 rounded">Sin contraseña</span>
+                    </div>
+                    <input type="text" id="modal-portal-password" placeholder="Dejar en blanco para acceso público directo" class="w-full bg-white border border-amber-300 rounded-lg p-2 text-xs font-mono" />
+                    <p class="text-[10px] text-amber-700">Si asignas una clave, el cliente deberá ingresarla antes de poder ver y descargar sus certificados.</p>
+                </div>
+
+                <div class="flex items-center gap-2 pt-1">
+                    <input type="checkbox" id="modal-portal-enabled" checked class="rounded text-brand-600 focus:ring-brand-500" />
+                    <label for="modal-portal-enabled" class="font-semibold text-slate-700 text-xs">Habilitar enlace de consulta para este cliente</label>
+                </div>
+
+                <div class="bg-slate-100 p-2.5 rounded-lg border border-slate-200 flex items-center justify-between gap-2 font-mono text-[11px] text-slate-700">
+                    <span id="modal-full-url-preview" class="truncate">https://.../portal/c/...</span>
+                    <button type="button" onclick="copyModalUrl()" class="bg-white hover:bg-slate-200 border border-slate-300 text-slate-800 px-2 py-1 rounded text-[10px] font-bold shrink-0">
+                        <i class="fa-solid fa-copy"></i> Copiar
+                    </button>
+                </div>
+
+                <div class="flex justify-end gap-2 pt-2 border-t border-slate-100">
+                    <button type="button" onclick="testModalPortal()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2 px-3 rounded-lg text-xs flex items-center gap-1">
+                        <i class="fa-solid fa-arrow-up-right-from-square"></i> Probar Portal
+                    </button>
+                    <button type="submit" class="bg-brand-600 hover:bg-brand-700 text-white font-bold py-2 px-4 rounded-lg text-xs shadow-sm">
+                        Guardar Ajustes de Enlace
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- TOPBAR -->
     <header class="bg-slate-900 text-white shadow-lg border-b border-slate-800 sticky top-0 z-40">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
@@ -38,10 +103,10 @@
                     <i class="fa-solid fa-shield-virus"></i>
                 </div>
                 <div>
-                    <h1 class="text-lg font-bold tracking-tight text-white flex items-center gap-2">
+                    <h1 id="topbar-trade-name" class="text-base font-bold tracking-tight text-white flex items-center gap-2">
                         FUMIFLOSA <span class="text-[10px] bg-brand-700 text-brand-100 font-semibold px-2 py-0.5 rounded-full border border-brand-500">NOM-256-SSA1-2012</span>
                     </h1>
-                    <p class="text-xs text-slate-400">Sistema SaaS Multinivel B2B / COFEPRIS / STPS</p>
+                    <p id="topbar-subtext" class="text-xs text-slate-400">Sistema SaaS Multinivel B2B / COFEPRIS / STPS</p>
                 </div>
             </div>
             
@@ -59,7 +124,7 @@
     <!-- CONTENEDOR PRINCIPAL -->
     <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
 
-        <!-- RESUMEN DE INDICADORES / METRICS -->
+        <!-- RESUMEN DE INDICADORES / METRICS HEADLINES -->
         <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
             <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
                 <p class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Clientes Matriz</p>
@@ -74,8 +139,8 @@
                 <p id="stat-technicians" class="text-xl font-bold text-blue-600 mt-1">0</p>
             </div>
             <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-                <p class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Químicos Catálogo</p>
-                <p id="stat-chemicals" class="text-xl font-bold text-teal-600 mt-1">0</p>
+                <p class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Total Servicios</p>
+                <p id="stat-total-orders" class="text-xl font-bold text-teal-600 mt-1">0</p>
             </div>
             <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
                 <p class="text-[11px] font-semibold text-rose-600 uppercase tracking-wider">Vencen en ≤7 Días</p>
@@ -90,27 +155,33 @@
         <!-- TABS DE NAVEGACIÓN COMPLETA -->
         <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
             <div class="border-b border-slate-200 bg-slate-50/70 px-4 overflow-x-auto">
-                <nav class="flex space-x-2 sm:space-x-4 min-w-max">
+                <nav class="flex space-x-2 sm:space-x-3 min-w-max">
                     <button onclick="switchTab('tab-vencimientos')" id="btn-tab-vencimientos" class="tab-btn py-3.5 px-3 border-b-2 border-brand-600 font-bold text-xs text-brand-700 flex items-center gap-1.5">
                         <i class="fa-solid fa-clock"></i> Calendario Vencimientos
+                    </button>
+                    <button onclick="switchTab('tab-analytics')" id="btn-tab-analytics" class="tab-btn py-3.5 px-3 border-b-2 border-transparent font-medium text-xs text-slate-500 hover:text-slate-800 flex items-center gap-1.5">
+                        <i class="fa-solid fa-chart-pie text-indigo-600"></i> Métricas & Analytics
                     </button>
                     <button onclick="switchTab('tab-nuevo-servicio')" id="btn-tab-nuevo-servicio" class="tab-btn py-3.5 px-3 border-b-2 border-transparent font-medium text-xs text-slate-500 hover:text-slate-800 flex items-center gap-1.5">
                         <i class="fa-solid fa-file-circle-plus text-brand-600"></i> Registrar Servicio (NOM-256)
                     </button>
                     <button onclick="switchTab('tab-ordenes')" id="btn-tab-ordenes" class="tab-btn py-3.5 px-3 border-b-2 border-transparent font-medium text-xs text-slate-500 hover:text-slate-800 flex items-center gap-1.5">
-                        <i class="fa-solid fa-file-lines"></i> Órdenes y Certificados PDF
+                        <i class="fa-solid fa-file-lines"></i> Órdenes & PDF
                     </button>
                     <button onclick="switchTab('tab-clientes')" id="btn-tab-clientes" class="tab-btn py-3.5 px-3 border-b-2 border-transparent font-medium text-xs text-slate-500 hover:text-slate-800 flex items-center gap-1.5">
-                        <i class="fa-solid fa-building"></i> Clientes Matriz y Sucursales
+                        <i class="fa-solid fa-building"></i> Clientes & Enlaces B2B
                     </button>
                     <button onclick="switchTab('tab-quimicos')" id="btn-tab-quimicos" class="tab-btn py-3.5 px-3 border-b-2 border-transparent font-medium text-xs text-slate-500 hover:text-slate-800 flex items-center gap-1.5">
-                        <i class="fa-solid fa-flask-vial"></i> Catálogo Químicos (CICOPLAFEST)
+                        <i class="fa-solid fa-flask-vial"></i> Catálogo Químicos
                     </button>
                     <button onclick="switchTab('tab-usuarios')" id="btn-tab-usuarios" class="tab-btn py-3.5 px-3 border-b-2 border-transparent font-medium text-xs text-slate-500 hover:text-slate-800 flex items-center gap-1.5">
-                        <i class="fa-solid fa-users-gear"></i> Usuarios y Roles (STPS DC-3)
+                        <i class="fa-solid fa-users-gear"></i> Usuarios & STPS
+                    </button>
+                    <button onclick="switchTab('tab-empresa')" id="btn-tab-empresa" class="tab-btn py-3.5 px-3 border-b-2 border-transparent font-medium text-xs text-slate-500 hover:text-slate-800 flex items-center gap-1.5">
+                        <i class="fa-solid fa-sliders text-amber-600"></i> Datos Empresa Fumigadora
                     </button>
                     <button onclick="switchTab('tab-importacion')" id="btn-tab-importacion" class="tab-btn py-3.5 px-3 border-b-2 border-transparent font-medium text-xs text-slate-500 hover:text-slate-800 flex items-center gap-1.5">
-                        <i class="fa-solid fa-file-csv text-emerald-600"></i> Ingesta Masiva CSV
+                        <i class="fa-solid fa-file-csv text-emerald-600"></i> Ingesta CSV
                     </button>
                 </nav>
             </div>
@@ -122,7 +193,7 @@
                 <div class="flex justify-between items-center">
                     <div>
                         <h2 class="text-base font-bold text-slate-900">Vigencias Sanitarias (Calculadas a 30 Días - NOM-256)</h2>
-                        <p class="text-xs text-slate-500">Alertas automáticas por Cliente Matriz para agendar servicios preventivos.</p>
+                        <p class="text-xs text-slate-500">Alertas automáticas por Cliente Matriz para programar re-aplicaciones.</p>
                     </div>
                     <button onclick="loadDashboardData()" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg font-semibold flex items-center gap-1.5 transition">
                         <i class="fa-solid fa-rotate"></i> Actualizar
@@ -134,7 +205,120 @@
             </div>
 
             <!-- ============================================================= -->
-            <!-- 2. PESTAÑA: REGISTRAR SERVICIO NUEVO (ORDEN + CERTIFICADO) -->
+            <!-- 2. PESTAÑA: MÉTRICAS Y ANALYTICS AVANZADOS -->
+            <!-- ============================================================= -->
+            <div id="tab-analytics" class="p-6 space-y-6 hidden">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h2 class="text-base font-bold text-slate-900">Estadísticas y Análisis de Operaciones de Fumigación</h2>
+                        <p class="text-xs text-slate-500">Métricas de rendimiento, plagas controladas, procedimientos y cumplimiento normativo.</p>
+                    </div>
+                    <button onclick="loadAnalyticsData()" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg font-semibold flex items-center gap-1.5">
+                        <i class="fa-solid fa-rotate"></i> Actualizar Gráficas
+                    </button>
+                </div>
+
+                <!-- KPI CARDS -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="bg-gradient-to-br from-emerald-500 to-teal-700 text-white p-4 rounded-xl shadow-sm">
+                        <p class="text-xs uppercase tracking-wider font-semibold opacity-80">Tasa de Cumplimiento Sanitario</p>
+                        <p id="kpi-compliance" class="text-3xl font-black mt-1">100%</p>
+                        <p class="text-[11px] opacity-90 mt-1">Certificados vigentes conforme a NOM-256</p>
+                    </div>
+                    <div class="bg-gradient-to-br from-indigo-500 to-blue-700 text-white p-4 rounded-xl shadow-sm">
+                        <p class="text-xs uppercase tracking-wider font-semibold opacity-80">Plaga Predominante</p>
+                        <p id="kpi-top-pest" class="text-2xl font-black mt-1">Rastreros</p>
+                        <p class="text-[11px] opacity-90 mt-1">Mayor recurrencia en servicios</p>
+                    </div>
+                    <div class="bg-gradient-to-br from-amber-500 to-orange-600 text-white p-4 rounded-xl shadow-sm">
+                        <p class="text-xs uppercase tracking-wider font-semibold opacity-80">Método Principal</p>
+                        <p id="kpi-top-method" class="text-2xl font-black mt-1">Aspersión</p>
+                        <p class="text-[11px] opacity-90 mt-1">Procedimiento más aplicado</p>
+                    </div>
+                    <div class="bg-gradient-to-br from-slate-800 to-slate-900 text-white p-4 rounded-xl shadow-sm">
+                        <p class="text-xs uppercase tracking-wider font-semibold opacity-80">Cliente con Mayor Volumen</p>
+                        <p id="kpi-top-client" class="text-xl font-black mt-1 truncate">IMSS</p>
+                        <p class="text-[11px] opacity-90 mt-1">Líder en unidades atendidas</p>
+                    </div>
+                </div>
+
+                <!-- GRÁFICAS -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                            <i class="fa-solid fa-chart-column text-brand-600"></i> Tendencia Mensual de Servicios
+                        </h3>
+                        <div class="h-64">
+                            <canvas id="chart-monthly-trend"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                            <i class="fa-solid fa-bug text-rose-600"></i> Desglose de Plagas Atendidas
+                        </h3>
+                        <div class="h-64 flex items-center justify-center">
+                            <canvas id="chart-pest-distribution"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                            <i class="fa-solid fa-spray-can text-indigo-600"></i> Procedimientos Técnicos Aplicados
+                        </h3>
+                        <div class="h-64">
+                            <canvas id="chart-procedures"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                            <i class="fa-solid fa-building-flag text-teal-600"></i> Tipos de Inmuebles Tratados
+                        </h3>
+                        <div class="h-64 flex items-center justify-center">
+                            <canvas id="chart-classifications"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TABLAS DE CONSUMO DE QUÍMICOS Y TOP CLIENTES -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="border border-slate-200 rounded-xl overflow-hidden bg-white">
+                        <div class="bg-slate-50 p-3 border-b border-slate-200 font-bold text-xs text-slate-800">
+                            <i class="fa-solid fa-flask text-teal-600 mr-1"></i> Ranking de Químicos Más Utilizados (CICOPLAFEST)
+                        </div>
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-slate-100 text-slate-600 font-bold uppercase text-[10px]">
+                                <tr>
+                                    <th class="p-3">Producto</th>
+                                    <th class="p-3">Ingrediente Activo</th>
+                                    <th class="p-3 text-right">Aplicaciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="top-chems-tbody" class="divide-y divide-slate-100"></tbody>
+                        </table>
+                    </div>
+
+                    <div class="border border-slate-200 rounded-xl overflow-hidden bg-white">
+                        <div class="bg-slate-50 p-3 border-b border-slate-200 font-bold text-xs text-slate-800">
+                            <i class="fa-solid fa-hospital-user text-indigo-600 mr-1"></i> Top Clientes Institucionales
+                        </div>
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-slate-100 text-slate-600 font-bold uppercase text-[10px]">
+                                <tr>
+                                    <th class="p-3">Cliente Matriz</th>
+                                    <th class="p-3">Sucursales</th>
+                                    <th class="p-3 text-right">Servicios Realizados</th>
+                                </tr>
+                            </thead>
+                            <tbody id="top-clients-tbody" class="divide-y divide-slate-100"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================================= -->
+            <!-- 3. PESTAÑA: REGISTRAR SERVICIO NUEVO (ORDEN + CERTIFICADO) -->
             <!-- ============================================================= -->
             <div id="tab-nuevo-servicio" class="p-6 space-y-6 hidden">
                 <div>
@@ -155,7 +339,7 @@
                         </div>
                         <div>
                             <label class="block font-semibold text-slate-700 mb-1">Prefijo de Folio Institucional</label>
-                            <input type="text" id="srv-prefix" value="IMSS" placeholder="ej. IMSS, OXXO, SRV" class="w-full bg-white border border-slate-300 rounded-lg p-2 uppercase" />
+                            <input type="text" id="srv-prefix" value="IMSS" placeholder="ej. IMSS, OXXO, SRV" class="w-full bg-white border border-slate-300 rounded-lg p-2 uppercase font-bold" />
                         </div>
                     </div>
 
@@ -210,16 +394,16 @@
                     <!-- Fila 5: Responsable y Licencia Sanitaria -->
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
-                            <label class="block font-semibold text-slate-700 mb-1">Licencia Sanitaria Empresarial *</label>
-                            <input type="text" id="srv-license" value="2023-15A-099" required class="w-full bg-white border border-slate-300 rounded-lg p-2" />
+                            <label class="block font-semibold text-slate-700 mb-1">Licencia Sanitaria (COFEPRIS)</label>
+                            <input type="text" id="srv-license" placeholder="Se tomará de configuración base" class="w-full bg-white border border-slate-300 rounded-lg p-2" />
                         </div>
                         <div>
-                            <label class="block font-semibold text-slate-700 mb-1">Responsable Sanitario *</label>
-                            <input type="text" id="srv-resp-name" value="Biól. Roberto Sánchez Martínez" required class="w-full bg-white border border-slate-300 rounded-lg p-2" />
+                            <label class="block font-semibold text-slate-700 mb-1">Responsable Sanitario</label>
+                            <input type="text" id="srv-resp-name" placeholder="Se tomará de configuración base" class="w-full bg-white border border-slate-300 rounded-lg p-2" />
                         </div>
                         <div>
                             <label class="block font-semibold text-slate-700 mb-1">Cédula Profesional</label>
-                            <input type="text" id="srv-resp-id" value="CED-8849201" class="w-full bg-white border border-slate-300 rounded-lg p-2" />
+                            <input type="text" id="srv-resp-id" placeholder="Cédula profesional" class="w-full bg-white border border-slate-300 rounded-lg p-2" />
                         </div>
                     </div>
 
@@ -231,7 +415,7 @@
                         </div>
                         <div>
                             <label class="block font-semibold text-slate-700 mb-1">Observaciones / Recomendaciones</label>
-                            <textarea id="srv-obs" rows="2" class="w-full bg-white border border-slate-300 rounded-lg p-2">Mantener ventilación natural y respetar tiempo de reentrada de 2 horas.</textarea>
+                            <textarea id="srv-obs" rows="2" class="w-full bg-white border border-slate-300 rounded-lg p-2">Mantener ventilación natural y respetar tiempo de reentrada.</textarea>
                         </div>
                     </div>
 
@@ -244,7 +428,7 @@
             </div>
 
             <!-- ============================================================= -->
-            <!-- 3. PESTAÑA: LISTA DE ÓRDENES Y CERTIFICADOS PDF -->
+            <!-- 4. PESTAÑA: LISTA DE ÓRDENES Y CERTIFICADOS PDF -->
             <!-- ============================================================= -->
             <div id="tab-ordenes" class="p-6 space-y-4 hidden">
                 <div class="flex justify-between items-center">
@@ -275,7 +459,7 @@
             </div>
 
             <!-- ============================================================= -->
-            <!-- 4. PESTAÑA: CLIENTES MATRIZ Y SUCURSALES -->
+            <!-- 5. PESTAÑA: CLIENTES MATRIZ, SUCURSALES Y ENLACES B2B -->
             <!-- ============================================================= -->
             <div id="tab-clientes" class="p-6 space-y-6 hidden">
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -299,7 +483,17 @@
                                     <input type="text" id="cli-contract" placeholder="ej. CTR-2026-IMSS-09" class="w-full bg-white border border-slate-300 rounded-lg p-2" />
                                 </div>
                             </div>
-                            <button type="submit" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-2 rounded-lg text-xs">Guardar Matriz</button>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-slate-700 font-semibold mb-1">Identificador de Enlace (Slug)</label>
+                                    <input type="text" id="cli-slug" placeholder="ej. imss-nacional" class="w-full bg-white border border-slate-300 rounded-lg p-2 font-mono" />
+                                </div>
+                                <div>
+                                    <label class="block text-slate-700 font-semibold mb-1">Contraseña de Portal (Opcional)</label>
+                                    <input type="text" id="cli-pwd" placeholder="PIN de acceso" class="w-full bg-white border border-slate-300 rounded-lg p-2" />
+                                </div>
+                            </div>
+                            <button type="submit" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-2 rounded-lg text-xs">Guardar Matriz & Generar Enlace</button>
                         </form>
                     </div>
 
@@ -331,7 +525,7 @@
                                     <input type="text" id="br-name" required placeholder="ej. HGZ No. 1 - Gabriel Mancera" class="w-full bg-white border border-slate-300 rounded-lg p-2" />
                                 </div>
                                 <div>
-                                    <label class="block text-slate-700 font-semibold mb-1">Clave Unidad / Teléfono *</label>
+                                    <label class="block text-slate-700 font-semibold mb-1">Teléfono / Clave Unidad *</label>
                                     <input type="text" id="br-phone" required placeholder="5556390000" class="w-full bg-white border border-slate-300 rounded-lg p-2" />
                                 </div>
                             </div>
@@ -348,9 +542,11 @@
                     </div>
                 </div>
 
-                <!-- Tabla de Matrices y Sucursales -->
-                <div class="border border-slate-200 rounded-xl overflow-hidden">
-                    <div class="bg-slate-50 p-3 border-b border-slate-200 font-bold text-xs text-slate-700">Directorios de Clientes y Sucursales</div>
+                <!-- Tabla de Matrices y Sucursales con Botón de Enlace Permanente -->
+                <div class="border border-slate-200 rounded-xl overflow-hidden bg-white">
+                    <div class="bg-slate-50 p-3 border-b border-slate-200 font-bold text-xs text-slate-700 flex justify-between items-center">
+                        <span>Directorio Institucional y Enlaces Permanentes</span>
+                    </div>
                     <table class="w-full text-left text-xs">
                         <thead class="bg-slate-100 text-slate-600 font-bold uppercase text-[10px]">
                             <tr>
@@ -359,7 +555,7 @@
                                 <th class="p-3">Sucursal / Unidad</th>
                                 <th class="p-3">Clasificación</th>
                                 <th class="p-3">Contacto</th>
-                                <th class="p-3 text-right">ZIP Matriz</th>
+                                <th class="p-3 text-right">Enlace / Portal B2B</th>
                             </tr>
                         </thead>
                         <tbody id="clients-branches-tbody" class="divide-y divide-slate-100"></tbody>
@@ -368,7 +564,97 @@
             </div>
 
             <!-- ============================================================= -->
-            <!-- 5. PESTAÑA: CATÁLOGO DE QUÍMICOS -->
+            <!-- 6. PESTAÑA: CONFIGURACIÓN DE LA EMPRESA BASE Y DATOS FISCALES -->
+            <!-- ============================================================= -->
+            <div id="tab-empresa" class="p-6 space-y-6 hidden">
+                <div>
+                    <h2 class="text-base font-bold text-slate-900">Configuración de la Empresa Prestadora de Servicios</h2>
+                    <p class="text-xs text-slate-500">Datos fiscales, Licencia Sanitaria COFEPRIS, Responsable Sanitario y Avisos SINTOX que se reflejan en todos los Certificados Oficiales en PDF.</p>
+                </div>
+
+                <form onsubmit="handleSaveCompanyConfig(event)" class="space-y-5 text-xs max-w-4xl">
+                    <div class="bg-slate-50 p-5 rounded-xl border border-slate-200 space-y-4">
+                        <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2">
+                            <i class="fa-solid fa-file-invoice text-brand-600"></i> Datos Fiscales y Comerciales
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-slate-700 font-semibold mb-1">Razón Social *</label>
+                                <input type="text" id="cfg-company-name" required class="w-full bg-white border border-slate-300 rounded-lg p-2" />
+                            </div>
+                            <div>
+                                <label class="block text-slate-700 font-semibold mb-1">Nombre Comercial *</label>
+                                <input type="text" id="cfg-trade-name" required class="w-full bg-white border border-slate-300 rounded-lg p-2" />
+                            </div>
+                            <div>
+                                <label class="block text-slate-700 font-semibold mb-1">RFC *</label>
+                                <input type="text" id="cfg-rfc" required maxlength="13" class="w-full bg-white border border-slate-300 rounded-lg p-2 uppercase font-mono" />
+                            </div>
+                            <div>
+                                <label class="block text-slate-700 font-semibold mb-1">Régimen Fiscal</label>
+                                <input type="text" id="cfg-tax-regime" class="w-full bg-white border border-slate-300 rounded-lg p-2" />
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-slate-700 font-semibold mb-1">Domicilio Fiscal Completo *</label>
+                                <input type="text" id="cfg-fiscal-address" required class="w-full bg-white border border-slate-300 rounded-lg p-2" />
+                            </div>
+                            <div>
+                                <label class="block text-slate-700 font-semibold mb-1">Teléfono Principal *</label>
+                                <input type="text" id="cfg-phone" required class="w-full bg-white border border-slate-300 rounded-lg p-2" />
+                            </div>
+                            <div>
+                                <label class="block text-slate-700 font-semibold mb-1">Correo Electrónico de Contacto *</label>
+                                <input type="email" id="cfg-email" required class="w-full bg-white border border-slate-300 rounded-lg p-2" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-50 p-5 rounded-xl border border-slate-200 space-y-4">
+                        <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2">
+                            <i class="fa-solid fa-stamp text-teal-600"></i> Acreditaciones Sanitarias (NOM-256-SSA1-2012 / COFEPRIS / STPS)
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-slate-700 font-semibold mb-1">Licencia Sanitaria (COFEPRIS) *</label>
+                                <input type="text" id="cfg-license" required class="w-full bg-white border border-slate-300 rounded-lg p-2 font-mono" />
+                            </div>
+                            <div>
+                                <label class="block text-slate-700 font-semibold mb-1">Responsable Sanitario *</label>
+                                <input type="text" id="cfg-resp-name" required class="w-full bg-white border border-slate-300 rounded-lg p-2" />
+                            </div>
+                            <div>
+                                <label class="block text-slate-700 font-semibold mb-1">Cédula Profesional</label>
+                                <input type="text" id="cfg-resp-id" class="w-full bg-white border border-slate-300 rounded-lg p-2" />
+                            </div>
+                            <div>
+                                <label class="block text-slate-700 font-semibold mb-1">Registro Empresa STPS</label>
+                                <input type="text" id="cfg-stps-num" class="w-full bg-white border border-slate-300 rounded-lg p-2 font-mono" />
+                            </div>
+                            <div>
+                                <label class="block text-slate-700 font-semibold mb-1">Horas Reentrada Estándar</label>
+                                <input type="number" id="cfg-reentry-hours" value="2" min="0" class="w-full bg-white border border-slate-300 rounded-lg p-2" />
+                            </div>
+                            <div>
+                                <label class="block text-slate-700 font-semibold mb-1">Días de Vigencia Estándar</label>
+                                <input type="number" id="cfg-validity-days" value="30" min="1" class="w-full bg-white border border-slate-300 rounded-lg p-2" />
+                            </div>
+                            <div class="md:col-span-3">
+                                <label class="block text-slate-700 font-semibold mb-1">Teléfonos de Emergencia Médica SINTOX 24/7 *</label>
+                                <input type="text" id="cfg-sintox" required class="w-full bg-white border border-slate-300 rounded-lg p-2 font-mono" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end gap-3">
+                        <button type="submit" id="btn-save-company-cfg" class="bg-brand-600 hover:bg-brand-700 text-white font-bold py-2.5 px-6 rounded-lg text-xs shadow-sm flex items-center gap-2">
+                            <i class="fa-solid fa-floppy-disk"></i> Guardar Configuración de Empresa
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- ============================================================= -->
+            <!-- 7. PESTAÑA: CATÁLOGO DE QUÍMICOS -->
             <!-- ============================================================= -->
             <div id="tab-quimicos" class="p-6 space-y-6 hidden">
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -411,7 +697,7 @@
                         </form>
                     </div>
 
-                    <div class="lg:col-span-2 border border-slate-200 rounded-xl overflow-hidden">
+                    <div class="lg:col-span-2 border border-slate-200 rounded-xl overflow-hidden bg-white">
                         <div class="bg-slate-50 p-3 border-b border-slate-200 font-bold text-xs text-slate-700">Catálogo Regulado por COFEPRIS</div>
                         <table class="w-full text-left text-xs">
                             <thead class="bg-slate-100 text-slate-600 font-bold uppercase text-[10px]">
@@ -430,7 +716,7 @@
             </div>
 
             <!-- ============================================================= -->
-            <!-- 6. PESTAÑA: USUARIOS Y ROLES (STPS DC-3) -->
+            <!-- 8. PESTAÑA: USUARIOS Y ROLES (STPS DC-3) -->
             <!-- ============================================================= -->
             <div id="tab-usuarios" class="p-6 space-y-6 hidden">
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -468,7 +754,7 @@
                         </form>
                     </div>
 
-                    <div class="lg:col-span-2 border border-slate-200 rounded-xl overflow-hidden">
+                    <div class="lg:col-span-2 border border-slate-200 rounded-xl overflow-hidden bg-white">
                         <div class="bg-slate-50 p-3 border-b border-slate-200 font-bold text-xs text-slate-700">Usuarios y Técnicos de Campo Certificados</div>
                         <table class="w-full text-left text-xs">
                             <thead class="bg-slate-100 text-slate-600 font-bold uppercase text-[10px]">
@@ -487,7 +773,7 @@
             </div>
 
             <!-- ============================================================= -->
-            <!-- 7. PESTAÑA: INGESTA MASIVA CSV -->
+            <!-- 9. PESTAÑA: INGESTA MASIVA CSV -->
             <!-- ============================================================= -->
             <div id="tab-importacion" class="p-6 space-y-6 hidden">
                 <div>
@@ -536,6 +822,10 @@
         let cachedTechnicians = [];
         let cachedChemicals = [];
         let cachedClients = [];
+        let chartTrendInstance = null;
+        let chartPestInstance = null;
+        let chartProcsInstance = null;
+        let chartClassInstance = null;
 
         function switchTab(tabId) {
             document.querySelectorAll('[id^="tab-"]').forEach(el => el.classList.add('hidden'));
@@ -550,8 +840,10 @@
             activeBtn.classList.add('border-brand-600', 'text-brand-700', 'font-bold');
 
             if(tabId === 'tab-vencimientos') loadDashboardData();
+            if(tabId === 'tab-analytics') loadAnalyticsData();
             if(tabId === 'tab-ordenes') loadOrders();
             if(tabId === 'tab-clientes') loadClientsAndBranches();
+            if(tabId === 'tab-empresa') loadCompanyConfig();
             if(tabId === 'tab-quimicos') loadChemicals();
             if(tabId === 'tab-usuarios') loadUsers();
             if(tabId === 'tab-nuevo-servicio') prepareNewServiceForm();
@@ -565,9 +857,191 @@
                 document.getElementById('stat-clients').innerText = data.total_clients;
                 document.getElementById('stat-branches').innerText = data.total_branches;
                 document.getElementById('stat-technicians').innerText = data.total_technicians;
-                document.getElementById('stat-chemicals').innerText = data.total_chemicals;
+                document.getElementById('stat-total-orders').innerText = data.total_orders;
                 document.getElementById('stat-exp-7').innerText = data.expiring_7_days;
                 document.getElementById('stat-exp-30').innerText = data.expiring_30_days;
+            } catch(e) { console.error(e); }
+        }
+
+        async function loadCompanyConfig() {
+            try {
+                const res = await fetch('/api/v1/company-config');
+                const cfg = await res.json();
+                
+                document.getElementById('topbar-trade-name').innerHTML = `${cfg.trade_name} <span class="text-[10px] bg-brand-700 text-brand-100 font-semibold px-2 py-0.5 rounded-full border border-brand-500">NOM-256-SSA1-2012</span>`;
+                
+                document.getElementById('cfg-company-name').value = cfg.company_name;
+                document.getElementById('cfg-trade-name').value = cfg.trade_name;
+                document.getElementById('cfg-rfc').value = cfg.rfc;
+                document.getElementById('cfg-tax-regime').value = cfg.tax_regime || '';
+                document.getElementById('cfg-fiscal-address').value = cfg.fiscal_address;
+                document.getElementById('cfg-phone').value = cfg.phone;
+                document.getElementById('cfg-email').value = cfg.email;
+                document.getElementById('cfg-license').value = cfg.sanitary_license_number;
+                document.getElementById('cfg-resp-name').value = cfg.sanitary_responsible_name;
+                document.getElementById('cfg-resp-id').value = cfg.sanitary_responsible_id || '';
+                document.getElementById('cfg-stps-num').value = cfg.stps_registration_number || '';
+                document.getElementById('cfg-reentry-hours').value = cfg.default_reentry_hours;
+                document.getElementById('cfg-validity-days').value = cfg.default_validity_days;
+                document.getElementById('cfg-sintox').value = cfg.sintox_emergency_phones;
+            } catch(e) { console.error(e); }
+        }
+
+        async function handleSaveCompanyConfig(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btn-save-company-cfg');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Guardando...';
+
+            const payload = {
+                company_name: document.getElementById('cfg-company-name').value,
+                trade_name: document.getElementById('cfg-trade-name').value,
+                rfc: document.getElementById('cfg-rfc').value.toUpperCase(),
+                tax_regime: document.getElementById('cfg-tax-regime').value || null,
+                fiscal_address: document.getElementById('cfg-fiscal-address').value,
+                phone: document.getElementById('cfg-phone').value,
+                email: document.getElementById('cfg-email').value,
+                sanitary_license_number: document.getElementById('cfg-license').value,
+                sanitary_responsible_name: document.getElementById('cfg-resp-name').value,
+                sanitary_responsible_id: document.getElementById('cfg-resp-id').value || null,
+                stps_registration_number: document.getElementById('cfg-stps-num').value || null,
+                default_reentry_hours: parseInt(document.getElementById('cfg-reentry-hours').value) || 2,
+                default_validity_days: parseInt(document.getElementById('cfg-validity-days').value) || 30,
+                sintox_emergency_phones: document.getElementById('cfg-sintox').value
+            };
+
+            try {
+                const res = await fetch('/api/v1/company-config', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (!res.ok) throw new Error((await res.json()).detail || 'Error al guardar');
+                alert('¡Datos fiscales y configuración sanitaria actualizados correctamente!');
+                loadCompanyConfig();
+            } catch(err) {
+                alert('Error: ' + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Guardar Configuración de Empresa';
+            }
+        }
+
+        async function loadAnalyticsData() {
+            try {
+                const res = await fetch('/api/v1/analytics/detailed');
+                const data = await res.json();
+
+                document.getElementById('kpi-compliance').innerText = data.compliance_rate + '%';
+                
+                // Top pest
+                let maxPest = 'Rastreros';
+                let maxPestCount = -1;
+                for (const [k, v] of Object.entries(data.pest_breakdown)) {
+                    if (v > maxPestCount) { maxPestCount = v; maxPest = k; }
+                }
+                document.getElementById('kpi-top-pest').innerText = maxPest;
+
+                // Top procedure
+                let maxProc = 'Aspersión';
+                let maxProcCount = -1;
+                for (const [k, v] of Object.entries(data.procedure_breakdown)) {
+                    if (v > maxProcCount) { maxProcCount = v; maxProc = k; }
+                }
+                document.getElementById('kpi-top-method').innerText = maxProc;
+
+                document.getElementById('kpi-top-client').innerText = data.top_clients.length ? data.top_clients[0].name : 'N/A';
+
+                // Chart 1: Trend
+                const ctxTrend = document.getElementById('chart-monthly-trend').getContext('2d');
+                if (chartTrendInstance) chartTrendInstance.destroy();
+                chartTrendInstance = new Chart(ctxTrend, {
+                    type: 'line',
+                    data: {
+                        labels: data.monthly_trend.map(m => m.month),
+                        datasets: [{
+                            label: 'Servicios Realizados',
+                            data: data.monthly_trend.map(m => m.count),
+                            borderColor: '#16a34a',
+                            backgroundColor: 'rgba(22, 163, 74, 0.1)',
+                            fill: true,
+                            tension: 0.3,
+                            borderWidth: 2
+                        }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false }
+                });
+
+                // Chart 2: Pests
+                const ctxPest = document.getElementById('chart-pest-distribution').getContext('2d');
+                if (chartPestInstance) chartPestInstance.destroy();
+                chartPestInstance = new Chart(ctxPest, {
+                    type: 'doughnut',
+                    data: {
+                        labels: Object.keys(data.pest_breakdown),
+                        datasets: [{
+                            data: Object.values(data.pest_breakdown),
+                            backgroundColor: ['#e11d48', '#d97706', '#0284c7', '#64748b']
+                        }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false }
+                });
+
+                // Chart 3: Procedures
+                const ctxProc = document.getElementById('chart-procedures').getContext('2d');
+                if (chartProcsInstance) chartProcsInstance.destroy();
+                chartProcsInstance = new Chart(ctxProc, {
+                    type: 'bar',
+                    data: {
+                        labels: Object.keys(data.procedure_breakdown),
+                        datasets: [{
+                            label: 'Frecuencia de Uso',
+                            data: Object.values(data.procedure_breakdown),
+                            backgroundColor: '#4f46e5'
+                        }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false }
+                });
+
+                // Chart 4: Classifications
+                const ctxClass = document.getElementById('chart-classifications').getContext('2d');
+                if (chartClassInstance) chartClassInstance.destroy();
+                chartClassInstance = new Chart(ctxClass, {
+                    type: 'pie',
+                    data: {
+                        labels: Object.keys(data.classification_breakdown),
+                        datasets: [{
+                            data: Object.values(data.classification_breakdown),
+                            backgroundColor: ['#0d9488', '#0284c7', '#e11d48', '#f59e0b', '#8b5cf6']
+                        }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false }
+                });
+
+                // Top chems table
+                const chemsTbody = document.getElementById('top-chems-tbody');
+                chemsTbody.innerHTML = data.top_chemicals.length 
+                    ? data.top_chemicals.map(c => `
+                        <tr class="hover:bg-slate-50">
+                            <td class="p-3 font-bold text-slate-800">${c.name}</td>
+                            <td class="p-3 text-slate-600">${c.ingredient}</td>
+                            <td class="p-3 text-right font-mono font-bold text-teal-700">${c.count}</td>
+                        </tr>
+                    `).join('')
+                    : '<tr><td colspan="3" class="p-4 text-center text-slate-400">Sin datos de aplicación aún.</td></tr>';
+
+                // Top clients table
+                const clientsTbody = document.getElementById('top-clients-tbody');
+                clientsTbody.innerHTML = data.top_clients.length
+                    ? data.top_clients.map(c => `
+                        <tr class="hover:bg-slate-50">
+                            <td class="p-3 font-bold text-slate-800">${c.name}</td>
+                            <td class="p-3 text-slate-600">${c.branches_count}</td>
+                            <td class="p-3 text-right font-mono font-bold text-indigo-700">${c.count}</td>
+                        </tr>
+                    `).join('')
+                    : '<tr><td colspan="3" class="p-4 text-center text-slate-400">Sin datos de clientes aún.</td></tr>';
+
             } catch(e) { console.error(e); }
         }
 
@@ -583,7 +1057,7 @@
                         <div class="text-center py-10 bg-slate-50 rounded-xl border border-slate-200">
                             <i class="fa-solid fa-folder-open text-3xl text-slate-300 mb-2"></i>
                             <p class="text-sm font-semibold text-slate-600">No hay certificados registrados aún</p>
-                            <p class="text-xs text-slate-400 mt-1">Usa la pestaña "Registrar Servicio" o "Ingesta Masiva CSV".</p>
+                            <p class="text-xs text-slate-400 mt-1">Usa la pestaña "Registrar Servicio" o "Ingesta CSV".</p>
                         </div>
                     `;
                     return;
@@ -594,14 +1068,19 @@
                     const allExp = [...client.expiring_7_days, ...client.expiring_15_days, ...client.expiring_30_days];
                     html += `
                         <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
-                            <div class="flex justify-between items-center pb-3 border-b border-slate-100">
+                            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pb-3 border-b border-slate-100">
                                 <div>
                                     <h3 class="font-bold text-slate-900 text-sm">${client.legal_name}</h3>
                                     <p class="text-xs text-slate-400">RFC: ${client.rfc}</p>
                                 </div>
-                                <a href="/api/v1/portal/matrix/${client.client_id}/certificates/zip" class="text-xs bg-slate-900 hover:bg-slate-800 text-white font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition">
-                                    <i class="fa-solid fa-file-zipper"></i> Descargar Todo en ZIP
-                                </a>
+                                <div class="flex items-center gap-2">
+                                    <a href="/portal/c/${client.portal_slug}" target="_blank" class="text-xs bg-brand-50 hover:bg-brand-100 text-brand-700 border border-brand-300 font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition">
+                                        <i class="fa-solid fa-arrow-up-right-from-square"></i> Portal Cliente
+                                    </a>
+                                    <a href="/api/v1/portal/matrix/${client.client_id}/certificates/zip" class="text-xs bg-slate-900 hover:bg-slate-800 text-white font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition">
+                                        <i class="fa-solid fa-file-zipper"></i> Descargar ZIP
+                                    </a>
+                                </div>
                             </div>
                             <div class="mt-3 overflow-x-auto">
                                 <table class="w-full text-left text-xs">
@@ -724,15 +1203,96 @@
                         <td class="p-3"><span class="bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded text-[10px] font-semibold">${b.classification}</span></td>
                         <td class="p-3 text-slate-600">${b.responsible_contact_name} (${b.phone})</td>
                         <td class="p-3 text-right">
-                            ${b.client ? `<a href="/api/v1/portal/matrix/${b.client_id}/certificates/zip" class="text-xs bg-slate-900 text-white px-2 py-1 rounded hover:bg-slate-800"><i class="fa-solid fa-file-zipper"></i> ZIP</a>` : ''}
+                            ${b.client ? `
+                                <div class="flex items-center justify-end gap-1.5">
+                                    <button onclick="openPortalModal('${b.client.id}')" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold px-2 py-1 rounded border border-slate-300 flex items-center gap-1">
+                                        <i class="fa-solid fa-gear"></i> Enlace B2B
+                                    </button>
+                                    <a href="/portal/c/${b.client.portal_slug}" target="_blank" class="text-xs bg-brand-50 hover:bg-brand-100 text-brand-700 font-bold px-2 py-1 rounded border border-brand-200 flex items-center gap-1">
+                                        <i class="fa-solid fa-arrow-up-right-from-square"></i> Abrir
+                                    </a>
+                                </div>
+                            ` : ''}
                         </td>
                     </tr>
                 `).join('');
             } catch(e) { console.error(e); }
         }
 
+        async function openPortalModal(clientId) {
+            try {
+                const res = await fetch(`/api/v1/clients/${clientId}/portal-config`);
+                const data = await res.json();
+                
+                document.getElementById('modal-portal-client-id').value = data.client_id;
+                document.getElementById('portal-modal-client-name').innerText = `${data.legal_name} (${data.rfc})`;
+                document.getElementById('modal-portal-slug').value = data.portal_slug;
+                document.getElementById('modal-portal-enabled').checked = data.portal_is_enabled;
+                document.getElementById('modal-portal-password').value = '';
+                
+                const badge = document.getElementById('badge-has-pwd');
+                if (data.has_password) {
+                    badge.innerText = 'Protegido con Contraseña';
+                    badge.className = 'text-[10px] bg-rose-200 text-rose-800 font-semibold px-2 py-0.5 rounded';
+                } else {
+                    badge.innerText = 'Sin contraseña (Acceso directo)';
+                    badge.className = 'text-[10px] bg-emerald-200 text-emerald-800 font-semibold px-2 py-0.5 rounded';
+                }
+
+                updateModalUrlPreview();
+                document.getElementById('modal-portal-config').classList.remove('hidden');
+            } catch(e) { alert('Error al cargar ajustes'); }
+        }
+
+        function closePortalModal() {
+            document.getElementById('modal-portal-config').classList.add('hidden');
+        }
+
+        function updateModalUrlPreview() {
+            const slug = document.getElementById('modal-portal-slug').value;
+            document.getElementById('modal-full-url-preview').innerText = window.location.origin + '/portal/c/' + slug;
+        }
+
+        document.getElementById('modal-portal-slug').addEventListener('input', updateModalUrlPreview);
+
+        async function savePortalConfig(e) {
+            e.preventDefault();
+            const clientId = document.getElementById('modal-portal-client-id').value;
+            const payload = {
+                portal_slug: document.getElementById('modal-portal-slug').value.trim(),
+                portal_password: document.getElementById('modal-portal-password').value,
+                portal_is_enabled: document.getElementById('modal-portal-enabled').checked
+            };
+
+            try {
+                const res = await fetch(`/api/v1/clients/${clientId}/portal-config`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if(!res.ok) throw new Error((await res.json()).detail || 'Error al guardar');
+                alert('¡Configuración de enlace permanente actualizada exitosamente!');
+                closePortalModal();
+                loadClientsAndBranches();
+            } catch(err) {
+                alert('Error: ' + err.message);
+            }
+        }
+
+        function copyModalUrl() {
+            const url = document.getElementById('modal-full-url-preview').innerText;
+            navigator.clipboard.writeText(url).then(() => {
+                alert('¡Enlace permanente copiado al portapapeles!\n' + url);
+            });
+        }
+
+        function testModalPortal() {
+            const slug = document.getElementById('modal-portal-slug').value;
+            window.open('/portal/c/' + slug, '_blank');
+        }
+
         async function prepareNewServiceForm() {
-            await Promise.all([loadClientsAndBranches(), loadUsers(), loadChemicals()]);
+            await Promise.all([loadClientsAndBranches(), loadUsers(), loadChemicals(), loadCompanyConfig()]);
             const branchSelect = document.getElementById('srv-branch-id');
             const techSelect = document.getElementById('srv-tech-id');
 
@@ -817,9 +1377,9 @@
                 proc_thermofogging: document.getElementById('srv-proc-thermo').checked,
                 results_summary: document.getElementById('srv-results').value,
                 observations: document.getElementById('srv-obs').value,
-                sanitary_license_number: document.getElementById('srv-license').value,
-                sanitary_responsible_name: document.getElementById('srv-resp-name').value,
-                sanitary_responsible_id: document.getElementById('srv-resp-id').value,
+                sanitary_license_number: document.getElementById('srv-license').value || null,
+                sanitary_responsible_name: document.getElementById('srv-resp-name').value || null,
+                sanitary_responsible_id: document.getElementById('srv-resp-id').value || null,
                 chemicals_applied: chemicals_applied
             };
 
@@ -847,7 +1407,9 @@
             const payload = {
                 legal_name: document.getElementById('cli-name').value,
                 rfc: document.getElementById('cli-rfc').value.toUpperCase(),
-                master_contract_number: document.getElementById('cli-contract').value || null
+                master_contract_number: document.getElementById('cli-contract').value || null,
+                portal_slug: document.getElementById('cli-slug').value.trim() || null,
+                portal_password: document.getElementById('cli-pwd').value.trim() || null
             };
             try {
                 const res = await fetch('/api/v1/clients', {
@@ -856,7 +1418,7 @@
                     body: JSON.stringify(payload)
                 });
                 if(!res.ok) throw new Error((await res.json()).detail || 'Error');
-                alert('Cliente Matriz registrado.');
+                alert('Cliente Matriz registrado con su enlace permanente.');
                 e.target.reset();
                 loadClientsAndBranches();
             } catch(err) { alert('Error: ' + err.message); }
@@ -975,6 +1537,7 @@
         }
 
         // Carga inicial
+        loadCompanyConfig();
         loadDashboardData();
     </script>
 </body>

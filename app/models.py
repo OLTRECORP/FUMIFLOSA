@@ -59,6 +59,38 @@ class AreaType(str, PyEnum):
 
 
 # ============================================================================
+# 0. CONFIGURACIÓN DE LA EMPRESA BASE Y DATOS FISCALES
+# ============================================================================
+class CompanyConfig(Base, TimestampMixin):
+    """Configuración y datos fiscales de la empresa de fumigación prestadora de servicios."""
+    __tablename__ = "company_config"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    company_name: Mapped[str] = mapped_column(String(255), nullable=False, default="FUMIFLOSA S.A. DE C.V.") # Razón Social
+    trade_name: Mapped[str] = mapped_column(String(255), nullable=False, default="FUMIFLOSA - Control de Plagas Urbanas") # Nombre Comercial
+    rfc: Mapped[str] = mapped_column(String(13), nullable=False, default="FUM200101XYZ")
+    tax_regime: Mapped[Optional[str]] = mapped_column(String(100), nullable=True, default="601 - General de Ley Personas Morales")
+    fiscal_address: Mapped[str] = mapped_column(String(500), nullable=False, default="Av. Insurgentes Sur 1200, Benito Juárez, CDMX, C.P. 03100")
+    phone: Mapped[str] = mapped_column(String(50), nullable=False, default="55-1234-5678")
+    email: Mapped[str] = mapped_column(String(255), nullable=False, default="contacto@fumiflosa.mx")
+    website: Mapped[Optional[str]] = mapped_column(String(255), nullable=True, default="https://fumiflosa.mx")
+    
+    # Datos Sanitarios y Normativos NOM-256
+    sanitary_license_number: Mapped[str] = mapped_column(String(100), nullable=False, default="2023-15A-099")
+    sanitary_responsible_name: Mapped[str] = mapped_column(String(255), nullable=False, default="Biól. Roberto Sánchez Martínez")
+    sanitary_responsible_id: Mapped[Optional[str]] = mapped_column(String(100), nullable=True, default="CED-8849201")
+    stps_registration_number: Mapped[Optional[str]] = mapped_column(String(100), nullable=True, default="FUM-STPS-DC3-2023")
+    logo_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    
+    sintox_emergency_phones: Mapped[str] = mapped_column(
+        String(255), nullable=False, default="01-800-0092800 / 800-009-2800 / CDMX 55-5598-6659"
+    )
+    default_reentry_hours: Mapped[int] = mapped_column(Integer, default=2, nullable=False)
+    default_validity_days: Mapped[int] = mapped_column(Integer, default=30, nullable=False)
+    terms_and_notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+
+
+# ============================================================================
 # 1. USUARIOS Y ROLES
 # ============================================================================
 class User(Base, TimestampMixin, SoftDeleteMixin):
@@ -86,8 +118,12 @@ class User(Base, TimestampMixin, SoftDeleteMixin):
 
 
 # ============================================================================
-# 2. CLIENTES Y SUCURSALES (Jerarquía Institucional)
+# 2. CLIENTES Y SUCURSALES (Jerarquía Institucional y Portal Permanente)
 # ============================================================================
+def generate_portal_slug():
+    return uuid.uuid4().hex[:10]
+
+
 class Client(Base, TimestampMixin, SoftDeleteMixin):
     """Cliente Corporativo / Matriz (ej. IMSS Órgano de Operación Administrativa)."""
     __tablename__ = "clients"
@@ -97,6 +133,11 @@ class Client(Base, TimestampMixin, SoftDeleteMixin):
     rfc: Mapped[str] = mapped_column(String(13), unique=True, nullable=False, index=True)
     master_contract_number: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     tax_regime: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    
+    # Portal Permanente Público/Privado para Clientes (URL estática)
+    portal_slug: Mapped[str] = mapped_column(String(100), unique=True, index=True, nullable=False, default=generate_portal_slug)
+    portal_password: Mapped[Optional[str]] = mapped_column(String(255), nullable=True) # Contraseña opcional
+    portal_is_enabled: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     
     # Relaciones
     branches: Mapped[List["Branch"]] = relationship("Branch", back_populates="client", cascade="all, delete-orphan")

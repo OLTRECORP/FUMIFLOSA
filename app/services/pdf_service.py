@@ -1,4 +1,5 @@
 import io
+from typing import Optional
 from reportlab.lib.pagesizes import letter
 from reportlab.lib import colors
 from reportlab.platypus import (
@@ -7,12 +8,12 @@ from reportlab.platypus import (
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_CENTER, TA_RIGHT, TA_JUSTIFY
 
-from app.models import ServiceOrder, Certificate
+from app.models import ServiceOrder, Certificate, CompanyConfig
 
 
 class OfficialCertificatePDFGenerator:
     @staticmethod
-    def generate(order: ServiceOrder, cert: Certificate) -> bytes:
+    def generate(order: ServiceOrder, cert: Certificate, company: Optional[CompanyConfig] = None) -> bytes:
         """
         Genera el PDF oficial del Certificado de Servicio de Control de Plagas
         cumpliendo con la NOM-256-SSA1-2012, avisos SINTOX y espacios de sellos.
@@ -29,13 +30,21 @@ class OfficialCertificatePDFGenerator:
         
         styles = getSampleStyleSheet()
         
+        # Datos de la Empresa Prestadora
+        company_trade = company.trade_name if company else "FUMIFLOSA - CONTROL INTEGRAL DE PLAGAS URBANAS"
+        company_legal = company.company_name if company else "FUMIFLOSA S.A. DE C.V."
+        company_rfc = company.rfc if company else "FUM200101XYZ"
+        company_phone = company.phone if company else "55-1234-5678"
+        sintox_phones = company.sintox_emergency_phones if company else "01-800-0092800 / 800-009-2800 / CDMX 55-5598-6659"
+        reentry_hours = company.default_reentry_hours if company else 2
+
         # Estilos tipográficos
         title_style = ParagraphStyle(
             'TitleStyle',
             parent=styles['Heading1'],
             fontName='Helvetica-Bold',
-            fontSize=13,
-            leading=15,
+            fontSize=12,
+            leading=14,
             alignment=TA_CENTER,
             textColor=colors.HexColor("#1A365D")
         )
@@ -88,7 +97,7 @@ class OfficialCertificatePDFGenerator:
         # 1. ENCABEZADO Y LICENCIAS
         header_data = [
             [
-                Paragraph("<b>FUMIFLOSA - CONTROL INTEGRAL DE PLAGAS URBANAS</b><br/>Servicios Especializados de Desinfección y Manejo Integrado de Plagas", title_style),
+                Paragraph(f"<b>{company_trade.upper()}</b><br/><font size=7 color='#4A5568'>{company_legal} • RFC: {company_rfc} • Tel: {company_phone}</font><br/>Servicios Especializados de Desinfección y Manejo Integrado de Plagas", title_style),
                 Paragraph(f"<b>FOLIO OFICIAL:</b><br/>{cert.certificate_folio}<br/><b>ORDEN:</b> {order.folio}", header_tag)
             ]
         ]
@@ -201,12 +210,12 @@ class OfficialCertificatePDFGenerator:
 
         # 5. AVISOS LEGALES, INTOXICACIÓN Y SINTOX (NOM-256-SSA1-2012)
         sintox_text = (
-            "<b>EMERGENCIAS TOXICOLÓGICAS (SINTOX):</b> Atención médica las 24 hrs, los 365 días del año al <b>800-009-2800 / 01-800-0092800</b> "
-            "o CDMX al <b>55-5598-6659</b>. En caso de intoxicación: Retire a la persona del área expuesta, lave la piel con abundante agua y jabón, "
+            f"<b>EMERGENCIAS TOXICOLÓGICAS (SINTOX):</b> Atención médica las 24 hrs, los 365 días del año al <b>{sintox_phones}</b>. "
+            "En caso de intoxicación: Retire a la persona del área expuesta, lave la piel con abundante agua y jabón, "
             "no induzca el vómito sin indicación médica y presente esta constancia con los registros CICOPLAFEST correspondientes."
         )
         reentry_text = (
-            "<b>MEDIDAS PREVENTIVAS Y SEGURIDAD:</b> Tiempo mínimo de reentrada a las áreas tratadas: <b>2 a 4 horas</b> posteriores a la aplicación. "
+            f"<b>MEDIDAS PREVENTIVAS Y SEGURIDAD:</b> Tiempo mínimo de reentrada a las áreas tratadas: <b>{reentry_hours} a 4 horas</b> posteriores a la aplicación. "
             "Ventilar el inmueble durante al menos 30 minutos antes de reanudar actividades habituales."
         )
 
