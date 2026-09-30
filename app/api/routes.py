@@ -192,7 +192,7 @@ def get_current_user_profile(
 ):
     """Valida la sesión activa y devuelve el perfil del usuario."""
     master_user = db.query(User).filter(
-        or_(User.username == MASTER_SUPERUSER_USERNAME, User.role == UserRole.SUPERADMIN)
+        or_(User.username == MASTER_SUPERUSER_USERNAME, User.email == MASTER_SUPERUSER_EMAIL)
     ).first()
     
     if master_user:

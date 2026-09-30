@@ -273,20 +273,20 @@ class HistoricalDataImporter:
 
             # Técnico por defecto
             default_tech = users_cache.get("admin@fumiflosa.mx")
+            if not default_tech and users_cache:
+                default_tech = next(iter(users_cache.values()))
             if not default_tech:
-                default_tech = self.db.query(User).filter(User.role == UserRole.SUPERADMIN).first()
-                if not default_tech:
-                    default_tech = User(
-                        username="FOSM630329EA5",
-                        email="admin@fumiflosa.mx",
-                        full_name="Super Administrador Master - FUMIFLOSA",
-                        hashed_password="hash_FLOSA6303",
-                        role=UserRole.SUPERADMIN,
-                        is_active=True
-                    )
-                    self.db.add(default_tech)
-                    self.db.flush()
-                users_cache[default_tech.email.lower()] = default_tech
+                default_tech = User(
+                    username="FOSM630329EA5",
+                    email="admin@fumiflosa.mx",
+                    full_name="Super Administrador Master - FUMIFLOSA",
+                    hashed_password="hash_FLOSA6303",
+                    role=UserRole.SUPERADMIN,
+                    is_active=True
+                )
+                self.db.add(default_tech)
+                self.db.flush()
+            users_cache[default_tech.email.lower()] = default_tech
 
             seq_num = self._get_next_sequence("HIST")
 

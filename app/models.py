@@ -101,7 +101,11 @@ class User(Base, TimestampMixin, SoftDeleteMixin):
     email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False, index=True)
     hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
     full_name: Mapped[str] = mapped_column(String(255), nullable=False)
-    role: Mapped[UserRole] = mapped_column(Enum(UserRole), nullable=False, default=UserRole.TECNICO_CAMPO)
+    role: Mapped[UserRole] = mapped_column(
+        Enum(UserRole, values_callable=lambda x: [e.value for e in x], name="userrole"),
+        nullable=False,
+        default=UserRole.TECNICO_CAMPO
+    )
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     
     # Requerimientos STPS para Técnicos
@@ -155,7 +159,9 @@ class Branch(Base, TimestampMixin, SoftDeleteMixin):
     address: Mapped[str] = mapped_column(String(500), nullable=False)
     phone: Mapped[str] = mapped_column(String(50), nullable=False)
     classification: Mapped[BranchClassification] = mapped_column(
-        Enum(BranchClassification), default=BranchClassification.COMERCIAL, nullable=False
+        Enum(BranchClassification, values_callable=lambda x: [e.value for e in x], name="branchclassification"),
+        default=BranchClassification.COMERCIAL,
+        nullable=False
     )
     responsible_contact_name: Mapped[str] = mapped_column(String(255), nullable=False)
     responsible_contact_email: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
@@ -262,7 +268,10 @@ class CertificateChemical(Base, TimestampMixin):
     )
     
     dose_applied: Mapped[str] = mapped_column(String(100), nullable=False)  # ej. "10 ml / Litro"
-    area_type: Mapped[AreaType] = mapped_column(Enum(AreaType), nullable=False)
+    area_type: Mapped[AreaType] = mapped_column(
+        Enum(AreaType, values_callable=lambda x: [e.value for e in x], name="areatype"),
+        nullable=False
+    )
     treated_zones_description: Mapped[str] = mapped_column(String(255), nullable=False) # ej. "Cocina, Almacén, Sótanos"
     application_method: Mapped[str] = mapped_column(String(100), nullable=False) # ej. "Aspersión Manual"
 
