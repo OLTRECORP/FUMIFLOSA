@@ -7,6 +7,28 @@ from app.models import UserRole, BranchClassification, AreaType
 
 
 # ----------------------------------------------------------------------------
+# Auth & Super Usuario Login
+# ----------------------------------------------------------------------------
+class LoginRequest(BaseModel):
+    username: str = Field(..., description="Usuario o Email (ej. FOSM630329EA5 o admin@fumiflosa.mx)")
+    password: str = Field(..., description="Contraseña de acceso")
+
+
+class AuthUserInfo(BaseModel):
+    id: uuid.UUID
+    username: Optional[str] = None
+    email: str
+    full_name: str
+    role: UserRole
+
+
+class LoginResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    user: AuthUserInfo
+
+
+# ----------------------------------------------------------------------------
 # Company Config (Configuración de la Empresa Base y Datos Fiscales)
 # ----------------------------------------------------------------------------
 class CompanyConfigBase(BaseModel):
@@ -60,6 +82,7 @@ class CompanyConfigResponse(CompanyConfigBase):
 # Users
 # ----------------------------------------------------------------------------
 class UserBase(BaseModel):
+    username: Optional[str] = None
     email: EmailStr
     full_name: str = Field(..., max_length=255)
     role: UserRole = UserRole.TECNICO_CAMPO
@@ -75,6 +98,7 @@ class UserCreate(UserBase):
 
 
 class UserUpdate(BaseModel):
+    username: Optional[str] = None
     email: Optional[EmailStr] = None
     full_name: Optional[str] = None
     role: Optional[UserRole] = None
@@ -340,25 +364,25 @@ class AdvancedAnalyticsResponse(BaseModel):
     compliance_rate: float
     
     # Tendencia mensual
-    monthly_trend: List[Dict[str, Any]] # [{"month": "Ene 2026", "count": 14}]
+    monthly_trend: List[Dict[str, Any]]
     
     # Plagas atendidas
-    pest_breakdown: Dict[str, int] # {"Rastreros": 45, "Roedores": 30, "Voladores": 12, "Otros": 5}
+    pest_breakdown: Dict[str, int]
     
     # Métodos de aplicación
-    procedure_breakdown: Dict[str, int] # {"Aspersión": 50, "Cebos": 25, "Geles": 18, ...}
+    procedure_breakdown: Dict[str, int]
     
     # Químicos más utilizados
-    top_chemicals: List[Dict[str, Any]] # [{"name": "Biothrine", "count": 35, "ingredient": "Deltametrina"}]
+    top_chemicals: List[Dict[str, Any]]
     
     # Distribución por clasificación de sucursal
-    classification_breakdown: Dict[str, int] # {"Hospitalaria": 60, "Comercial": 30, ...}
+    classification_breakdown: Dict[str, int]
     
     # Estado de vigencias
-    validity_health: Dict[str, int] # {"vigente": 80, "proximo_15d": 12, "critico_7d": 5, "vencido": 3}
+    validity_health: Dict[str, int]
     
     # Top clientes con mayor número de servicios
-    top_clients: List[Dict[str, Any]] # [{"name": "IMSS", "count": 42, "branches_count": 18}]
+    top_clients: List[Dict[str, Any]]
 
 
 # ----------------------------------------------------------------------------

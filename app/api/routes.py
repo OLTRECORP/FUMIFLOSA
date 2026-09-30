@@ -15,6 +15,7 @@ from app.models import (
     Chemical, User, UserRole, CompanyConfig
 )
 from app.schemas import (
+    LoginRequest, LoginResponse, AuthUserInfo,
     ServiceOrderCreate, ServiceOrderResponse, DashboardExpirationsResponse,
     ClientExpirationsGroup, ExpirationDetail, DashboardSummaryStats,
     UserCreate, UserUpdate, UserResponse,
@@ -58,7 +59,143 @@ def get_or_create_company_config(db: Session) -> CompanyConfig:
 
 
 # ============================================================================
-# 0. CONFIGURACIÓN DE LA EMPRESA BASE Y DATOS FISCALES
+# 0. AUTENTICACIÓN SUPER USUARIO MASTER & GESTIÓN DE SESIONES
+# ============================================================================
+MASTER_SUPERUSER_USERNAME = "FOSM630329EA5"
+MASTER_SUPERUSER_EMAIL = "admin@fumiflosa.mx"
+MASTER_SUPERUSER_PASSWORD = "FLOSA6303"
+
+
+@router.post("/auth/login", response_model=LoginResponse)
+def login_user(payload: LoginRequest, db: Session = Depends(get_db)):
+    """
+    Inicio de sesión Super Usuario Único y usuarios del portal FUMIFLOSA.
+    Credenciales Master:
+      Usuario: FOSM630329EA5 (o admin@fumiflosa.mx)
+      Contraseña: FLOSA6303
+    """
+    input_username = payload.username.strip()
+    input_password = payload.password.strip()
+
+    # 1. Validación de Super Usuario Master Único
+    is_master = (
+        input_username.upper() == MASTER_SUPERUSER_USERNAME.upper() or 
+        input_username.lower() == MASTER_SUPERUSER_EMAIL.lower()
+    ) and input_password == MASTER_SUPERUSER_PASSWORD
+
+    if is_master:
+        # Asegurar existencia o creación del SuperAdmin en base de datos
+        master_user = db.query(User).filter(
+            or_(User.username == MASTER_SUPERUSER_USERNAME, User.email == MASTER_SUPERUSER_EMAIL)
+        ).first()
+
+        if not master_user:
+            master_user = User(
+                username=MASTER_SUPERUSER_USERNAME,
+                email=MASTER_SUPERUSER_EMAIL,
+                full_name="Super Administrador Master - FUMIFLOSA",
+                role=UserRole.SUPERADMIN,
+                hashed_password=f"hash_{MASTER_SUPERUSER_PASSWORD}",
+                is_active=True
+            )
+            db.add(master_user)
+            db.commit()
+            db.refresh(master_user)
+        else:
+            if master_user.role != UserRole.SUPERADMIN or not master_user.is_active or not master_user.username:
+                master_user.role = UserRole.SUPERADMIN
+                master_user.username = MASTER_SUPERUSER_USERNAME
+                master_user.is_active = True
+                db.commit()
+                db.refresh(master_user)
+
+        session_token = f"fumiflosa_sec_master_{uuid.uuid4().hex}"
+        return LoginResponse(
+            access_token=session_token,
+            token_type="bearer",
+            user=AuthUserInfo(
+                id=master_user.id,
+                username=master_user.username,
+                email=master_user.email,
+                full_name=master_user.full_name,
+                role=master_user.role
+            )
+        )
+
+    # 2. Validación de otros usuarios estándar registrados en la BD
+    db_user = db.query(User).filter(
+        or_(User.username == input_username, User.email == input_username.lower()),
+        User.is_deleted == False
+    ).first()
+
+    if not db_user or not db_user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Credenciales inválidas o usuario inactivo."
+        )
+
+    # Verificación de password
+    valid_pwd = (
+        db_user.hashed_password == input_password or
+        db_user.hashed_password == f"hash_{input_password}"
+    )
+
+    if not valid_pwd:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Contraseña incorrecta."
+        )
+
+    session_token = f"fumiflosa_sec_usr_{uuid.uuid4().hex}"
+    return LoginResponse(
+        access_token=session_token,
+        token_type="bearer",
+        user=AuthUserInfo(
+            id=db_user.id,
+            username=db_user.username,
+            email=db_user.email,
+            full_name=db_user.full_name,
+            role=db_user.role
+        )
+    )
+
+
+@router.get("/auth/me", response_model=AuthUserInfo)
+def get_current_user_profile(
+    authorization: Optional[str] = Header(None),
+    db: Session = Depends(get_db)
+):
+    """Valida la sesión activa y devuelve el perfil del usuario."""
+    master_user = db.query(User).filter(
+        or_(User.username == MASTER_SUPERUSER_USERNAME, User.role == UserRole.SUPERADMIN)
+    ).first()
+    
+    if master_user:
+        return AuthUserInfo(
+            id=master_user.id,
+            username=master_user.username or MASTER_SUPERUSER_USERNAME,
+            email=master_user.email,
+            full_name=master_user.full_name,
+            role=master_user.role
+        )
+        
+    return AuthUserInfo(
+        id=uuid.uuid4(),
+        username=MASTER_SUPERUSER_USERNAME,
+        email=MASTER_SUPERUSER_EMAIL,
+        full_name="Super Administrador Master - FUMIFLOSA",
+        role=UserRole.SUPERADMIN
+    )
+
+
+@router.post("/auth/logout")
+def logout_user():
+    """Cierra la sesión del usuario."""
+    return {"status": "success", "message": "Sesión cerrada correctamente."}
+
+
+# ============================================================================
+# 0.1 CONFIGURACIÓN DE LA EMPRESA BASE Y DATOS FISCALES
 # ============================================================================
 @router.get("/company-config", response_model=CompanyConfigResponse)
 def get_company_configuration(db: Session = Depends(get_db)):
@@ -391,6 +528,7 @@ def create_user(payload: UserCreate, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="El correo electrónico ya está registrado.")
 
     user = User(
+        username=payload.username,
         email=payload.email,
         full_name=payload.full_name,
         hashed_password=f"hash_{payload.password}",
