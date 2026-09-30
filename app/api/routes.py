@@ -1149,13 +1149,20 @@ def download_matrix_certificates_zip(client_id: uuid.UUID, db: Session = Depends
 @router.post("/import/historical-csv")
 async def import_historical_csv(file: UploadFile = File(...), db: Session = Depends(get_db)):
     """Procesa un archivo CSV histórico y migra órdenes/certificados en lote."""
-    if not file.filename.endswith('.csv'):
-        raise HTTPException(status_code=400, detail="El archivo debe ser un CSV válido.")
+    if not file.filename.lower().endswith('.csv'):
+        raise HTTPException(status_code=400, detail="El archivo debe ser un CSV válido (.csv).")
     
-    contents = await file.read()
-    importer = HistoricalDataImporter(db)
-    result = importer.process_csv(contents)
-    return {"status": "success", "result": result}
+    try:
+        contents = await file.read()
+        importer = HistoricalDataImporter(db)
+        result = importer.process_csv(contents)
+        return {"status": "success", "result": result}
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Error al procesar el CSV: {str(e)}")
 
 
 # ============================================================================

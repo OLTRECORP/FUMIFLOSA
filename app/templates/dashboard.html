@@ -2515,27 +2515,50 @@
 
             btn.disabled = true;
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Procesando...';
-            logBox.innerHTML = `> Iniciando carga del archivo: ${file.name}...\n> Parseando columnas y validando jerarquía Matriz/Sucursal...\n`;
+            logBox.innerHTML = `> Iniciando carga del archivo: ${file.name}...\n> Parseando columnas, normalizando químicos y validando jerarquía Matriz/Sucursal...\n`;
 
             try {
                 const res = await fetch('/api/v1/import/historical-csv', {
                     method: 'POST',
                     body: formData
                 });
-                const data = await res.json();
                 
-                if (res.ok) {
-                    logBox.innerHTML += `\n[ÉXITO] Migración completada:\n` +
-                        `- Clientes creados: ${data.result.clients_created}\n` +
-                        `- Sucursales creadas: ${data.result.branches_created}\n` +
-                        `- Órdenes y Certificados NOM-256 generados: ${data.result.orders_processed}\n\n` +
-                        `> Transacción confirmada en Base de Datos PostgreSQL.`;
+                const rawText = await res.text();
+                let data;
+                try {
+                    data = JSON.parse(rawText);
+                } catch (jsonErr) {
+                    data = { detail: rawText || `Error HTTP ${res.status}: ${res.statusText}` };
+                }
+                
+                if (res.ok && data.result) {
+                    const r = data.result;
+                    let summaryText = `\n[ÉXITO] Migración completada exitosamente:\n` +
+                        `- Filas totales procesadas: ${r.total_rows || 0}\n` +
+                        `- Clientes creados: ${r.clients_created || 0} (vinculados existentes: ${r.clients_linked || 0})\n` +
+                        `- Sucursales creadas: ${r.branches_created || 0} (vinculadas existentes: ${r.branches_linked || 0})\n` +
+                        `- Químicos / Ingredientes Activos creados: ${r.chemicals_created || 0} (enlazados: ${r.chemicals_linked || 0})\n` +
+                        `- Líneas de aplicación registradas: ${r.applied_chemicals_total || 0}\n` +
+                        `- Órdenes y Certificados generados: ${r.orders_processed || 0}\n` +
+                        `- Omitidos por duplicidad: ${r.duplicates_skipped || 0}\n`;
+
+                    if (r.errors && r.errors.length > 0) {
+                        summaryText += `\n[AVISOS / DETALLES DE FILAS]:\n` + r.errors.slice(0, 15).map(e => `  • ${e}`).join('\n');
+                        if (r.errors.length > 15) {
+                            summaryText += `\n  ... y ${r.errors.length - 15} avisos más.`;
+                        }
+                    }
+
+                    summaryText += `\n\n> Transacción confirmada en Base de Datos. Datos actualizados.`;
+                    logBox.innerHTML += summaryText;
                     loadDashboardData();
+                    if (typeof loadClientsList === 'function') loadClientsList();
+                    if (typeof loadChemicalsList === 'function') loadChemicalsList();
                 } else {
-                    logBox.innerHTML += `\n[ERROR]: ${data.detail || 'Falla al procesar el archivo.'}`;
+                    logBox.innerHTML += `\n[ERROR]: ${data.detail || data.message || 'Falla al procesar el archivo CSV.'}`;
                 }
             } catch (err) {
-                logBox.innerHTML += `\n[ERROR DE RED]: ${err.message}`;
+                logBox.innerHTML += `\n[ERROR DE COMUNICACIÓN]: ${err.message}`;
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = '<i class="fa-solid fa-play"></i> Procesar Migración Atómica';

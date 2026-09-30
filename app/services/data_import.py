@@ -292,197 +292,200 @@ class HistoricalDataImporter:
 
             for idx, row in df.iterrows():
                 row_num = idx + 2
+                try:
+                    rfc = (row.get('rfc') or '').strip().upper()[:13]
+                    razon_social = (row.get('razon_social') or '').strip()
+                    sucursal_nombre = (row.get('sucursal_nombre') or '').strip()
+                    sucursal_direccion = (row.get('sucursal_direccion') or '').strip()
 
-                rfc = (row.get('rfc') or '').strip().upper()
-                razon_social = (row.get('razon_social') or '').strip()
-                sucursal_nombre = (row.get('sucursal_nombre') or '').strip()
-                sucursal_direccion = (row.get('sucursal_direccion') or '').strip()
+                    if not razon_social and not sucursal_nombre:
+                        summary["errors"].append(f"Línea {row_num}: Razón Social y Sucursal vacías (omitida).")
+                        continue
 
-                if not razon_social and not sucursal_nombre:
-                    summary["errors"].append(f"Línea {row_num}: Razón Social y Sucursal vacías (omitida).")
-                    continue
+                    if not razon_social:
+                        razon_social = sucursal_nombre or "CLIENTE GENERAL FUMIFLOSA"
+                    if not sucursal_nombre:
+                        sucursal_nombre = "Matriz / Principal"
 
-                if not razon_social:
-                    razon_social = sucursal_nombre or "CLIENTE GENERAL FUMIFLOSA"
-                if not sucursal_nombre:
-                    sucursal_nombre = "Matriz / Principal"
+                    # Parseo de Fecha de Expedición
+                    exp_date = self._parse_date(row.get(date_col))
+                    if not exp_date:
+                        summary["errors"].append(f"Línea {row_num}: Fecha de expedición '{row.get(date_col)}' inválida o no reconocida.")
+                        continue
 
-                # Parseo de Fecha de Expedición
-                exp_date = self._parse_date(row.get(date_col))
-                if not exp_date:
-                    summary["errors"].append(f"Línea {row_num}: Fecha de expedición '{row.get(date_col)}' inválida.")
-                    continue
+                    # 1. Gestión / Upsert de Cliente Matriz
+                    client = None
+                    if rfc:
+                        client = clients_by_rfc.get(rfc)
+                        if not client:
+                            client = clients_by_name.get(razon_social.upper())
 
-                # 1. Gestión / Upsert de Cliente Matriz
-                client = None
-                if rfc:
-                    client = clients_by_rfc.get(rfc)
-                    if not client:
+                    if not client and not rfc:
                         client = clients_by_name.get(razon_social.upper())
 
-                if not client and not rfc:
-                    client = clients_by_name.get(razon_social.upper())
+                    if not client:
+                        # Crear nuevo cliente
+                        if not rfc:
+                            # Generar RFC genérico único de 13 caracteres
+                            rfc = f"GEN{abs(hash(razon_social)) % 1000000000:09d}"[:13]
+                            while rfc in clients_by_rfc:
+                                rfc = f"GEN{abs(hash(razon_social + str(idx))) % 1000000000:09d}"[:13]
 
-                if not client:
-                    # Crear nuevo cliente
-                    if not rfc:
-                        # Generar RFC genérico único
-                        rfc = f"GEN{abs(hash(razon_social)) % 1000000000:09d}"[:13]
-                        while rfc in clients_by_rfc:
-                            rfc = f"GEN{abs(hash(razon_social + str(idx))) % 1000000000:09d}"[:13]
-
-                    new_client = Client(
-                        legal_name=razon_social,
-                        rfc=rfc,
-                        tax_regime=row.get('regimen_fiscal', '601 - General de Ley Personas Morales')
-                    )
-                    self.db.add(new_client)
-                    self.db.flush()
-                    clients_by_rfc[rfc] = new_client
-                    clients_by_name[razon_social.upper()] = new_client
-                    client = new_client
-                    summary["clients_created"] += 1
-                else:
-                    summary["clients_linked"] += 1
-
-                # 2. Gestión / Upsert de Sucursal
-                branch = branches_by_name.get((client.id, sucursal_nombre.upper()))
-                if not branch and sucursal_direccion and len(sucursal_direccion) > 5:
-                    branch = branches_by_addr.get((client.id, sucursal_direccion.upper()))
-
-                if not branch:
-                    new_branch = Branch(
-                        client_id=client.id,
-                        name=sucursal_nombre,
-                        address=sucursal_direccion or 'Domicilio no especificado',
-                        phone=(row.get('sucursal_telefono') or '5500000000').strip(),
-                        classification=BranchClassification.COMERCIAL,
-                        responsible_contact_name=(row.get('contacto_sucursal') or 'Encargado de Unidad').strip()
-                    )
-                    self.db.add(new_branch)
-                    self.db.flush()
-                    branches_by_name[(client.id, sucursal_nombre.upper())] = new_branch
-                    if sucursal_direccion:
-                        branches_by_addr[(client.id, sucursal_direccion.upper())] = new_branch
-                    branch = new_branch
-                    summary["branches_created"] += 1
-                else:
-                    summary["branches_linked"] += 1
-
-                # 3. Determinación de Folios y Validación de Duplicidad
-                input_folio = (row.get('folio') or '').strip().lstrip('/').strip()
-                if input_folio.lower() in ('nan', 'none', 'null'):
-                    input_folio = ''
-
-                if input_folio:
-                    cert_folio = input_folio
-                    order_folio = f"ORD-{input_folio}" if not input_folio.startswith("ORD-") else input_folio
-                else:
-                    cert_folio = f"HIST-CERT-{seq_num:06d}"
-                    order_folio = f"HIST-ORD-{seq_num:06d}"
-                    seq_num += 1
-
-                # Omitir si ya existe el certificado por folio
-                if cert_folio.upper() in existing_cert_folios:
-                    summary["errors"].append(f"Línea {row_num}: El certificado con folio '{cert_folio}' ya existe (omitido por duplicidad).")
-                    summary["duplicates_skipped"] += 1
-                    continue
-
-                # Omitir si ya existe un certificado con la misma (fecha_de_exp, sucursal_id)
-                if (exp_date, branch.id) in existing_cert_dates_branches:
-                    summary["errors"].append(f"Línea {row_num}: Ya existe un certificado emitido el {exp_date} para la sucursal '{branch.name}' (omitido por duplicidad).")
-                    summary["duplicates_skipped"] += 1
-                    continue
-
-                orig_order_folio = order_folio
-                col_idx = 1
-                while order_folio.upper() in existing_order_folios:
-                    order_folio = f"{orig_order_folio}-{col_idx}"
-                    col_idx += 1
-
-                # 4. Crear Orden de Servicio
-                service_start = datetime.combine(exp_date, time(9, 0), tzinfo=timezone.utc)
-                service_end = service_start + timedelta(hours=2)
-
-                service_order = ServiceOrder(
-                    folio=order_folio,
-                    branch_id=branch.id,
-                    technician_id=default_tech.id,
-                    service_start_date=service_start,
-                    service_end_date=service_end,
-                    pest_crawling_insects=True,
-                    pest_rodents=True,
-                    proc_aspersion=True,
-                    observations=(row.get('observaciones') or 'Servicio migrado históricamente conforme a NOM-256.').strip(),
-                    results_summary="Tratamiento integral preventivo y correctivo aplicado satisfactoriamente."
-                )
-                self.db.add(service_order)
-                self.db.flush()
-                existing_order_folios.add(order_folio.upper())
-
-                # 5. Crear Certificado NOM-256 Oficial
-                certificate = Certificate(
-                    service_order_id=service_order.id,
-                    certificate_folio=cert_folio,
-                    issue_date=exp_date,
-                    validity_start_date=exp_date,
-                    validity_end_date=exp_date + timedelta(days=validity_days),
-                    sanitary_license_number=sanitary_license,
-                    sanitary_responsible_name=sanitary_responsible,
-                    sanitary_responsible_id=sanitary_responsible_id
-                )
-                self.db.add(certificate)
-                self.db.flush()
-                existing_cert_folios.add(cert_folio.upper())
-                existing_cert_dates_branches.add((exp_date, branch.id))
-
-                # 6. Extraer y Persistir hasta 4 Químicos / Ingredientes Activos
-                chem_items = self._extract_chemicals_from_row(row.to_dict())
-
-                for item in chem_items:
-                    cico = item["cicoplafest"].upper().strip()
-                    c_name = item["name"].strip()
-                    c_active = item["active_ingredient"].strip()
-
-                    chem_entity = chems_by_cico.get(cico)
-                    if not chem_entity:
-                        chem_entity = chems_by_name.get(c_name.upper())
-                    if not chem_entity:
-                        chem_entity = chems_by_active.get(c_active.upper())
-
-                    if not chem_entity:
-                        chem_entity = Chemical(
-                            commercial_name=c_name,
-                            active_ingredient=c_active,
-                            cicoplafest_number=cico,
-                            authorized_dose_per_liter=item["dose"],
-                            compatible_methods=item["metodo"],
-                            toxicological_category="Precaución / Banda Verde",
-                            safety_interval_hours=2
+                        new_client = Client(
+                            legal_name=razon_social[:255],
+                            rfc=rfc[:13],
+                            tax_regime=str(row.get('regimen_fiscal') or '601 - General de Ley Personas Morales')[:100]
                         )
-                        self.db.add(chem_entity)
+                        self.db.add(new_client)
                         self.db.flush()
-                        chems_by_cico[cico] = chem_entity
-                        chems_by_name[c_name.upper()] = chem_entity
-                        chems_by_active[c_active.upper()] = chem_entity
-                        summary["chemicals_created"] += 1
+                        clients_by_rfc[rfc] = new_client
+                        clients_by_name[razon_social.upper()] = new_client
+                        client = new_client
+                        summary["clients_created"] += 1
                     else:
-                        summary["chemicals_linked"] += 1
+                        summary["clients_linked"] += 1
 
-                    area_t = self._detect_area_type(item["lugar"])
+                    # 2. Gestión / Upsert de Sucursal
+                    branch = branches_by_name.get((client.id, sucursal_nombre.upper()))
+                    if not branch and sucursal_direccion and len(sucursal_direccion) > 5:
+                        branch = branches_by_addr.get((client.id, sucursal_direccion.upper()))
 
-                    cert_chem = CertificateChemical(
-                        certificate_id=certificate.id,
-                        chemical_id=chem_entity.id,
-                        dose_applied=item["dose"],
-                        area_type=area_t,
-                        treated_zones_description=item["lugar"],
-                        application_method=item["metodo"]
+                    if not branch:
+                        new_branch = Branch(
+                            client_id=client.id,
+                            name=sucursal_nombre[:255],
+                            address=(sucursal_direccion or 'Domicilio no especificado')[:500],
+                            phone=(row.get('sucursal_telefono') or '5500000000').strip()[:50],
+                            classification=BranchClassification.COMERCIAL,
+                            responsible_contact_name=(row.get('contacto_sucursal') or 'Encargado de Unidad').strip()[:255]
+                        )
+                        self.db.add(new_branch)
+                        self.db.flush()
+                        branches_by_name[(client.id, sucursal_nombre.upper())] = new_branch
+                        if sucursal_direccion:
+                            branches_by_addr[(client.id, sucursal_direccion.upper())] = new_branch
+                        branch = new_branch
+                        summary["branches_created"] += 1
+                    else:
+                        summary["branches_linked"] += 1
+
+                    # 3. Determinación de Folios y Validación de Duplicidad
+                    input_folio = (row.get('folio') or '').strip().lstrip('/').strip()
+                    if input_folio.lower() in ('nan', 'none', 'null'):
+                        input_folio = ''
+
+                    if input_folio:
+                        cert_folio = input_folio[:100]
+                        order_folio = (f"ORD-{input_folio}" if not input_folio.startswith("ORD-") else input_folio)[:100]
+                    else:
+                        cert_folio = f"HIST-CERT-{seq_num:06d}"
+                        order_folio = f"HIST-ORD-{seq_num:06d}"
+                        seq_num += 1
+
+                    # Omitir si ya existe el certificado por folio
+                    if cert_folio.upper() in existing_cert_folios:
+                        summary["errors"].append(f"Línea {row_num}: El certificado con folio '{cert_folio}' ya existe (omitido por duplicidad).")
+                        summary["duplicates_skipped"] += 1
+                        continue
+
+                    # Omitir si ya existe un certificado con la misma (fecha_de_exp, sucursal_id)
+                    if (exp_date, branch.id) in existing_cert_dates_branches:
+                        summary["errors"].append(f"Línea {row_num}: Ya existe un certificado emitido el {exp_date} para la sucursal '{branch.name}' (omitido por duplicidad).")
+                        summary["duplicates_skipped"] += 1
+                        continue
+
+                    orig_order_folio = order_folio
+                    col_idx = 1
+                    while order_folio.upper() in existing_order_folios:
+                        order_folio = f"{orig_order_folio}-{col_idx}"[:100]
+                        col_idx += 1
+
+                    # 4. Crear Orden de Servicio
+                    service_start = datetime.combine(exp_date, time(9, 0), tzinfo=timezone.utc)
+                    service_end = service_start + timedelta(hours=2)
+
+                    service_order = ServiceOrder(
+                        folio=order_folio,
+                        branch_id=branch.id,
+                        technician_id=default_tech.id,
+                        service_start_date=service_start,
+                        service_end_date=service_end,
+                        pest_crawling_insects=True,
+                        pest_rodents=True,
+                        proc_aspersion=True,
+                        observations=str(row.get('observaciones') or 'Servicio migrado históricamente conforme a NOM-256.').strip(),
+                        results_summary="Tratamiento integral preventivo y correctivo aplicado satisfactoriamente."
                     )
-                    self.db.add(cert_chem)
-                    summary["applied_chemicals_total"] += 1
+                    self.db.add(service_order)
+                    self.db.flush()
+                    existing_order_folios.add(order_folio.upper())
 
-                summary["orders_processed"] += 1
+                    # 5. Crear Certificado NOM-256 Oficial
+                    certificate = Certificate(
+                        service_order_id=service_order.id,
+                        certificate_folio=cert_folio,
+                        issue_date=exp_date,
+                        validity_start_date=exp_date,
+                        validity_end_date=exp_date + timedelta(days=validity_days),
+                        sanitary_license_number=str(sanitary_license)[:100],
+                        sanitary_responsible_name=str(sanitary_responsible)[:255],
+                        sanitary_responsible_id=str(sanitary_responsible_id)[:100] if sanitary_responsible_id else None
+                    )
+                    self.db.add(certificate)
+                    self.db.flush()
+                    existing_cert_folios.add(cert_folio.upper())
+                    existing_cert_dates_branches.add((exp_date, branch.id))
+
+                    # 6. Extraer y Persistir hasta 4 Químicos / Ingredientes Activos
+                    chem_items = self._extract_chemicals_from_row(row.to_dict())
+
+                    for item in chem_items:
+                        cico = item["cicoplafest"].upper().strip()[:100]
+                        c_name = item["name"].strip()[:255]
+                        c_active = item["active_ingredient"].strip()[:255]
+
+                        chem_entity = chems_by_cico.get(cico)
+                        if not chem_entity:
+                            chem_entity = chems_by_name.get(c_name.upper())
+                        if not chem_entity:
+                            chem_entity = chems_by_active.get(c_active.upper())
+
+                        if not chem_entity:
+                            chem_entity = Chemical(
+                                commercial_name=c_name,
+                                active_ingredient=c_active,
+                                cicoplafest_number=cico,
+                                authorized_dose_per_liter=str(item["dose"])[:100],
+                                compatible_methods=str(item["metodo"])[:255],
+                                toxicological_category="Precaución / Banda Verde",
+                                safety_interval_hours=2
+                            )
+                            self.db.add(chem_entity)
+                            self.db.flush()
+                            chems_by_cico[cico] = chem_entity
+                            chems_by_name[c_name.upper()] = chem_entity
+                            chems_by_active[c_active.upper()] = chem_entity
+                            summary["chemicals_created"] += 1
+                        else:
+                            summary["chemicals_linked"] += 1
+
+                        area_t = self._detect_area_type(item["lugar"])
+
+                        cert_chem = CertificateChemical(
+                            certificate_id=certificate.id,
+                            chemical_id=chem_entity.id,
+                            dose_applied=str(item["dose"])[:100],
+                            area_type=area_t,
+                            treated_zones_description=str(item["lugar"])[:255],
+                            application_method=str(item["metodo"])[:100]
+                        )
+                        self.db.add(cert_chem)
+                        summary["applied_chemicals_total"] += 1
+
+                    summary["orders_processed"] += 1
+
+                except Exception as row_err:
+                    summary["errors"].append(f"Línea {row_num}: Error al procesar registro: {str(row_err)}")
 
             self.db.commit()
             return summary
