@@ -23,10 +23,12 @@ from app.schemas import (
     BranchCreate, BranchUpdate, BranchResponse,
     ChemicalCreate, ChemicalUpdate, ChemicalResponse,
     CompanyConfigResponse, CompanyConfigUpdate,
-    AdvancedAnalyticsResponse, ClientPortalAuthRequest, ClientPortalDataResponse
+    AdvancedAnalyticsResponse, ClientPortalAuthRequest, ClientPortalDataResponse,
+    CloudRestoreRequest, RestoreSummaryResponse
 )
 from app.services.data_import import HistoricalDataImporter
 from app.services.pdf_service import OfficialCertificatePDFGenerator
+from app.services.backup_service import SystemBackupRestoreService
 
 router = APIRouter(prefix="/api/v1", tags=["FUMIFLOSA Core"])
 
@@ -1008,3 +1010,158 @@ async def import_historical_csv(file: UploadFile = File(...), db: Session = Depe
     importer = HistoricalDataImporter(db)
     result = importer.process_csv(contents)
     return {"status": "success", "result": result}
+
+
+# ============================================================================
+# 13. DESCARGA MASIVA DE CERTIFICADOS OFICIALES (POR CLIENTE / MES / AÑO)
+# ============================================================================
+@router.get("/certificates/download-bulk")
+def download_bulk_certificates(
+    client_id: Optional[uuid.UUID] = None,
+    branch_id: Optional[uuid.UUID] = None,
+    year: Optional[int] = None,
+    month: Optional[int] = None,
+    start_date: Optional[date] = None,
+    end_date: Optional[date] = None,
+    status_filter: Optional[str] = None,
+    db: Session = Depends(get_db)
+):
+    """
+    Descarga masiva de certificados oficiales en formato ZIP con filtrado inteligente:
+    - Por Cliente Matriz
+    - Por Sucursal
+    - Por Año (ej. 2026)
+    - Por Mes (1 a 12)
+    - Por Rango de Fechas
+    - Por Estado (vigente / vencido)
+    Incluye un Manifiesto en CSV con el resumen de todos los certificados incluidos.
+    """
+    zip_bytes, zip_filename, count = SystemBackupRestoreService.generate_bulk_certificates_zip(
+        db=db,
+        client_id=client_id,
+        branch_id=branch_id,
+        year=year,
+        month=month,
+        start_date=start_date,
+        end_date=end_date,
+        status_filter=status_filter
+    )
+
+    if count == 0:
+        raise HTTPException(
+            status_code=404,
+            detail="No se encontraron certificados con los filtros seleccionados."
+        )
+
+    return Response(
+        content=zip_bytes,
+        media_type="application/x-zip-compressed",
+        headers={
+            "Content-Disposition": f'attachment; filename="{zip_filename}"',
+            "X-Certificates-Count": str(count)
+        }
+    )
+
+
+# ============================================================================
+# 14. RESPALDO DEL SISTEMA COMPLETO (EXPORTACIÓN JSON / ZIP)
+# ============================================================================
+@router.get("/backup/export")
+def export_system_backup(
+    as_zip: bool = False,
+    db: Session = Depends(get_db)
+):
+    """
+    Genera un respaldo completo del sistema FUMIFLOSA (Base de datos completa,
+    configuración de empresa, catálogo de químicos, clientes, sucursales,
+    órdenes de servicio, certificados y químicos aplicados).
+    """
+    backup_data = SystemBackupRestoreService.export_full_backup(db)
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+
+    if as_zip:
+        zip_buf = io.BytesIO()
+        with zipfile.ZipFile(zip_buf, "w", zipfile.ZIP_DEFLATED) as zf:
+            json_bytes = json.dumps(backup_data, indent=2, ensure_ascii=False).encode('utf-8')
+            zf.writestr(f"FUMIFLOSA_Backup_{timestamp}.json", json_bytes)
+        
+        zip_buf.seek(0)
+        return StreamingResponse(
+            zip_buf,
+            media_type="application/x-zip-compressed",
+            headers={"Content-Disposition": f'attachment; filename="FUMIFLOSA_Backup_{timestamp}.zip"'}
+        )
+
+    json_str = json.dumps(backup_data, indent=2, ensure_ascii=False)
+    return Response(
+        content=json_str,
+        media_type="application/json",
+        headers={"Content-Disposition": f'attachment; filename="FUMIFLOSA_Backup_{timestamp}.json"'}
+    )
+
+
+# ============================================================================
+# 15. RESTAURACIÓN DEL SISTEMA (DESDE ARCHIVO LOCAL O NUBE)
+# ============================================================================
+@router.post("/backup/restore-file", response_model=RestoreSummaryResponse)
+async def restore_system_from_file(
+    file: UploadFile = File(...),
+    mode: str = "merge",
+    db: Session = Depends(get_db)
+):
+    """
+    Restaura la base de datos de FUMIFLOSA a partir de un archivo subido (.json o .zip).
+    Modos:
+      - 'merge' (default): Inserta registros nuevos y conserva existentes.
+      - 'overwrite': Limpia el contenido actual y restablece el respaldo exacto.
+    """
+    content = await file.read()
+    filename = file.filename.lower()
+
+    if filename.endswith(".zip"):
+        try:
+            with zipfile.ZipFile(io.BytesIO(content), "r") as zf:
+                json_files = [f for f in zf.namelist() if f.endswith(".json")]
+                if not json_files:
+                    raise HTTPException(status_code=400, detail="El archivo ZIP no contiene ningún JSON de respaldo.")
+                json_content = zf.read(json_files[0]).decode('utf-8')
+                backup_data = json.loads(json_content)
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"Error al descomprimir archivo ZIP: {str(e)}")
+    elif filename.endswith(".json"):
+        try:
+            backup_data = json.loads(content.decode('utf-8'))
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"Error al leer JSON de respaldo: {str(e)}")
+    else:
+        raise HTTPException(status_code=400, detail="Formato no admitido. Sube un archivo .json o .zip.")
+
+    try:
+        summary = SystemBackupRestoreService.restore_full_backup(db, backup_data, mode=mode)
+        return summary
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error en la restauración: {str(e)}")
+
+
+@router.post("/backup/restore-cloud", response_model=RestoreSummaryResponse)
+def restore_system_from_cloud_url(
+    payload: CloudRestoreRequest,
+    db: Session = Depends(get_db)
+):
+    """
+    Restaura la base de datos descargando el respaldo desde una URL en la nube
+    (ej. S3, Google Cloud Storage, GitHub Raw o enlace de almacenamiento público/privado).
+    """
+    try:
+        summary = SystemBackupRestoreService.restore_from_cloud_url(
+            db=db,
+            url=payload.backup_url,
+            mode=payload.mode
+        )
+        return summary
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error al restaurar desde la nube ({payload.backup_url}): {str(e)}"
+        )
+

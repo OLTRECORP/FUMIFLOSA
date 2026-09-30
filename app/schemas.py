@@ -404,3 +404,26 @@ class ClientPortalDataResponse(BaseModel):
     branches: List[BranchResponse]
     services: List[ServiceOrderResponse]
     company_info: CompanyConfigResponse
+
+
+# ----------------------------------------------------------------------------
+# Respaldo y Restauración del Sistema (Backup & Restore)
+# ----------------------------------------------------------------------------
+class CloudRestoreRequest(BaseModel):
+    backup_url: str = Field(..., description="URL pública o accesible del archivo de respaldo JSON o ZIP")
+    mode: str = Field(default="merge", description="Modo de restauración: 'merge' (ignora duplicados existentes) o 'overwrite'")
+
+
+class RestoreSummaryResponse(BaseModel):
+    status: str
+    mode: str
+    restored_at: datetime
+    company_config_restored: bool
+    users_restored: int
+    chemicals_restored: int
+    clients_restored: int
+    branches_restored: int
+    orders_restored: int
+    certificates_restored: int
+    certificate_chemicals_restored: int
+    message: str

@@ -278,6 +278,9 @@
                     <button onclick="switchTab('tab-importacion')" id="btn-tab-importacion" class="tab-btn py-3.5 px-3 border-b-2 border-transparent font-medium text-xs text-slate-500 hover:text-slate-800 flex items-center gap-1.5">
                         <i class="fa-solid fa-file-csv text-emerald-600"></i> Ingesta CSV
                     </button>
+                    <button onclick="switchTab('tab-respaldos')" id="btn-tab-respaldos" class="tab-btn py-3.5 px-3 border-b-2 border-transparent font-medium text-xs text-slate-500 hover:text-slate-800 flex items-center gap-1.5">
+                        <i class="fa-solid fa-cloud-arrow-down text-cyan-600"></i> Respaldos & Descarga Masiva
+                    </button>
                 </nav>
             </div>
 
@@ -910,6 +913,169 @@
                 </div>
             </div>
 
+            <!-- ============================================================= -->
+            <!-- 10. PESTAÑA: RESPALDOS, RESTAURACIÓN Y DESCARGA MASIVA -->
+            <!-- ============================================================= -->
+            <div id="tab-respaldos" class="p-6 space-y-8 hidden">
+                <div>
+                    <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                        <i class="fa-solid fa-cloud-arrow-down text-cyan-600"></i> Centro de Respaldos, Restauración y Descarga Masiva de Certificados
+                    </h2>
+                    <p class="text-xs text-slate-500">Administra la seguridad de la base de datos de FUMIFLOSA, copias de seguridad en nube/archivo y exportaciones masivas de certificados oficiales NOM-256.</p>
+                </div>
+
+                <!-- SECCIÓN 1: DESCARGA MASIVA DE CERTIFICADOS OFICIALES NOM-256 -->
+                <div class="bg-gradient-to-r from-cyan-950 via-slate-900 to-slate-900 p-6 rounded-2xl border border-cyan-800/50 text-white space-y-5 shadow-lg">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-cyan-600 rounded-xl flex items-center justify-center text-white text-lg font-bold shadow-md shadow-cyan-900/40">
+                            <i class="fa-solid fa-file-zipper"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-bold text-cyan-200">Descarga Masiva de Certificados en ZIP (Por Cliente o por Mes)</h3>
+                            <p class="text-xs text-slate-400">Genera y empaqueta en memoria todos los PDFs oficiales con su código QR de validación y un manifiesto en CSV.</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
+                        <div>
+                            <label class="block text-slate-300 font-semibold mb-1">Filtrar por Cliente Matriz:</label>
+                            <select id="bulk-client-filter" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-white font-medium focus:ring-2 focus:ring-cyan-500 focus:outline-none">
+                                <option value="">Todos los Clientes Matriz</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-slate-300 font-semibold mb-1">Filtrar por Año:</label>
+                            <select id="bulk-year-filter" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-white font-medium focus:ring-2 focus:ring-cyan-500 focus:outline-none">
+                                <option value="">Todos los Años</option>
+                                <option value="2027">2027</option>
+                                <option value="2026" selected>2026</option>
+                                <option value="2025">2025</option>
+                                <option value="2024">2024</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-slate-300 font-semibold mb-1">Filtrar por Mes:</label>
+                            <select id="bulk-month-filter" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-white font-medium focus:ring-2 focus:ring-cyan-500 focus:outline-none">
+                                <option value="">Todos los Meses</option>
+                                <option value="1">01 - Enero</option>
+                                <option value="2">02 - Febrero</option>
+                                <option value="3">03 - Marzo</option>
+                                <option value="4">04 - Abril</option>
+                                <option value="5">05 - Mayo</option>
+                                <option value="6">06 - Junio</option>
+                                <option value="7">07 - Julio</option>
+                                <option value="8">08 - Agosto</option>
+                                <option value="9">09 - Septiembre</option>
+                                <option value="10">10 - Octubre</option>
+                                <option value="11">11 - Noviembre</option>
+                                <option value="12">12 - Diciembre</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-slate-300 font-semibold mb-1">Estado de Vigencia:</label>
+                            <select id="bulk-status-filter" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-white font-medium focus:ring-2 focus:ring-cyan-500 focus:outline-none">
+                                <option value="">Todos los Estados</option>
+                                <option value="vigente">Solo Vigentes</option>
+                                <option value="vencido">Solo Vencidos</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2 border-t border-slate-800">
+                        <div class="text-[11px] text-slate-400 flex items-center gap-2">
+                            <i class="fa-solid fa-circle-info text-cyan-400"></i> Cada PDF incluirá los datos fiscales de FUMIFLOSA, licencia sanitaria y número SINTOX.
+                        </div>
+                        <button onclick="handleBulkCertificatesDownload()" id="btn-bulk-download" class="w-full sm:w-auto bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-2.5 px-6 rounded-xl text-xs flex items-center justify-center gap-2 shadow-lg shadow-cyan-600/30 transition">
+                            <i class="fa-solid fa-download"></i> Descargar Paquete ZIP de Certificados
+                        </button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+                    
+                    <!-- SECCIÓN 2: GENERAR RESPALDO DEL SISTEMA -->
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                        <div class="flex items-center gap-2.5 border-b border-slate-100 pb-3">
+                            <div class="w-8 h-8 bg-emerald-100 text-emerald-700 rounded-lg flex items-center justify-center text-sm font-bold">
+                                <i class="fa-solid fa-database"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-slate-900 text-sm">Exportar Respaldo del Sistema</h3>
+                                <p class="text-[11px] text-slate-500">Copia de seguridad completa e íntegra de la base de datos</p>
+                            </div>
+                        </div>
+
+                        <p class="text-xs text-slate-600 leading-relaxed">
+                            Exporta todos los datos: Configuración de Empresa, Clientes, Sucursales, Químicos COFEPRIS, Usuarios/Técnicos STPS, Órdenes de Servicio y Certificados con sus firmas y relaciones atómicas.
+                        </p>
+
+                        <div class="grid grid-cols-2 gap-3 pt-2">
+                            <button onclick="downloadSystemBackup(false)" id="btn-backup-json" class="bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 px-3 rounded-xl text-xs flex items-center justify-center gap-2 shadow-sm transition">
+                                <i class="fa-solid fa-file-code text-emerald-400"></i> Descargar JSON (.json)
+                            </button>
+                            <button onclick="downloadSystemBackup(true)" id="btn-backup-zip" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-3 rounded-xl text-xs flex items-center justify-center gap-2 shadow-sm transition">
+                                <i class="fa-solid fa-file-zipper"></i> Descargar Paquete ZIP (.zip)
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- SECCIÓN 3: RESTAURAR SISTEMA DESDE ARCHIVO O NUBE -->
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                        <div class="flex items-center gap-2.5 border-b border-slate-100 pb-3">
+                            <div class="w-8 h-8 bg-indigo-100 text-indigo-700 rounded-lg flex items-center justify-center text-sm font-bold">
+                                <i class="fa-solid fa-rotate-left"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-slate-900 text-sm">Restaurar Base de Datos</h3>
+                                <p class="text-[11px] text-slate-500">Desde archivo local (.json/.zip) o URL en la nube</p>
+                            </div>
+                        </div>
+
+                        <div class="space-y-3 text-xs">
+                            <div>
+                                <label class="block font-semibold text-slate-700 mb-1">Modo de Restauración:</label>
+                                <select id="restore-mode-select" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2 font-medium">
+                                    <option value="merge">Fusión Segura (Merge - Omite duplicados y preserva registros nuevos)</option>
+                                    <option value="overwrite">Sobrescritura Total (Overwrite - Reemplaza base de datos completa)</option>
+                                </select>
+                            </div>
+
+                            <!-- Opción 1: Subir Archivo -->
+                            <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-2">
+                                <label class="block font-bold text-slate-800">Opción A: Subir Archivo de Respaldo (.json o .zip)</label>
+                                <input type="file" id="restore-file-input" accept=".json,.zip" class="block w-full text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-700 cursor-pointer" />
+                                <button onclick="handleRestoreFromFile()" id="btn-restore-file" class="w-full mt-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-sm transition">
+                                    <i class="fa-solid fa-upload"></i> Ejecutar Restauración desde Archivo
+                                </button>
+                            </div>
+
+                            <!-- Opción 2: Restaurar desde Nube -->
+                            <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-2">
+                                <label class="block font-bold text-slate-800">Opción B: Restaurar desde URL en Nube (AWS S3 / GCS / GitHub)</label>
+                                <input type="url" id="restore-cloud-url" placeholder="https://mi-storage.com/respaldo-fumiflosa.json" class="w-full bg-white border border-slate-300 rounded-lg p-2 font-mono text-xs" />
+                                <button onclick="handleRestoreFromCloud()" id="btn-restore-cloud" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-2 rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-sm transition">
+                                    <i class="fa-solid fa-cloud-arrow-down text-indigo-400"></i> Descargar y Restaurar desde URL
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CONSOLA DE REGISTRO DE RESTAURACIÓN / LOG -->
+                <div class="bg-slate-950 text-slate-100 p-5 rounded-2xl border border-slate-800 text-xs font-mono space-y-2">
+                    <div class="flex items-center justify-between text-emerald-400 font-bold border-b border-slate-800 pb-2">
+                        <span class="flex items-center gap-2"><i class="fa-solid fa-terminal"></i> Consola de Auditoría y Estado de Restauración</span>
+                        <span class="text-[10px] text-slate-400 font-normal">Transacciones atómicas protegidas</span>
+                    </div>
+                    <div id="restore-log-console" class="text-slate-300 leading-relaxed whitespace-pre-line max-h-48 overflow-y-auto">
+                        > Sistema listo. Puedes generar respaldos completos, restaurar datos o descargar lotes de certificados en formato ZIP.
+                    </div>
+                </div>
+            </div>
+
         </div>
 
         <!-- AVISO NORMATIVO NOM-256 -->
@@ -1297,7 +1463,15 @@
                 cachedBranches = await resB.json();
 
                 const selectClientInBranchForm = document.getElementById('br-client-id');
-                selectClientInBranchForm.innerHTML = cachedClients.map(c => `<option value="${c.id}">${c.legal_name} (${c.rfc})</option>`).join('');
+                if (selectClientInBranchForm) {
+                    selectClientInBranchForm.innerHTML = cachedClients.map(c => `<option value="${c.id}">${c.legal_name} (${c.rfc})</option>`).join('');
+                }
+
+                const bulkClientSelect = document.getElementById('bulk-client-filter');
+                if (bulkClientSelect) {
+                    bulkClientSelect.innerHTML = '<option value="">Todos los Clientes Matriz</option>' + 
+                        cachedClients.map(c => `<option value="${c.id}">${c.legal_name} (${c.rfc})</option>`).join('');
+                }
 
                 const tbody = document.getElementById('clients-branches-tbody');
                 tbody.innerHTML = cachedBranches.map(b => `
@@ -1761,6 +1935,227 @@
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = '<i class="fa-solid fa-play"></i> Procesar Migración Atómica';
+            }
+        }
+
+        // ====================================================================
+        // DESCARGA MASIVA DE CERTIFICADOS OFICIALES NOM-256 (POR CLIENTE/MES/AÑO)
+        // ====================================================================
+        async function handleBulkCertificatesDownload() {
+            const client_id = document.getElementById('bulk-client-filter').value;
+            const year = document.getElementById('bulk-year-filter').value;
+            const month = document.getElementById('bulk-month-filter').value;
+            const status_filter = document.getElementById('bulk-status-filter').value;
+            const btn = document.getElementById('btn-bulk-download');
+
+            const params = new URLSearchParams();
+            if (client_id) params.append('client_id', client_id);
+            if (year) params.append('year', year);
+            if (month) params.append('month', month);
+            if (status_filter) params.append('status_filter', status_filter);
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generando ZIP y Manifiesto...';
+
+            try {
+                const url = `/api/v1/certificates/download-bulk?${params.toString()}`;
+                const res = await fetch(url);
+                
+                if (!res.ok) {
+                    const errData = await res.json().catch(() => ({}));
+                    throw new Error(errData.detail || 'No se encontraron certificados con los filtros seleccionados.');
+                }
+
+                const blob = await res.blob();
+                const disposition = res.headers.get('Content-Disposition');
+                let filename = 'Certificados_FUMIFLOSA.zip';
+                if (disposition && disposition.includes('filename=')) {
+                    filename = disposition.split('filename=')[1].replace(/["']/g, '').trim();
+                }
+
+                const downloadUrl = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = downloadUrl;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                window.URL.revokeObjectURL(downloadUrl);
+
+                logRestoreMessage(`> [ÉXITO] Descarga masiva completada: ${filename}`);
+            } catch (err) {
+                alert('Aviso: ' + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-download"></i> Descargar Paquete ZIP de Certificados';
+            }
+        }
+
+        // ====================================================================
+        // RESPALDO DEL SISTEMA COMPLETO (EXPORTACIÓN)
+        // ====================================================================
+        function downloadSystemBackup(asZip) {
+            const btnId = asZip ? 'btn-backup-zip' : 'btn-backup-json';
+            const btn = document.getElementById(btnId);
+            const origHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Exportando...';
+
+            const url = `/api/v1/backup/export?as_zip=${asZip}`;
+            
+            fetch(url)
+                .then(res => {
+                    if (!res.ok) throw new Error('Error al generar respaldo');
+                    const disposition = res.headers.get('Content-Disposition');
+                    let filename = asZip ? 'FUMIFLOSA_Backup.zip' : 'FUMIFLOSA_Backup.json';
+                    if (disposition && disposition.includes('filename=')) {
+                        filename = disposition.split('filename=')[1].replace(/["']/g, '').trim();
+                    }
+                    return res.blob().then(blob => ({ blob, filename }));
+                })
+                .then(({ blob, filename }) => {
+                    const downloadUrl = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = downloadUrl;
+                    a.download = filename;
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                    window.URL.revokeObjectURL(downloadUrl);
+                    logRestoreMessage(`> [ÉXITO] Respaldo completo generado y descargado: ${filename}`);
+                })
+                .catch(err => {
+                    alert('Error al exportar respaldo: ' + err.message);
+                })
+                .finally(() => {
+                    btn.disabled = false;
+                    btn.innerHTML = origHtml;
+                });
+        }
+
+        // ====================================================================
+        // RESTAURACIÓN DEL SISTEMA (DESDE ARCHIVO O NUBE)
+        // ====================================================================
+        function logRestoreMessage(msg) {
+            const consoleBox = document.getElementById('restore-log-console');
+            if (consoleBox) {
+                consoleBox.innerHTML += `\n${msg}`;
+                consoleBox.scrollTop = consoleBox.scrollHeight;
+            }
+        }
+
+        async function handleRestoreFromFile() {
+            const input = document.getElementById('restore-file-input');
+            const mode = document.getElementById('restore-mode-select').value;
+            const btn = document.getElementById('btn-restore-file');
+
+            if (!input.files || input.files.length === 0) {
+                alert('Por favor selecciona un archivo de respaldo (.json o .zip) primero.');
+                return;
+            }
+
+            if (mode === 'overwrite' && !confirm('⚠️ ATENCIÓN: El modo "Sobrescritura Total" reemplazará los datos actuales por los del respaldo. ¿Deseas continuar?')) {
+                return;
+            }
+
+            const file = input.files[0];
+            const formData = new FormData();
+            formData.append('file', file);
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Restaurando...';
+            logRestoreMessage(`> [INICIO] Iniciando restauración desde archivo: ${file.name} (Modo: ${mode})...`);
+
+            try {
+                const res = await fetch(`/api/v1/backup/restore-file?mode=${mode}`, {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+
+                if (!res.ok) {
+                    throw new Error(data.detail || 'Falla en la restauración');
+                }
+
+                logRestoreMessage(
+                    `> [ÉXITO] Restauración completada satisfactoriamente:\n` +
+                    `  - Configuración de Empresa: ${data.company_config_restored ? 'Actualizada' : 'Conservada'}\n` +
+                    `  - Clientes Matriz: ${data.clients_restored}\n` +
+                    `  - Sucursales: ${data.branches_restored}\n` +
+                    `  - Catálogo de Químicos: ${data.chemicals_restored}\n` +
+                    `  - Usuarios/Técnicos: ${data.users_restored}\n` +
+                    `  - Órdenes de Servicio: ${data.orders_restored}\n` +
+                    `  - Certificados NOM-256: ${data.certificates_restored}\n` +
+                    `  - Químicos Dosificados (Pivote): ${data.certificate_chemicals_restored}\n` +
+                    `> Mensaje: ${data.message}`
+                );
+
+                alert('¡Base de datos restaurada con éxito!');
+                loadDashboardData();
+                loadClientsAndBranches();
+                loadChemicals();
+                loadUsers();
+            } catch (err) {
+                logRestoreMessage(`> [ERROR CRÍTICO]: ${err.message}`);
+                alert('Error al restaurar: ' + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-upload"></i> Ejecutar Restauración desde Archivo';
+            }
+        }
+
+        async function handleRestoreFromCloud() {
+            const urlInput = document.getElementById('restore-cloud-url');
+            const mode = document.getElementById('restore-mode-select').value;
+            const btn = document.getElementById('btn-restore-cloud');
+            const cloudUrl = urlInput.value.trim();
+
+            if (!cloudUrl) {
+                alert('Por favor introduce la URL del respaldo en la nube.');
+                return;
+            }
+
+            if (mode === 'overwrite' && !confirm('⚠️ ATENCIÓN: El modo "Sobrescritura Total" reemplazará los datos actuales por los del respaldo. ¿Deseas continuar?')) {
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Descargando y Restaurando...';
+            logRestoreMessage(`> [INICIO] Descargando respaldo desde nube: ${cloudUrl} (Modo: ${mode})...`);
+
+            try {
+                const res = await fetch('/api/v1/backup/restore-cloud', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ backup_url: cloudUrl, mode: mode })
+                });
+                const data = await res.json();
+
+                if (!res.ok) {
+                    throw new Error(data.detail || 'Falla en la restauración desde la nube');
+                }
+
+                logRestoreMessage(
+                    `> [ÉXITO] Restauración desde la nube completada:\n` +
+                    `  - Clientes Matriz: ${data.clients_restored}\n` +
+                    `  - Sucursales: ${data.branches_restored}\n` +
+                    `  - Químicos: ${data.chemicals_restored}\n` +
+                    `  - Órdenes: ${data.orders_restored}\n` +
+                    `  - Certificados NOM-256: ${data.certificates_restored}\n` +
+                    `> Mensaje: ${data.message}`
+                );
+
+                alert('¡Restauración desde la nube completada con éxito!');
+                loadDashboardData();
+                loadClientsAndBranches();
+                loadChemicals();
+                loadUsers();
+            } catch (err) {
+                logRestoreMessage(`> [ERROR NUBE]: ${err.message}`);
+                alert('Error al restaurar desde la nube: ' + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-down text-indigo-400"></i> Descargar y Restaurar desde URL';
             }
         }
 
