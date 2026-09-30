@@ -872,9 +872,27 @@
             <!-- 9. PESTAÑA: INGESTA MASIVA CSV -->
             <!-- ============================================================= -->
             <div id="tab-importacion" class="p-6 space-y-6 hidden">
-                <div>
-                    <h2 class="text-base font-bold text-slate-900">Migración Masiva de Históricos y Sucursales</h2>
-                    <p class="text-xs text-slate-500">Carga un archivo CSV con las unidades de clientes corporativos (ej. IMSS con 100+ hospitales).</p>
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <div>
+                        <h2 class="text-base font-bold text-slate-900">Migración Masiva de Históricos por Certificado</h2>
+                        <p class="text-xs text-slate-500">Carga un archivo CSV con el historial de certificados, clientes y sucursales.</p>
+                    </div>
+                    <button onclick="downloadCSVTemplate()" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-3 py-2 rounded-lg border border-slate-300 flex items-center gap-1.5 transition self-start">
+                        <i class="fa-solid fa-file-csv text-emerald-600"></i> Descargar Plantilla CSV Ejemplo
+                    </button>
+                </div>
+
+                <!-- Formato Requerido Card -->
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 text-xs space-y-2">
+                    <p class="font-bold text-slate-800 flex items-center gap-1.5">
+                        <i class="fa-solid fa-table-columns text-brand-600"></i> Estructura Oficial de Columnas CSV Requerida:
+                    </p>
+                    <div class="bg-slate-900 text-emerald-300 p-2.5 rounded-lg font-mono text-[11px] overflow-x-auto whitespace-nowrap shadow-inner">
+                        folio,rfc,razon_social,sucursal_nombre,sucursal_direccion,sucursal_telefono,contacto_sucursal,fecha_de_exp,quimico_nombre,ingrediente_activo,quimico_cicoplafest,dosis,lugar_tratado,metodo,observaciones
+                    </div>
+                    <p class="text-[10px] text-slate-500">
+                        * <strong>folio:</strong> Folio único institucional (ej. <code>IMSS-2026-001</code>). * <strong>fecha_de_exp:</strong> Fecha de expedición (ej. <code>2026-05-10</code> o <code>10/05/2026</code>).
+                    </p>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
@@ -883,7 +901,7 @@
                             <i class="fa-solid fa-cloud-arrow-up"></i>
                         </div>
                         <h3 class="text-sm font-bold text-slate-800">Selecciona o arrastra tu archivo CSV</h3>
-                        <p class="text-xs text-slate-500 mt-1 mb-4">Soporta creación automática de Matriz, Sucursales, Químicos y Certificados.</p>
+                        <p class="text-xs text-slate-500 mt-1 mb-4">Procesa en lote Clientes, Sucursales, Químicos y Certificados NOM-256 con vigencia automática.</p>
                         
                         <input type="file" id="csv-file-input" accept=".csv" class="block w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-brand-600 file:text-white hover:file:bg-brand-700 cursor-pointer" />
                         
@@ -1894,6 +1912,22 @@
 
             // Si no hay sesión, mostrar modal de login
             if (loginModal) loginModal.classList.remove('hidden');
+        }
+
+        function downloadCSVTemplate() {
+            const headers = "folio,rfc,razon_social,sucursal_nombre,sucursal_direccion,sucursal_telefono,contacto_sucursal,fecha_de_exp,quimico_nombre,ingrediente_activo,quimico_cicoplafest,dosis,lugar_tratado,metodo,observaciones\n";
+            const sample1 = "IMSS-2026-001,IMS421231I45,INSTITUTO MEXICANO DEL SEGURO SOCIAL,HGZ No. 1 Gabriel Mancera,Gabriel Mancera 222 Benito Juarez CDMX,5556391122,Dra. Marcela Rivas,2026-05-10,Biothrine Flow,Deltametrina 2.5%,RSCO-URB-INAC-111-2020,10 ml / 1 L,Cocina y Almacen,Aspersion Manual,Servicio mensual NOM-256\n";
+            const sample2 = "WAL-2026-088,WAL860507P92,NUEVA WAL-MART DE MEXICO S.DE R.L. DE C.V.,Walmart Express Felix Cuevas,Felix Cuevas 374 Tlacoquemecatl del Valle CDMX,5555754400,Gerente de Turno,2026-05-15,Maxforce Forte,Fipronil 0.05%,RSCO-DOM-INAC-182-2021,Gel focalizado,Comedores y Oficinas,Geles,Aplicacion preventiva de gel cucarachicida";
+            
+            const blob = new Blob([headers + sample1 + sample2], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'plantilla_certificados_fumiflosa.csv';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
         }
 
         async function uploadCSV() {
