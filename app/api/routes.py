@@ -16,7 +16,7 @@ from app.models import (
 )
 from app.schemas import (
     LoginRequest, LoginResponse, AuthUserInfo,
-    ServiceOrderCreate, ServiceOrderResponse, DashboardExpirationsResponse,
+    ServiceOrderCreate, ServiceOrderUpdate, ServiceOrderResponse, DashboardExpirationsResponse,
     ClientExpirationsGroup, ExpirationDetail, DashboardSummaryStats,
     UserCreate, UserUpdate, UserResponse,
     ClientCreate, ClientUpdate, ClientResponse, ClientPortalConfigUpdate,
@@ -879,6 +879,129 @@ def create_service_order_with_certificate(
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Error al crear el servicio: {str(e)}")
+
+
+@router.get("/services/{service_id}", response_model=ServiceOrderResponse)
+def get_service_order_by_id(service_id: uuid.UUID, db: Session = Depends(get_db)):
+    """Obtiene una orden de servicio individual con su certificado y químicos aplicados."""
+    order = db.query(ServiceOrder).options(
+        joinedload(ServiceOrder.branch).joinedload(Branch.client),
+        joinedload(ServiceOrder.technician),
+        joinedload(ServiceOrder.certificate).joinedload(Certificate.applied_chemicals).joinedload(CertificateChemical.chemical)
+    ).filter(ServiceOrder.id == service_id, ServiceOrder.is_deleted == False).first()
+
+    if not order:
+        raise HTTPException(status_code=404, detail="Orden de servicio no encontrada.")
+    return order
+
+
+@router.put("/services/{service_id}", response_model=ServiceOrderResponse)
+def update_service_order_and_certificate(
+    service_id: uuid.UUID,
+    payload: ServiceOrderUpdate,
+    db: Session = Depends(get_db)
+):
+    """
+    Actualiza la orden de servicio y su certificado NOM-256 enlazado
+    (folios, fechas, responsables, observaciones y químicos aplicados).
+    """
+    order = db.query(ServiceOrder).options(
+        joinedload(ServiceOrder.branch).joinedload(Branch.client),
+        joinedload(ServiceOrder.technician),
+        joinedload(ServiceOrder.certificate).joinedload(Certificate.applied_chemicals).joinedload(CertificateChemical.chemical)
+    ).filter(ServiceOrder.id == service_id, ServiceOrder.is_deleted == False).first()
+
+    if not order:
+        raise HTTPException(status_code=404, detail="Orden de servicio no encontrada.")
+
+    try:
+        if payload.folio is not None:
+            order.folio = payload.folio
+        if payload.service_start_date is not None:
+            order.service_start_date = payload.service_start_date
+        if payload.service_end_date is not None:
+            order.service_end_date = payload.service_end_date
+        if payload.branch_id is not None:
+            order.branch_id = payload.branch_id
+        if payload.technician_id is not None:
+            order.technician_id = payload.technician_id
+        if payload.results_summary is not None:
+            order.results_summary = payload.results_summary
+        if payload.observations is not None:
+            order.observations = payload.observations
+
+        # Actualizar datos del certificado enlazado
+        if order.certificate:
+            cert = order.certificate
+            if payload.certificate_folio is not None:
+                cert.certificate_folio = payload.certificate_folio
+            if payload.issue_date is not None:
+                cert.issue_date = payload.issue_date
+            if payload.validity_start_date is not None:
+                cert.validity_start_date = payload.validity_start_date
+            if payload.validity_end_date is not None:
+                cert.validity_end_date = payload.validity_end_date
+            if payload.sanitary_license_number is not None:
+                cert.sanitary_license_number = payload.sanitary_license_number
+            if payload.sanitary_responsible_name is not None:
+                cert.sanitary_responsible_name = payload.sanitary_responsible_name
+            if payload.sanitary_responsible_id is not None:
+                cert.sanitary_responsible_id = payload.sanitary_responsible_id
+
+            # Si se enviaron químicos aplicados para actualizar
+            if payload.chemicals_applied is not None:
+                # Eliminar químicos anteriores
+                db.query(CertificateChemical).filter(CertificateChemical.certificate_id == cert.id).delete()
+                # Insertar los nuevos
+                for item in payload.chemicals_applied:
+                    chem = db.query(Chemical).filter(Chemical.id == item.chemical_id).first()
+                    if chem:
+                        applied = CertificateChemical(
+                            certificate_id=cert.id,
+                            chemical_id=chem.id,
+                            dose_applied=item.dose_applied,
+                            area_type=item.area_type,
+                            treated_zones_description=item.treated_zones_description,
+                            application_method=item.application_method
+                        )
+                        db.add(applied)
+
+        db.commit()
+        db.refresh(order)
+        return order
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Error al actualizar el servicio: {str(e)}")
+
+
+@router.delete("/services/{service_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_service_order(service_id: uuid.UUID, db: Session = Depends(get_db)):
+    """Eliminación lógica de la orden de servicio y su certificado asociado."""
+    order = db.query(ServiceOrder).filter(ServiceOrder.id == service_id, ServiceOrder.is_deleted == False).first()
+    if not order:
+        raise HTTPException(status_code=404, detail="Orden de servicio no encontrada.")
+    
+    order.soft_delete()
+    if order.certificate:
+        order.certificate.soft_delete()
+    
+    db.commit()
+    return None
+
+
+@router.delete("/certificates/{certificate_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_certificate(certificate_id: uuid.UUID, db: Session = Depends(get_db)):
+    """Eliminación lógica del certificado y su orden de servicio asociada."""
+    cert = db.query(Certificate).filter(Certificate.id == certificate_id, Certificate.is_deleted == False).first()
+    if not cert:
+        raise HTTPException(status_code=404, detail="Certificado no encontrado.")
+    
+    cert.soft_delete()
+    if cert.service_order:
+        cert.service_order.soft_delete()
+    
+    db.commit()
+    return None
 
 
 # ============================================================================

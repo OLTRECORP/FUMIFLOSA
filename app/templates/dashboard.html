@@ -95,6 +95,224 @@
         </div>
     </div>
 
+    <!-- MODAL DE EDICIÓN DE ORDEN / CERTIFICADO -->
+    <div id="modal-edit-service" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-xl w-full p-6 space-y-4 border border-slate-200 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 bg-blue-100 text-blue-700 rounded-lg flex items-center justify-center text-sm font-bold">
+                        <i class="fa-solid fa-file-pen"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-900">Editar Servicio y Certificado NOM-256</h3>
+                        <p id="edit-service-modal-subtitle" class="text-[11px] text-slate-500">Modificación de folios, fechas y observaciones</p>
+                    </div>
+                </div>
+                <button onclick="closeEditServiceModal()" class="text-slate-400 hover:text-slate-600 p-1"><i class="fa-solid fa-xmark text-base"></i></button>
+            </div>
+            <form onsubmit="handleUpdateService(event)" class="space-y-4 text-xs">
+                <input type="hidden" id="edit-service-id" />
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Folio de la Orden *</label>
+                        <input type="text" id="edit-service-folio" required class="w-full bg-white border border-slate-300 rounded-lg p-2 font-mono font-bold" />
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Folio de Certificado *</label>
+                        <input type="text" id="edit-cert-folio" required class="w-full bg-white border border-slate-300 rounded-lg p-2 font-mono font-bold text-brand-700" />
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Fecha de Expedición *</label>
+                        <input type="date" id="edit-service-issue-date" required class="w-full bg-white border border-slate-300 rounded-lg p-2" />
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Fecha Término de Vigencia *</label>
+                        <input type="date" id="edit-service-validity-end" required class="w-full bg-white border border-slate-300 rounded-lg p-2" />
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Responsable Sanitario *</label>
+                        <input type="text" id="edit-service-resp-name" required class="w-full bg-white border border-slate-300 rounded-lg p-2" />
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Licencia Sanitaria COFEPRIS *</label>
+                        <input type="text" id="edit-service-license" required class="w-full bg-white border border-slate-300 rounded-lg p-2 font-mono" />
+                    </div>
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Resumen de Resultados</label>
+                    <input type="text" id="edit-service-summary" class="w-full bg-white border border-slate-300 rounded-lg p-2" />
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Observaciones NOM-256</label>
+                    <textarea id="edit-service-obs" rows="2" class="w-full bg-white border border-slate-300 rounded-lg p-2"></textarea>
+                </div>
+                <div class="flex justify-end gap-2 pt-2 border-t border-slate-100">
+                    <button type="button" onclick="closeEditServiceModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2 px-3 rounded-lg text-xs">Cancelar</button>
+                    <button type="submit" class="bg-brand-600 hover:bg-brand-700 text-white font-bold py-2 px-4 rounded-lg text-xs shadow-sm">Guardar Cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL DE EDICIÓN DE CLIENTE MATRIZ -->
+    <div id="modal-edit-client" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 space-y-4 border border-slate-200">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 bg-brand-100 text-brand-700 rounded-lg flex items-center justify-center text-sm font-bold">
+                        <i class="fa-solid fa-building-pen"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-900">Editar Cliente Matriz</h3>
+                        <p class="text-[11px] text-slate-500">Actualiza la razón social y datos fiscales del cliente</p>
+                    </div>
+                </div>
+                <button onclick="closeEditClientModal()" class="text-slate-400 hover:text-slate-600 p-1"><i class="fa-solid fa-xmark text-base"></i></button>
+            </div>
+            <form onsubmit="handleUpdateClient(event)" class="space-y-4 text-xs">
+                <input type="hidden" id="edit-cli-id" />
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Razón Social *</label>
+                    <input type="text" id="edit-cli-name" required class="w-full bg-white border border-slate-300 rounded-lg p-2 font-bold" />
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">RFC *</label>
+                        <input type="text" id="edit-cli-rfc" required maxlength="13" class="w-full bg-white border border-slate-300 rounded-lg p-2 uppercase font-mono font-bold" />
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Contrato Marco</label>
+                        <input type="text" id="edit-cli-contract" class="w-full bg-white border border-slate-300 rounded-lg p-2" />
+                    </div>
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Régimen Fiscal</label>
+                    <input type="text" id="edit-cli-regime" placeholder="601 - General de Ley Personas Morales" class="w-full bg-white border border-slate-300 rounded-lg p-2" />
+                </div>
+                <div class="flex justify-end gap-2 pt-2 border-t border-slate-100">
+                    <button type="button" onclick="closeEditClientModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2 px-3 rounded-lg text-xs">Cancelar</button>
+                    <button type="submit" class="bg-slate-900 hover:bg-slate-800 text-white font-bold py-2 px-4 rounded-lg text-xs shadow-sm">Guardar Cliente</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL DE EDICIÓN DE SUCURSAL -->
+    <div id="modal-edit-branch" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 space-y-4 border border-slate-200">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 bg-indigo-100 text-indigo-700 rounded-lg flex items-center justify-center text-sm font-bold">
+                        <i class="fa-solid fa-hospital-user"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-900">Editar Sucursal / Unidad Operativa</h3>
+                        <p class="text-[11px] text-slate-500">Modifica la información de ubicación y contacto</p>
+                    </div>
+                </div>
+                <button onclick="closeEditBranchModal()" class="text-slate-400 hover:text-slate-600 p-1"><i class="fa-solid fa-xmark text-base"></i></button>
+            </div>
+            <form onsubmit="handleUpdateBranch(event)" class="space-y-4 text-xs">
+                <input type="hidden" id="edit-br-id" />
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Nombre de Sucursal *</label>
+                        <input type="text" id="edit-br-name" required class="w-full bg-white border border-slate-300 rounded-lg p-2 font-bold" />
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Clasificación *</label>
+                        <select id="edit-br-class" class="w-full bg-white border border-slate-300 rounded-lg p-2">
+                            <option value="Hospitalaria">Hospitalaria</option>
+                            <option value="Comercial">Comercial</option>
+                            <option value="Industrial">Industrial</option>
+                            <option value="Oficinas">Oficinas</option>
+                            <option value="Habitacional">Habitacional</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Dirección Completa *</label>
+                    <input type="text" id="edit-br-addr" required class="w-full bg-white border border-slate-300 rounded-lg p-2" />
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Teléfono / Clave Unidad *</label>
+                        <input type="text" id="edit-br-phone" required class="w-full bg-white border border-slate-300 rounded-lg p-2" />
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Responsable en Sitio *</label>
+                        <input type="text" id="edit-br-resp" required class="w-full bg-white border border-slate-300 rounded-lg p-2" />
+                    </div>
+                </div>
+                <div class="flex justify-end gap-2 pt-2 border-t border-slate-100">
+                    <button type="button" onclick="closeEditBranchModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2 px-3 rounded-lg text-xs">Cancelar</button>
+                    <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg text-xs shadow-sm">Guardar Sucursal</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL DE EDICIÓN DE QUÍMICO -->
+    <div id="modal-edit-chemical" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 space-y-4 border border-slate-200">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 bg-teal-100 text-teal-700 rounded-lg flex items-center justify-center text-sm font-bold">
+                        <i class="fa-solid fa-flask"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-900">Editar Químico / Plaguicida</h3>
+                        <p class="text-[11px] text-slate-500">Regulado por COFEPRIS / CICOPLAFEST</p>
+                    </div>
+                </div>
+                <button onclick="closeEditChemicalModal()" class="text-slate-400 hover:text-slate-600 p-1"><i class="fa-solid fa-xmark text-base"></i></button>
+            </div>
+            <form onsubmit="handleUpdateChemical(event)" class="space-y-4 text-xs">
+                <input type="hidden" id="edit-chem-id" />
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Nombre Comercial *</label>
+                    <input type="text" id="edit-chem-name" required class="w-full bg-white border border-slate-300 rounded-lg p-2 font-bold" />
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Ingrediente Activo *</label>
+                    <input type="text" id="edit-chem-active" required class="w-full bg-white border border-slate-300 rounded-lg p-2" />
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Registro CICOPLAFEST *</label>
+                    <input type="text" id="edit-chem-cico" required class="w-full bg-white border border-slate-300 rounded-lg p-2 uppercase font-mono font-bold text-teal-800" />
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Dosis / Litro *</label>
+                        <input type="text" id="edit-chem-dose" required class="w-full bg-white border border-slate-300 rounded-lg p-2" />
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Reentrada (Hrs) *</label>
+                        <input type="number" id="edit-chem-hours" min="0" required class="w-full bg-white border border-slate-300 rounded-lg p-2" />
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Métodos Compatibles *</label>
+                        <input type="text" id="edit-chem-methods" required class="w-full bg-white border border-slate-300 rounded-lg p-2" />
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Categoría Toxicológica *</label>
+                        <input type="text" id="edit-chem-tox" required class="w-full bg-white border border-slate-300 rounded-lg p-2" />
+                    </div>
+                </div>
+                <div class="flex justify-end gap-2 pt-2 border-t border-slate-100">
+                    <button type="button" onclick="closeEditChemicalModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2 px-3 rounded-lg text-xs">Cancelar</button>
+                    <button type="submit" class="bg-teal-600 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded-lg text-xs shadow-sm">Guardar Químico</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- MODAL / PANTALLA DE INICIO DE SESIÓN SUPER USUARIO MASTER -->
     <div id="modal-auth-login" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-200 animate-fadeIn">
@@ -519,14 +737,14 @@
             <div id="tab-ordenes" class="p-6 space-y-4 hidden">
                 <div class="flex justify-between items-center">
                     <div>
-                        <h2 class="text-base font-bold text-slate-900">Historial de Órdenes y Certificados</h2>
-                        <p class="text-xs text-slate-500">Consulta los folios generados y descarga el Certificado Oficial NOM-256 en PDF.</p>
+                        <h2 class="text-base font-bold text-slate-900">Historial de Órdenes y Certificados NOM-256</h2>
+                        <p class="text-xs text-slate-500">Consulta los folios generados, descarga el Certificado Oficial en PDF y edita o elimina registros.</p>
                     </div>
                     <button onclick="loadOrders()" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg font-semibold flex items-center gap-1.5">
                         <i class="fa-solid fa-rotate"></i> Actualizar
                     </button>
                 </div>
-                <div class="overflow-x-auto border border-slate-200 rounded-xl">
+                <div class="overflow-x-auto border border-slate-200 rounded-xl bg-white shadow-sm">
                     <table class="w-full text-left text-xs">
                         <thead class="bg-slate-50 text-slate-600 font-bold uppercase text-[10px] border-b border-slate-200">
                             <tr>
@@ -535,8 +753,8 @@
                                 <th class="p-3">Cliente / Sucursal</th>
                                 <th class="p-3">Técnico</th>
                                 <th class="p-3">Fecha Servicio</th>
-                                <th class="p-3">Vigencia (30 Días)</th>
-                                <th class="p-3 text-right">PDF Oficial</th>
+                                <th class="p-3">Vigencia NOM-256</th>
+                                <th class="p-3 text-right">Acciones</th>
                             </tr>
                         </thead>
                         <tbody id="orders-tbody" class="divide-y divide-slate-100"></tbody>
@@ -628,24 +846,49 @@
                     </div>
                 </div>
 
-                <!-- Tabla de Matrices y Sucursales con Botón de Enlace Permanente -->
-                <div class="border border-slate-200 rounded-xl overflow-hidden bg-white">
-                    <div class="bg-slate-50 p-3 border-b border-slate-200 font-bold text-xs text-slate-700 flex justify-between items-center">
-                        <span>Directorio Institucional y Enlaces Permanentes</span>
+                <!-- 1. Tabla de Clientes Matriz Registrados -->
+                <div class="border border-slate-200 rounded-xl overflow-hidden bg-white shadow-sm space-y-0">
+                    <div class="bg-slate-50 p-3.5 border-b border-slate-200 font-bold text-xs text-slate-800 flex justify-between items-center">
+                        <span class="flex items-center gap-2"><i class="fa-solid fa-building text-brand-600"></i> Directorio de Clientes Matriz (Corporativos)</span>
+                        <span id="clients-count-badge" class="bg-brand-100 text-brand-800 text-[10px] font-bold px-2 py-0.5 rounded-full">0 Clientes</span>
                     </div>
-                    <table class="w-full text-left text-xs">
-                        <thead class="bg-slate-100 text-slate-600 font-bold uppercase text-[10px]">
-                            <tr>
-                                <th class="p-3">Matriz</th>
-                                <th class="p-3">RFC</th>
-                                <th class="p-3">Sucursal / Unidad</th>
-                                <th class="p-3">Clasificación</th>
-                                <th class="p-3">Contacto</th>
-                                <th class="p-3 text-right">Enlace / Portal B2B</th>
-                            </tr>
-                        </thead>
-                        <tbody id="clients-branches-tbody" class="divide-y divide-slate-100"></tbody>
-                    </table>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-slate-100 text-slate-600 font-bold uppercase text-[10px]">
+                                <tr>
+                                    <th class="p-3">Razón Social</th>
+                                    <th class="p-3">RFC</th>
+                                    <th class="p-3">Contrato Marco</th>
+                                    <th class="p-3">Portal Slug</th>
+                                    <th class="p-3 text-right">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="clients-tbody" class="divide-y divide-slate-100"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 2. Tabla de Sucursales y Unidades Operativas -->
+                <div class="border border-slate-200 rounded-xl overflow-hidden bg-white shadow-sm space-y-0">
+                    <div class="bg-slate-50 p-3.5 border-b border-slate-200 font-bold text-xs text-slate-800 flex justify-between items-center">
+                        <span class="flex items-center gap-2"><i class="fa-solid fa-hospital text-indigo-600"></i> Sucursales y Unidades Operativas</span>
+                        <span id="branches-count-badge" class="bg-indigo-100 text-indigo-800 text-[10px] font-bold px-2 py-0.5 rounded-full">0 Sucursales</span>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-slate-100 text-slate-600 font-bold uppercase text-[10px]">
+                                <tr>
+                                    <th class="p-3">Cliente Matriz</th>
+                                    <th class="p-3">Sucursal / Unidad</th>
+                                    <th class="p-3">Clasificación</th>
+                                    <th class="p-3">Dirección</th>
+                                    <th class="p-3">Contacto / Teléfono</th>
+                                    <th class="p-3 text-right">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="branches-tbody" class="divide-y divide-slate-100"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
@@ -793,6 +1036,7 @@
                                     <th class="p-3">CICOPLAFEST</th>
                                     <th class="p-3">Dosis</th>
                                     <th class="p-3">Reentrada</th>
+                                    <th class="p-3 text-right">Acciones</th>
                                 </tr>
                             </thead>
                             <tbody id="chemicals-tbody" class="divide-y divide-slate-100"></tbody>
@@ -885,13 +1129,13 @@
                 <!-- Formato Requerido Card -->
                 <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 text-xs space-y-2">
                     <p class="font-bold text-slate-800 flex items-center gap-1.5">
-                        <i class="fa-solid fa-table-columns text-brand-600"></i> Estructura Oficial de Columnas CSV Requerida:
+                        <i class="fa-solid fa-table-columns text-brand-600"></i> Estructura Oficial de Columnas CSV Requerida (Soporta hasta 4 ingredientes activos / químicos):
                     </p>
                     <div class="bg-slate-900 text-emerald-300 p-2.5 rounded-lg font-mono text-[11px] overflow-x-auto whitespace-nowrap shadow-inner">
-                        folio,rfc,razon_social,sucursal_nombre,sucursal_direccion,sucursal_telefono,contacto_sucursal,fecha_de_exp,quimico_nombre,ingrediente_activo,quimico_cicoplafest,dosis,lugar_tratado,metodo,observaciones
+                        folio,rfc,razon_social,sucursal_nombre,sucursal_direccion,sucursal_telefono,contacto_sucursal,fecha_de_exp,quimico_nombre_1,ingrediente_activo_1,quimico_cicoplafest_1,dosis_1,lugar_tratado_1,metodo_1,quimico_nombre_2,ingrediente_activo_2,quimico_cicoplafest_2,dosis_2,lugar_tratado_2,metodo_2,quimico_nombre_3,ingrediente_activo_3,quimico_cicoplafest_3,dosis_3,lugar_tratado_3,metodo_3,quimico_nombre_4,ingrediente_activo_4,quimico_cicoplafest_4,dosis_4,lugar_tratado_4,metodo_4,observaciones
                     </div>
                     <p class="text-[10px] text-slate-500">
-                        * <strong>folio:</strong> Folio único institucional (ej. <code>IMSS-2026-001</code>). * <strong>fecha_de_exp:</strong> Fecha de expedición (ej. <code>2026-05-10</code> o <code>10/05/2026</code>).
+                        * <strong>folio:</strong> Folio único (ej. <code>IMSS-2026-001</code>). * <strong>fecha_de_exp:</strong> Fecha expedición (<code>YYYY-MM-DD</code>). * <strong>Químicos 1 a 4:</strong> Si solo usaste 1, 2 o 3 químicos, deja vacíos los campos restantes (<code>_2</code>, <code>_3</code>, <code>_4</code>). También se admiten nombres simples o delimitados con pleca (<code>|</code>).
                     </p>
                 </div>
 
@@ -1382,9 +1626,17 @@
                                                     <td class="py-2 px-3 text-slate-600">${item.validity_end_date}</td>
                                                     <td class="py-2 px-3">${badge}</td>
                                                     <td class="py-2 px-3 text-right">
-                                                        <a href="/api/v1/services/${item.service_order_id}/pdf" target="_blank" class="text-brand-600 hover:text-brand-800 font-bold flex items-center justify-end gap-1">
-                                                            <i class="fa-solid fa-file-pdf"></i> Ver PDF
-                                                        </a>
+                                                        <div class="flex items-center justify-end gap-1.5">
+                                                            <a href="/api/v1/services/${item.service_order_id}/pdf" target="_blank" class="text-brand-600 hover:text-brand-800 font-bold flex items-center gap-1">
+                                                                <i class="fa-solid fa-file-pdf"></i> PDF
+                                                            </a>
+                                                            <button onclick="openEditServiceModal('${item.service_order_id}')" class="text-slate-600 hover:text-slate-900 font-bold flex items-center gap-1 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">
+                                                                <i class="fa-solid fa-pen-to-square"></i>
+                                                            </button>
+                                                            <button onclick="deleteService('${item.service_order_id}', '${item.certificate_folio}')" class="text-rose-600 hover:text-rose-800 font-bold flex items-center gap-1 bg-rose-50 px-1.5 py-0.5 rounded border border-rose-200">
+                                                                <i class="fa-solid fa-trash"></i>
+                                                            </button>
+                                                        </div>
                                                     </td>
                                                 </tr>
                                             `;
@@ -1411,15 +1663,23 @@
                 tbody.innerHTML = orders.map(o => `
                     <tr class="hover:bg-slate-50">
                         <td class="p-3 font-mono font-bold text-slate-900">${o.folio}</td>
-                        <td class="p-3 font-mono text-slate-600">${o.certificate ? o.certificate.certificate_folio : 'N/A'}</td>
-                        <td class="p-3 font-medium text-slate-800">${o.branch ? o.branch.name : 'N/A'}</td>
+                        <td class="p-3 font-mono font-bold text-brand-700">${o.certificate ? o.certificate.certificate_folio : 'N/A'}</td>
+                        <td class="p-3 font-medium text-slate-800">${o.branch ? `${o.branch.name} <span class="text-slate-400 text-[10px]">(${o.branch.client ? o.branch.client.legal_name : ''})</span>` : 'N/A'}</td>
                         <td class="p-3 text-slate-600">${o.technician ? o.technician.full_name : 'N/A'}</td>
                         <td class="p-3 text-slate-600">${new Date(o.service_start_date).toLocaleDateString()}</td>
                         <td class="p-3 text-slate-600">${o.certificate ? o.certificate.validity_end_date : 'N/A'}</td>
                         <td class="p-3 text-right">
-                            <a href="/api/v1/services/${o.id}/pdf" target="_blank" class="inline-flex items-center gap-1 bg-brand-50 hover:bg-brand-100 text-brand-700 font-bold px-2.5 py-1 rounded border border-brand-200">
-                                <i class="fa-solid fa-file-pdf"></i> PDF Oficial
-                            </a>
+                            <div class="flex items-center justify-end gap-1.5">
+                                <a href="/api/v1/services/${o.id}/pdf" target="_blank" class="inline-flex items-center gap-1 bg-brand-50 hover:bg-brand-100 text-brand-700 font-bold px-2 py-1 rounded border border-brand-200 text-xs">
+                                    <i class="fa-solid fa-file-pdf"></i> PDF
+                                </a>
+                                <button onclick="openEditServiceModal('${o.id}')" class="inline-flex items-center gap-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-2 py-1 rounded border border-slate-300 text-xs">
+                                    <i class="fa-solid fa-pen-to-square"></i> Editar
+                                </button>
+                                <button onclick="deleteService('${o.id}', '${o.folio}')" class="inline-flex items-center gap-1 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold px-2 py-1 rounded border border-rose-200 text-xs">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </div>
                         </td>
                     </tr>
                 `).join('');
@@ -1431,6 +1691,10 @@
                 const res = await fetch('/api/v1/chemicals');
                 cachedChemicals = await res.json();
                 const tbody = document.getElementById('chemicals-tbody');
+                if(!cachedChemicals.length) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="p-6 text-center text-slate-400">No hay químicos registrados en el catálogo.</td></tr>';
+                    return;
+                }
                 tbody.innerHTML = cachedChemicals.map(c => `
                     <tr class="hover:bg-slate-50">
                         <td class="p-3 font-bold text-slate-800">${c.commercial_name}</td>
@@ -1438,6 +1702,16 @@
                         <td class="p-3 font-mono text-teal-700 font-semibold">${c.cicoplafest_number}</td>
                         <td class="p-3 text-slate-600">${c.authorized_dose_per_liter}</td>
                         <td class="p-3 text-slate-600">${c.safety_interval_hours} hrs</td>
+                        <td class="p-3 text-right">
+                            <div class="flex items-center justify-end gap-1.5">
+                                <button onclick="openEditChemicalModal('${c.id}')" class="inline-flex items-center gap-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-2 py-1 rounded border border-slate-300 text-xs">
+                                    <i class="fa-solid fa-pen-to-square"></i> Editar
+                                </button>
+                                <button onclick="deleteChemical('${c.id}', '${c.commercial_name}')" class="inline-flex items-center gap-1 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold px-2 py-1 rounded border border-rose-200 text-xs">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
                     </tr>
                 `).join('');
             } catch(e) { console.error(e); }
@@ -1479,28 +1753,72 @@
                         cachedClients.map(c => `<option value="${c.id}">${c.legal_name} (${c.rfc})</option>`).join('');
                 }
 
-                const tbody = document.getElementById('clients-branches-tbody');
-                tbody.innerHTML = cachedBranches.map(b => `
-                    <tr class="hover:bg-slate-50">
-                        <td class="p-3 font-bold text-slate-800">${b.client ? b.client.legal_name : 'N/A'}</td>
-                        <td class="p-3 font-mono text-slate-600">${b.client ? b.client.rfc : 'N/A'}</td>
-                        <td class="p-3 font-medium text-slate-800">${b.name}</td>
-                        <td class="p-3"><span class="bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded text-[10px] font-semibold">${b.classification}</span></td>
-                        <td class="p-3 text-slate-600">${b.responsible_contact_name} (${b.phone})</td>
-                        <td class="p-3 text-right">
-                            ${b.client ? `
-                                <div class="flex items-center justify-end gap-1.5">
-                                    <button onclick="openPortalModal('${b.client.id}')" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold px-2 py-1 rounded border border-slate-300 flex items-center gap-1">
-                                        <i class="fa-solid fa-gear"></i> Enlace B2B
-                                    </button>
-                                    <a href="/portal/c/${b.client.portal_slug}" target="_blank" class="text-xs bg-brand-50 hover:bg-brand-100 text-brand-700 font-bold px-2 py-1 rounded border border-brand-200 flex items-center gap-1">
-                                        <i class="fa-solid fa-arrow-up-right-from-square"></i> Abrir
-                                    </a>
-                                </div>
-                            ` : ''}
-                        </td>
-                    </tr>
-                `).join('');
+                // Badges de conteo
+                const cliBadge = document.getElementById('clients-count-badge');
+                if (cliBadge) cliBadge.innerText = `${cachedClients.length} Clientes Matriz`;
+                const brBadge = document.getElementById('branches-count-badge');
+                if (brBadge) brBadge.innerText = `${cachedBranches.length} Sucursales`;
+
+                // 1. Render Clientes Matriz
+                const clientsTbody = document.getElementById('clients-tbody');
+                if (clientsTbody) {
+                    if (!cachedClients.length) {
+                        clientsTbody.innerHTML = '<tr><td colspan="5" class="p-6 text-center text-slate-400">No hay clientes matriz registrados.</td></tr>';
+                    } else {
+                        clientsTbody.innerHTML = cachedClients.map(c => `
+                            <tr class="hover:bg-slate-50">
+                                <td class="p-3 font-bold text-slate-800">${c.legal_name}</td>
+                                <td class="p-3 font-mono font-bold text-slate-600">${c.rfc}</td>
+                                <td class="p-3 text-slate-600">${c.master_contract_number || 'N/A'}</td>
+                                <td class="p-3 font-mono text-[11px] text-brand-700">${c.portal_slug}</td>
+                                <td class="p-3 text-right">
+                                    <div class="flex items-center justify-end gap-1.5">
+                                        <button onclick="openPortalModal('${c.id}')" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold px-2 py-1 rounded border border-slate-300 flex items-center gap-1">
+                                            <i class="fa-solid fa-gear"></i> Enlace B2B
+                                        </button>
+                                        <a href="/portal/c/${c.portal_slug}" target="_blank" class="text-xs bg-brand-50 hover:bg-brand-100 text-brand-700 font-bold px-2 py-1 rounded border border-brand-200 flex items-center gap-1">
+                                            <i class="fa-solid fa-arrow-up-right-from-square"></i> Abrir
+                                        </a>
+                                        <button onclick="openEditClientModal('${c.id}')" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-2 py-1 rounded border border-slate-300 flex items-center gap-1" title="Editar Cliente">
+                                            <i class="fa-solid fa-pen-to-square"></i>
+                                        </button>
+                                        <button onclick="deleteClient('${c.id}', '${c.legal_name}')" class="text-xs bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold px-2 py-1 rounded border border-rose-200 flex items-center gap-1" title="Eliminar Cliente">
+                                            <i class="fa-solid fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        `).join('');
+                    }
+                }
+
+                // 2. Render Sucursales
+                const branchesTbody = document.getElementById('branches-tbody');
+                if (branchesTbody) {
+                    if (!cachedBranches.length) {
+                        branchesTbody.innerHTML = '<tr><td colspan="6" class="p-6 text-center text-slate-400">No hay sucursales registradas.</td></tr>';
+                    } else {
+                        branchesTbody.innerHTML = cachedBranches.map(b => `
+                            <tr class="hover:bg-slate-50">
+                                <td class="p-3 font-bold text-slate-800">${b.client ? b.client.legal_name : 'N/A'}</td>
+                                <td class="p-3 font-medium text-slate-800">${b.name}</td>
+                                <td class="p-3"><span class="bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded text-[10px] font-semibold">${b.classification}</span></td>
+                                <td class="p-3 text-slate-600">${b.address}</td>
+                                <td class="p-3 text-slate-600">${b.responsible_contact_name} (${b.phone})</td>
+                                <td class="p-3 text-right">
+                                    <div class="flex items-center justify-end gap-1.5">
+                                        <button onclick="openEditBranchModal('${b.id}')" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-2 py-1 rounded border border-slate-300 flex items-center gap-1">
+                                            <i class="fa-solid fa-pen-to-square"></i> Editar
+                                        </button>
+                                        <button onclick="deleteBranch('${b.id}', '${b.name}')" class="text-xs bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold px-2 py-1 rounded border border-rose-200 flex items-center gap-1">
+                                            <i class="fa-solid fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        `).join('');
+                    }
+                }
             } catch(e) { console.error(e); }
         }
 
@@ -1574,6 +1892,257 @@
         function testModalPortal() {
             const slug = document.getElementById('modal-portal-slug').value;
             window.open('/portal/c/' + slug, '_blank');
+        }
+
+        // ====================================================================
+        // EDICIÓN Y ELIMINACIÓN DE SERVICIOS / CERTIFICADOS
+        // ====================================================================
+        async function openEditServiceModal(serviceId) {
+            try {
+                const res = await fetch(`/api/v1/services/${serviceId}`);
+                if (!res.ok) throw new Error('No se pudo obtener el servicio');
+                const srv = await res.json();
+
+                document.getElementById('edit-service-id').value = srv.id;
+                document.getElementById('edit-service-folio').value = srv.folio;
+                document.getElementById('edit-cert-folio').value = srv.certificate ? srv.certificate.certificate_folio : '';
+                
+                // Fechas
+                const startStr = srv.service_start_date ? srv.service_start_date.split('T')[0] : '';
+                document.getElementById('edit-service-issue-date').value = (srv.certificate && srv.certificate.issue_date) || startStr;
+                document.getElementById('edit-service-validity-end').value = (srv.certificate && srv.certificate.validity_end_date) || '';
+                
+                document.getElementById('edit-service-resp-name').value = srv.certificate ? srv.certificate.sanitary_responsible_name : '';
+                document.getElementById('edit-service-license').value = srv.certificate ? srv.certificate.sanitary_license_number : '';
+                document.getElementById('edit-service-summary').value = srv.results_summary || '';
+                document.getElementById('edit-service-obs').value = srv.observations || '';
+
+                document.getElementById('edit-service-modal-subtitle').innerText = `${srv.folio} - ${srv.branch ? srv.branch.name : ''}`;
+                document.getElementById('modal-edit-service').classList.remove('hidden');
+            } catch (err) {
+                alert('Error: ' + err.message);
+            }
+        }
+
+        function closeEditServiceModal() {
+            document.getElementById('modal-edit-service').classList.add('hidden');
+        }
+
+        async function handleUpdateService(e) {
+            e.preventDefault();
+            const serviceId = document.getElementById('edit-service-id').value;
+            const payload = {
+                folio: document.getElementById('edit-service-folio').value.trim(),
+                certificate_folio: document.getElementById('edit-cert-folio').value.trim(),
+                issue_date: document.getElementById('edit-service-issue-date').value,
+                validity_start_date: document.getElementById('edit-service-issue-date').value,
+                validity_end_date: document.getElementById('edit-service-validity-end').value,
+                sanitary_responsible_name: document.getElementById('edit-service-resp-name').value.trim(),
+                sanitary_license_number: document.getElementById('edit-service-license').value.trim(),
+                results_summary: document.getElementById('edit-service-summary').value.trim(),
+                observations: document.getElementById('edit-service-obs').value.trim()
+            };
+
+            try {
+                const res = await fetch(`/api/v1/services/${serviceId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (!res.ok) throw new Error((await res.json()).detail || 'Error al actualizar');
+                alert('¡Servicio y Certificado actualizados correctamente!');
+                closeEditServiceModal();
+                loadOrders();
+                loadDashboardData();
+            } catch (err) {
+                alert('Error: ' + err.message);
+            }
+        }
+
+        async function deleteService(serviceId, folio) {
+            if (!confirm(`¿Estás seguro de que deseas eliminar la orden y certificado con folio "${folio}"?`)) return;
+            try {
+                const res = await fetch(`/api/v1/services/${serviceId}`, { method: 'DELETE' });
+                if (!res.ok) throw new Error('No se pudo eliminar el servicio.');
+                alert(`Orden "${folio}" y Certificado eliminados.`);
+                loadOrders();
+                loadDashboardData();
+            } catch (err) {
+                alert('Error: ' + err.message);
+            }
+        }
+
+        // ====================================================================
+        // EDICIÓN Y ELIMINACIÓN DE CLIENTES MATRIZ
+        // ====================================================================
+        function openEditClientModal(clientId) {
+            const client = cachedClients.find(c => c.id === clientId);
+            if (!client) return;
+            document.getElementById('edit-cli-id').value = client.id;
+            document.getElementById('edit-cli-name').value = client.legal_name;
+            document.getElementById('edit-cli-rfc').value = client.rfc;
+            document.getElementById('edit-cli-contract').value = client.master_contract_number || '';
+            document.getElementById('edit-cli-regime').value = client.tax_regime || '';
+            document.getElementById('modal-edit-client').classList.remove('hidden');
+        }
+
+        function closeEditClientModal() {
+            document.getElementById('modal-edit-client').classList.add('hidden');
+        }
+
+        async function handleUpdateClient(e) {
+            e.preventDefault();
+            const clientId = document.getElementById('edit-cli-id').value;
+            const payload = {
+                legal_name: document.getElementById('edit-cli-name').value.trim(),
+                rfc: document.getElementById('edit-cli-rfc').value.trim().toUpperCase(),
+                master_contract_number: document.getElementById('edit-cli-contract').value.trim() || null,
+                tax_regime: document.getElementById('edit-cli-regime').value.trim() || null
+            };
+
+            try {
+                const res = await fetch(`/api/v1/clients/${clientId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (!res.ok) throw new Error((await res.json()).detail || 'Error al actualizar');
+                alert('¡Cliente Matriz actualizado exitosamente!');
+                closeEditClientModal();
+                loadClientsAndBranches();
+            } catch (err) {
+                alert('Error: ' + err.message);
+            }
+        }
+
+        async function deleteClient(clientId, clientName) {
+            if (!confirm(`¿Estás seguro de eliminar el cliente "${clientName}" y todas sus sucursales asociadas?`)) return;
+            try {
+                const res = await fetch(`/api/v1/clients/${clientId}`, { method: 'DELETE' });
+                if (!res.ok) throw new Error('No se pudo eliminar el cliente.');
+                alert(`Cliente "${clientName}" eliminado.`);
+                loadClientsAndBranches();
+            } catch (err) {
+                alert('Error: ' + err.message);
+            }
+        }
+
+        // ====================================================================
+        // EDICIÓN Y ELIMINACIÓN DE SUCURSALES
+        // ====================================================================
+        function openEditBranchModal(branchId) {
+            const branch = cachedBranches.find(b => b.id === branchId);
+            if (!branch) return;
+            document.getElementById('edit-br-id').value = branch.id;
+            document.getElementById('edit-br-name').value = branch.name;
+            document.getElementById('edit-br-class').value = branch.classification;
+            document.getElementById('edit-br-addr').value = branch.address;
+            document.getElementById('edit-br-phone').value = branch.phone;
+            document.getElementById('edit-br-resp').value = branch.responsible_contact_name;
+            document.getElementById('modal-edit-branch').classList.remove('hidden');
+        }
+
+        function closeEditBranchModal() {
+            document.getElementById('modal-edit-branch').classList.add('hidden');
+        }
+
+        async function handleUpdateBranch(e) {
+            e.preventDefault();
+            const branchId = document.getElementById('edit-br-id').value;
+            const payload = {
+                name: document.getElementById('edit-br-name').value.trim(),
+                classification: document.getElementById('edit-br-class').value,
+                address: document.getElementById('edit-br-addr').value.trim(),
+                phone: document.getElementById('edit-br-phone').value.trim(),
+                responsible_contact_name: document.getElementById('edit-br-resp').value.trim()
+            };
+
+            try {
+                const res = await fetch(`/api/v1/branches/${branchId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (!res.ok) throw new Error((await res.json()).detail || 'Error al actualizar');
+                alert('¡Sucursal actualizada exitosamente!');
+                closeEditBranchModal();
+                loadClientsAndBranches();
+            } catch (err) {
+                alert('Error: ' + err.message);
+            }
+        }
+
+        async function deleteBranch(branchId, branchName) {
+            if (!confirm(`¿Estás seguro de eliminar la sucursal "${branchName}"?`)) return;
+            try {
+                const res = await fetch(`/api/v1/branches/${branchId}`, { method: 'DELETE' });
+                if (!res.ok) throw new Error('No se pudo eliminar la sucursal.');
+                alert(`Sucursal "${branchName}" eliminada.`);
+                loadClientsAndBranches();
+            } catch (err) {
+                alert('Error: ' + err.message);
+            }
+        }
+
+        // ====================================================================
+        // EDICIÓN Y ELIMINACIÓN DE QUÍMICOS / INGREDIENTES ACTIVOS
+        // ====================================================================
+        function openEditChemicalModal(chemId) {
+            const chem = cachedChemicals.find(c => c.id === chemId);
+            if (!chem) return;
+            document.getElementById('edit-chem-id').value = chem.id;
+            document.getElementById('edit-chem-name').value = chem.commercial_name;
+            document.getElementById('edit-chem-active').value = chem.active_ingredient;
+            document.getElementById('edit-chem-cico').value = chem.cicoplafest_number;
+            document.getElementById('edit-chem-dose').value = chem.authorized_dose_per_liter;
+            document.getElementById('edit-chem-hours').value = chem.safety_interval_hours;
+            document.getElementById('edit-chem-methods').value = chem.compatible_methods;
+            document.getElementById('edit-chem-tox').value = chem.toxicological_category;
+            document.getElementById('modal-edit-chemical').classList.remove('hidden');
+        }
+
+        function closeEditChemicalModal() {
+            document.getElementById('modal-edit-chemical').classList.add('hidden');
+        }
+
+        async function handleUpdateChemical(e) {
+            e.preventDefault();
+            const chemId = document.getElementById('edit-chem-id').value;
+            const payload = {
+                commercial_name: document.getElementById('edit-chem-name').value.trim(),
+                active_ingredient: document.getElementById('edit-chem-active').value.trim(),
+                cicoplafest_number: document.getElementById('edit-chem-cico').value.trim().toUpperCase(),
+                authorized_dose_per_liter: document.getElementById('edit-chem-dose').value.trim(),
+                safety_interval_hours: parseInt(document.getElementById('edit-chem-hours').value),
+                compatible_methods: document.getElementById('edit-chem-methods').value.trim(),
+                toxicological_category: document.getElementById('edit-chem-tox').value.trim()
+            };
+
+            try {
+                const res = await fetch(`/api/v1/chemicals/${chemId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (!res.ok) throw new Error((await res.json()).detail || 'Error al actualizar');
+                alert('¡Químico actualizado exitosamente!');
+                closeEditChemicalModal();
+                loadChemicals();
+            } catch (err) {
+                alert('Error: ' + err.message);
+            }
+        }
+
+        async function deleteChemical(chemId, chemName) {
+            if (!confirm(`¿Estás seguro de eliminar el químico "${chemName}" del catálogo?`)) return;
+            try {
+                const res = await fetch(`/api/v1/chemicals/${chemId}`, { method: 'DELETE' });
+                if (!res.ok) throw new Error('No se pudo eliminar el químico.');
+                alert(`Químico "${chemName}" eliminado.`);
+                loadChemicals();
+            } catch (err) {
+                alert('Error: ' + err.message);
+            }
         }
 
         async function prepareNewServiceForm() {
@@ -1915,15 +2484,15 @@
         }
 
         function downloadCSVTemplate() {
-            const headers = "folio,rfc,razon_social,sucursal_nombre,sucursal_direccion,sucursal_telefono,contacto_sucursal,fecha_de_exp,quimico_nombre,ingrediente_activo,quimico_cicoplafest,dosis,lugar_tratado,metodo,observaciones\n";
-            const sample1 = "IMSS-2026-001,IMS421231I45,INSTITUTO MEXICANO DEL SEGURO SOCIAL,HGZ No. 1 Gabriel Mancera,Gabriel Mancera 222 Benito Juarez CDMX,5556391122,Dra. Marcela Rivas,2026-05-10,Biothrine Flow,Deltametrina 2.5%,RSCO-URB-INAC-111-2020,10 ml / 1 L,Cocina y Almacen,Aspersion Manual,Servicio mensual NOM-256\n";
-            const sample2 = "WAL-2026-088,WAL860507P92,NUEVA WAL-MART DE MEXICO S.DE R.L. DE C.V.,Walmart Express Felix Cuevas,Felix Cuevas 374 Tlacoquemecatl del Valle CDMX,5555754400,Gerente de Turno,2026-05-15,Maxforce Forte,Fipronil 0.05%,RSCO-DOM-INAC-182-2021,Gel focalizado,Comedores y Oficinas,Geles,Aplicacion preventiva de gel cucarachicida";
+            const headers = "folio,rfc,razon_social,sucursal_nombre,sucursal_direccion,sucursal_telefono,contacto_sucursal,fecha_de_exp,quimico_nombre_1,ingrediente_activo_1,quimico_cicoplafest_1,dosis_1,lugar_tratado_1,metodo_1,quimico_nombre_2,ingrediente_activo_2,quimico_cicoplafest_2,dosis_2,lugar_tratado_2,metodo_2,quimico_nombre_3,ingrediente_activo_3,quimico_cicoplafest_3,dosis_3,lugar_tratado_3,metodo_3,quimico_nombre_4,ingrediente_activo_4,quimico_cicoplafest_4,dosis_4,lugar_tratado_4,metodo_4,observaciones\n";
+            const sample1 = "IMSS-2026-001,IMS421231I45,INSTITUTO MEXICANO DEL SEGURO SOCIAL,HGZ No. 1 Gabriel Mancera,Gabriel Mancera 222 Benito Juarez CDMX,5556391122,Dra. Marcela Rivas,2026-05-10,Biothrine Flow,Deltametrina 2.5%,RSCO-URB-INAC-111-2020,10 ml / 1 L,Cocina y Almacen,Aspersion Manual,Maxforce Forte,Fipronil 0.05%,RSCO-DOM-INAC-182-2021,Gel focalizado,Comedores y Oficinas,Geles,Demand Duo,Tiametoxam 11.6% + Lambda Cyhalotrina 8.8%,RSCO-URB-INAC-158-2015,5 ml / 1 L,Perimetros exteriores,Termonebulizacion,,,,,,,Servicio mensual integral NOM-256\n";
+            const sample2 = "WAL-2026-088,WAL860507P92,NUEVA WAL-MART DE MEXICO S.DE R.L. DE C.V.,Walmart Express Felix Cuevas,Felix Cuevas 374 Tlacoquemecatl del Valle CDMX,5555754400,Gerente de Turno,2026-05-15,Temprid SC,Imidacloprid 21% + Betaciflutrin 10.5%,RSCO-URB-INAC-177-2017,4 ml / 1 L,Bodega y Pasillos,Microinyeccion,,,,,,,,,,,,,,,,,,Aplicacion preventiva y correctiva";
             
             const blob = new Blob([headers + sample1 + sample2], { type: 'text/csv;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = 'plantilla_certificados_fumiflosa.csv';
+            a.download = 'plantilla_certificados_fumiflosa_4_quimicos.csv';
             document.body.appendChild(a);
             a.click();
             a.remove();

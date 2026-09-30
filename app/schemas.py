@@ -290,6 +290,26 @@ class ServiceOrderCreate(BaseModel):
     chemicals_applied: List[CertificateChemicalCreate]
 
 
+class ServiceOrderUpdate(BaseModel):
+    folio: Optional[str] = None
+    service_start_date: Optional[datetime] = None
+    service_end_date: Optional[datetime] = None
+    branch_id: Optional[uuid.UUID] = None
+    technician_id: Optional[uuid.UUID] = None
+    results_summary: Optional[str] = None
+    observations: Optional[str] = None
+    
+    # Certificado NOM-256
+    certificate_folio: Optional[str] = None
+    issue_date: Optional[date] = None
+    validity_start_date: Optional[date] = None
+    validity_end_date: Optional[date] = None
+    sanitary_license_number: Optional[str] = None
+    sanitary_responsible_name: Optional[str] = None
+    sanitary_responsible_id: Optional[str] = None
+    chemicals_applied: Optional[List[CertificateChemicalCreate]] = None
+
+
 class ServiceOrderResponse(BaseModel):
     id: uuid.UUID
     folio: str
