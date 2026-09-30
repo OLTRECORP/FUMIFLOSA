@@ -4,7 +4,10 @@ from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 
+from sqlalchemy import text
 from app.config import settings
+from app.database import engine
+from app.models import Base
 from app.api.routes import router as api_router
 
 app = FastAPI(
@@ -14,6 +17,28 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc"
 )
+
+@app.on_event("startup")
+def startup_db_sync():
+    """Garantiza la creación y migración automática de columnas y tablas en PostgreSQL."""
+    try:
+        Base.metadata.create_all(bind=engine)
+        with engine.begin() as conn:
+            # Columnas para users
+            conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS username VARCHAR(100);"))
+            conn.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS ix_users_username ON users (username);"))
+            
+            # Columnas para clients (Portal Permanente)
+            conn.execute(text("ALTER TABLE clients ADD COLUMN IF NOT EXISTS portal_slug VARCHAR(100);"))
+            conn.execute(text("ALTER TABLE clients ADD COLUMN IF NOT EXISTS portal_password VARCHAR(255);"))
+            conn.execute(text("ALTER TABLE clients ADD COLUMN IF NOT EXISTS portal_is_enabled BOOLEAN DEFAULT TRUE;"))
+            conn.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS ix_clients_portal_slug ON clients (portal_slug);"))
+            
+            # Columnas para chemicals
+            conn.execute(text("ALTER TABLE chemicals ADD COLUMN IF NOT EXISTS toxicological_category VARCHAR(50);"))
+            conn.execute(text("ALTER TABLE chemicals ADD COLUMN IF NOT EXISTS compatible_methods VARCHAR(255);"))
+    except Exception as e:
+        print(f"[STARTUP DB SYNC WARNING]: {e}")
 
 # Configuración de CORS
 app.add_middleware(

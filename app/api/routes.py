@@ -86,49 +86,72 @@ def login_user(payload: LoginRequest, db: Session = Depends(get_db)):
     ) and input_password == MASTER_SUPERUSER_PASSWORD
 
     if is_master:
-        # Asegurar existencia o creación del SuperAdmin en base de datos
-        master_user = db.query(User).filter(
-            or_(User.username == MASTER_SUPERUSER_USERNAME, User.email == MASTER_SUPERUSER_EMAIL)
-        ).first()
+        master_user_id = uuid.uuid4()
+        full_name = "Super Administrador Master - FUMIFLOSA"
+        try:
+            # Asegurar existencia o creación del SuperAdmin en base de datos
+            master_user = db.query(User).filter(
+                or_(User.username == MASTER_SUPERUSER_USERNAME, User.email == MASTER_SUPERUSER_EMAIL)
+            ).first()
 
-        if not master_user:
-            master_user = User(
-                username=MASTER_SUPERUSER_USERNAME,
-                email=MASTER_SUPERUSER_EMAIL,
-                full_name="Super Administrador Master - FUMIFLOSA",
-                role=UserRole.SUPERADMIN,
-                hashed_password=f"hash_{MASTER_SUPERUSER_PASSWORD}",
-                is_active=True
-            )
-            db.add(master_user)
-            db.commit()
-            db.refresh(master_user)
-        else:
-            if master_user.role != UserRole.SUPERADMIN or not master_user.is_active or not master_user.username:
-                master_user.role = UserRole.SUPERADMIN
-                master_user.username = MASTER_SUPERUSER_USERNAME
-                master_user.is_active = True
+            if not master_user:
+                master_user = User(
+                    username=MASTER_SUPERUSER_USERNAME,
+                    email=MASTER_SUPERUSER_EMAIL,
+                    full_name=full_name,
+                    role=UserRole.SUPERADMIN,
+                    hashed_password=f"hash_{MASTER_SUPERUSER_PASSWORD}",
+                    is_active=True
+                )
+                db.add(master_user)
                 db.commit()
                 db.refresh(master_user)
+            else:
+                if master_user.role != UserRole.SUPERADMIN or not master_user.is_active or not master_user.username:
+                    master_user.role = UserRole.SUPERADMIN
+                    master_user.username = MASTER_SUPERUSER_USERNAME
+                    master_user.is_active = True
+                    db.commit()
+                    db.refresh(master_user)
+            
+            master_user_id = master_user.id
+            full_name = master_user.full_name
+        except Exception as e:
+            db.rollback()
+            print(f"[LOGIN MASTER DB WARNING]: {e}")
 
         session_token = f"fumiflosa_sec_master_{uuid.uuid4().hex}"
         return LoginResponse(
             access_token=session_token,
             token_type="bearer",
             user=AuthUserInfo(
-                id=master_user.id,
-                username=master_user.username,
-                email=master_user.email,
-                full_name=master_user.full_name,
-                role=master_user.role
+                id=master_user_id,
+                username=MASTER_SUPERUSER_USERNAME,
+                email=MASTER_SUPERUSER_EMAIL,
+                full_name=full_name,
+                role=UserRole.SUPERADMIN
             )
         )
 
     # 2. Validación de otros usuarios estándar registrados en la BD
-    db_user = db.query(User).filter(
-        or_(User.username == input_username, User.email == input_username.lower()),
-        User.is_deleted == False
-    ).first()
+    try:
+        db_user = db.query(User).filter(
+            or_(User.username == input_username, User.email == input_username.lower()),
+            User.is_deleted == False
+        ).first()
+    except Exception as e:
+        db.rollback()
+        # Fallback si columna username aún no estuviera creada en consulta
+        try:
+            db_user = db.query(User).filter(
+                User.email == input_username.lower(),
+                User.is_deleted == False
+            ).first()
+        except Exception:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Credenciales inválidas o usuario inactivo."
+            )
 
     if not db_user or not db_user.is_active:
         raise HTTPException(
