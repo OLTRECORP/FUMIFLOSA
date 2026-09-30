@@ -31,6 +31,15 @@ class HistoricalDataImporter:
         count = self.db.execute(stmt).scalar() or 0
         return count + 1
 
+    def _clean_str(self, val: Any, default: str = "") -> str:
+        """Limpia y garantiza retorno de cadena de texto sin caracteres nulos ni floats."""
+        if val is None or pd.isna(val):
+            return default
+        s = str(val).strip()
+        if s.lower() in ("nan", "none", "null", "<na>", ""):
+            return default
+        return s
+
     def _parse_date(self, val: Any) -> Optional[date]:
         """Convierte cadenas de fecha en diversos formatos (ISO, DD/MM/YYYY, etc.) a date."""
         if pd.isna(val) or val is None:
@@ -77,9 +86,12 @@ class HistoricalDataImporter:
     def _get_first_val(self, row: dict, keys: List[str]) -> Optional[str]:
         """Devuelve el primer valor no vacío de una lista de claves posibles."""
         for k in keys:
-            v = row.get(k)
-            if v is not None and not pd.isna(v) and str(v).strip():
-                return str(v).strip()
+            if k in row:
+                v = row.get(k)
+                if v is not None and not pd.isna(v):
+                    s = str(v).strip()
+                    if s and s.lower() not in ("nan", "none", "null", "<na>"):
+                        return s
         return None
 
     def _extract_chemicals_from_row(self, row: dict) -> List[Dict[str, Any]]:
@@ -144,12 +156,12 @@ class HistoricalDataImporter:
 
         # 2. Si solo se detectó 1 químico (o ninguno) y existen delimitadores '|' o ';' en los campos base
         if len(extracted) <= 1:
-            base_name = str(row.get("quimico_nombre") or "")
-            base_active = str(row.get("ingrediente_activo") or "")
-            base_cico = str(row.get("quimico_cicoplafest") or "")
-            base_dose = str(row.get("dosis") or "")
-            base_lugar = str(row.get("lugar_tratado") or "")
-            base_metodo = str(row.get("metodo") or "")
+            base_name = self._clean_str(row.get("quimico_nombre"))
+            base_active = self._clean_str(row.get("ingrediente_activo"))
+            base_cico = self._clean_str(row.get("quimico_cicoplafest"))
+            base_dose = self._clean_str(row.get("dosis"))
+            base_lugar = self._clean_str(row.get("lugar_tratado"))
+            base_metodo = self._clean_str(row.get("metodo"))
 
             delim = "|" if "|" in (base_active + base_name) else (";" if ";" in (base_active + base_name) else None)
             
@@ -186,12 +198,12 @@ class HistoricalDataImporter:
         if not extracted:
             extracted.append({
                 "slot": 1,
-                "name": str(row.get("quimico_nombre") or "Insecticida Piretroide").strip(),
-                "active_ingredient": str(row.get("ingrediente_activo") or "Deltametrina 2.5%").strip(),
-                "cicoplafest": str(row.get("quimico_cicoplafest") or "RSCO-URB-INAC-111-2020").strip(),
-                "dose": str(row.get("dosis") or "10 ml / 1 L").strip(),
-                "lugar": str(row.get("lugar_tratado") or "Áreas comunes e interiores").strip(),
-                "metodo": str(row.get("metodo") or "Aspersión Manual").strip()
+                "name": self._clean_str(row.get("quimico_nombre"), "Insecticida Piretroide"),
+                "active_ingredient": self._clean_str(row.get("ingrediente_activo"), "Deltametrina 2.5%"),
+                "cicoplafest": self._clean_str(row.get("quimico_cicoplafest"), "RSCO-URB-INAC-111-2020"),
+                "dose": self._clean_str(row.get("dosis"), "10 ml / 1 L"),
+                "lugar": self._clean_str(row.get("lugar_tratado"), "Áreas comunes e interiores"),
+                "metodo": self._clean_str(row.get("metodo"), "Aspersión Manual")
             })
 
         return extracted[:4]
@@ -201,18 +213,19 @@ class HistoricalDataImporter:
         Ingesta, normaliza y persiste órdenes y certificados históricos en una sola transacción atómica.
         Permite hasta 4 químicos/ingredientes activos por certificado (33 columnas).
         """
-        # Intentar leer con encoding UTF-8 o latin1
+        # Intentar leer con encoding UTF-8 o latin1 asegurando que celdas vacías sean cadenas vacías
         try:
-            df = pd.read_csv(io.BytesIO(file_contents), dtype=str, encoding='utf-8-sig')
+            df = pd.read_csv(io.BytesIO(file_contents), dtype=str, encoding='utf-8-sig', keep_default_na=False)
         except UnicodeDecodeError:
             try:
-                df = pd.read_csv(io.BytesIO(file_contents), dtype=str, encoding='latin1')
+                df = pd.read_csv(io.BytesIO(file_contents), dtype=str, encoding='latin1', keep_default_na=False)
             except Exception:
-                df = pd.read_csv(io.BytesIO(file_contents), dtype=str, encoding='cp1252')
+                df = pd.read_csv(io.BytesIO(file_contents), dtype=str, encoding='cp1252', keep_default_na=False)
 
         # Normalizar nombres de columnas a minúsculas y sin espacios
         df.columns = df.columns.str.strip().str.lower()
-        df = df.map(lambda x: x.strip() if isinstance(x, str) else x)
+        df = df.fillna('')
+        df = df.astype(str)
 
         # Mapeo de alias de fecha de expedición
         date_col = None
@@ -227,6 +240,7 @@ class HistoricalDataImporter:
             )
 
         summary = {
+            "total_rows": len(df),
             "clients_created": 0,
             "clients_linked": 0,
             "branches_created": 0,
@@ -293,10 +307,15 @@ class HistoricalDataImporter:
             for idx, row in df.iterrows():
                 row_num = idx + 2
                 try:
-                    rfc = (row.get('rfc') or '').strip().upper()[:13]
-                    razon_social = (row.get('razon_social') or '').strip()
-                    sucursal_nombre = (row.get('sucursal_nombre') or '').strip()
-                    sucursal_direccion = (row.get('sucursal_direccion') or '').strip()
+                    row_dict = row.to_dict()
+                    rfc = self._clean_str(row_dict.get('rfc')).upper()[:13]
+                    razon_social = self._clean_str(row_dict.get('razon_social'))
+                    sucursal_nombre = self._clean_str(row_dict.get('sucursal_nombre'))
+                    sucursal_direccion = self._clean_str(row_dict.get('sucursal_direccion'))
+                    sucursal_telefono = self._clean_str(row_dict.get('sucursal_telefono'), '5500000000')[:50]
+                    contacto_sucursal = self._clean_str(row_dict.get('contacto_sucursal'), 'Encargado de Unidad')[:255]
+                    regimen_fiscal = self._clean_str(row_dict.get('regimen_fiscal'), '601 - General de Ley Personas Morales')[:100]
+                    observaciones = self._clean_str(row_dict.get('observaciones'), 'Servicio migrado históricamente conforme a NOM-256.')
 
                     if not razon_social and not sucursal_nombre:
                         summary["errors"].append(f"Línea {row_num}: Razón Social y Sucursal vacías (omitida).")
@@ -308,9 +327,9 @@ class HistoricalDataImporter:
                         sucursal_nombre = "Matriz / Principal"
 
                     # Parseo de Fecha de Expedición
-                    exp_date = self._parse_date(row.get(date_col))
+                    exp_date = self._parse_date(row_dict.get(date_col))
                     if not exp_date:
-                        summary["errors"].append(f"Línea {row_num}: Fecha de expedición '{row.get(date_col)}' inválida o no reconocida.")
+                        summary["errors"].append(f"Línea {row_num}: Fecha de expedición '{row_dict.get(date_col)}' inválida o no reconocida.")
                         continue
 
                     # 1. Gestión / Upsert de Cliente Matriz
@@ -334,7 +353,7 @@ class HistoricalDataImporter:
                         new_client = Client(
                             legal_name=razon_social[:255],
                             rfc=rfc[:13],
-                            tax_regime=str(row.get('regimen_fiscal') or '601 - General de Ley Personas Morales')[:100]
+                            tax_regime=regimen_fiscal
                         )
                         self.db.add(new_client)
                         self.db.flush()
@@ -355,9 +374,9 @@ class HistoricalDataImporter:
                             client_id=client.id,
                             name=sucursal_nombre[:255],
                             address=(sucursal_direccion or 'Domicilio no especificado')[:500],
-                            phone=(row.get('sucursal_telefono') or '5500000000').strip()[:50],
+                            phone=sucursal_telefono,
                             classification=BranchClassification.COMERCIAL,
-                            responsible_contact_name=(row.get('contacto_sucursal') or 'Encargado de Unidad').strip()[:255]
+                            responsible_contact_name=contacto_sucursal
                         )
                         self.db.add(new_branch)
                         self.db.flush()
@@ -370,9 +389,7 @@ class HistoricalDataImporter:
                         summary["branches_linked"] += 1
 
                     # 3. Determinación de Folios y Validación de Duplicidad
-                    input_folio = (row.get('folio') or '').strip().lstrip('/').strip()
-                    if input_folio.lower() in ('nan', 'none', 'null'):
-                        input_folio = ''
+                    input_folio = self._clean_str(row_dict.get('folio')).lstrip('/').strip()
 
                     if input_folio:
                         cert_folio = input_folio[:100]
@@ -413,7 +430,7 @@ class HistoricalDataImporter:
                         pest_crawling_insects=True,
                         pest_rodents=True,
                         proc_aspersion=True,
-                        observations=str(row.get('observaciones') or 'Servicio migrado históricamente conforme a NOM-256.').strip(),
+                        observations=observaciones,
                         results_summary="Tratamiento integral preventivo y correctivo aplicado satisfactoriamente."
                     )
                     self.db.add(service_order)
@@ -437,47 +454,53 @@ class HistoricalDataImporter:
                     existing_cert_dates_branches.add((exp_date, branch.id))
 
                     # 6. Extraer y Persistir hasta 4 Químicos / Ingredientes Activos
-                    chem_items = self._extract_chemicals_from_row(row.to_dict())
+                    chem_items = self._extract_chemicals_from_row(row_dict)
 
                     for item in chem_items:
-                        cico = item["cicoplafest"].upper().strip()[:100]
-                        c_name = item["name"].strip()[:255]
-                        c_active = item["active_ingredient"].strip()[:255]
+                        cico = self._clean_str(item.get("cicoplafest")).upper()[:100]
+                        c_name = self._clean_str(item.get("name"))[:255]
+                        c_active = self._clean_str(item.get("active_ingredient"))[:255]
+                        dose_val = self._clean_str(item.get("dose"), "10 ml / 1 L")[:100]
+                        lugar_val = self._clean_str(item.get("lugar"), "Áreas comunes e interiores")[:255]
+                        metodo_val = self._clean_str(item.get("metodo"), "Aspersión Manual")[:100]
 
-                        chem_entity = chems_by_cico.get(cico)
-                        if not chem_entity:
+                        chem_entity = chems_by_cico.get(cico) if cico else None
+                        if not chem_entity and c_name:
                             chem_entity = chems_by_name.get(c_name.upper())
-                        if not chem_entity:
+                        if not chem_entity and c_active:
                             chem_entity = chems_by_active.get(c_active.upper())
 
                         if not chem_entity:
                             chem_entity = Chemical(
-                                commercial_name=c_name,
-                                active_ingredient=c_active,
-                                cicoplafest_number=cico,
-                                authorized_dose_per_liter=str(item["dose"])[:100],
-                                compatible_methods=str(item["metodo"])[:255],
+                                commercial_name=c_name or "Insecticida Piretroide",
+                                active_ingredient=c_active or "Deltametrina 2.5%",
+                                cicoplafest_number=cico or f"RSCO-URB-INAC-{abs(hash(c_name + c_active)) % 10000:04d}-2026",
+                                authorized_dose_per_liter=dose_val,
+                                compatible_methods=metodo_val,
                                 toxicological_category="Precaución / Banda Verde",
                                 safety_interval_hours=2
                             )
                             self.db.add(chem_entity)
                             self.db.flush()
-                            chems_by_cico[cico] = chem_entity
-                            chems_by_name[c_name.upper()] = chem_entity
-                            chems_by_active[c_active.upper()] = chem_entity
+                            if chem_entity.cicoplafest_number:
+                                chems_by_cico[chem_entity.cicoplafest_number.upper()] = chem_entity
+                            if chem_entity.commercial_name:
+                                chems_by_name[chem_entity.commercial_name.upper()] = chem_entity
+                            if chem_entity.active_ingredient:
+                                chems_by_active[chem_entity.active_ingredient.upper()] = chem_entity
                             summary["chemicals_created"] += 1
                         else:
                             summary["chemicals_linked"] += 1
 
-                        area_t = self._detect_area_type(item["lugar"])
+                        area_t = self._detect_area_type(lugar_val)
 
                         cert_chem = CertificateChemical(
                             certificate_id=certificate.id,
                             chemical_id=chem_entity.id,
-                            dose_applied=str(item["dose"])[:100],
+                            dose_applied=dose_val,
                             area_type=area_t,
-                            treated_zones_description=str(item["lugar"])[:255],
-                            application_method=str(item["metodo"])[:100]
+                            treated_zones_description=lugar_val,
+                            application_method=metodo_val
                         )
                         self.db.add(cert_chem)
                         summary["applied_chemicals_total"] += 1
