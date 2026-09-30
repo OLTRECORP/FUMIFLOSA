@@ -36,8 +36,11 @@ class HistoricalDataImporter:
         if pd.isna(val) or val is None:
             return None
         val_str = str(val).strip()
-        if not val_str:
+        if not val_str or val_str.lower() in ('nan', 'none', 'null', '0', '00'):
             return None
+
+        # Si el día viene como 00 o 0 (ej. 00/03/2020), corregir a 01 para permitir lectura segura
+        val_str = re.sub(r'^00?([/-])', r'01\1', val_str)
 
         # Intentar con pandas to_datetime
         try:
@@ -127,7 +130,7 @@ class HistoricalDataImporter:
             if name or active or cico:
                 safe_name = name or active or f"Químico #{i}"
                 safe_active = active or name or "Ingrediente Activo"
-                safe_cico = cico or f"RSCO-URB-INAC-{abs(hash(safe_name + safe_active)) % 10000:04d}-2026"
+                safe_cico = (cico or f"RSCO-URB-INAC-{abs(hash(safe_name + safe_active)) % 10000:04d}-2026").rstrip('|').rstrip(';').strip()
                 
                 extracted.append({
                     "slot": i,
@@ -367,7 +370,10 @@ class HistoricalDataImporter:
                     summary["branches_linked"] += 1
 
                 # 3. Determinación de Folios y Validación de Duplicidad
-                input_folio = (row.get('folio') or '').strip()
+                input_folio = (row.get('folio') or '').strip().lstrip('/').strip()
+                if input_folio.lower() in ('nan', 'none', 'null'):
+                    input_folio = ''
+
                 if input_folio:
                     cert_folio = input_folio
                     order_folio = f"ORD-{input_folio}" if not input_folio.startswith("ORD-") else input_folio

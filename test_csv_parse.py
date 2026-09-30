@@ -1,0 +1,13 @@
+import io
+import re
+import csv
+from datetime import datetime, date
+
+csv_data = """folio,rfc,razon_social,sucursal_nombre,sucursal_direccion,sucursal_telefono,contacto_sucursal,fecha_de_exp,quimico_nombre_1,ingrediente_activo_1,quimico_cicoplafest_1,dosis_1,lugar_tratado_1,metodo_1,quimico_nombre_2,ingrediente_activo_2,quimico_cicoplafest_2,dosis_2,lugar_tratado_2,metodo_2,quimico_nombre_3,ingrediente_activo_3,quimico_cicoplafest_3,dosis_3,lugar_tratado_3,metodo_3,quimico_nombre_4,ingrediente_activo_4,quimico_cicoplafest_4,dosis_4,lugar_tratado_4,metodo_4,observaciones
+0149/20,,DIF. #216 CAMION FREIGHTLINER,TRANSPORTE,"AV. TECNOLOGICO #2903, CHIHUAHUA,CHIH",,,00/03/2020,IMIDACLOPRID,IMIDACLOPRID,RSCO-URB-MEZC-1101T-301-064-032,3ml/L,INTERIOR,ASPERSION,,,,,,,,,,,,,,,,,,,"ARACNIDOS, CUCARACHA, DIPTEROS"
+00331-19,,CARNICECIA EL TORITO,INMUEBLE DE UN PISO,"C. ROSALIO HERNANDEZ N0. 115 CD. CUAUHTEMOC, CHIH-",,,13/08/2019,CIPERMETRINA,CIPERMETRINA,RSCO-URB-INAC-111-00-02-40,2.5 ML,INT. Y EXTERIOR,ASPERSION,BRODIFACOUM,BRODIFACOUM,RSCO-RODE-501-X0001-033-005,10 PZ,INTERIOR,MANUAL,,,,,,,,,,,,,TODO TIPO DE INSECTOS Y ROEDORES
+0003/19,,INSTITUTO MEXICANO DEL SEGUROS SOCIAL,H.G.Z. NO. 16,AV. 16 DE SEPTIEMBRE Y ROMA S/N,,,16/08/2019,IMIDACLOPRID,IMIDACLOPRID,URB-MEZC-1101T-301-064-032,3ML/L,INTERIOR,ASPERCION,CIPERMERINA,CIPERMERINA,URB-INAC-111-00-02-40,2.5GR/L,EXTERIOR,ASPERCION,DIFETIALONA,DIFETIALONA,RODE-0501-X0001-033-005,MINIBLOCK,EXTERIOR,MANUAL,,,,,,,"PREVENCION CONTRA ARAGNIDOS, CUCARCHA, DIPTEROS Y ROEDORES"
+00001-19,,DRA. MARIBEL TREVIZO P.,OFICINA DE DOS PLANTAS____________________________,"AV. JUAREZ Y 4a. ALVARO OBREGON, CHIH.",,,19/08/2019,TEMPRID SC,TEMPRID SC,IMIDACLOPRID,,3 ML,INETEGRAL,,,,,,,,,,,,,,,,,,,"ARAGNIDOS, CUCARACHA Y ROEDORES"
+"""
+
+print("Testing CSV parser...")
