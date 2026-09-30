@@ -20,7 +20,7 @@ from app.schemas import (
     ClientExpirationsGroup, ExpirationDetail, DashboardSummaryStats,
     UserCreate, UserUpdate, UserResponse,
     ClientCreate, ClientUpdate, ClientResponse, ClientPortalConfigUpdate,
-    BranchCreate, BranchUpdate, BranchResponse,
+    BranchCreate, BranchUpdate, BranchResponse, AssociateBranchesRequest,
     ChemicalCreate, ChemicalUpdate, ChemicalResponse,
     CompanyConfigResponse, CompanyConfigUpdate,
     AdvancedAnalyticsResponse, ClientPortalAuthRequest, ClientPortalDataResponse,
@@ -696,12 +696,37 @@ def update_branch(branch_id: uuid.UUID, payload: BranchUpdate, db: Session = Dep
         raise HTTPException(status_code=404, detail="Sucursal no encontrada.")
 
     update_data = payload.model_dump(exclude_unset=True)
+    if "client_id" in update_data and update_data["client_id"]:
+        client = db.query(Client).filter(Client.id == update_data["client_id"], Client.is_deleted == False).first()
+        if not client:
+            raise HTTPException(status_code=404, detail="Cliente Matriz especificado no encontrado.")
+
     for key, value in update_data.items():
         setattr(branch, key, value)
 
     db.commit()
     db.refresh(branch)
     return branch
+
+
+@router.post("/clients/{client_id}/branches/associate", response_model=List[BranchResponse])
+def associate_branches_to_client(client_id: uuid.UUID, payload: AssociateBranchesRequest, db: Session = Depends(get_db)):
+    """Asocia múltiples sucursales existentes a un cliente matriz específico."""
+    client = db.query(Client).filter(Client.id == client_id, Client.is_deleted == False).first()
+    if not client:
+        raise HTTPException(status_code=404, detail="Cliente Matriz no encontrado.")
+
+    updated_branches = []
+    for branch_id in payload.branch_ids:
+        branch = db.query(Branch).filter(Branch.id == branch_id, Branch.is_deleted == False).first()
+        if branch:
+            branch.client_id = client.id
+            updated_branches.append(branch)
+
+    db.commit()
+    for b in updated_branches:
+        db.refresh(b)
+    return updated_branches
 
 
 @router.delete("/branches/{branch_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -1036,34 +1061,52 @@ def export_service_certificate_pdf(service_id: uuid.UUID, db: Session = Depends(
 @router.get("/dashboard/expirations", response_model=DashboardExpirationsResponse)
 def get_dashboard_expirations(db: Session = Depends(get_db)):
     """
-    Agrupa por Cliente Matriz las sucursales con certificados próximos a vencer
-    en ventanas de 7, 15 y 30 días naturales.
+    Agrupa por Cliente Matriz las sucursales con sus certificados.
+    Calcula estrictamente la vigencia a 30 días naturales posteriores a la fecha de expedición.
+    Clasifica en: ≤7 días (crítico), ≤15 días (advertencia), ≤30 días (vigente) y Vencidos (>30 días).
     """
     today = date.today()
-    limit_30 = today + timedelta(days=30)
 
     certificates = db.query(Certificate).options(
         joinedload(Certificate.service_order).joinedload(ServiceOrder.branch).joinedload(Branch.client)
     ).filter(
-        Certificate.is_deleted == False,
-        Certificate.validity_end_date >= today,
-        Certificate.validity_end_date <= limit_30
-    ).all()
+        Certificate.is_deleted == False
+    ).order_by(Certificate.issue_date.desc()).all()
 
     clients_map = {}
 
     for cert in certificates:
+        if not cert.service_order or not cert.service_order.branch or not cert.service_order.branch.client:
+            continue
+
         branch = cert.service_order.branch
         client = branch.client
-        days_left = (cert.validity_end_date - today).days
+
+        # Conforme a NOM-256, vigencia estricta de 30 días naturales desde expedición
+        exact_validity_end = cert.issue_date + timedelta(days=30)
+        days_left = (exact_validity_end - today).days
 
         if client.id not in clients_map:
             clients_map[client.id] = ClientExpirationsGroup(
                 client_id=client.id,
                 legal_name=client.legal_name,
                 rfc=client.rfc,
-                portal_slug=client.portal_slug
+                portal_slug=client.portal_slug,
+                expiring_7_days=[],
+                expiring_15_days=[],
+                expiring_30_days=[],
+                expired=[]
             )
+
+        is_valid = (days_left >= 0)
+        if not is_valid:
+            status_label = f"Vencido ({abs(days_left)}d)"
+        elif days_left <= 7:
+            status_label = f"Vence en {days_left}d"
+        elif days_left <= 15:
+            status_label = f"Vence en {days_left}d"
+        else:
+            status_label = f"Vigente ({days_left}d)"
 
         exp_detail = ExpirationDetail(
             certificate_id=cert.id,
@@ -1072,11 +1115,16 @@ def get_dashboard_expirations(db: Session = Depends(get_db)):
             branch_id=branch.id,
             branch_name=branch.name,
             branch_unit_code=branch.unit_code,
-            validity_end_date=cert.validity_end_date,
-            days_until_expiration=days_left
+            issue_date=cert.issue_date,
+            validity_end_date=exact_validity_end,
+            days_until_expiration=days_left,
+            is_valid=is_valid,
+            status_label=status_label
         )
 
-        if days_left <= 7:
+        if not is_valid:
+            clients_map[client.id].expired.append(exp_detail)
+        elif days_left <= 7:
             clients_map[client.id].expiring_7_days.append(exp_detail)
         elif days_left <= 15:
             clients_map[client.id].expiring_15_days.append(exp_detail)

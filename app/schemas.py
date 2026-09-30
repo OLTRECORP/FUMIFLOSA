@@ -174,6 +174,7 @@ class BranchCreate(BranchBase):
 
 
 class BranchUpdate(BaseModel):
+    client_id: Optional[uuid.UUID] = None
     name: Optional[str] = None
     unit_code: Optional[str] = None
     address: Optional[str] = None
@@ -181,6 +182,10 @@ class BranchUpdate(BaseModel):
     classification: Optional[BranchClassification] = None
     responsible_contact_name: Optional[str] = None
     responsible_contact_email: Optional[str] = None
+
+
+class AssociateBranchesRequest(BaseModel):
+    branch_ids: List[uuid.UUID]
 
 
 class BranchResponse(BranchBase):
@@ -344,9 +349,12 @@ class ExpirationDetail(BaseModel):
     service_order_id: uuid.UUID
     branch_id: uuid.UUID
     branch_name: str
-    branch_unit_code: Optional[str]
+    branch_unit_code: Optional[str] = None
+    issue_date: Optional[date] = None
     validity_end_date: date
     days_until_expiration: int
+    is_valid: bool = True
+    status_label: str = "Vigente"
 
 
 class ClientExpirationsGroup(BaseModel):
@@ -357,6 +365,7 @@ class ClientExpirationsGroup(BaseModel):
     expiring_7_days: List[ExpirationDetail] = []
     expiring_15_days: List[ExpirationDetail] = []
     expiring_30_days: List[ExpirationDetail] = []
+    expired: List[ExpirationDetail] = []
 
 
 class DashboardExpirationsResponse(BaseModel):

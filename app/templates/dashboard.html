@@ -248,11 +248,70 @@
                         <input type="text" id="edit-br-resp" required class="w-full bg-white border border-slate-300 rounded-lg p-2" />
                     </div>
                 </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Cliente Matriz Asignado (Razón Social) *</label>
+                    <select id="edit-br-client-id" required class="w-full bg-white border border-slate-300 rounded-lg p-2 font-semibold">
+                    </select>
+                </div>
                 <div class="flex justify-end gap-2 pt-2 border-t border-slate-100">
                     <button type="button" onclick="closeEditBranchModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2 px-3 rounded-lg text-xs">Cancelar</button>
                     <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg text-xs shadow-sm">Guardar Sucursal</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- MODAL DE ASOCIACIÓN MASIVA DE SUCURSALES A CLIENTE MATRIZ -->
+    <div id="modal-associate-branches" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-6 space-y-4 border border-slate-200 max-h-[90vh] flex flex-col">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3 flex-shrink-0">
+                <div class="flex items-center gap-2">
+                    <div class="w-9 h-9 bg-indigo-100 text-indigo-700 rounded-xl flex items-center justify-center text-base font-bold">
+                        <i class="fa-solid fa-network-wired"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-900">Asociar Sucursales a Cliente Matriz</h3>
+                        <p class="text-[11px] text-slate-500">
+                            Cliente: <span id="assoc-client-name" class="font-bold text-slate-800"></span> 
+                            (<span id="assoc-client-rfc" class="font-mono text-slate-600"></span>)
+                        </p>
+                    </div>
+                </div>
+                <button onclick="closeAssociateBranchesModal()" class="text-slate-400 hover:text-slate-600 p-1"><i class="fa-solid fa-xmark text-base"></i></button>
+            </div>
+
+            <input type="hidden" id="assoc-client-id" />
+
+            <!-- Buscador y selección rápida -->
+            <div class="flex flex-col sm:flex-row gap-2 flex-shrink-0">
+                <div class="relative flex-1">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+                    <input type="text" id="assoc-search-input" oninput="filterAssocBranchesList()" placeholder="Buscar sucursal por nombre, dirección o cliente actual..." class="w-full text-xs pl-8 pr-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-500" />
+                </div>
+                <div class="flex items-center gap-1.5 text-xs">
+                    <button type="button" onclick="toggleSelectAllAssoc(true)" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-2.5 py-1.5 rounded-lg border border-slate-300 text-[11px]">
+                        Seleccionar Todo
+                    </button>
+                    <button type="button" onclick="toggleSelectAllAssoc(false)" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-2.5 py-1.5 rounded-lg border border-slate-300 text-[11px]">
+                        Deseleccionar
+                    </button>
+                </div>
+            </div>
+
+            <!-- Contenedor scrollable de sucursales -->
+            <div id="assoc-branches-list" class="flex-1 overflow-y-auto space-y-2 border border-slate-200 rounded-xl p-3 bg-slate-50 text-xs max-h-80">
+                <!-- Se llena dinámicamente -->
+            </div>
+
+            <div class="flex justify-between items-center pt-2 border-t border-slate-100 flex-shrink-0">
+                <span id="assoc-selected-count" class="text-xs font-semibold text-slate-600">0 sucursales seleccionadas</span>
+                <div class="flex gap-2">
+                    <button type="button" onclick="closeAssociateBranchesModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2 px-3 rounded-lg text-xs">Cancelar</button>
+                    <button type="button" onclick="saveAssociatedBranches()" id="btn-save-assoc-branches" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg text-xs shadow-sm flex items-center gap-1.5">
+                        <i class="fa-solid fa-check"></i> Guardar Asociación
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -494,14 +553,22 @@
             <!-- 1. PESTAÑA: CALENDARIO DE VENCIMIENTOS -->
             <!-- ============================================================= -->
             <div id="tab-vencimientos" class="p-6 space-y-4">
-                <div class="flex justify-between items-center">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                     <div>
                         <h2 class="text-base font-bold text-slate-900">Vigencias Sanitarias (Calculadas a 30 Días - NOM-256)</h2>
-                        <p class="text-xs text-slate-500">Alertas automáticas por Cliente Matriz para programar re-aplicaciones.</p>
+                        <p class="text-xs text-slate-500">Cada certificado cuenta con una vigencia legal estricta de 30 días naturales posteriores a su expedición.</p>
                     </div>
-                    <button onclick="loadDashboardData()" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg font-semibold flex items-center gap-1.5 transition">
-                        <i class="fa-solid fa-rotate"></i> Actualizar
-                    </button>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <div class="bg-slate-100 p-1 rounded-lg border border-slate-200 flex text-xs font-semibold">
+                            <button onclick="setExpFilter('all')" id="btn-exp-all" class="exp-filter-btn px-2.5 py-1 rounded bg-white text-slate-900 shadow-sm font-bold">Todos</button>
+                            <button onclick="setExpFilter('vigentes')" id="btn-exp-vigentes" class="exp-filter-btn px-2.5 py-1 rounded text-emerald-700 hover:text-emerald-900">Vigentes (≤30d)</button>
+                            <button onclick="setExpFilter('criticos')" id="btn-exp-criticos" class="exp-filter-btn px-2.5 py-1 rounded text-rose-700 hover:text-rose-900">Críticos (≤7d)</button>
+                            <button onclick="setExpFilter('vencidos')" id="btn-exp-vencidos" class="exp-filter-btn px-2.5 py-1 rounded text-slate-600 hover:text-slate-900">Vencidos (>30d)</button>
+                        </div>
+                        <button onclick="loadDashboardData()" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg font-semibold flex items-center gap-1.5 transition">
+                            <i class="fa-solid fa-rotate"></i> Actualizar
+                        </button>
+                    </div>
                 </div>
                 <div id="expirations-container" class="space-y-4">
                     <p class="text-xs text-slate-400 text-center py-8">Cargando vencimientos...</p>
@@ -1566,89 +1633,141 @@
             } catch(e) { console.error(e); }
         }
 
+        let cachedDashboardData = null;
+        let currentExpFilter = 'all';
+
+        function setExpFilter(filterType) {
+            currentExpFilter = filterType;
+            document.querySelectorAll('.exp-filter-btn').forEach(b => {
+                b.classList.remove('bg-white', 'text-slate-900', 'shadow-sm', 'font-bold');
+            });
+            const activeBtn = document.getElementById('btn-exp-' + filterType);
+            if (activeBtn) activeBtn.classList.add('bg-white', 'text-slate-900', 'shadow-sm', 'font-bold');
+            renderExpirations();
+        }
+
         async function loadDashboardData() {
             loadSummaryStats();
             try {
                 const res = await fetch('/api/v1/dashboard/expirations');
-                const data = await res.json();
-                const container = document.getElementById('expirations-container');
+                cachedDashboardData = await res.json();
+                renderExpirations();
+            } catch(e) { console.error(e); }
+        }
 
-                if (!data.clients || data.clients.length === 0) {
-                    container.innerHTML = `
-                        <div class="text-center py-10 bg-slate-50 rounded-xl border border-slate-200">
-                            <i class="fa-solid fa-folder-open text-3xl text-slate-300 mb-2"></i>
-                            <p class="text-sm font-semibold text-slate-600">No hay certificados registrados aún</p>
-                            <p class="text-xs text-slate-400 mt-1">Usa la pestaña "Registrar Servicio" o "Ingesta CSV".</p>
-                        </div>
-                    `;
-                    return;
+        function renderExpirations() {
+            const container = document.getElementById('expirations-container');
+            if (!cachedDashboardData || !cachedDashboardData.clients || cachedDashboardData.clients.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-10 bg-slate-50 rounded-xl border border-slate-200">
+                        <i class="fa-solid fa-folder-open text-3xl text-slate-300 mb-2"></i>
+                        <p class="text-sm font-semibold text-slate-600">No hay certificados registrados aún</p>
+                        <p class="text-xs text-slate-400 mt-1">Usa la pestaña "Registrar Servicio" o "Ingesta CSV".</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '';
+            let totalShownGroups = 0;
+
+            cachedDashboardData.clients.forEach(client => {
+                let items = [];
+                if (currentExpFilter === 'all') {
+                    items = [...client.expiring_7_days, ...client.expiring_15_days, ...client.expiring_30_days, ...(client.expired || [])];
+                } else if (currentExpFilter === 'vigentes') {
+                    items = [...client.expiring_7_days, ...client.expiring_15_days, ...client.expiring_30_days];
+                } else if (currentExpFilter === 'criticos') {
+                    items = [...client.expiring_7_days];
+                } else if (currentExpFilter === 'vencidos') {
+                    items = [...(client.expired || [])];
                 }
 
-                let html = '';
-                data.clients.forEach(client => {
-                    const allExp = [...client.expiring_7_days, ...client.expiring_15_days, ...client.expiring_30_days];
-                    html += `
-                        <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
-                            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pb-3 border-b border-slate-100">
-                                <div>
-                                    <h3 class="font-bold text-slate-900 text-sm">${client.legal_name}</h3>
-                                    <p class="text-xs text-slate-400">RFC: ${client.rfc}</p>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <a href="/portal/c/${client.portal_slug}" target="_blank" class="text-xs bg-brand-50 hover:bg-brand-100 text-brand-700 border border-brand-300 font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition">
-                                        <i class="fa-solid fa-arrow-up-right-from-square"></i> Portal Cliente
-                                    </a>
-                                    <a href="/api/v1/portal/matrix/${client.client_id}/certificates/zip" class="text-xs bg-slate-900 hover:bg-slate-800 text-white font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition">
-                                        <i class="fa-solid fa-file-zipper"></i> Descargar ZIP
-                                    </a>
-                                </div>
+                if (items.length === 0) return;
+                totalShownGroups++;
+
+                html += `
+                    <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pb-3 border-b border-slate-100">
+                            <div>
+                                <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2">
+                                    <i class="fa-solid fa-building text-brand-700"></i> ${client.legal_name}
+                                </h3>
+                                <p class="text-xs text-slate-400">RFC: ${client.rfc} • ${items.length} certificados mostrados</p>
                             </div>
-                            <div class="mt-3 overflow-x-auto">
-                                <table class="w-full text-left text-xs">
-                                    <thead class="bg-slate-50 text-slate-500 uppercase text-[10px] font-bold">
-                                        <tr>
-                                            <th class="py-2 px-3">Sucursal / Unidad</th>
-                                            <th class="py-2 px-3">Folio Certificado</th>
-                                            <th class="py-2 px-3">Vencimiento (30 Días)</th>
-                                            <th class="py-2 px-3">Estado</th>
-                                            <th class="py-2 px-3 text-right">Acción</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="divide-y divide-slate-100">
-                                        ${allExp.map(item => {
-                                            let badge = item.days_until_expiration <= 7 
-                                                ? '<span class="bg-rose-100 text-rose-800 font-bold px-2 py-0.5 rounded text-[10px]"><i class="fa-solid fa-triangle-exclamation"></i> Vence en ' + item.days_until_expiration + ' días</span>'
-                                                : '<span class="bg-emerald-100 text-emerald-800 font-semibold px-2 py-0.5 rounded text-[10px]">Vigente (' + item.days_until_expiration + ' días)</span>';
-                                            return `
-                                                <tr class="hover:bg-slate-50">
-                                                    <td class="py-2 px-3 font-medium text-slate-800">${item.branch_name}</td>
-                                                    <td class="py-2 px-3 font-mono text-slate-600">${item.certificate_folio}</td>
-                                                    <td class="py-2 px-3 text-slate-600">${item.validity_end_date}</td>
-                                                    <td class="py-2 px-3">${badge}</td>
-                                                    <td class="py-2 px-3 text-right">
-                                                        <div class="flex items-center justify-end gap-1.5">
-                                                            <a href="/api/v1/services/${item.service_order_id}/pdf" target="_blank" class="text-brand-600 hover:text-brand-800 font-bold flex items-center gap-1">
-                                                                <i class="fa-solid fa-file-pdf"></i> PDF
-                                                            </a>
-                                                            <button onclick="openEditServiceModal('${item.service_order_id}')" class="text-slate-600 hover:text-slate-900 font-bold flex items-center gap-1 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">
-                                                                <i class="fa-solid fa-pen-to-square"></i>
-                                                            </button>
-                                                            <button onclick="deleteService('${item.service_order_id}', '${item.certificate_folio}')" class="text-rose-600 hover:text-rose-800 font-bold flex items-center gap-1 bg-rose-50 px-1.5 py-0.5 rounded border border-rose-200">
-                                                                <i class="fa-solid fa-trash"></i>
-                                                            </button>
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            `;
-                                        }).join('')}
-                                    </tbody>
-                                </table>
+                            <div class="flex items-center gap-2">
+                                <a href="/portal/c/${client.portal_slug}" target="_blank" class="text-xs bg-brand-50 hover:bg-brand-100 text-brand-700 border border-brand-300 font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition">
+                                    <i class="fa-solid fa-arrow-up-right-from-square"></i> Portal Cliente
+                                </a>
+                                <a href="/api/v1/portal/matrix/${client.client_id}/certificates/zip" class="text-xs bg-slate-900 hover:bg-slate-800 text-white font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition">
+                                    <i class="fa-solid fa-file-zipper"></i> Descargar ZIP
+                                </a>
                             </div>
                         </div>
-                    `;
-                });
+                        <div class="mt-3 overflow-x-auto">
+                            <table class="w-full text-left text-xs">
+                                <thead class="bg-slate-50 text-slate-500 uppercase text-[10px] font-bold">
+                                    <tr>
+                                        <th class="py-2 px-3">Razón Social (Sucursal)</th>
+                                        <th class="py-2 px-3">Folio Certificado</th>
+                                        <th class="py-2 px-3">Fecha Expedición</th>
+                                        <th class="py-2 px-3">Vencimiento (30 Días)</th>
+                                        <th class="py-2 px-3">Estado Vigencia</th>
+                                        <th class="py-2 px-3 text-right">Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100">
+                                    ${items.map(item => {
+                                        let badge = '';
+                                        if (!item.is_valid || item.days_until_expiration < 0) {
+                                            badge = `<span class="bg-rose-50 text-rose-700 font-bold px-2 py-0.5 rounded text-[10px] border border-rose-200 inline-flex items-center gap-1"><i class="fa-solid fa-circle-xmark"></i> Vencido (${Math.abs(item.days_until_expiration)}d)</span>`;
+                                        } else if (item.days_until_expiration <= 7) {
+                                            badge = `<span class="bg-amber-100 text-amber-900 font-bold px-2 py-0.5 rounded text-[10px] border border-amber-300 inline-flex items-center gap-1"><i class="fa-solid fa-triangle-exclamation"></i> Vence en ${item.days_until_expiration}d</span>`;
+                                        } else if (item.days_until_expiration <= 15) {
+                                            badge = `<span class="bg-yellow-50 text-yellow-800 font-semibold px-2 py-0.5 rounded text-[10px] border border-yellow-200 inline-flex items-center gap-1">Vence en ${item.days_until_expiration}d</span>`;
+                                        } else {
+                                            badge = `<span class="bg-emerald-50 text-emerald-700 font-semibold px-2 py-0.5 rounded text-[10px] border border-emerald-200 inline-flex items-center gap-1"><i class="fa-solid fa-circle-check"></i> Vigente (${item.days_until_expiration}d)</span>`;
+                                        }
+                                        return `
+                                            <tr class="hover:bg-slate-50">
+                                                <td class="py-2 px-3 font-medium text-slate-800">${client.legal_name} <span class="text-slate-500 font-normal">(${item.branch_name})</span></td>
+                                                <td class="py-2 px-3 font-mono font-bold text-slate-700">${item.certificate_folio}</td>
+                                                <td class="py-2 px-3 text-slate-600">${item.issue_date || 'N/A'}</td>
+                                                <td class="py-2 px-3 font-semibold text-slate-700">${item.validity_end_date}</td>
+                                                <td class="py-2 px-3">${badge}</td>
+                                                <td class="py-2 px-3 text-right">
+                                                    <div class="flex items-center justify-end gap-1.5">
+                                                        <a href="/api/v1/services/${item.service_order_id}/pdf" target="_blank" class="text-brand-600 hover:text-brand-800 font-bold flex items-center gap-1">
+                                                            <i class="fa-solid fa-file-pdf"></i> PDF
+                                                        </a>
+                                                        <button onclick="openEditServiceModal('${item.service_order_id}')" class="text-slate-600 hover:text-slate-900 font-bold flex items-center gap-1 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200" title="Editar">
+                                                            <i class="fa-solid fa-pen-to-square"></i>
+                                                        </button>
+                                                        <button onclick="deleteService('${item.service_order_id}', '${item.certificate_folio}')" class="text-rose-600 hover:text-rose-800 font-bold flex items-center gap-1 bg-rose-50 px-1.5 py-0.5 rounded border border-rose-200" title="Eliminar">
+                                                            <i class="fa-solid fa-trash"></i>
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        `;
+                                    }).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+            });
+
+            if (totalShownGroups === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-10 bg-slate-50 rounded-xl border border-slate-200">
+                        <i class="fa-solid fa-filter text-2xl text-slate-300 mb-2"></i>
+                        <p class="text-sm font-semibold text-slate-600">No hay certificados para el filtro seleccionado ("${currentExpFilter}")</p>
+                    </div>
+                `;
+            } else {
                 container.innerHTML = html;
-            } catch(e) { console.error(e); }
+            }
         }
 
         async function loadOrders() {
@@ -1664,7 +1783,7 @@
                     <tr class="hover:bg-slate-50">
                         <td class="p-3 font-mono font-bold text-slate-900">${o.folio}</td>
                         <td class="p-3 font-mono font-bold text-brand-700">${o.certificate ? o.certificate.certificate_folio : 'N/A'}</td>
-                        <td class="p-3 font-medium text-slate-800">${o.branch ? `${o.branch.name} <span class="text-slate-400 text-[10px]">(${o.branch.client ? o.branch.client.legal_name : ''})</span>` : 'N/A'}</td>
+                        <td class="p-3 font-medium text-slate-800">${o.branch && o.branch.client ? `${o.branch.client.legal_name} <span class="text-slate-500 font-normal text-[11px]">(${o.branch.name})</span>` : (o.branch ? o.branch.name : 'N/A')}</td>
                         <td class="p-3 text-slate-600">${o.technician ? o.technician.full_name : 'N/A'}</td>
                         <td class="p-3 text-slate-600">${new Date(o.service_start_date).toLocaleDateString()}</td>
                         <td class="p-3 text-slate-600">${o.certificate ? o.certificate.validity_end_date : 'N/A'}</td>
@@ -1773,6 +1892,9 @@
                                 <td class="p-3 font-mono text-[11px] text-brand-700">${c.portal_slug}</td>
                                 <td class="p-3 text-right">
                                     <div class="flex items-center justify-end gap-1.5">
+                                        <button onclick="openAssociateBranchesModal('${c.id}')" class="text-xs bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold px-2 py-1 rounded border border-indigo-200 flex items-center gap-1" title="Asociar Sucursales a este Cliente">
+                                            <i class="fa-solid fa-network-wired"></i> Sucursales
+                                        </button>
                                         <button onclick="openPortalModal('${c.id}')" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold px-2 py-1 rounded border border-slate-300 flex items-center gap-1">
                                             <i class="fa-solid fa-gear"></i> Enlace B2B
                                         </button>
@@ -2028,6 +2150,115 @@
         }
 
         // ====================================================================
+        // ASOCIACIÓN DE SUCURSALES A CLIENTE MATRIZ
+        // ====================================================================
+        let currentAssocClientId = null;
+
+        function openAssociateBranchesModal(clientId) {
+            const client = cachedClients.find(c => c.id === clientId);
+            if (!client) return;
+            currentAssocClientId = clientId;
+            document.getElementById('assoc-client-id').value = clientId;
+            document.getElementById('assoc-client-name').innerText = client.legal_name;
+            document.getElementById('assoc-client-rfc').innerText = client.rfc;
+            document.getElementById('assoc-search-input').value = '';
+            renderAssocBranchesList();
+            document.getElementById('modal-associate-branches').classList.remove('hidden');
+        }
+
+        function closeAssociateBranchesModal() {
+            document.getElementById('modal-associate-branches').classList.add('hidden');
+            currentAssocClientId = null;
+        }
+
+        function renderAssocBranchesList() {
+            const container = document.getElementById('assoc-branches-list');
+            const term = (document.getElementById('assoc-search-input').value || '').toLowerCase().trim();
+            
+            const filtered = cachedBranches.filter(b => {
+                if (!term) return true;
+                const matchName = (b.name || '').toLowerCase().includes(term);
+                const matchAddr = (b.address || '').toLowerCase().includes(term);
+                const matchClient = (b.client && b.client.legal_name || '').toLowerCase().includes(term);
+                return matchName || matchAddr || matchClient;
+            });
+
+            if (filtered.length === 0) {
+                container.innerHTML = '<p class="text-center py-6 text-slate-400">No se encontraron sucursales para el término de búsqueda.</p>';
+                updateAssocCount();
+                return;
+            }
+
+            container.innerHTML = filtered.map(b => {
+                const isAssignedToThis = (b.client_id === currentAssocClientId);
+                const currentClientName = b.client ? b.client.legal_name : 'Sin asignar';
+                return `
+                    <label class="flex items-start gap-3 p-2.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100/70 transition cursor-pointer">
+                        <input type="checkbox" value="${b.id}" class="assoc-branch-chk mt-1 rounded text-indigo-600 focus:ring-indigo-500" ${isAssignedToThis ? 'checked' : ''} onchange="updateAssocCount()" />
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center justify-between gap-2">
+                                <p class="font-bold text-slate-800 truncate">${b.name}</p>
+                                <span class="bg-indigo-50 text-indigo-700 px-1.5 py-0.5 rounded text-[9px] font-semibold">${b.classification}</span>
+                            </div>
+                            <p class="text-[11px] text-slate-500 truncate">${b.address}</p>
+                            <p class="text-[10px] ${isAssignedToThis ? 'text-emerald-600 font-bold' : 'text-slate-400'}">
+                                ${isAssignedToThis ? '✓ Actualmente asignada a este cliente' : `Pertenece a: ${currentClientName}`}
+                            </p>
+                        </div>
+                    </label>
+                `;
+            }).join('');
+
+            updateAssocCount();
+        }
+
+        function filterAssocBranchesList() {
+            renderAssocBranchesList();
+        }
+
+        function toggleSelectAllAssoc(check) {
+            document.querySelectorAll('.assoc-branch-chk').forEach(chk => {
+                chk.checked = check;
+            });
+            updateAssocCount();
+        }
+
+        function updateAssocCount() {
+            const count = document.querySelectorAll('.assoc-branch-chk:checked').length;
+            const badge = document.getElementById('assoc-selected-count');
+            if (badge) badge.innerText = `${count} sucursal(es) seleccionada(s)`;
+        }
+
+        async function saveAssociatedBranches() {
+            if (!currentAssocClientId) return;
+            const checkedBoxes = Array.from(document.querySelectorAll('.assoc-branch-chk:checked'));
+            const branchIds = checkedBoxes.map(chk => chk.value);
+            const btn = document.getElementById('btn-save-assoc-branches');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Guardando...';
+
+            try {
+                const res = await fetch(`/api/v1/clients/${currentAssocClientId}/branches/associate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ branch_ids: branchIds })
+                });
+
+                if (!res.ok) throw new Error((await res.json()).detail || 'Error al asociar sucursales');
+                alert(`¡Se asociaron exitosamente ${branchIds.length} sucursales a este cliente!`);
+                closeAssociateBranchesModal();
+                await loadClientsAndBranches();
+                loadDashboardData();
+                loadOrders();
+            } catch (err) {
+                alert('Error: ' + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-check"></i> Guardar Asociación';
+            }
+        }
+
+        // ====================================================================
         // EDICIÓN Y ELIMINACIÓN DE SUCURSALES
         // ====================================================================
         function openEditBranchModal(branchId) {
@@ -2039,6 +2270,13 @@
             document.getElementById('edit-br-addr').value = branch.address;
             document.getElementById('edit-br-phone').value = branch.phone;
             document.getElementById('edit-br-resp').value = branch.responsible_contact_name;
+            
+            const selectClient = document.getElementById('edit-br-client-id');
+            if (selectClient) {
+                selectClient.innerHTML = cachedClients.map(c => `<option value="${c.id}">${c.legal_name} (${c.rfc})</option>`).join('');
+                selectClient.value = branch.client_id;
+            }
+
             document.getElementById('modal-edit-branch').classList.remove('hidden');
         }
 
@@ -2050,6 +2288,7 @@
             e.preventDefault();
             const branchId = document.getElementById('edit-br-id').value;
             const payload = {
+                client_id: document.getElementById('edit-br-client-id') ? document.getElementById('edit-br-client-id').value : undefined,
                 name: document.getElementById('edit-br-name').value.trim(),
                 classification: document.getElementById('edit-br-class').value,
                 address: document.getElementById('edit-br-addr').value.trim(),
@@ -2067,6 +2306,8 @@
                 alert('¡Sucursal actualizada exitosamente!');
                 closeEditBranchModal();
                 loadClientsAndBranches();
+                loadDashboardData();
+                loadOrders();
             } catch (err) {
                 alert('Error: ' + err.message);
             }
@@ -2150,7 +2391,7 @@
             const branchSelect = document.getElementById('srv-branch-id');
             const techSelect = document.getElementById('srv-tech-id');
 
-            branchSelect.innerHTML = cachedBranches.map(b => `<option value="${b.id}">${b.name} - ${b.client ? b.client.legal_name : ''}</option>`).join('');
+            branchSelect.innerHTML = cachedBranches.map(b => `<option value="${b.id}">${b.client ? b.client.legal_name : 'Sin Cliente'} (${b.name})</option>`).join('');
             techSelect.innerHTML = cachedTechnicians.map(t => `<option value="${t.id}">${t.full_name} (${t.role})</option>`).join('');
 
             const now = new Date();
