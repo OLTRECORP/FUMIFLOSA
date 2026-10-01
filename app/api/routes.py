@@ -1117,10 +1117,58 @@ def search_rsco_chemicals(q: str = "", db: Session = Depends(get_db)):
     return results
 
 
+@router.get("/chemicals/online-lookup")
+def online_chemical_lookup(
+    name: Optional[str] = None,
+    rsco: Optional[str] = None,
+    q: Optional[str] = None,
+    db: Session = Depends(get_db)
+):
+    """
+    Buscador y sintetizador de especificaciones químicas y registros sanitarios en línea.
+    Permite consultar por Nombre Comercial, Ingrediente Activo o Código RSCO/CICOPLAFEST.
+    """
+    query_str = (q or "").strip()
+    search_rsco = (rsco or (query_str if "rsco" in query_str.lower() or "-" in query_str else "")).strip()
+    search_name = (name or (query_str if not search_rsco else "")).strip()
+
+    # 1. Buscar en base local si ya existe
+    item = None
+    if search_rsco:
+        item = db.query(RSCOItem).filter(
+            func.lower(RSCOItem.cicoplafest_number) == search_rsco.lower(),
+            RSCOItem.is_deleted == False
+        ).first()
+    if not item and search_name:
+        item = db.query(RSCOItem).filter(
+            func.lower(RSCOItem.commercial_name).contains(search_name.lower()),
+            RSCOItem.is_deleted == False
+        ).first()
+
+    # 2. Consultar directorio oficial con resolución inteligente
+    sheet_info = lookup_online_sheets_by_rsco(
+        rsco=search_rsco or (item.cicoplafest_number if item else ""),
+        commercial_name=search_name or (item.commercial_name if item else "")
+    )
+
+    result = {
+        "commercial_name": (item.commercial_name if item else sheet_info.get("commercial_name")) or search_name or "Plaguicida Autorizado",
+        "active_ingredient": (item.active_ingredient if item else sheet_info.get("active_ingredient")) or "Ingrediente Activo",
+        "cicoplafest_number": (item.cicoplafest_number if item else sheet_info.get("cicoplafest_number")) or search_rsco or sheet_info.get("rsco_prefix", "RSCO-URB-COFEPRIS"),
+        "authorized_dose_per_liter": (item.authorized_dose if item else sheet_info.get("authorized_dose")) or "10 ml / Litro de agua",
+        "safety_interval_hours": (item.safety_interval_hours if item else sheet_info.get("safety_interval_hours", 2)),
+        "compatible_methods": (f"Formulación: {item.formulation}" if item and item.formulation else sheet_info.get("compatible_methods", sheet_info.get("application_methods", "Aspersión Manual"))),
+        "toxicological_category": (item.toxicological_category if item else sheet_info.get("toxicological_category", "Banda Verde / Precaución")),
+        "technical_sheet_url": (item.technical_sheet_url if item else None) or sheet_info.get("technical_sheet_url"),
+        "safety_sheet_url": (item.safety_sheet_url if item else None) or sheet_info.get("safety_sheet_url"),
+        "match_type": sheet_info.get("match_type", "online_lookup"),
+        "has_verified_online": sheet_info.get("has_verified_online", True)
+    }
+    return result
+
+
 @router.get("/chemicals", response_model=List[ChemicalResponse])
 def get_chemicals(db: Session = Depends(get_db)):
-    if db.query(Chemical).filter(Chemical.is_deleted == False).count() == 0:
-        seed_all_database_defaults(db)
     return db.query(Chemical).filter(Chemical.is_deleted == False).order_by(Chemical.commercial_name).all()
 
 

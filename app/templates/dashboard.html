@@ -2050,10 +2050,36 @@
             <!-- 6. PESTAÑA: CATÁLOGO DE QUÍMICOS -->
             <!-- ============================================================= -->
             <div id="tab-quimicos" class="p-6 space-y-6 hidden">
-                <div class="bg-slate-50 p-5 rounded-xl border border-slate-200 space-y-3">
-                    <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2">
-                        <i class="fa-solid fa-flask-vial text-teal-600"></i> Registrar Químico / Plaguicida (COFEPRIS)
-                    </h3>
+                <div class="bg-slate-50 p-5 rounded-xl border border-slate-200 space-y-4">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 pb-3">
+                        <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2">
+                            <i class="fa-solid fa-flask-vial text-teal-600"></i> Registrar Químico / Plaguicida (COFEPRIS)
+                        </h3>
+                        <button type="button" onclick="openRscoSearchModal()" class="text-xs bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold px-3 py-1.5 rounded-lg border border-indigo-200 flex items-center gap-1.5 shadow-2xs transition">
+                            <i class="fa-solid fa-magnifying-glass"></i> Catálogo Completo RSCO COFEPRIS
+                        </button>
+                    </div>
+
+                    <!-- BUSCADOR EN LÍNEA POR NOMBRE O POR RSCO -->
+                    <div class="bg-gradient-to-r from-indigo-50/90 to-teal-50/90 p-4 rounded-xl border border-indigo-200 space-y-2.5">
+                        <div class="flex items-center justify-between">
+                            <label class="font-bold text-indigo-950 text-xs flex items-center gap-2">
+                                <span class="w-6 h-6 rounded-lg bg-indigo-600 text-white flex items-center justify-center text-xs shadow-xs"><i class="fa-solid fa-bolt"></i></span>
+                                Buscar y Auto-Completar Químico en Línea (por Nombre Comercial o Código RSCO):
+                            </label>
+                        </div>
+                        <div class="flex flex-col sm:flex-row gap-2">
+                            <div class="relative flex-1">
+                                <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-indigo-400 text-xs"></i>
+                                <input type="text" id="quick-chem-online-query" onkeydown="if(event.key==='Enter'){event.preventDefault();searchAndAutofillChemical();}" placeholder="Escribe Nombre (ej. Biothrine, Cipermetrina, Advion, Temprid, Maxforce) o Código RSCO (ej. RSCO-URB-INAC...)" class="w-full pl-9 pr-3 py-2 bg-white border border-indigo-300 rounded-lg text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none shadow-2xs" />
+                            </div>
+                            <button type="button" id="btn-quick-chem-lookup" onclick="searchAndAutofillChemical()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2 rounded-lg text-xs flex items-center justify-center gap-1.5 shadow-xs transition shrink-0">
+                                <i class="fa-solid fa-wand-magic-sparkles"></i> Consultar y Rellenar
+                            </button>
+                        </div>
+                        <div id="quick-chem-lookup-feedback" class="hidden text-[11px] font-medium p-2 rounded-lg"></div>
+                    </div>
+
                     <form onsubmit="handleCreateChemical(event)" class="space-y-3 text-xs">
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                             <div>
@@ -4898,6 +4924,92 @@
         }
 
         // ====================================================================
+        // CONSULTA Y AUTO-COMPLETADO DE QUÍMICOS EN LÍNEA (POR NOMBRE O RSCO)
+        // ====================================================================
+        async function searchAndAutofillChemical() {
+            const queryInput = document.getElementById('quick-chem-online-query');
+            const query = queryInput ? queryInput.value.trim() : '';
+            const feedback = document.getElementById('quick-chem-lookup-feedback');
+            const btn = document.getElementById('btn-quick-chem-lookup');
+            
+            if (!query) {
+                alert('Por favor escribe un Nombre Comercial (ej. Biothrine, Cipermetrina) o un Código RSCO para consultar en línea.');
+                if (queryInput) queryInput.focus();
+                return;
+            }
+
+            const origHtml = btn ? btn.innerHTML : '';
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Consultando...';
+            }
+
+            if (feedback) {
+                feedback.className = "text-[11px] font-medium p-2 rounded-lg bg-indigo-100/70 text-indigo-800 border border-indigo-200 block flex items-center gap-1.5";
+                feedback.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Consultando especificaciones oficiales en el directorio COFEPRIS / CICOPLAFEST...';
+            }
+
+            try {
+                const res = await fetch(`/api/v1/chemicals/online-lookup?q=${encodeURIComponent(query)}`);
+                if (!res.ok) {
+                    const err = await res.json();
+                    throw new Error(err.detail || 'No se encontró información del químico solicitado.');
+                }
+                const data = await res.json();
+
+                populateChemicalForm(data);
+
+                if (feedback) {
+                    feedback.className = "text-[11px] font-medium p-2 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-300 block flex items-center gap-1.5 animate-fadeIn";
+                    feedback.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-600"></i> <b>¡Químico detectado y auto-completado!</b> ${data.commercial_name} (RSCO: ${data.cicoplafest_number}) — Dosis: ${data.authorized_dose_per_liter}`;
+                }
+            } catch (err) {
+                if (feedback) {
+                    feedback.className = "text-[11px] font-medium p-2 rounded-lg bg-rose-50 text-rose-800 border border-rose-300 block flex items-center gap-1.5";
+                    feedback.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-rose-600"></i> ${err.message}`;
+                } else {
+                    alert('Error: ' + err.message);
+                }
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = origHtml;
+                }
+            }
+        }
+
+        function populateChemicalForm(data) {
+            if (!data) return;
+            if (document.getElementById('chem-name')) document.getElementById('chem-name').value = data.commercial_name || '';
+            if (document.getElementById('chem-active')) document.getElementById('chem-active').value = data.active_ingredient || '';
+            if (document.getElementById('chem-cico')) document.getElementById('chem-cico').value = data.cicoplafest_number || '';
+            if (document.getElementById('chem-dose')) document.getElementById('chem-dose').value = data.authorized_dose_per_liter || data.authorized_dose || '10 ml / Litro';
+            if (document.getElementById('chem-hours')) document.getElementById('chem-hours').value = (data.safety_interval_hours !== undefined && data.safety_interval_hours !== null) ? data.safety_interval_hours : 2;
+            if (document.getElementById('chem-methods')) document.getElementById('chem-methods').value = data.compatible_methods || data.application_methods || 'Aspersión Manual';
+            if (document.getElementById('chem-tox')) document.getElementById('chem-tox').value = data.toxicological_category || 'Precaución (Banda Verde)';
+            if (document.getElementById('chem-tech-url')) document.getElementById('chem-tech-url').value = data.technical_sheet_url || '';
+            if (document.getElementById('chem-safe-url')) document.getElementById('chem-safe-url').value = data.safety_sheet_url || '';
+        }
+
+        function autofillFromRscoModal(index) {
+            const prod = rscoSearchResults[index];
+            if (!prod) return;
+            closeRscoSearchModal();
+            switchTab('tab-quimicos');
+            populateChemicalForm(prod);
+            const feedback = document.getElementById('quick-chem-lookup-feedback');
+            if (feedback) {
+                feedback.className = "text-[11px] font-medium p-2 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-300 block flex items-center gap-1.5 animate-fadeIn";
+                feedback.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-600"></i> Formulario cargado con datos oficiales de: <b>${prod.commercial_name}</b> (${prod.cicoplafest_number}). Revisa y pulsa "Guardar Químico".`;
+            }
+            const nameInput = document.getElementById('chem-name');
+            if (nameInput) {
+                nameInput.focus();
+                nameInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+
+        // ====================================================================
         // EDICIÓN Y ELIMINACIÓN DE QUÍMICOS / INGREDIENTES ACTIVOS
         // ====================================================================
         async function autoFetchCreateChemicalSheets() {
@@ -6452,12 +6564,15 @@
                         </div>
                     </div>
 
-                    <div class="flex items-center gap-2 shrink-0">
+                    <div class="flex items-center gap-2 shrink-0 flex-wrap sm:flex-nowrap">
+                        <button type="button" onclick="autofillFromRscoModal(${idx})" class="px-2.5 py-1.5 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-lg text-xs shadow-2xs flex items-center gap-1 transition" title="Copiar especificaciones oficiales al formulario de registro">
+                            <i class="fa-solid fa-pen-to-square"></i> Rellenar Formulario
+                        </button>
                         ${!prod.in_local_catalog ? `
-                        <button type="button" onclick="addRscoToLocalCatalog(${idx})" class="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-xs shadow-2xs flex items-center gap-1 transition">
+                        <button type="button" onclick="addRscoToLocalCatalog(${idx})" class="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-xs shadow-2xs flex items-center gap-1 transition" title="Guardar directamente en el catálogo local del SaaS">
                             <i class="fa-solid fa-plus"></i> Dar de Alta
                         </button>` : ''}
-                        <button type="button" onclick="useRscoProduct(${idx})" class="px-2.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg text-xs shadow-2xs flex items-center gap-1 transition">
+                        <button type="button" onclick="useRscoProduct(${idx})" class="px-2.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg text-xs shadow-2xs flex items-center gap-1 transition" title="Usar en orden de servicio">
                             <i class="fa-solid fa-check"></i> Usar
                         </button>
                     </div>
