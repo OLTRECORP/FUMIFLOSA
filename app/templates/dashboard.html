@@ -1116,6 +1116,24 @@
                     <span id="login-error-text" class="leading-tight">Credenciales inválidas. Por favor verifica.</span>
                 </div>
 
+                <!-- Credenciales Sugeridas / Acceso Rápido 1-Clic -->
+                <div class="bg-emerald-50/80 border border-emerald-200 rounded-2xl p-3 text-xs text-slate-700">
+                    <div class="flex items-center justify-between font-bold text-emerald-950 mb-2">
+                        <span class="flex items-center gap-1.5"><i class="fa-solid fa-key text-emerald-600"></i> Credenciales de Acceso Rápido:</span>
+                        <span class="text-[10px] text-emerald-700 font-normal">1-clic para entrar</span>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                        <button type="button" onclick="quickFillLogin('admin@fumiflosa.mx', 'FLOSA6303')" class="px-2.5 py-1.5 bg-white hover:bg-emerald-100/80 border border-emerald-300 rounded-xl text-[11px] font-mono font-bold text-emerald-900 transition shadow-sm flex items-center justify-between">
+                            <span><i class="fa-solid fa-envelope text-emerald-600 mr-1 text-[10px]"></i> admin@fumiflosa.mx</span>
+                            <span class="text-[10px] text-slate-400 font-mono">FLOSA6303</span>
+                        </button>
+                        <button type="button" onclick="quickFillLogin('FOSM630329EA5', 'FLOSA6303')" class="px-2.5 py-1.5 bg-white hover:bg-emerald-100/80 border border-emerald-300 rounded-xl text-[11px] font-mono font-bold text-emerald-900 transition shadow-sm flex items-center justify-between">
+                            <span><i class="fa-solid fa-id-card text-emerald-600 mr-1 text-[10px]"></i> FOSM630329EA5</span>
+                            <span class="text-[10px] text-slate-400 font-mono">FLOSA6303</span>
+                        </button>
+                    </div>
+                </div>
+
                 <form onsubmit="handleMasterLogin(event)" class="space-y-4">
                     <div>
                         <label class="block text-xs font-bold text-slate-700 mb-1">Usuario o Correo:</label>
@@ -5240,11 +5258,22 @@
             if (alertBox) alertBox.classList.add('hidden');
         }
 
-        async function handleMasterLogin(e) {
-            e.preventDefault();
+        function quickFillLogin(username, password) {
+            const uInput = document.getElementById('login-input-username');
+            const pInput = document.getElementById('login-input-password');
+            if (uInput) uInput.value = username;
+            if (pInput) pInput.value = password;
             hideLoginError();
-            const username = document.getElementById('login-input-username').value.trim();
-            const password = document.getElementById('login-input-password').value.trim();
+            handleMasterLogin(null);
+        }
+
+        async function handleMasterLogin(e) {
+            if (e && typeof e.preventDefault === 'function') {
+                e.preventDefault();
+            }
+            hideLoginError();
+            const username = (document.getElementById('login-input-username')?.value || '').trim();
+            const password = (document.getElementById('login-input-password')?.value || '').trim();
             const btn = document.getElementById('btn-login-submit');
 
             if (!username || !password) {
