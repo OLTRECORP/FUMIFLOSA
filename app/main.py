@@ -4,6 +4,7 @@ from typing import Optional
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 
 from sqlalchemy import text
 from app.config import settings
@@ -35,6 +36,9 @@ def startup_db_sync():
     except Exception as e:
         print(f"[STARTUP DB SYNC WARNING]: {e}")
 
+# Compresión GZIP de alto rendimiento (reduce transferencias de 530KB a ~75KB)
+app.add_middleware(GZipMiddleware, minimum_size=1000)
+
 # Configuración de CORS
 app.add_middleware(
     CORSMiddleware,
@@ -64,12 +68,16 @@ if ASSETS_DIR.exists():
 @app.get("/assets/logo.png", tags=["Assets"])
 @app.get("/assets/logo_flosa.png", tags=["Assets"])
 def get_logo_image():
-    """Devuelve el logo oficial de FLOSA Control de Plagas."""
+    """Devuelve el logo oficial de FLOSA Control de Plagas con caché en navegador."""
     logo_path = ASSETS_DIR / "certificates" / "logo_flosa.png"
     if not logo_path.exists():
         logo_path = ASSETS_DIR / "logo_flosa.png"
     if logo_path.exists():
-        return FileResponse(str(logo_path), media_type="image/png")
+        return FileResponse(
+            str(logo_path),
+            media_type="image/png",
+            headers={"Cache-Control": "public, max-age=86400"}
+        )
     return HTMLResponse("", status_code=404)
 
 

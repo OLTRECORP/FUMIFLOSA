@@ -12,6 +12,10 @@ from reportlab.platypus import (
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_CENTER, TA_RIGHT, TA_LEFT, TA_JUSTIFY
 from reportlab.pdfgen import canvas
+from reportlab.lib.utils import ImageReader
+from reportlab.graphics.barcode.qr import QrCodeWidget
+from reportlab.graphics.shapes import Drawing
+from reportlab.graphics import renderPDF
 
 from app.models import ServiceOrder, Certificate, CompanyConfig
 
@@ -21,6 +25,21 @@ FRAME_PATH = ASSETS_DIR / "border_frame.png"
 WATERMARK_PATH = ASSETS_DIR / "watermark_flosa.png"
 LOGO_PATH = ASSETS_DIR / "logo_flosa.png"
 SIGNATURE_PATH = ASSETS_DIR / "signature_mafs.png"
+
+# Caché en memoria para evitar I/O de disco y descompresión reiterada de PNGs
+_CACHED_IMAGES: Dict[str, ImageReader] = {}
+
+def _get_cached_image(path: Path) -> Optional[ImageReader]:
+    """Obtiene una imagen pre-cargada en memoria para acelerar la generación de PDFs."""
+    if not path.exists():
+        return None
+    p_str = str(path)
+    if p_str not in _CACHED_IMAGES:
+        try:
+            _CACHED_IMAGES[p_str] = ImageReader(p_str)
+        except Exception:
+            return None
+    return _CACHED_IMAGES[p_str]
 
 
 def _safe_str(val: Any, default: str = "") -> str:
@@ -64,8 +83,9 @@ class OfficialCertificatePDFGenerator:
 
         # 1. MARCO ORNAMENTAL HISTÓRICO (Bordes exteriores en x=[8.25, 783.75], y=[14.25, 599.25])
         # Recuadro interior blanco seguro: x in [80, 712] (ancho útil 632 pt), y in [88, 516]
-        if FRAME_PATH.exists():
-            c.drawImage(str(FRAME_PATH), 8.25, 14.25, width=775.5, height=585.0, mask='auto')
+        frame_img = _get_cached_image(FRAME_PATH)
+        if frame_img:
+            c.drawImage(frame_img, 8.25, 14.25, width=775.5, height=585.0, mask='auto')
         else:
             c.setStrokeColor(colors.HexColor("#738C7B"))
             c.setLineWidth(3)
@@ -283,12 +303,14 @@ class OfficialCertificatePDFGenerator:
         rec_table.drawOn(c, 80, 274)
 
         # 7. FILA OPERATIVA (LOGO IZQUIERDA, FIRMA TÉCNICA AUTÓGRAFA CENTRO, SINTOX DERECHA)
-        if LOGO_PATH.exists():
-            c.drawImage(str(LOGO_PATH), 80, 214, width=115.0, height=50.0, mask='auto')
+        logo_img = _get_cached_image(LOGO_PATH)
+        if logo_img:
+            c.drawImage(logo_img, 80, 214, width=115.0, height=50.0, mask='auto')
 
         # Firma autógrafa con mayor presencia y tamaño visual
-        if SIGNATURE_PATH.exists():
-            c.drawImage(str(SIGNATURE_PATH), 328, 224, width=136.0, height=48.0, mask='auto')
+        sig_img = _get_cached_image(SIGNATURE_PATH)
+        if sig_img:
+            c.drawImage(sig_img, 328, 224, width=136.0, height=48.0, mask='auto')
 
         c.setStrokeColor(colors.HexColor("#222222"))
         c.setLineWidth(0.8)
@@ -336,10 +358,6 @@ class OfficialCertificatePDFGenerator:
         sintox_table.drawOn(c, 527, 214)
 
         # 8. CONSTANCIA DIGITAL OFICIAL Y FIRMA ELECTRÓNICA AVANZADA (DISEÑO IDÉNTICO Y HOMOGÉNEO)
-        from reportlab.graphics.barcode.qr import QrCodeWidget
-        from reportlab.graphics.shapes import Drawing
-        from reportlab.graphics import renderPDF
-
         is_signed = getattr(cert, 'is_signed', False) and bool(getattr(cert, 'digital_signature_seal', None))
         
         # QR Oficial en esquina inferior izquierda (x=84, y=114, tamaño 52x52)

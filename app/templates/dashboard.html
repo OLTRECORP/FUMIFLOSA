@@ -5324,16 +5324,40 @@
             }
         }
 
-        function refreshAllDashboardData() {
-            try { if (typeof loadCompanyConfig === 'function') loadCompanyConfig(); } catch(e){ console.warn('loadCompanyConfig:', e); }
-            try { if (typeof loadSummaryStats === 'function') loadSummaryStats(); } catch(e){ console.warn('loadSummaryStats:', e); }
-            try { if (typeof loadFielTopBadge === 'function') loadFielTopBadge(); } catch(e){ console.warn('loadFielTopBadge:', e); }
-            try { if (typeof loadDashboardData === 'function') loadDashboardData(); } catch(e){ console.warn('loadDashboardData:', e); }
-            try { if (typeof loadChronologicalCalendar === 'function') loadChronologicalCalendar(); } catch(e){ console.warn('loadChronologicalCalendar:', e); }
-            try { if (typeof loadOrders === 'function') loadOrders(); } catch(e){ console.warn('loadOrders:', e); }
-            try { if (typeof loadClientsAndBranches === 'function') loadClientsAndBranches(); } catch(e){ console.warn('loadClientsAndBranches:', e); }
-            try { if (typeof loadChemicals === 'function') loadChemicals(); } catch(e){ console.warn('loadChemicals:', e); }
-            try { if (typeof loadUsers === 'function') loadUsers(); } catch(e){ console.warn('loadUsers:', e); }
+        async function refreshAllDashboardData() {
+            // Carga paralela ultra rápida de cabecera y estadísticas críticas
+            await Promise.allSettled([
+                typeof loadSummaryStats === 'function' ? loadSummaryStats() : Promise.resolve(),
+                typeof loadCompanyConfig === 'function' ? loadCompanyConfig() : Promise.resolve(),
+                typeof loadFielTopBadge === 'function' ? loadFielTopBadge() : Promise.resolve()
+            ]);
+
+            // Cargar de inmediato únicamente la pestaña activa para renderizado instantáneo
+            const activeTab = Array.from(document.querySelectorAll('[id^="tab-"]')).find(el => !el.classList.contains('hidden'));
+            if (activeTab) {
+                if (activeTab.id === 'tab-cronologico' && typeof loadChronologicalCalendar === 'function') {
+                    loadChronologicalCalendar();
+                } else if (activeTab.id === 'tab-vencimientos' && typeof loadDashboardData === 'function') {
+                    loadDashboardData();
+                } else if (activeTab.id === 'tab-ordenes' && typeof loadOrders === 'function') {
+                    loadOrders();
+                }
+            } else if (typeof loadChronologicalCalendar === 'function') {
+                loadChronologicalCalendar();
+            }
+
+            // Precarga diferida en segundo plano de catálogos secundarios sin congelar el navegador
+            if ('requestIdleCallback' in window) {
+                requestIdleCallback(() => {
+                    if (typeof loadClientsAndBranches === 'function') loadClientsAndBranches();
+                    if (typeof loadChemicals === 'function') loadChemicals();
+                });
+            } else {
+                setTimeout(() => {
+                    if (typeof loadClientsAndBranches === 'function') loadClientsAndBranches();
+                    if (typeof loadChemicals === 'function') loadChemicals();
+                }, 300);
+            }
         }
 
         function renderAuthenticatedUser(user) {

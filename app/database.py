@@ -1,5 +1,7 @@
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine, text, event
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.engine import Engine
+from sqlite3 import Connection as SQLite3Connection
 from app.config import settings
 
 # Ajustar compatibilidad de URL en caso de que Render use postgres:// en lugar de postgresql://
@@ -10,16 +12,19 @@ if db_url.startswith("postgres://"):
 if "sqlite" in db_url:
     engine = create_engine(
         db_url,
-        connect_args={"check_same_thread": False}
+        connect_args={"check_same_thread": False},
+        pool_pre_ping=True
     )
 else:
-    # Intentar conexión con PostgreSQL y auto-fallback a SQLite si la base de datos local no está disponible
+    # Conexión optimizada para PostgreSQL con pool robusto para concurrencia
     try:
         engine = create_engine(
             db_url,
             pool_pre_ping=True,
-            pool_size=5,
-            max_overflow=10
+            pool_size=15,
+            max_overflow=25,
+            pool_timeout=30,
+            pool_recycle=1800
         )
         with engine.connect() as test_conn:
             pass
@@ -28,8 +33,25 @@ else:
         sqlite_url = "sqlite:///./fumiflosa.db"
         engine = create_engine(
             sqlite_url,
-            connect_args={"check_same_thread": False}
+            connect_args={"check_same_thread": False},
+            pool_pre_ping=True
         )
+
+# Optimización de alto rendimiento para SQLite (WAL mode, cache en memoria y timeouts)
+@event.listens_for(Engine, "connect")
+def set_sqlite_pragma(dbapi_connection, connection_record):
+    if isinstance(dbapi_connection, SQLite3Connection):
+        cursor = dbapi_connection.cursor()
+        try:
+            cursor.execute("PRAGMA journal_mode=WAL")
+            cursor.execute("PRAGMA synchronous=NORMAL")
+            cursor.execute("PRAGMA cache_size=-64000")  # 64MB memory page cache
+            cursor.execute("PRAGMA busy_timeout=5000")
+            cursor.execute("PRAGMA temp_store=MEMORY")
+        except Exception:
+            pass
+        finally:
+            cursor.close()
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 

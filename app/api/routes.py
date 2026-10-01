@@ -8,7 +8,7 @@ from typing import List, Optional, Dict, Any
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, status, Query, Header
 from fastapi.responses import Response, StreamingResponse, RedirectResponse
 from sqlalchemy.orm import Session, joinedload
-from sqlalchemy import select, func, or_, and_, desc
+from sqlalchemy import select, func, or_, and_, desc, case
 
 from app.database import get_db
 from app.models import (
@@ -332,7 +332,7 @@ def get_detailed_analytics(
     end_date: Optional[date] = None,
     db: Session = Depends(get_db)
 ):
-    """Genera las métricas avanzadas y estadísticas de servicios de fumigación con filtro de fechas opcional (2019 a hoy)."""
+    """Genera las métricas avanzadas y estadísticas de servicios de fumigación optimizadas en consultas agregadas."""
     start_dt = datetime.combine(start_date, datetime.min.time()).replace(tzinfo=timezone.utc) if start_date else None
     end_dt = datetime.combine(end_date, datetime.max.time()).replace(tzinfo=timezone.utc) if end_date else None
 
@@ -343,23 +343,35 @@ def get_detailed_analytics(
     if end_dt:
         order_filters.append(ServiceOrder.service_start_date <= end_dt)
 
-    total_services = db.query(func.count(ServiceOrder.id)).filter(*order_filters).scalar() or 0
+    # 1 y 2. Desglose de Plagas y Procedimientos en 1 sola consulta agregada de alto rendimiento
+    pest_proc_aggregates = db.query(
+        func.count(ServiceOrder.id).label("total_services"),
+        func.sum(case((ServiceOrder.pest_crawling_insects == True, 1), else_=0)).label("crawling"),
+        func.sum(case((ServiceOrder.pest_rodents == True, 1), else_=0)).label("rodents"),
+        func.sum(case((ServiceOrder.pest_flying_insects == True, 1), else_=0)).label("flying"),
+        func.sum(case((and_(ServiceOrder.pest_others.isnot(None), ServiceOrder.pest_others != ""), 1), else_=0)).label("others"),
+        func.sum(case((ServiceOrder.proc_aspersion == True, 1), else_=0)).label("asp"),
+        func.sum(case((ServiceOrder.proc_baits == True, 1), else_=0)).label("baits"),
+        func.sum(case((ServiceOrder.proc_traps == True, 1), else_=0)).label("traps"),
+        func.sum(case((ServiceOrder.proc_gels == True, 1), else_=0)).label("gels"),
+        func.sum(case((ServiceOrder.proc_ulv_fogging == True, 1), else_=0)).label("ulv"),
+        func.sum(case((ServiceOrder.proc_thermofogging == True, 1), else_=0)).label("thermo")
+    ).filter(*order_filters).first()
+
+    total_services = int(pest_proc_aggregates.total_services or 0) if pest_proc_aggregates else 0
+    pest_crawling = int(pest_proc_aggregates.crawling or 0) if pest_proc_aggregates else 0
+    pest_rodents = int(pest_proc_aggregates.rodents or 0) if pest_proc_aggregates else 0
+    pest_flying = int(pest_proc_aggregates.flying or 0) if pest_proc_aggregates else 0
+    pest_others = int(pest_proc_aggregates.others or 0) if pest_proc_aggregates else 0
+    proc_asp = int(pest_proc_aggregates.asp or 0) if pest_proc_aggregates else 0
+    proc_baits = int(pest_proc_aggregates.baits or 0) if pest_proc_aggregates else 0
+    proc_traps = int(pest_proc_aggregates.traps or 0) if pest_proc_aggregates else 0
+    proc_gels = int(pest_proc_aggregates.gels or 0) if pest_proc_aggregates else 0
+    proc_ulv = int(pest_proc_aggregates.ulv or 0) if pest_proc_aggregates else 0
+    proc_thermo = int(pest_proc_aggregates.thermo or 0) if pest_proc_aggregates else 0
+
     total_clients = db.query(func.count(Client.id)).filter(Client.is_deleted == False).scalar() or 0
     total_branches = db.query(func.count(Branch.id)).filter(Branch.is_deleted == False).scalar() or 0
-
-    # 1. Desglose de Plagas
-    pest_crawling = db.query(func.count(ServiceOrder.id)).filter(*order_filters, ServiceOrder.pest_crawling_insects == True).scalar() or 0
-    pest_rodents = db.query(func.count(ServiceOrder.id)).filter(*order_filters, ServiceOrder.pest_rodents == True).scalar() or 0
-    pest_flying = db.query(func.count(ServiceOrder.id)).filter(*order_filters, ServiceOrder.pest_flying_insects == True).scalar() or 0
-    pest_others = db.query(func.count(ServiceOrder.id)).filter(*order_filters, ServiceOrder.pest_others.isnot(None), ServiceOrder.pest_others != "").scalar() or 0
-
-    # 2. Desglose de Procedimientos
-    proc_asp = db.query(func.count(ServiceOrder.id)).filter(*order_filters, ServiceOrder.proc_aspersion == True).scalar() or 0
-    proc_baits = db.query(func.count(ServiceOrder.id)).filter(*order_filters, ServiceOrder.proc_baits == True).scalar() or 0
-    proc_traps = db.query(func.count(ServiceOrder.id)).filter(*order_filters, ServiceOrder.proc_traps == True).scalar() or 0
-    proc_gels = db.query(func.count(ServiceOrder.id)).filter(*order_filters, ServiceOrder.proc_gels == True).scalar() or 0
-    proc_ulv = db.query(func.count(ServiceOrder.id)).filter(*order_filters, ServiceOrder.proc_ulv_fogging == True).scalar() or 0
-    proc_thermo = db.query(func.count(ServiceOrder.id)).filter(*order_filters, ServiceOrder.proc_thermofogging == True).scalar() or 0
 
     # 3. Químicos más utilizados
     top_chems_query = db.query(
@@ -383,7 +395,7 @@ def get_detailed_analytics(
         .group_by(Branch.classification).all()
     classification_breakdown = {str(c[0].value if hasattr(c[0], 'value') else c[0]): c[1] for c in classes_query}
 
-    # 5. Estado de Vigencias Sanitarias (Calculadas)
+    # 5. Estado de Vigencias Sanitarias (Calculadas en 1 sola consulta agregada)
     today = date.today()
     limit_7 = today + timedelta(days=7)
     limit_15 = today + timedelta(days=15)
@@ -394,21 +406,17 @@ def get_detailed_analytics(
     if end_date:
         cert_filters.append(Certificate.issue_date <= end_date)
 
-    critico_7d = db.query(func.count(Certificate.id)).filter(
-        *cert_filters, Certificate.validity_end_date >= today, Certificate.validity_end_date <= limit_7
-    ).scalar() or 0
+    cert_aggregates = db.query(
+        func.sum(case((and_(Certificate.validity_end_date >= today, Certificate.validity_end_date <= limit_7), 1), else_=0)).label("critico"),
+        func.sum(case((and_(Certificate.validity_end_date > limit_7, Certificate.validity_end_date <= limit_15), 1), else_=0)).label("proximo"),
+        func.sum(case((Certificate.validity_end_date > limit_15, 1), else_=0)).label("vigente"),
+        func.sum(case((Certificate.validity_end_date < today, 1), else_=0)).label("vencido")
+    ).filter(*cert_filters).first()
 
-    proximo_15d = db.query(func.count(Certificate.id)).filter(
-        *cert_filters, Certificate.validity_end_date > limit_7, Certificate.validity_end_date <= limit_15
-    ).scalar() or 0
-
-    vigente = db.query(func.count(Certificate.id)).filter(
-        *cert_filters, Certificate.validity_end_date > limit_15
-    ).scalar() or 0
-
-    vencido = db.query(func.count(Certificate.id)).filter(
-        *cert_filters, Certificate.validity_end_date < today
-    ).scalar() or 0
+    critico_7d = int(cert_aggregates.critico or 0) if cert_aggregates else 0
+    proximo_15d = int(cert_aggregates.proximo or 0) if cert_aggregates else 0
+    vigente = int(cert_aggregates.vigente or 0) if cert_aggregates else 0
+    vencido = int(cert_aggregates.vencido or 0) if cert_aggregates else 0
 
     # 6. Tendencia Mensual (Histórico hasta 120 meses para abarcar desde 2019)
     monthly_orders = db.query(
@@ -1519,9 +1527,6 @@ def get_service_orders(
     limit: Optional[int] = 500, 
     db: Session = Depends(get_db)
 ):
-    if db.query(ServiceOrder).filter(ServiceOrder.is_deleted == False).count() == 0:
-        seed_all_database_defaults(db)
-
     query = db.query(ServiceOrder).options(
         joinedload(ServiceOrder.branch).joinedload(Branch.client),
         joinedload(ServiceOrder.technician),
@@ -1789,9 +1794,6 @@ def get_services_calendar(
     Registro cronológico de servicios para visualización en calendario interactivo.
     Devuelve servicios completados, agendados y cancelados con codificación de colores y metadatos.
     """
-    if db.query(ServiceOrder).filter(ServiceOrder.is_deleted == False).count() == 0:
-        seed_all_database_defaults(db)
-
     query = db.query(ServiceOrder).options(
         joinedload(ServiceOrder.branch).joinedload(Branch.client),
         joinedload(ServiceOrder.technician),
@@ -2281,9 +2283,6 @@ def get_dashboard_expirations(db: Session = Depends(get_db)):
     Calcula estrictamente la vigencia a 30 días naturales posteriores a la fecha de expedición.
     Clasifica en: ≤7 días (crítico), ≤15 días (advertencia), ≤30 días (vigente) y Vencidos (>30 días).
     """
-    if db.query(Certificate).filter(Certificate.is_deleted == False).count() == 0:
-        seed_all_database_defaults(db)
-
     today = date.today()
 
     certificates = db.query(Certificate).options(
