@@ -165,80 +165,95 @@ DEFAULT_PESTICIDES_CATALOG = [
 ]
 
 
+from sqlalchemy.exc import IntegrityError
+
+
 def seed_company_config(db: Session) -> CompanyConfig:
     """Garantiza la existencia de la configuración de la empresa prestadora."""
-    config = db.query(CompanyConfig).first()
-    if not config:
-        config = CompanyConfig(
-            company_name="FUMIFLOSA S.A. DE C.V.",
-            trade_name="FUMIFLOSA - Control de Plagas Urbanas",
-            rfc="FUM200101XYZ",
-            tax_regime="601 - General de Ley Personas Morales",
-            fiscal_address="Av. Insurgentes Sur 1200, Benito Juárez, CDMX, C.P. 03100",
-            phone="55-1234-5678",
-            email="contacto@fumiflosa.mx",
-            website="https://fumiflosa.mx",
-            sanitary_license_number="2023-15A-099",
-            sanitary_responsible_name="Biól. Roberto Sánchez Martínez",
-            sanitary_responsible_id="CED-8849201",
-            stps_registration_number="FUM-STPS-DC3-2023",
-            sintox_emergency_phones="01-800-0092800 / 800-009-2800 / CDMX 55-5598-6659",
-            default_reentry_hours=2,
-            default_validity_days=30,
-            terms_and_notes="Servicio ejecutado conforme a la NOM-256-SSA1-2012. Los plaguicidas empleados cuentan con registro sanitario vigente ante COFEPRIS."
-        )
-        db.add(config)
-        db.commit()
-        db.refresh(config)
-    return config
+    try:
+        config = db.query(CompanyConfig).first()
+        if not config:
+            config = CompanyConfig(
+                company_name="FUMIFLOSA S.A. DE C.V.",
+                trade_name="FUMIFLOSA - Control de Plagas Urbanas",
+                rfc="FUM200101XYZ",
+                tax_regime="601 - General de Ley Personas Morales",
+                fiscal_address="Av. Insurgentes Sur 1200, Benito Juárez, CDMX, C.P. 03100",
+                phone="55-1234-5678",
+                email="contacto@fumiflosa.mx",
+                website="https://fumiflosa.mx",
+                sanitary_license_number="2023-15A-099",
+                sanitary_responsible_name="Biól. Roberto Sánchez Martínez",
+                sanitary_responsible_id="CED-8849201",
+                stps_registration_number="FUM-STPS-DC3-2023",
+                sintox_emergency_phones="01-800-0092800 / 800-009-2800 / CDMX 55-5598-6659",
+                default_reentry_hours=2,
+                default_validity_days=30,
+                terms_and_notes="Servicio ejecutado conforme a la NOM-256-SSA1-2012. Los plaguicidas empleados cuentan con registro sanitario vigente ante COFEPRIS."
+            )
+            db.add(config)
+            db.commit()
+            db.refresh(config)
+        return config
+    except IntegrityError:
+        db.rollback()
+        return db.query(CompanyConfig).first()
+    except Exception:
+        db.rollback()
+        return db.query(CompanyConfig).first()
 
 
 def seed_users(db: Session) -> int:
     """Garantiza la existencia del Super Administrador Master y de los técnicos aplicadores."""
     count_new = 0
-    # 1. SuperAdmin Master
-    master_admin = db.query(User).filter(
-        or_(User.username == "FOSM630329EA5", User.email == "admin@fumiflosa.mx")
-    ).first()
-    if not master_admin:
-        master_admin = User(
-            username="FOSM630329EA5",
-            email="admin@fumiflosa.mx",
-            full_name="Super Administrador Master - FUMIFLOSA",
-            role=UserRole.SUPERADMIN,
-            hashed_password="hash_FLOSA6303",
-            is_active=True
-        )
-        db.add(master_admin)
-        count_new += 1
-    else:
-        if not master_admin.username or master_admin.role != UserRole.SUPERADMIN:
-            master_admin.username = "FOSM630329EA5"
-            master_admin.role = UserRole.SUPERADMIN
-            master_admin.is_active = True
-
-    # 2. Técnicos Aplicadores con DC-3
-    techs = [
-        ("tec1@fumiflosa.mx", "tecnico1", "Téc. Juan Carlos Pérez Morales", "NOM-256-DC3-TEC01"),
-        ("tec2@fumiflosa.mx", "tecnico2", "Téc. Miguel Ángel Soto Flores", "NOM-256-DC3-TEC02"),
-        ("tec3@fumiflosa.mx", "tecnico3", "Téc. Marco Antonio Flores Sáenz", "NOM-256-DC3-TEC03"),
-    ]
-    for email, uname, name, dc3 in techs:
-        t_user = db.query(User).filter(or_(User.username == uname, User.email == email)).first()
-        if not t_user:
-            t_user = User(
-                username=uname,
-                email=email,
-                full_name=name,
-                role=UserRole.TECNICO_CAMPO,
-                hashed_password="hash_tec123",
-                stps_dc3_file_url=dc3,
+    try:
+        # 1. SuperAdmin Master
+        master_admin = db.query(User).filter(
+            or_(User.username == "FOSM630329EA5", User.email == "admin@fumiflosa.mx")
+        ).first()
+        if not master_admin:
+            master_admin = User(
+                username="FOSM630329EA5",
+                email="admin@fumiflosa.mx",
+                full_name="Super Administrador Master - FUMIFLOSA",
+                role=UserRole.SUPERADMIN,
+                hashed_password="hash_FLOSA6303",
                 is_active=True
             )
-            db.add(t_user)
+            db.add(master_admin)
             count_new += 1
+        else:
+            if not master_admin.username or master_admin.role != UserRole.SUPERADMIN:
+                master_admin.username = "FOSM630329EA5"
+                master_admin.role = UserRole.SUPERADMIN
+                master_admin.is_active = True
 
-    db.commit()
+        # 2. Técnicos Aplicadores con DC-3
+        techs = [
+            ("tec1@fumiflosa.mx", "tecnico1", "Téc. Juan Carlos Pérez Morales", "NOM-256-DC3-TEC01"),
+            ("tec2@fumiflosa.mx", "tecnico2", "Téc. Miguel Ángel Soto Flores", "NOM-256-DC3-TEC02"),
+            ("tec3@fumiflosa.mx", "tecnico3", "Téc. Marco Antonio Flores Sáenz", "NOM-256-DC3-TEC03"),
+        ]
+        for email, uname, name, dc3 in techs:
+            t_user = db.query(User).filter(or_(User.username == uname, User.email == email)).first()
+            if not t_user:
+                t_user = User(
+                    username=uname,
+                    email=email,
+                    full_name=name,
+                    role=UserRole.TECNICO_CAMPO,
+                    hashed_password="hash_tec123",
+                    stps_dc3_file_url=dc3,
+                    is_active=True
+                )
+                db.add(t_user)
+                count_new += 1
+
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+    except Exception:
+        db.rollback()
     return count_new
 
 
@@ -246,27 +261,32 @@ def seed_chemicals(db: Session) -> int:
     """Inserta en la tabla chemicals el catálogo oficial COFEPRIS si no existen."""
     count_new = 0
     for p in DEFAULT_PESTICIDES_CATALOG:
-        rsco = p["cicoplafest_number"].strip().upper()
-        existing = db.query(Chemical).filter(
-            Chemical.cicoplafest_number == rsco,
-            Chemical.is_deleted == False
-        ).first()
-        if not existing:
-            sheet_info = lookup_online_sheets_by_rsco(rsco, p["commercial_name"])
-            chem = Chemical(
-                commercial_name=p["commercial_name"],
-                active_ingredient=p["active_ingredient"],
-                cicoplafest_number=rsco,
-                authorized_dose_per_liter=p["authorized_dose_per_liter"],
-                safety_interval_hours=p["safety_interval_hours"],
-                compatible_methods=p["compatible_methods"],
-                toxicological_category=p["toxicological_category"],
-                technical_sheet_url=sheet_info.get("technical_sheet_url"),
-                safety_sheet_url=sheet_info.get("safety_sheet_url")
-            )
-            db.add(chem)
-            count_new += 1
-    db.commit()
+        try:
+            rsco = p["cicoplafest_number"].strip().upper()
+            existing = db.query(Chemical).filter(
+                Chemical.cicoplafest_number == rsco,
+                Chemical.is_deleted == False
+            ).first()
+            if not existing:
+                sheet_info = lookup_online_sheets_by_rsco(rsco, p["commercial_name"])
+                chem = Chemical(
+                    commercial_name=p["commercial_name"],
+                    active_ingredient=p["active_ingredient"],
+                    cicoplafest_number=rsco,
+                    authorized_dose_per_liter=p["authorized_dose_per_liter"],
+                    safety_interval_hours=p["safety_interval_hours"],
+                    compatible_methods=p["compatible_methods"],
+                    toxicological_category=p["toxicological_category"],
+                    technical_sheet_url=sheet_info.get("technical_sheet_url"),
+                    safety_sheet_url=sheet_info.get("safety_sheet_url")
+                )
+                db.add(chem)
+                db.commit()
+                count_new += 1
+        except IntegrityError:
+            db.rollback()
+        except Exception:
+            db.rollback()
     return count_new
 
 
