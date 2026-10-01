@@ -282,16 +282,17 @@ class OfficialCertificatePDFGenerator:
         rec_table.wrapOn(c, 632, 28)
         rec_table.drawOn(c, 80, 274)
 
-        # 7. FILA OPERATIVA (LOGO IZQUIERDA, FIRMA TÉCNICA CENTRO, SINTOX DERECHA)
+        # 7. FILA OPERATIVA (LOGO IZQUIERDA, FIRMA TÉCNICA AUTÓGRAFA CENTRO, SINTOX DERECHA)
         if LOGO_PATH.exists():
             c.drawImage(str(LOGO_PATH), 80, 214, width=115.0, height=50.0, mask='auto')
 
+        # Firma autógrafa con mayor presencia y tamaño visual
         if SIGNATURE_PATH.exists():
-            c.drawImage(str(SIGNATURE_PATH), 345, 226, width=105.0, height=38.0, mask='auto')
+            c.drawImage(str(SIGNATURE_PATH), 328, 224, width=136.0, height=48.0, mask='auto')
 
         c.setStrokeColor(colors.HexColor("#222222"))
         c.setLineWidth(0.8)
-        c.line(285, 226, 507, 226)
+        c.line(275, 226, 517, 226)
 
         c.setFont("Times-Bold", 7.5)
         c.setFillColor(colors.HexColor("#111111"))
@@ -334,41 +335,41 @@ class OfficialCertificatePDFGenerator:
         sintox_table.wrapOn(c, 185, 52)
         sintox_table.drawOn(c, 527, 214)
 
-        # 8. FIRMA ELECTRÓNICA AVANZADA (FIEL / E.FIRMA SAT) EN LA MISMA HOJA
+        # 8. CONSTANCIA DIGITAL OFICIAL Y FIRMA ELECTRÓNICA AVANZADA (DISEÑO IDÉNTICO Y HOMOGÉNEO)
         from reportlab.graphics.barcode.qr import QrCodeWidget
         from reportlab.graphics.shapes import Drawing
         from reportlab.graphics import renderPDF
 
         is_signed = getattr(cert, 'is_signed', False) and bool(getattr(cert, 'digital_signature_seal', None))
         
+        # QR Oficial en esquina inferior izquierda (x=84, y=114, tamaño 52x52)
+        qr_data = f"https://fumiflosa.mx/verificar?folio={cert.certificate_folio}&uuid={cert.verification_uuid or cert.id}&rfc={cert.signed_by_rfc or comp_rfc}"
+        qr_widget = QrCodeWidget(qr_data)
+        qr_widget.barWidth = 52
+        qr_widget.barHeight = 52
+        qr_drawing = Drawing(52, 52)
+        qr_drawing.add(qr_widget)
+        renderPDF.draw(qr_drawing, c, 84, 114)
+
+        c.setFont("Helvetica-Bold", 5.2)
+        c.setFillColor(colors.HexColor("#166534"))
+        c.drawCentredString(110, 103, "ESCANEAR PARA VALIDAR")
+        c.setFont("Helvetica", 4.8)
+        c.setFillColor(colors.HexColor("#475569"))
+        c.drawCentredString(110, 93, "Validez Oficial SAT / NOM-256")
+
+        # Bloque criptográfico / constancia oficial SAT (x=148, ancho=564 -> max x=712, y=90 -> top 184)
+        seal_fiel_style = ParagraphStyle(
+            'SealSingleStyle',
+            parent=styles['Normal'],
+            fontName='Courier',
+            fontSize=4.2,
+            leading=5.2,
+            textColor=colors.HexColor("#0F172A")
+        )
+        
+        sign_dt_str = cert.signed_at.strftime('%Y-%m-%d %H:%M:%S UTC') if getattr(cert, 'signed_at', None) else date.today().strftime('%Y-%m-%d')
         if is_signed:
-            # QR Oficial en esquina inferior izquierda (x=82, y=114, tamaño 52x52)
-            qr_data = f"https://fumiflosa.mx/verificar?folio={cert.certificate_folio}&uuid={cert.verification_uuid or cert.id}&rfc={cert.signed_by_rfc or comp_rfc}"
-            qr_widget = QrCodeWidget(qr_data)
-            qr_widget.barWidth = 52
-            qr_widget.barHeight = 52
-            qr_drawing = Drawing(52, 52)
-            qr_drawing.add(qr_widget)
-            renderPDF.draw(qr_drawing, c, 84, 114)
-
-            c.setFont("Helvetica-Bold", 5.2)
-            c.setFillColor(colors.HexColor("#166534"))
-            c.drawCentredString(110, 103, "ESCANEAR PARA VALIDAR")
-            c.setFont("Helvetica", 4.8)
-            c.setFillColor(colors.HexColor("#475569"))
-            c.drawCentredString(110, 93, "Validez Oficial SAT / NOM-256")
-
-            # Bloque criptográfico SAT (x=148, ancho=564 -> max x=712, y=90 -> top 184)
-            seal_fiel_style = ParagraphStyle(
-                'SealSingleStyle',
-                parent=styles['Normal'],
-                fontName='Courier',
-                fontSize=4.2,
-                leading=5.2,
-                textColor=colors.HexColor("#0F172A")
-            )
-            
-            sign_dt_str = cert.signed_at.strftime('%Y-%m-%d %H:%M:%S UTC') if cert.signed_at else date.today().strftime('%Y-%m-%d')
             fiel_box_html = (
                 f"<b>FIRMA ELECTRÓNICA AVANZADA (e.firma / FIEL del SAT) - CONSTANCIA OFICIAL NOM-256</b><br/>"
                 f"<b>Serie SAT:</b> {cert.certificate_serial_number or '30001000000500003416'} &nbsp;|&nbsp; "
@@ -379,26 +380,27 @@ class OfficialCertificatePDFGenerator:
                 f"<b>Sello Digital Criptográfico (RSA-SHA256):</b><br/>"
                 f"<font face='Courier' size='4.0'>{cert.digital_signature_seal}</font>"
             )
-
-            fiel_single_table = Table([[Paragraph(fiel_box_html, seal_fiel_style)]], colWidths=[564])
-            fiel_single_table.setStyle(TableStyle([
-                ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor("#F0FDF4")),
-                ('BOX', (0, 0), (-1, -1), 0.5, colors.HexColor("#86EFAC")),
-                ('TOPPADDING', (0, 0), (-1, -1), 2.5),
-                ('BOTTOMPADDING', (0, 0), (-1, -1), 2.5),
-                ('LEFTPADDING', (0, 0), (-1, -1), 4),
-                ('RIGHTPADDING', (0, 0), (-1, -1), 4),
-            ]))
-            fiel_single_table.wrapOn(c, 564, 94)
-            fiel_single_table.drawOn(c, 148, 90)
         else:
-            # Pie informativo cuando aún no se firma (dentro del área blanca segura)
-            c.setFont("Helvetica-Bold", 6.5)
-            c.setFillColor(colors.HexColor("#166534"))
-            c.drawCentredString(page_width / 2, 130, "CERTIFICADO OFICIAL EMITIDO DE CONFORMIDAD CON LA NOM-256-SSA1-2012 Y LA LEY GENERAL DE SALUD")
-            c.setFont("Helvetica-Oblique", 6)
-            c.setFillColor(colors.HexColor("#64748B"))
-            c.drawCentredString(page_width / 2, 116, "Marco Antonio Flores Sáenz - FLOSA Control de Plagas | Licencia Sanitaria No. " + license_no)
+            fiel_box_html = (
+                f"<b>CONSTANCIA DIGITAL DE VALIDEZ SANITARIA OFICIAL (NOM-256-SSA1-2012 / COFEPRIS)</b><br/>"
+                f"<b>Folio Digital:</b> {cert.certificate_folio} &nbsp;|&nbsp; <b>ID Verificación UUID:</b> {cert.verification_uuid or cert.id}<br/>"
+                f"<b>Responsable Sanitario:</b> {cert.sanitary_responsible_name or responsible_title} (RFC: {comp_rfc}) &nbsp;|&nbsp; <b>Licencia Sanitaria:</b> {license_no}<br/>"
+                f"<b>Cadena de Autenticidad Oficial:</b><br/>"
+                f"<font face='Courier' size='4.0'>||{cert.certificate_folio}|{issue_str}|{comp_rfc}|{license_no}|{client_display}|NOM-256-SSA1-2012||</font><br/>"
+                f"<b>Registro de Emisión:</b> Certificado Oficial registrado en Plataforma FLOSA. Validez plena para inspección sanitaria COFEPRIS / Escanee el código QR para validar autenticidad en tiempo real."
+            )
+
+        fiel_single_table = Table([[Paragraph(fiel_box_html, seal_fiel_style)]], colWidths=[564])
+        fiel_single_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor("#F0FDF4")),
+            ('BOX', (0, 0), (-1, -1), 0.5, colors.HexColor("#86EFAC")),
+            ('TOPPADDING', (0, 0), (-1, -1), 2.5),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 2.5),
+            ('LEFTPADDING', (0, 0), (-1, -1), 4),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 4),
+        ]))
+        fiel_single_table.wrapOn(c, 564, 94)
+        fiel_single_table.drawOn(c, 148, 90)
 
         # 9. MARCA DE AGUA EN CASO DE CANCELACIÓN
         if getattr(cert, 'is_cancelled', False):
