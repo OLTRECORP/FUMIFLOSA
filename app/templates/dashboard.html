@@ -1856,8 +1856,9 @@
                                 <th class="p-3">Folio Certificado</th>
                                 <th class="p-3">Cliente / Sucursal</th>
                                 <th class="p-3">Técnico</th>
+                                <th class="p-3">Fecha Servicio</th>
                                 <th class="p-3">Vigencia NOM-256</th>
-                                <th class="p-3">Firma FIEL SAT</th>
+                                <th class="p-3">Firma SAT</th>
                                 <th class="p-3 text-right">Acciones Rápidas</th>
                             </tr>
                         </thead>
@@ -3471,59 +3472,6 @@
             } catch(e) { console.error(e); }
         }
 
-        async function loadOrders() {
-            try {
-                const res = await fetch('/api/v1/services?limit=100');
-                cachedOrders = await res.json();
-                const tbody = document.getElementById('orders-tbody');
-                if(!cachedOrders.length) {
-                    tbody.innerHTML = '<tr><td colspan="7" class="p-6 text-center text-slate-400">No hay órdenes registradas.</td></tr>';
-                    return;
-                }
-                tbody.innerHTML = cachedOrders.map(o => {
-                    const branchName = o.branch ? o.branch.name : 'N/A';
-                    const branchEmail = o.branch && o.branch.responsible_contact_email ? o.branch.responsible_contact_email : '';
-                    const cert = o.certificate;
-                    const certFolio = cert ? cert.certificate_folio : 'N/A';
-                    const certId = cert ? cert.id : null;
-                    const isSigned = cert && cert.is_signed;
-
-                    let signBadge = isSigned
-                        ? `<span class="inline-flex items-center gap-1 bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded text-[10px]"><i class="fa-solid fa-certificate text-emerald-600"></i> Firmado SAT</span>`
-                        : `<span class="inline-flex items-center gap-1 bg-amber-100 text-amber-800 font-semibold px-2 py-0.5 rounded text-[10px]"><i class="fa-solid fa-clock text-amber-600"></i> Borrador (Sin Firmar)</span>`;
-
-                    return `
-                        <tr class="hover:bg-slate-50">
-                            <td class="p-3 font-mono font-bold text-slate-900">${o.folio}</td>
-                            <td class="p-3 font-mono text-slate-600">${certFolio}</td>
-                            <td class="p-3 font-medium text-slate-800">${branchName}</td>
-                            <td class="p-3 text-slate-600">${o.technician ? o.technician.full_name : 'N/A'}</td>
-                            <td class="p-3 text-slate-600">${cert ? cert.validity_start_date + ' al ' + cert.validity_end_date : 'N/A'}</td>
-                            <td class="p-3">${signBadge}</td>
-                            <td class="p-3 text-right">
-                                <div class="inline-flex items-center gap-1.5">
-                                    ${certId ? `
-                                        <button onclick="openSignModal('${certId}', '${certFolio}', '${branchName.replace(/'/g, "\\'")}')" title="Firmar manualmente con FIEL SAT" class="bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold px-2 py-1 rounded border border-amber-200 flex items-center gap-1">
-                                            <i class="fa-solid fa-stamp"></i> ${isSigned ? 'Re-Firmar' : 'Firmar FIEL'}
-                                        </button>
-                                    ` : ''}
-                                    <button onclick="openDuplicateModal('${o.id}', '${o.folio}', '${branchName.replace(/'/g, "\\'")}', '${branchEmail}')" title="Duplicar para nuevo mes" class="bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold px-2 py-1 rounded border border-purple-200 flex items-center gap-1">
-                                        <i class="fa-solid fa-clone"></i> Duplicar Mes
-                                    </button>
-                                    <button onclick="openEmailModal('${o.id}', '${certFolio}', '${branchEmail}')" title="Enviar Certificado por Correo" class="bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold px-2 py-1 rounded border border-blue-200 flex items-center gap-1">
-                                        <i class="fa-solid fa-envelope"></i> Email
-                                    </button>
-                                    <a href="/api/v1/services/${o.id}/pdf" target="_blank" title="Imprimir / Ver PDF" class="bg-brand-50 hover:bg-brand-100 text-brand-700 font-bold px-2 py-1 rounded border border-brand-200 flex items-center gap-1">
-                                        <i class="fa-solid fa-print"></i> PDF
-                                    </a>
-                                </div>
-                            </td>
-                        </tr>
-                    `;
-                }).join('');
-            } catch(e) { console.error(e); }
-        }
-
         // =============================================================
         // CONFIGURACIÓN DE EMPRESA Y FIEL SAT
         // =============================================================
@@ -4024,8 +3972,8 @@
                     } else if (currentExpFilter === 'vencidos') {
                         items = expiredItems;
                     } else { // 'all'
-                        // Default to active items to prevent overflowing the DOM
-                        items = activeItems;
+                        // Muestra todos los certificados históricos y vigentes
+                        items = [...activeItems, ...expiredItems];
                     }
                 }
 
@@ -4249,6 +4197,23 @@
                     validityCell = isCertCancelled ? '<span class="text-rose-600 font-bold text-[11px]">Cancelado</span>' : `<span class="text-slate-700 font-medium">${o.certificate.validity_end_date}</span>`;
                 }
 
+                let signCell = 'N/A';
+                const certId = o.certificate ? o.certificate.id : null;
+                const certFolio = o.certificate ? o.certificate.certificate_folio : '';
+                const branchName = o.branch ? o.branch.name : '';
+                const branchEmail = o.branch && o.branch.responsible_contact_email ? o.branch.responsible_contact_email : '';
+                const isSigned = o.certificate && o.certificate.is_signed;
+
+                if (o.certificate) {
+                    if (isCertCancelled) {
+                        signCell = `<span class="text-slate-400 text-[10px] italic">N/A</span>`;
+                    } else if (isSigned) {
+                        signCell = `<span class="inline-flex items-center gap-1 bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded text-[10px]"><i class="fa-solid fa-certificate text-emerald-600"></i> Firmado SAT</span>`;
+                    } else {
+                        signCell = `<span class="inline-flex items-center gap-1 bg-amber-100 text-amber-800 font-semibold px-2 py-0.5 rounded text-[10px]"><i class="fa-solid fa-clock text-amber-600"></i> Borrador</span>`;
+                    }
+                }
+
                 return `
                 <tr class="hover:bg-slate-50 ${isOrderCancelled ? 'bg-rose-50/20' : ''}">
                     <td class="p-3 font-mono font-bold text-slate-900">
@@ -4260,6 +4225,7 @@
                     <td class="p-3 text-slate-600">${o.technician ? o.technician.full_name : 'N/A'}</td>
                     <td class="p-3 text-slate-600">${new Date(o.service_start_date).toLocaleDateString()}</td>
                     <td class="p-3">${validityCell}</td>
+                    <td class="p-3">${signCell}</td>
                     <td class="p-3 text-right">
                         <div class="flex items-center justify-end gap-1.5 flex-wrap">
                             ${o.certificate ? `
@@ -4272,9 +4238,19 @@
                             <a href="/api/v1/services/${o.id}/pesticide-sheets/zip" target="_blank" title="Descargar Fichas Técnicas y Hojas de Seguridad HDS (ZIP)" class="inline-flex items-center gap-1 bg-teal-50 hover:bg-teal-100 text-teal-800 font-bold px-2 py-1 rounded border border-teal-200 text-xs shadow-xs">
                                 <i class="fa-solid fa-file-zipper text-teal-600"></i> Fichas/HDS
                             </a>
+                            ${certId && !isCertCancelled ? `
+                            <button onclick="openSignModal('${certId}', '${certFolio}', '${branchName.replace(/'/g, "\\'")}')" title="Firmar con FIEL SAT" class="inline-flex items-center gap-1 bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold px-2 py-1 rounded border border-amber-200 text-xs">
+                                <i class="fa-solid fa-stamp"></i> ${isSigned ? 'Re-Firmar' : 'Firmar'}
+                            </button>` : ''}
+                            <button onclick="openDuplicateModal('${o.id}', '${o.folio}', '${branchName.replace(/'/g, "\\'")}', '${branchEmail}')" title="Duplicar para nuevo mes" class="inline-flex items-center gap-1 bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold px-2 py-1 rounded border border-purple-200 text-xs">
+                                <i class="fa-solid fa-clone"></i> Duplicar
+                            </button>
+                            <button onclick="openEmailModal('${o.id}', '${certFolio}', '${branchEmail}')" title="Enviar Certificado por Correo" class="inline-flex items-center gap-1 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold px-2 py-1 rounded border border-blue-200 text-xs">
+                                <i class="fa-solid fa-envelope"></i> Email
+                            </button>
                             ${o.certificate && !isCertCancelled ? `
-                            <button onclick="openCancelCertModal('${o.certificate.id}', '${o.certificate.certificate_folio}')" title="Cancelar este certificado si no se llevó a cabo" class="inline-flex items-center gap-1 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold px-2 py-1 rounded border border-rose-200 text-xs">
-                                <i class="fa-solid fa-ban"></i> Cancelar
+                            <button onclick="openCancelCertModal('${o.certificate.id}', '${o.certificate.certificate_folio}')" title="Cancelar este certificado" class="inline-flex items-center gap-1 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold px-2 py-1 rounded border border-rose-200 text-xs">
+                                <i class="fa-solid fa-ban"></i>
                             </button>` : ''}
                             <button onclick="openEditServiceModal('${o.id}')" title="Editar orden" class="inline-flex items-center gap-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-2 py-1 rounded border border-slate-300 text-xs">
                                 <i class="fa-solid fa-pen-to-square"></i>
@@ -4422,6 +4398,7 @@
                 cachedClients = await resC.json();
                 cachedBranches = await resB.json();
 
+                const selectClientInBranchForm = document.getElementById('br-client-id');
                 if (selectClientInBranchForm) {
                     selectClientInBranchForm.innerHTML = cachedClients.map(c => `<option value="${c.id}">${c.legal_name} (${c.rfc})</option>`).join('');
                 }
