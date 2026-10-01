@@ -15,6 +15,7 @@ import uuid
 from datetime import date, datetime, timedelta, timezone
 from sqlalchemy.orm import Session
 from sqlalchemy import or_
+from sqlalchemy.exc import IntegrityError
 
 from app.models import (
     CompanyConfig, User, UserRole, Chemical, RSCOItem,
@@ -305,6 +306,11 @@ def seed_clients_and_services(db: Session) -> int:
     Inserta clientes institucionales, sucursales y certificados de ejemplo con
     distintas vigencias de forma idempotente y segura.
     """
+    if db.query(User).count() == 0:
+        seed_users(db)
+    if db.query(Chemical).count() == 0:
+        seed_chemicals(db)
+
     # Obtener un técnico y químicos para asociar
     tech = db.query(User).filter(User.role == UserRole.TECNICO_CAMPO, User.is_active == True).first()
     if not tech:

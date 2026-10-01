@@ -649,7 +649,7 @@ def get_dashboard_summary(db: Session = Depends(get_db)):
 @router.get("/users", response_model=List[UserResponse])
 def get_users(role: Optional[UserRole] = None, db: Session = Depends(get_db)):
     if db.query(User).filter(User.is_deleted == False).count() == 0:
-        seed_users(db)
+        seed_all_database_defaults(db)
     query = db.query(User).filter(User.is_deleted == False)
     if role:
         query = query.filter(User.role == role)
@@ -711,7 +711,7 @@ def delete_user(user_id: uuid.UUID, db: Session = Depends(get_db)):
 @router.get("/clients", response_model=List[ClientResponse])
 def get_clients(db: Session = Depends(get_db)):
     if db.query(Client).filter(Client.is_deleted == False).count() == 0:
-        seed_clients_and_services(db)
+        seed_all_database_defaults(db)
     clients = db.query(Client).filter(Client.is_deleted == False).order_by(Client.legal_name).all()
     # Mapear portal_has_password
     for c in clients:
@@ -774,7 +774,7 @@ def delete_client(client_id: uuid.UUID, db: Session = Depends(get_db)):
 @router.get("/branches", response_model=List[BranchResponse])
 def get_branches(client_id: Optional[uuid.UUID] = None, db: Session = Depends(get_db)):
     if db.query(Branch).filter(Branch.is_deleted == False).count() == 0:
-        seed_clients_and_services(db)
+        seed_all_database_defaults(db)
     query = db.query(Branch).options(joinedload(Branch.client)).filter(Branch.is_deleted == False)
     if client_id:
         query = query.filter(Branch.client_id == client_id)
@@ -1112,7 +1112,7 @@ def search_rsco_chemicals(q: str = "", db: Session = Depends(get_db)):
 @router.get("/chemicals", response_model=List[ChemicalResponse])
 def get_chemicals(db: Session = Depends(get_db)):
     if db.query(Chemical).filter(Chemical.is_deleted == False).count() == 0:
-        seed_chemicals(db)
+        seed_all_database_defaults(db)
     return db.query(Chemical).filter(Chemical.is_deleted == False).order_by(Chemical.commercial_name).all()
 
 
@@ -1520,7 +1520,7 @@ def get_service_orders(
     db: Session = Depends(get_db)
 ):
     if db.query(ServiceOrder).filter(ServiceOrder.is_deleted == False).count() == 0:
-        seed_clients_and_services(db)
+        seed_all_database_defaults(db)
 
     query = db.query(ServiceOrder).options(
         joinedload(ServiceOrder.branch).joinedload(Branch.client),
@@ -1784,6 +1784,9 @@ def get_services_calendar(
     Registro cronológico de servicios para visualización en calendario interactivo.
     Devuelve servicios completados, agendados y cancelados con codificación de colores y metadatos.
     """
+    if db.query(ServiceOrder).filter(ServiceOrder.is_deleted == False).count() == 0:
+        seed_all_database_defaults(db)
+
     query = db.query(ServiceOrder).options(
         joinedload(ServiceOrder.branch).joinedload(Branch.client),
         joinedload(ServiceOrder.technician),
@@ -2274,7 +2277,7 @@ def get_dashboard_expirations(db: Session = Depends(get_db)):
     Clasifica en: ≤7 días (crítico), ≤15 días (advertencia), ≤30 días (vigente) y Vencidos (>30 días).
     """
     if db.query(Certificate).filter(Certificate.is_deleted == False).count() == 0:
-        seed_clients_and_services(db)
+        seed_all_database_defaults(db)
 
     today = date.today()
 
