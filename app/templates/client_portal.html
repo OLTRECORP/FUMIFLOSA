@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal de Clientes - Consulta de Certificados Sanitarios (NOM-256)</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                            800: '#166534',
+                            900: '#14532d',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans min-h-screen flex flex-col antialiased">
+
+    <!-- PASSWORD MODAL (SI EL CLIENTE TIENE CONTRASEÑA) -->
+    <div id="password-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 space-y-4 border border-slate-200 text-center animate-fade-in">
+            <div class="bg-slate-50 p-3 rounded-2xl max-w-[140px] mx-auto border border-slate-200 shadow-xs">
+                <img src="/assets/logo_flosa.png" alt="FLOSA Fumigación" class="h-12 w-auto object-contain mx-auto" />
+            </div>
+            <div>
+                <h3 class="text-lg font-bold text-slate-900">Portal Privado de Cliente</h3>
+                <p class="text-xs text-slate-500 mt-1">Este enlace permanente está protegido. Ingresa la clave de acceso proporcionada por FLOSA Fumigación.</p>
+            </div>
+
+            <form onsubmit="handleAuth(event)" class="space-y-3 pt-2">
+                <div>
+                    <input type="password" id="portal-pwd-input" required placeholder="Contraseña de acceso" class="w-full text-center tracking-widest text-sm bg-slate-50 border border-slate-300 rounded-xl py-3 px-4 focus:ring-2 focus:ring-brand-500 focus:outline-none" />
+                </div>
+                <div id="auth-error-msg" class="text-xs text-rose-600 font-semibold hidden">Contraseña incorrecta. Intenta nuevamente.</div>
+                <button type="submit" id="btn-auth-submit" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-bold py-3 rounded-xl text-xs shadow-md transition flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-arrow-right-to-bracket"></i> Desbloquear Portal
+                </button>
+            </form>
+            <p class="text-[11px] text-slate-400">NOM-256-SSA1-2012 • Cumplimiento Sanitario y Legal</p>
+        </div>
+    </div>
+
+    <!-- TOPBAR -->
+    <header class="bg-slate-900 text-white shadow-md border-b border-slate-800 sticky top-0 z-30">
+        <div class="w-full max-w-[98%] 2xl:max-w-[1850px] mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="bg-white/95 rounded-lg p-1 flex items-center justify-center shadow-md">
+                    <img src="/assets/logo_flosa.png" alt="FLOSA" class="h-9 w-auto object-contain" />
+                </div>
+                <div>
+                    <h1 id="company-name-header" class="text-sm sm:text-base font-bold text-white flex items-center gap-2">
+                        FLOSA FUMIGACIÓN - Portal de Clientes
+                    </h1>
+                    <p class="text-[11px] text-slate-400">Marco Antonio Flores Sáenz &bull; Lic. Sanitaria: 08 17 19 SA 0001</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center space-x-2">
+                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-950 text-emerald-300 border border-emerald-800">
+                    <span class="w-2 h-2 mr-1.5 bg-emerald-400 rounded-full animate-pulse"></span> Enlace Permanente Activo
+                </span>
+            </div>
+        </div>
+    </header>
+
+    <!-- BANNER DEL CLIENTE MATRIZ -->
+    <div class="bg-white border-b border-slate-200">
+        <div class="w-full max-w-[98%] 2xl:max-w-[1850px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div class="space-y-1">
+                    <div class="flex items-center gap-2">
+                        <span class="bg-slate-900 text-white text-[10px] font-bold px-2 py-0.5 rounded">CLIENTE INSTITUCIONAL</span>
+                        <span id="client-rfc-badge" class="bg-slate-100 text-slate-700 font-mono text-xs font-semibold px-2 py-0.5 rounded border border-slate-300">...</span>
+                    </div>
+                    <h2 id="client-legal-name" class="text-xl sm:text-2xl font-black text-slate-900">Cargando información del cliente...</h2>
+                    <p id="client-contract" class="text-xs text-slate-500">Contrato Marco: N/A</p>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-3">
+                    <button onclick="downloadAllZip()" id="btn-download-all-zip" class="bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs py-2.5 px-4 rounded-xl shadow-sm flex items-center gap-2 transition">
+                        <i class="fa-solid fa-file-zipper text-brand-400"></i> Descargar Todo en ZIP
+                    </button>
+                    <button onclick="copyPermanentLink()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs py-2.5 px-3 rounded-xl border border-slate-300 flex items-center gap-1.5 transition">
+                        <i class="fa-solid fa-share-nodes"></i> Copiar Enlace
+                    </button>
+                </div>
+            </div>
+
+            <!-- METRIC CARDS DEL CLIENTE -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6">
+                <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+                    <p class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Total Servicios</p>
+                    <p id="stat-total-services" class="text-xl font-black text-slate-900 mt-0.5">0</p>
+                </div>
+                <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+                    <p class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Sucursales / Unidades</p>
+                    <p id="stat-total-branches" class="text-xl font-black text-indigo-600 mt-0.5">0</p>
+                </div>
+                <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+                    <p class="text-[11px] font-semibold text-emerald-600 uppercase tracking-wider">Certificados Vigentes</p>
+                    <p id="stat-valid-certs" class="text-xl font-black text-emerald-600 mt-0.5">0</p>
+                </div>
+                <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+                    <p class="text-[11px] font-semibold text-amber-600 uppercase tracking-wider">Por Re-aplicar (≤15d)</p>
+                    <p id="stat-warning-certs" class="text-xl font-black text-amber-600 mt-0.5">0</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CONTENEDOR PRINCIPAL: HISTORIAL Y FILTROS -->
+    <main class="flex-1 w-full max-w-[98%] 2xl:max-w-[1850px] mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+        <!-- BARRA DE BÚSQUEDA Y FILTRADO -->
+        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col md:flex-row gap-3 items-center justify-between">
+            <div class="flex-1 w-full flex flex-col sm:flex-row gap-3">
+                <div class="relative flex-1">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-400 text-xs"></i>
+                    <input type="text" id="search-input" onkeyup="filterServices()" placeholder="Buscar por folio, sucursal, responsable..." class="w-full text-xs pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-lg focus:ring-1 focus:ring-brand-500 focus:outline-none" />
+                </div>
+                <div class="w-full sm:w-64">
+                    <select id="branch-filter-select" onchange="filterServices()" class="w-full text-xs py-2.5 px-3 bg-slate-50 border border-slate-300 rounded-lg focus:ring-1 focus:ring-brand-500 focus:outline-none">
+                        <option value="">Todas las sucursales / unidades</option>
+                    </select>
+                </div>
+            </div>
+            <button onclick="loadPortalData()" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-3 py-2.5 rounded-lg flex items-center gap-1.5 transition">
+                <i class="fa-solid fa-rotate"></i> Recargar
+            </button>
+        </div>
+
+        <!-- TABLA DE CERTIFICADOS HISTÓRICOS -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="p-4 border-b border-slate-200 bg-slate-50/50 flex justify-between items-center">
+                <h3 class="font-bold text-xs text-slate-800 uppercase tracking-wider">Historial de Certificados Sanitarios (NOM-256)</h3>
+                <span id="services-count-badge" class="text-[11px] font-semibold bg-brand-100 text-brand-800 px-2.5 py-0.5 rounded-full">0 registros</span>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs">
+                    <thead class="bg-slate-100 text-slate-600 font-bold uppercase text-[10px] border-b border-slate-200">
+                        <tr>
+                            <th class="p-3">Folio Certificado</th>
+                            <th class="p-3">Razón Social (Sucursal)</th>
+                            <th class="p-3">Fecha Aplicación</th>
+                            <th class="p-3">Vigencia (30 Días)</th>
+                            <th class="p-3">Plaguicidas / Dosis</th>
+                            <th class="p-3">Estado</th>
+                            <th class="p-3 text-right">Descargar PDF</th>
+                        </tr>
+                    </thead>
+                    <tbody id="services-tbody" class="divide-y divide-slate-100">
+                        <tr><td colspan="7" class="p-8 text-center text-slate-400">Cargando certificados...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- RECUADRO DE SEGURIDAD Y AVISO SINTOX -->
+        <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-3 text-xs text-emerald-900">
+            <div class="flex items-center gap-3">
+                <i class="fa-solid fa-shield-virus text-2xl text-emerald-600"></i>
+                <div>
+                    <p class="font-bold text-sm">Constancia de Cumplimiento Sanitario NOM-256-SSA1-2012</p>
+                    <p class="text-emerald-700">Documentos oficiales respaldados por Responsable Sanitario con cédula y registros CICOPLAFEST / COFEPRIS.</p>
+                </div>
+            </div>
+            <div class="bg-white px-3 py-2 rounded-lg border border-emerald-300 font-mono text-[11px] text-emerald-950 font-semibold shadow-sm">
+                <i class="fa-solid fa-phone text-rose-600 mr-1"></i> SINTOX 24/7: <span id="sintox-phones-badge">800-009-2800 / 01-800-0092800</span>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- SCRIPT DEL CLIENTE -->
+    <script>
+        const portalSlug = window.location.pathname.split('/').filter(Boolean).pop();
+        let cachedPortalData = null;
+        let clientPassword = localStorage.getItem('portal_pwd_' + portalSlug) || '';
+
+        async function initPortal() {
+            loadPortalData();
+        }
+
+        async function loadPortalData() {
+            try {
+                const headers = {};
+                if (clientPassword) headers['x-portal-password'] = clientPassword;
+
+                const res = await fetch(`/api/v1/portal/data/${portalSlug}`, { headers });
+                
+                if (res.status === 401) {
+                    // Requiere contraseña
+                    document.getElementById('password-modal').classList.remove('hidden');
+                    return;
+                }
+
+                if (!res.ok) {
+                    const err = await res.json();
+                    alert(err.detail || 'Error al cargar el portal.');
+                    return;
+                }
+
+                document.getElementById('password-modal').classList.add('hidden');
+                cachedPortalData = await res.json();
+                renderPortal(cachedPortalData);
+
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function handleAuth(e) {
+            e.preventDefault();
+            const pwd = document.getElementById('portal-pwd-input').value;
+            const btn = document.getElementById('btn-auth-submit');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Verificando...';
+
+            try {
+                const res = await fetch(`/api/v1/portal/verify/${portalSlug}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password: pwd })
+                });
+
+                if (res.ok) {
+                    clientPassword = pwd;
+                    localStorage.setItem('portal_pwd_' + portalSlug, pwd);
+                    document.getElementById('password-modal').classList.add('hidden');
+                    loadPortalData();
+                } else {
+                    document.getElementById('auth-error-msg').classList.remove('hidden');
+                }
+            } catch (err) {
+                alert('Error de conexión');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-arrow-right-to-bracket"></i> Desbloquear Portal';
+            }
+        }
+
+        function renderPortal(data) {
+            document.getElementById('client-legal-name').innerText = data.legal_name;
+            document.getElementById('client-rfc-badge').innerText = 'RFC: ' + data.rfc;
+            document.getElementById('client-contract').innerText = 'Contrato Marco: ' + (data.master_contract_number || 'N/A');
+            document.getElementById('company-name-header').innerText = data.company_info.trade_name;
+            document.getElementById('sintox-phones-badge').innerText = data.company_info.sintox_emergency_phones;
+
+            document.getElementById('stat-total-services').innerText = data.total_services;
+            document.getElementById('stat-total-branches').innerText = data.total_branches;
+
+            // Sucursales en Select
+            const branchSelect = document.getElementById('branch-filter-select');
+            branchSelect.innerHTML = '<option value="">Todas las sucursales / unidades</option>' + 
+                data.branches.map(b => `<option value="${b.id}">${data.legal_name} (${b.name})</option>`).join('');
+
+            // Calcular vigencias
+            const today = new Date();
+            let validCount = 0;
+            let warningCount = 0;
+
+            data.services.forEach(s => {
+                if (s.certificate) {
+                    const end = new Date(s.certificate.validity_end_date);
+                    const diffDays = Math.ceil((end - today) / (1000 * 60 * 60 * 24));
+                    if (diffDays >= 0) validCount++;
+                    if (diffDays >= 0 && diffDays <= 15) warningCount++;
+                }
+            });
+
+            document.getElementById('stat-valid-certs').innerText = validCount;
+            document.getElementById('stat-warning-certs').innerText = warningCount;
+
+            renderTable(data.services);
+        }
+
+        function renderTable(services) {
+            const tbody = document.getElementById('services-tbody');
+            document.getElementById('services-count-badge').innerText = `${services.length} registros`;
+
+            if (services.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-slate-400">No se encontraron certificados para los criterios seleccionados.</td></tr>';
+                return;
+            }
+
+            const today = new Date();
+
+            tbody.innerHTML = services.map(s => {
+                let badge = '<span class="bg-slate-100 text-slate-700 px-2 py-0.5 rounded text-[10px]">Sin Certificado</span>';
+                let chemsStr = 'N/A';
+
+                if (s.certificate) {
+                    const end = new Date(s.certificate.validity_end_date);
+                    const diffDays = Math.ceil((end - today) / (1000 * 60 * 60 * 24));
+
+                    if (diffDays < 0) {
+                        badge = `<span class="bg-slate-200 text-slate-700 font-bold px-2 py-0.5 rounded text-[10px]">Vencido (${Math.abs(diffDays)}d)</span>`;
+                    } else if (diffDays <= 7) {
+                        badge = `<span class="bg-rose-100 text-rose-800 font-bold px-2 py-0.5 rounded text-[10px]"><i class="fa-solid fa-triangle-exclamation"></i> Vence en ${diffDays}d</span>`;
+                    } else if (diffDays <= 15) {
+                        badge = `<span class="bg-amber-100 text-amber-800 font-semibold px-2 py-0.5 rounded text-[10px]">Vence en ${diffDays}d</span>`;
+                    } else {
+                        badge = `<span class="bg-emerald-100 text-emerald-800 font-semibold px-2 py-0.5 rounded text-[10px]">Vigente (${diffDays}d)</span>`;
+                    }
+
+                    if (s.certificate.applied_chemicals && s.certificate.applied_chemicals.length > 0) {
+                        chemsStr = s.certificate.applied_chemicals.map(ac => `${ac.chemical.commercial_name} (${ac.dose_applied})`).join(', ');
+                    }
+                }
+
+                return `
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="p-3 font-mono font-bold text-slate-900">${s.certificate ? s.certificate.certificate_folio : s.folio}</td>
+                        <td class="p-3 font-medium text-slate-800">${cachedPortalData && cachedPortalData.legal_name ? cachedPortalData.legal_name : ''} <span class="text-slate-500 font-normal text-[11px]">(${s.branch ? s.branch.name : 'Matriz'})</span></td>
+                        <td class="p-3 text-slate-600">${new Date(s.service_start_date).toLocaleDateString()}</td>
+                        <td class="p-3 text-slate-600 font-medium">${s.certificate ? s.certificate.validity_end_date : 'N/A'}</td>
+                        <td class="p-3 text-slate-600 max-w-xs truncate" title="${chemsStr}">${chemsStr}</td>
+                        <td class="p-3">${badge}</td>
+                        <td class="p-3 text-right">
+                            <a href="/api/v1/services/${s.id}/pdf" target="_blank" class="inline-flex items-center gap-1.5 bg-brand-600 hover:bg-brand-700 text-white font-bold px-3 py-1.5 rounded-lg shadow-sm text-xs transition">
+                                <i class="fa-solid fa-file-pdf"></i> PDF Oficial
+                            </a>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function filterServices() {
+            if (!cachedPortalData) return;
+            const term = document.getElementById('search-input').value.toLowerCase().trim();
+            const branchId = document.getElementById('branch-filter-select').value;
+
+            const filtered = cachedPortalData.services.filter(s => {
+                const matchBranch = !branchId || s.branch_id === branchId;
+                const matchTerm = !term || 
+                    s.folio.toLowerCase().includes(term) ||
+                    (s.certificate && s.certificate.certificate_folio.toLowerCase().includes(term)) ||
+                    (s.branch && s.branch.name.toLowerCase().includes(term)) ||
+                    (s.observations && s.observations.toLowerCase().includes(term));
+                return matchBranch && matchTerm;
+            });
+
+            renderTable(filtered);
+        }
+
+        function downloadAllZip() {
+            if (!cachedPortalData) return;
+            window.location.href = `/api/v1/portal/matrix/${cachedPortalData.client_id}/certificates/zip`;
+        }
+
+        function copyPermanentLink() {
+            const url = window.location.href;
+            navigator.clipboard.writeText(url).then(() => {
+                alert('¡Enlace permanente copiado al portapapeles!\n' + url);
+            });
+        }
+
+        initPortal();
+    </script>
+</body>
+</html>
