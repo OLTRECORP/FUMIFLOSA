@@ -77,10 +77,15 @@ class ServiceDuplicationService:
             raise ValueError(f"Técnico asignado ID {target_technician_id} no válido o inactivo.")
 
         # 4. Generar folios
-        prefix = folio_prefix or "SRV"
-        next_num = self._get_next_sequence(prefix)
-        new_order_folio = f"{prefix}-ORD-{next_num:06d}"
-        new_cert_folio = f"{prefix}-CERT-{next_num:06d}"
+        prefix = (folio_prefix or "").strip()
+        if not prefix or prefix.upper() in ["SRV", "ORD", "CER", "AUTO"]:
+            next_num = self._get_next_sequence("ORD")
+            new_order_folio = f"ORD-{next_num:05d}"
+            new_cert_folio = f"CER-{next_num:05d}"
+        else:
+            next_num = self._get_next_sequence(prefix)
+            new_order_folio = f"{prefix}-ORD-{next_num:05d}"
+            new_cert_folio = f"{prefix}-CER-{next_num:05d}"
 
         # 5. Crear nueva Orden de Servicio
         new_order = ServiceOrder(
@@ -238,8 +243,8 @@ class ServiceDuplicationService:
         service_dt_start = datetime.combine(target_date, parsed_time).replace(tzinfo=timezone.utc)
         service_dt_end = service_dt_start + timedelta(hours=max(1, service_duration_hours))
 
-        prefix = folio_prefix or "MENS"
-        seq_num = self._get_next_sequence(prefix)
+        prefix = (folio_prefix or "").strip()
+        seq_num = self._get_next_sequence(prefix or "ORD")
 
         created_orders_summary = []
         emails_sent_count = 0
@@ -247,8 +252,12 @@ class ServiceDuplicationService:
 
         try:
             for branch in branches:
-                order_folio = f"{prefix}-ORD-{seq_num:06d}"
-                cert_folio = f"{prefix}-CERT-{seq_num:06d}"
+                if not prefix or prefix.upper() in ["MENS", "SRV", "ORD", "CER", "AUTO"]:
+                    order_folio = f"ORD-{seq_num:05d}"
+                    cert_folio = f"CER-{seq_num:05d}"
+                else:
+                    order_folio = f"{prefix}-ORD-{seq_num:05d}"
+                    cert_folio = f"{prefix}-CER-{seq_num:05d}"
                 seq_num += 1
 
                 # Buscar último servicio de la sucursal si el modo es "clone_last_service"

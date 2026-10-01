@@ -138,7 +138,7 @@ def seed_test_data(db):
     cert1 = Certificate(
         id=uuid.uuid4(),
         service_order_id=order1.id,
-        certificate_folio="IMSS-CERT-000001",
+        certificate_folio="IMSS-CER-000001",
         issue_date=start_dt.date(),
         validity_start_date=start_dt.date(),
         validity_end_date=start_dt.date() + timedelta(days=30),
@@ -201,7 +201,7 @@ def test_duplicate_single_service(db_session):
     # Verificar certificado
     assert duplicated.certificate is not None
     assert duplicated.certificate.id != data["cert1"].id
-    assert duplicated.certificate.certificate_folio.startswith("MENS-CERT-")
+    assert duplicated.certificate.certificate_folio.startswith("MENS-CER-")
     assert duplicated.certificate.validity_start_date == date(2026, 9, 1)
     assert duplicated.certificate.validity_end_date == date(2026, 9, 1) + timedelta(days=30)
     assert duplicated.certificate.sanitary_license_number == data["cert1"].sanitary_license_number
@@ -243,7 +243,7 @@ def test_generate_monthly_batch_for_client(db_session):
 
     for o in result["created_orders"]:
         assert o["order_folio"].startswith("IMSS-SEP-ORD-")
-        assert o["certificate_folio"].startswith("IMSS-SEP-CERT-")
+        assert o["certificate_folio"].startswith("IMSS-SEP-CER-")
         assert o["validity_start_date"] == "2026-09-15"
         assert o["validity_end_date"] == str(date(2026, 9, 15) + timedelta(days=30))
 
@@ -289,7 +289,7 @@ def test_api_duplicate_endpoint(client, db_session):
     res_data = response.json()
     assert res_data["id"] != source_order_id
     assert res_data["folio"].startswith("DUP-ORD-")
-    assert res_data["certificate"]["certificate_folio"].startswith("DUP-CERT-")
+    assert res_data["certificate"]["certificate_folio"].startswith("DUP-CER-")
 
 
 def test_api_send_email_endpoint(client, db_session):

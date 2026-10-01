@@ -1560,14 +1560,19 @@ def create_service_order_with_certificate(
 
     company = get_or_create_company_config(db)
 
-    prefix = payload.folio_prefix or "SRV"
-    count = db.execute(
-        select(func.count(ServiceOrder.id)).where(ServiceOrder.folio.like(f"{prefix}-%"))
-    ).scalar() or 0
-    next_num = count + 1
-    
-    order_folio = f"{prefix}-ORD-{next_num:06d}"
-    cert_folio = f"{prefix}-CERT-{next_num:06d}"
+    prefix = (payload.folio_prefix or "").strip()
+    if not prefix or prefix.upper() in ["SRV", "ORD", "CER", "AUTO"]:
+        count = db.execute(select(func.count(ServiceOrder.id))).scalar() or 0
+        next_num = count + 1
+        order_folio = f"ORD-{next_num:05d}"
+        cert_folio = f"CER-{next_num:05d}"
+    else:
+        count = db.execute(
+            select(func.count(ServiceOrder.id)).where(ServiceOrder.folio.like(f"{prefix}-%"))
+        ).scalar() or 0
+        next_num = count + 1
+        order_folio = f"{prefix}-ORD-{next_num:05d}"
+        cert_folio = f"{prefix}-CER-{next_num:05d}"
 
     try:
         service_order = ServiceOrder(

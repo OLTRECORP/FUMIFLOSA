@@ -339,7 +339,8 @@ def seed_clients_and_services(db: Session) -> int:
                     "contact": "Dra. Marcela Rivas",
                     "classification": BranchClassification.HOSPITALARIA,
                     "service_days_ago": 5, # Vigente (25 días restantes)
-                    "folio": "IMSS-2026-001",
+                    "folio": "ORD-00001",
+                    "cert_folio": "CER-00001",
                     "quimicos": [chem_biothrine, chem_maxforce],
                     "pests": "Cucarachas, Moscas, Áreas Clínicas",
                     "method": "Aspersión Manual y Gel Focalizado",
@@ -354,7 +355,8 @@ def seed_clients_and_services(db: Session) -> int:
                     "contact": "Dra. María Garza",
                     "classification": BranchClassification.HOSPITALARIA,
                     "service_days_ago": 24, # Próximo a vencer en 6 días (Crítico)
-                    "folio": "IMSS-2026-002",
+                    "folio": "ORD-00002",
+                    "cert_folio": "CER-00002",
                     "quimicos": [chem_maxforce],
                     "pests": "Cucaracha Alemana",
                     "method": "Gel Cucarachicida",
@@ -369,7 +371,8 @@ def seed_clients_and_services(db: Session) -> int:
                     "contact": "Dr. Armando Fuentes",
                     "classification": BranchClassification.HOSPITALARIA,
                     "service_days_ago": 16, # Advertencia (14 días restantes)
-                    "folio": "IMSS-2026-003",
+                    "folio": "ORD-00003",
+                    "cert_folio": "CER-00003",
                     "quimicos": [chem_demand, chem_biothrine],
                     "pests": "Insectos Rastreros y Voladores",
                     "method": "Aspersión Residual Microencapsulada",
@@ -384,7 +387,8 @@ def seed_clients_and_services(db: Session) -> int:
                     "contact": "Dr. Sergio Lara",
                     "classification": BranchClassification.HOSPITALARIA,
                     "service_days_ago": -2, # Agendado en 2 días
-                    "folio": "IMSS-2026-004",
+                    "folio": "ORD-00004",
+                    "cert_folio": "CER-00004",
                     "quimicos": [chem_biothrine],
                     "pests": "Cucarachas y Fauna Nociva",
                     "method": "Aspersión Manual y Trampeo",
@@ -407,7 +411,8 @@ def seed_clients_and_services(db: Session) -> int:
                     "contact": "Lic. Roberto Gómez",
                     "classification": BranchClassification.COMERCIAL,
                     "service_days_ago": 2, # Reciente (28 días restantes)
-                    "folio": "WAL-2026-088",
+                    "folio": "ORD-00005",
+                    "cert_folio": "CER-00005",
                     "quimicos": [chem_temprid, chem_maxforce],
                     "pests": "Cucarachas, Hormigas, Roedores",
                     "method": "Microinyección y Cebado",
@@ -422,7 +427,8 @@ def seed_clients_and_services(db: Session) -> int:
                     "contact": "Ing. Patricia Vega",
                     "classification": BranchClassification.COMERCIAL,
                     "service_days_ago": 45, # Vencido (hace 15 días)
-                    "folio": "WAL-2026-072",
+                    "folio": "ORD-00006",
+                    "cert_folio": "CER-00006",
                     "quimicos": [chem_biothrine, chem_storm],
                     "pests": "Insectos Rastreros y Roedores",
                     "method": "Aspersión Manual y Estaciones Cebaderas",
@@ -437,7 +443,8 @@ def seed_clients_and_services(db: Session) -> int:
                     "contact": "Lic. Fernando Ortega",
                     "classification": BranchClassification.COMERCIAL,
                     "service_days_ago": -5, # Agendado en 5 días
-                    "folio": "WAL-2026-095",
+                    "folio": "ORD-00007",
+                    "cert_folio": "CER-00007",
                     "quimicos": [chem_temprid],
                     "pests": "Insectos Rastreros y Voladores",
                     "method": "Aspersión Perimetral",
@@ -460,7 +467,8 @@ def seed_clients_and_services(db: Session) -> int:
                     "contact": "Lic. Carlos Mendoza",
                     "classification": BranchClassification.COMERCIAL,
                     "service_days_ago": 10, # Vigente (20 días restantes)
-                    "folio": "OXXO-2026-042",
+                    "folio": "ORD-00008",
+                    "cert_folio": "CER-00008",
                     "quimicos": [chem_biothrine, chem_demand],
                     "pests": "Cucarachas y Moscas",
                     "method": "Aspersión y Termonebulización",
@@ -475,7 +483,8 @@ def seed_clients_and_services(db: Session) -> int:
                     "contact": "Lic. Sofía Robles",
                     "classification": BranchClassification.COMERCIAL,
                     "service_days_ago": -3, # Agendado en 3 días
-                    "folio": "OXXO-2026-043",
+                    "folio": "ORD-00009",
+                    "cert_folio": "CER-00009",
                     "quimicos": [chem_biothrine],
                     "pests": "Cucarachas y Hormigas",
                     "method": "Aspersión y Gel Focalizado",
@@ -498,7 +507,8 @@ def seed_clients_and_services(db: Session) -> int:
                     "contact": "Q.F.B. Daniela Roldán",
                     "classification": BranchClassification.COMERCIAL,
                     "service_days_ago": 12, # Vigente (18 días restantes)
-                    "folio": "FA-2026-012",
+                    "folio": "ORD-00010",
+                    "cert_folio": "CER-00010",
                     "quimicos": [chem_maxforce, chem_biothrine],
                     "pests": "Cucarachas y Fauna Nociva",
                     "method": "Gel Cucarachicida y Aspersión Focalizada",
@@ -582,7 +592,7 @@ def seed_clients_and_services(db: Session) -> int:
 
                     # Crear Certificado Oficial únicamente para servicios completados
                     if svc_status == "completed":
-                        cert_folio = f"CERT-{b_data['folio']}"
+                        cert_folio = b_data.get("cert_folio") or b_data["folio"].replace("ORD-", "CER-")
                         existing_cert = db.query(Certificate).filter(Certificate.certificate_folio == cert_folio).first()
                         if not existing_cert:
                             certificate = Certificate(

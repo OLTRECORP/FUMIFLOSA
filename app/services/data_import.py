@@ -390,13 +390,12 @@ class HistoricalDataImporter:
 
                     # 3. Determinación de Folios y Validación de Duplicidad
                     input_folio = self._clean_str(row_dict.get('folio')).lstrip('/').strip()
-
                     if input_folio:
-                        cert_folio = input_folio[:100]
+                        cert_folio = (f"CER-{input_folio}" if not (input_folio.startswith("CER-") or input_folio.startswith("CERT-")) else input_folio.replace("CERT-", "CER-"))[:100]
                         order_folio = (f"ORD-{input_folio}" if not input_folio.startswith("ORD-") else input_folio)[:100]
                     else:
-                        cert_folio = f"HIST-CERT-{seq_num:06d}"
-                        order_folio = f"HIST-ORD-{seq_num:06d}"
+                        cert_folio = f"CER-{seq_num:05d}"
+                        order_folio = f"ORD-{seq_num:05d}"
                         seq_num += 1
 
                     # Omitir si ya existe el certificado por folio

@@ -333,7 +333,18 @@ class OfficialCertificatePDFGenerator:
         sintox_table.wrapOn(c, 204, 55)
         sintox_table.drawOn(c, 503, 85)
 
-        # 8. MARCA DE AGUA EN CASO DE CANCELACIÓN
+        # 8. FIRMA ELECTRÓNICA AVANZADA (FIEL / E.FIRMA SAT) EN CERTIFICADO
+        is_signed = getattr(cert, 'is_signed', False) and bool(getattr(cert, 'digital_signature_seal', None))
+        if is_signed:
+            # Sello visual en página 1
+            c.setFont("Helvetica-Bold", 7.5)
+            c.setFillColor(colors.HexColor("#166534"))
+            c.drawCentredString(396, 60, "[ DOCUMENTO OFICIAL FIRMADO ELECTRÓNICAMENTE CON e.firma / FIEL DEL SAT ]")
+            c.setFont("Helvetica", 6.5)
+            c.setFillColor(colors.HexColor("#475569"))
+            c.drawCentredString(396, 50, f"Serie SAT: {cert.certificate_serial_number or 'N/A'}  |  Validez Oficial NOM-256  |  Verificación en Hoja 2")
+
+        # 9. MARCA DE AGUA EN CASO DE CANCELACIÓN
         if getattr(cert, 'is_cancelled', False):
             c.saveState()
             c.setFont("Helvetica-Bold", 65)
@@ -353,6 +364,144 @@ class OfficialCertificatePDFGenerator:
             c.drawCentredString(page_width / 2, page_height - 52, cancel_msg[:120])
 
         c.showPage()
+
+        # 10. HOJA 2: CONSTANCIA OFICIAL DE FIRMA ELECTRÓNICA AVANZADA (SAT / NOM-256)
+        if is_signed:
+            from reportlab.graphics.barcode.qr import QrCodeWidget
+            from reportlab.graphics.shapes import Drawing
+            from reportlab.graphics import renderPDF
+
+            # Marco de la hoja 2
+            c.setStrokeColor(colors.HexColor("#CBD5E1"))
+            c.setLineWidth(1)
+            c.rect(25, 25, page_width - 50, page_height - 50)
+            c.setStrokeColor(colors.HexColor("#1E3A8A"))
+            c.setLineWidth(2)
+            c.rect(20, 20, page_width - 40, page_height - 40)
+
+            # Encabezado Hoja 2
+            c.setFillColor(colors.HexColor("#1E3A8A"))
+            c.rect(20, page_height - 60, page_width - 40, 40, fill=True, stroke=False)
+            c.setFillColor(colors.white)
+            c.setFont("Helvetica-Bold", 13)
+            c.drawCentredString(page_width / 2, page_height - 42, "CONSTANCIA Y AUDITORÍA DE FIRMA ELECTRÓNICA AVANZADA (FIEL / E.FIRMA SAT)")
+            c.setFont("Helvetica", 8)
+            c.drawCentredString(page_width / 2, page_height - 54, f"Certificado Oficial Folio: {folio_str}  |  Validez Oficial Conforme al Código de Comercio y NOM-256-SSA1-2012")
+
+            # Generar código QR oficial de validación
+            qr_data = f"https://fumiflosa.mx/verificar?folio={cert.certificate_folio}&uuid={cert.verification_uuid or cert.id}&rfc={cert.signed_by_rfc or comp_rfc}"
+            qr_widget = QrCodeWidget(qr_data)
+            qr_widget.barWidth = 110
+            qr_widget.barHeight = 110
+            qr_drawing = Drawing(110, 110)
+            qr_drawing.add(qr_widget)
+            renderPDF.draw(qr_drawing, c, 45, page_height - 185)
+
+            c.setFont("Helvetica-Bold", 7.5)
+            c.setFillColor(colors.HexColor("#0F172A"))
+            c.drawCentredString(100, page_height - 195, "ESCANEAR PARA VALIDAR")
+            c.setFont("Helvetica", 6.5)
+            c.setFillColor(colors.HexColor("#64748B"))
+            c.drawCentredString(100, page_height - 205, "Portal Oficial de Verificación")
+
+            # Metadatos del Certificado SAT
+            meta_style = ParagraphStyle(
+                'FielMeta',
+                parent=styles['Normal'],
+                fontName='Helvetica',
+                fontSize=7.5,
+                leading=10,
+                textColor=colors.HexColor("#1E293B")
+            )
+            code_style = ParagraphStyle(
+                'FielCode',
+                parent=styles['Normal'],
+                fontName='Courier',
+                fontSize=5.5,
+                leading=7.2,
+                textColor=colors.HexColor("#0F172A")
+            )
+
+            sign_date_str = cert.signed_at.strftime('%Y-%m-%d %H:%M:%S UTC') if cert.signed_at else date.today().strftime('%Y-%m-%d')
+            meta_html = (
+                f"<b>DATOS DE CERTIFICACIÓN DIGITAL DEL SAT:</b><br/>"
+                f"• <b>Número de Serie del Certificado SAT:</b> {cert.certificate_serial_number or 'N/A'}<br/>"
+                f"• <b>Fecha y Hora de Sellado:</b> {sign_date_str}<br/>"
+                f"• <b>Firmante Autorizado:</b> {cert.signed_by_name or responsible_title} (RFC: {cert.signed_by_rfc or comp_rfc})<br/>"
+                f"• <b>Identificador Único (UUID):</b> {cert.verification_uuid or cert.id}<br/>"
+                f"• <b>Licencia Sanitaria Emisora:</b> {license_no}"
+            )
+            meta_table = Table([[Paragraph(meta_html, meta_style)]], colWidths=[580])
+            meta_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor("#F8FAFC")),
+                ('BOX', (0, 0), (-1, -1), 0.5, colors.HexColor("#CBD5E1")),
+                ('TOPPADDING', (0, 0), (-1, -1), 6),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+                ('LEFTPADDING', (0, 0), (-1, -1), 8),
+                ('RIGHTPADDING', (0, 0), (-1, -1), 8),
+            ]))
+            meta_table.wrapOn(c, 580, 80)
+            meta_table.drawOn(c, 170, page_height - 155)
+
+            # Cadena Original
+            chain_html = f"<b>CADENA ORIGINAL DE LA CONSTANCIA DIGITAL:</b><br/>{cert.original_chain or '||...||'}"
+            chain_table = Table([[Paragraph(chain_html, code_style)]], colWidths=[705])
+            chain_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor("#F1F5F9")),
+                ('BOX', (0, 0), (-1, -1), 0.5, colors.HexColor("#CBD5E1")),
+                ('TOPPADDING', (0, 0), (-1, -1), 4),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+                ('LEFTPADDING', (0, 0), (-1, -1), 6),
+                ('RIGHTPADDING', (0, 0), (-1, -1), 6),
+            ]))
+            chain_table.wrapOn(c, 705, 90)
+            chain_table.drawOn(c, 45, page_height - 295)
+
+            # Sello Digital SAT
+            seal_html = f"<b>SELLO DIGITAL DEL EMISOR (CRIPTOGRAMA SHA256withRSA):</b><br/>{cert.digital_signature_seal}"
+            seal_table = Table([[Paragraph(seal_html, code_style)]], colWidths=[705])
+            seal_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor("#F0FDF4")),
+                ('BOX', (0, 0), (-1, -1), 0.5, colors.HexColor("#86EFAC")),
+                ('TOPPADDING', (0, 0), (-1, -1), 4),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+                ('LEFTPADDING', (0, 0), (-1, -1), 6),
+                ('RIGHTPADDING', (0, 0), (-1, -1), 6),
+            ]))
+            seal_table.wrapOn(c, 705, 90)
+            seal_table.drawOn(c, 45, page_height - 435)
+
+            # Leyenda legal
+            legal_style = ParagraphStyle(
+                'FielLegal',
+                parent=styles['Normal'],
+                fontName='Helvetica',
+                fontSize=6.5,
+                leading=8.5,
+                alignment=TA_JUSTIFY,
+                textColor=colors.HexColor("#475569")
+            )
+            legal_html = (
+                "<b>VALIDEZ Y EFICACIA JURÍDICA:</b> Este documento oficial ha sido emitido y firmado digitalmente mediante el uso de la "
+                "Firma Electrónica Avanzada (e.firma / FIEL) amparada por un certificado digital vigente emitido por el Servicio de Administración Tributaria (SAT). "
+                "De conformidad con el Artículo 7 de la Ley de Firma Electrónica Avanzada, el Artículo 89 del Código de Comercio y la Norma Oficial Mexicana "
+                "NOM-256-SSA1-2012, este certificado electrónico produce los mismos efectos jurídicos que los documentos con firma autógrafa y tiene pleno valor probatorio ante COFEPRIS, "
+                "Secretaría de Salud y Unidades Municipales/Estatales de Protección Civil."
+            )
+            legal_table = Table([[Paragraph(legal_html, legal_style)]], colWidths=[705])
+            legal_table.setStyle(TableStyle([
+                ('BOX', (0, 0), (-1, -1), 0.5, colors.HexColor("#94A3B8")),
+                ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor("#F8FAFC")),
+                ('TOPPADDING', (0, 0), (-1, -1), 5),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
+                ('LEFTPADDING', (0, 0), (-1, -1), 8),
+                ('RIGHTPADDING', (0, 0), (-1, -1), 8),
+            ]))
+            legal_table.wrapOn(c, 705, 60)
+            legal_table.drawOn(c, 45, 40)
+
+            c.showPage()
+
         c.save()
         buffer.seek(0)
         return buffer.getvalue()
@@ -688,7 +837,7 @@ class OfficialWorkOrderPDFGenerator:
         elements.append(diag_table)
         elements.append(Spacer(1, 12))
 
-        # 6. FIRMAS DE CONFORMIDAD
+        # 6. FIRMAS DE CONFORMIDAD OPERATIVA (EN CAMPO)
         sig_data = [
             [
                 Paragraph(f"_____________________________<br/><b>{tech_full_name}</b><br/>Responsable Técnico Operativo<br/>No. De Licencia Sanitaria: {license_no}", subtitle_style),
@@ -703,75 +852,6 @@ class OfficialWorkOrderPDFGenerator:
             ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
         ]))
         elements.append(KeepTogether(sig_table))
-        elements.append(Spacer(1, 6))
-
-        # 7. BLOQUE DE FIRMA ELECTRÓNICA AVANZADA (FIEL / E.FIRMA SAT)
-        from reportlab.graphics.barcode.qr import QrCodeWidget
-        from reportlab.graphics.shapes import Drawing
-
-        seal_style = ParagraphStyle(
-            'SealStyle',
-            parent=styles['Normal'],
-            fontName='Courier',
-            fontSize=5.5,
-            leading=7,
-            textColor=colors.HexColor("#2D3748")
-        )
-        seal_meta_style = ParagraphStyle(
-            'SealMetaStyle',
-            parent=styles['Normal'],
-            fontName='Helvetica',
-            fontSize=6,
-            leading=8,
-            textColor=colors.HexColor("#4A5568")
-        )
-
-        cert = getattr(order, 'certificate', None)
-        if cert and cert.is_signed and cert.digital_signature_seal:
-            qr_data = f"https://fumiflosa.mx/verificar?folio={cert.certificate_folio}&uuid={cert.verification_uuid or cert.id}&rfc={cert.signed_by_rfc or 'RFC'}"
-            qr_widget = QrCodeWidget(qr_data)
-            qr_widget.barWidth = 60
-            qr_widget.barHeight = 60
-            qr_drawing = Drawing(60, 60)
-            qr_drawing.add(qr_widget)
-
-            fiel_info_html = (
-                f"<b>FIRMA ELECTRÓNICA AVANZADA (e.firma / FIEL del SAT) - VALIDEZ OFICIAL NOM-256</b><br/>"
-                f"<b>Serie Certificado SAT:</b> {cert.certificate_serial_number or 'N/A'} &nbsp;|&nbsp; "
-                f"<b>Fecha de Firma:</b> {cert.signed_at.strftime('%Y-%m-%d %H:%M:%S UTC') if cert.signed_at else 'N/A'} &nbsp;|&nbsp; "
-                f"<b>RFC Firmante:</b> {cert.signed_by_rfc or 'N/A'} ({cert.signed_by_name or 'FUMIFLOSA'})<br/>"
-                f"<b>Cadena Original:</b><br/>"
-                f"<font face='Courier' size='5'>{cert.original_chain or '||...||'}</font><br/>"
-                f"<b>Sello Digital:</b><br/>"
-                f"<font face='Courier' size='5'>{cert.digital_signature_seal}</font>"
-            )
-
-            fiel_table_data = [
-                [qr_drawing, Paragraph(fiel_info_html, seal_style)]
-            ]
-            fiel_table = Table(fiel_table_data, colWidths=[65, 475])
-            fiel_table.setStyle(TableStyle([
-                ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor("#F0FDF4")),
-                ('BOX', (0, 0), (-1, -1), 0.5, colors.HexColor("#86EFAC")),
-                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-                ('TOPPADDING', (0, 0), (-1, -1), 3),
-                ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
-            ]))
-            elements.append(KeepTogether(fiel_table))
-        elif cert:
-            pending_html = (
-                "<b>ESTADO DE CERTIFICACIÓN:</b> DOCUMENTO PENDIENTE DE FIRMA ELECTRÓNICA AVANZADA (FIEL DEL SAT). "
-                "<i>Este documento se encuentra en estado de borrador o revisión previa. Una vez validado por el responsable sanitario, "
-                "se estampará la firma digital con validez plena ante COFEPRIS y Protección Civil.</i>"
-            )
-            pending_table = Table([[Paragraph(pending_html, seal_meta_style)]], colWidths=[540])
-            pending_table.setStyle(TableStyle([
-                ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor("#FEFCE8")),
-                ('BOX', (0, 0), (-1, -1), 0.5, colors.HexColor("#FDE047")),
-                ('TOPPADDING', (0, 0), (-1, -1), 4),
-                ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
-            ]))
-            elements.append(KeepTogether(pending_table))
 
         doc.build(elements)
         buffer.seek(0)
