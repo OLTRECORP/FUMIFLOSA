@@ -5300,12 +5300,9 @@
                 // 3. Renderizar usuario en cabecera
                 renderAuthenticatedUser(data.user);
 
-                // 4. Disparar carga de datos en segundo plano
+                // 4. Disparar carga integral de todos los módulos y calendarios
                 setTimeout(() => {
-                    try { if (typeof loadCompanyConfig === 'function') loadCompanyConfig(); } catch(errCfg) { console.warn('loadCompanyConfig:', errCfg); }
-                    try { if (typeof loadSummaryStats === 'function') loadSummaryStats(); } catch(errStats) { console.warn('loadSummaryStats:', errStats); }
-                    try { if (typeof loadChronologicalCalendar === 'function') loadChronologicalCalendar(); } catch(errCal) { console.warn('loadChronologicalCalendar:', errCal); }
-                    try { if (typeof loadServices === 'function') loadServices(); } catch(errSvc) { console.warn('loadServices:', errSvc); }
+                    refreshAllDashboardData();
                 }, 10);
 
                 return false;
@@ -5316,6 +5313,18 @@
                 btn.disabled = false;
                 btn.innerHTML = '<i class="fa-solid fa-arrow-right-to-bracket"></i> Iniciar Sesión Super Usuario';
             }
+        }
+
+        function refreshAllDashboardData() {
+            try { if (typeof loadCompanyConfig === 'function') loadCompanyConfig(); } catch(e){ console.warn('loadCompanyConfig:', e); }
+            try { if (typeof loadSummaryStats === 'function') loadSummaryStats(); } catch(e){ console.warn('loadSummaryStats:', e); }
+            try { if (typeof loadFielTopBadge === 'function') loadFielTopBadge(); } catch(e){ console.warn('loadFielTopBadge:', e); }
+            try { if (typeof loadDashboardData === 'function') loadDashboardData(); } catch(e){ console.warn('loadDashboardData:', e); }
+            try { if (typeof loadChronologicalCalendar === 'function') loadChronologicalCalendar(); } catch(e){ console.warn('loadChronologicalCalendar:', e); }
+            try { if (typeof loadOrders === 'function') loadOrders(); } catch(e){ console.warn('loadOrders:', e); }
+            try { if (typeof loadClientsAndBranches === 'function') loadClientsAndBranches(); } catch(e){ console.warn('loadClientsAndBranches:', e); }
+            try { if (typeof loadChemicals === 'function') loadChemicals(); } catch(e){ console.warn('loadChemicals:', e); }
+            try { if (typeof loadUsers === 'function') loadUsers(); } catch(e){ console.warn('loadUsers:', e); }
         }
 
         function renderAuthenticatedUser(user) {
@@ -5357,9 +5366,7 @@
                         loginModal.style.cssText = 'display: none !important;';
                     }
                     setTimeout(() => {
-                        try { if (typeof loadCompanyConfig === 'function') loadCompanyConfig(); } catch(e){}
-                        try { if (typeof loadSummaryStats === 'function') loadSummaryStats(); } catch(e){}
-                        try { if (typeof loadChronologicalCalendar === 'function') loadChronologicalCalendar(); } catch(e){}
+                        refreshAllDashboardData();
                     }, 10);
                     return true;
                 } catch(e) {

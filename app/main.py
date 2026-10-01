@@ -20,43 +20,37 @@ app = FastAPI(
 
 @app.on_event("startup")
 def startup_db_sync():
-    """Garantiza la creación y migración automática de columnas y tablas en PostgreSQL."""
+    """Garantiza la creación y migración automática de columnas y tablas en PostgreSQL / SQLite."""
     try:
         Base.metadata.create_all(bind=engine)
-        with engine.begin() as conn:
-            # Soporte para revisiones alembic largas
-            conn.execute(text("ALTER TABLE IF EXISTS alembic_version ALTER COLUMN version_num TYPE VARCHAR(128);"))
-
-            # Columnas para users
-            conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS username VARCHAR(100);"))
-            conn.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS ix_users_username ON users (username);"))
-            
-            # Columnas para clients (Portal Permanente)
-            conn.execute(text("ALTER TABLE clients ADD COLUMN IF NOT EXISTS portal_slug VARCHAR(100);"))
-            conn.execute(text("ALTER TABLE clients ADD COLUMN IF NOT EXISTS portal_password VARCHAR(255);"))
-            conn.execute(text("ALTER TABLE clients ADD COLUMN IF NOT EXISTS portal_is_enabled BOOLEAN DEFAULT TRUE;"))
-            conn.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS ix_clients_portal_slug ON clients (portal_slug);"))
-            
-            # Columnas para chemicals
-            conn.execute(text("ALTER TABLE chemicals ADD COLUMN IF NOT EXISTS toxicological_category VARCHAR(50);"))
-            conn.execute(text("ALTER TABLE chemicals ADD COLUMN IF NOT EXISTS compatible_methods VARCHAR(255);"))
-            conn.execute(text("ALTER TABLE chemicals ADD COLUMN IF NOT EXISTS technical_sheet_url VARCHAR(500);"))
-            conn.execute(text("ALTER TABLE chemicals ADD COLUMN IF NOT EXISTS safety_sheet_url VARCHAR(500);"))
-
-            # Columnas para rsco_items
-            conn.execute(text("ALTER TABLE rsco_items ADD COLUMN IF NOT EXISTS technical_sheet_url VARCHAR(500);"))
-            conn.execute(text("ALTER TABLE rsco_items ADD COLUMN IF NOT EXISTS safety_sheet_url VARCHAR(500);"))
-            
-            # Columnas para certificates (Cancelación)
-            conn.execute(text("ALTER TABLE certificates ADD COLUMN IF NOT EXISTS is_cancelled BOOLEAN DEFAULT FALSE;"))
-            conn.execute(text("ALTER TABLE certificates ADD COLUMN IF NOT EXISTS cancellation_reason VARCHAR(500);"))
-            conn.execute(text("ALTER TABLE certificates ADD COLUMN IF NOT EXISTS cancelled_at TIMESTAMPTZ;"))
-
-            # Columnas para service_orders (Estado y Agendamiento)
-            conn.execute(text("ALTER TABLE service_orders ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'completed';"))
-            conn.execute(text("ALTER TABLE service_orders ADD COLUMN IF NOT EXISTS scheduled_for TIMESTAMPTZ;"))
+        if engine.dialect.name == "postgresql":
+            with engine.begin() as conn:
+                for stmt in [
+                    "ALTER TABLE IF EXISTS alembic_version ALTER COLUMN version_num TYPE VARCHAR(128);",
+                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS username VARCHAR(100);",
+                    "CREATE UNIQUE INDEX IF NOT EXISTS ix_users_username ON users (username);",
+                    "ALTER TABLE clients ADD COLUMN IF NOT EXISTS portal_slug VARCHAR(100);",
+                    "ALTER TABLE clients ADD COLUMN IF NOT EXISTS portal_password VARCHAR(255);",
+                    "ALTER TABLE clients ADD COLUMN IF NOT EXISTS portal_is_enabled BOOLEAN DEFAULT TRUE;",
+                    "CREATE UNIQUE INDEX IF NOT EXISTS ix_clients_portal_slug ON clients (portal_slug);",
+                    "ALTER TABLE chemicals ADD COLUMN IF NOT EXISTS toxicological_category VARCHAR(50);",
+                    "ALTER TABLE chemicals ADD COLUMN IF NOT EXISTS compatible_methods VARCHAR(255);",
+                    "ALTER TABLE chemicals ADD COLUMN IF NOT EXISTS technical_sheet_url VARCHAR(500);",
+                    "ALTER TABLE chemicals ADD COLUMN IF NOT EXISTS safety_sheet_url VARCHAR(500);",
+                    "ALTER TABLE rsco_items ADD COLUMN IF NOT EXISTS technical_sheet_url VARCHAR(500);",
+                    "ALTER TABLE rsco_items ADD COLUMN IF NOT EXISTS safety_sheet_url VARCHAR(500);",
+                    "ALTER TABLE certificates ADD COLUMN IF NOT EXISTS is_cancelled BOOLEAN DEFAULT FALSE;",
+                    "ALTER TABLE certificates ADD COLUMN IF NOT EXISTS cancellation_reason VARCHAR(500);",
+                    "ALTER TABLE certificates ADD COLUMN IF NOT EXISTS cancelled_at TIMESTAMPTZ;",
+                    "ALTER TABLE service_orders ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'completed';",
+                    "ALTER TABLE service_orders ADD COLUMN IF NOT EXISTS scheduled_for TIMESTAMPTZ;"
+                ]:
+                    try:
+                        conn.execute(text(stmt))
+                    except Exception:
+                        pass
         
-        # Sincronizar catálogo inicial RSCO, Químicos, Usuarios, Clientes y Bitácoras
+        # Sincronizar catálogo inicial RSCO, Químicos, Usuarios, Clientes, Certificados y Bitácoras
         from app.database import SessionLocal
         from app.services.seed_service import seed_all_database_defaults
         with SessionLocal() as db_session:
