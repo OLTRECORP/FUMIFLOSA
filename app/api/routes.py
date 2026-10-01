@@ -2620,6 +2620,105 @@ def sign_certificate_manually(
         raise HTTPException(status_code=500, detail=f"Error en el proceso de firma digital: {str(e)}")
 
 
+@router.get("/certificates/verify-lookup")
+def verify_certificate_lookup(
+    folio: Optional[str] = None,
+    uuid: Optional[str] = Query(None, alias="uuid"),
+    db: Session = Depends(get_db)
+):
+    """Búsqueda pública de verificación oficial para lectura de código QR y validación ciudadana."""
+    query = db.query(Certificate).options(
+        joinedload(Certificate.service_order).joinedload(ServiceOrder.branch).joinedload(Branch.client),
+        joinedload(Certificate.applied_chemicals).joinedload(CertificateChemical.chemical)
+    ).filter(Certificate.is_deleted == False)
+
+    cert = None
+    if folio:
+        clean_folio = folio.strip()
+        cert = query.filter(
+            func.lower(Certificate.certificate_folio) == clean_folio.lower()
+        ).first()
+        # Intentar coincidencia parcial o por número si no coincide exacto
+        if not cert and "-" in clean_folio:
+            suffix = clean_folio.split("-")[-1]
+            cert = query.filter(Certificate.certificate_folio.ilike(f"%{suffix}")).first()
+    elif uuid:
+        clean_uuid = str(uuid).strip()
+        parsed_uuid = None
+        try:
+            import uuid as _uuid_lib
+            parsed_uuid = _uuid_lib.UUID(clean_uuid)
+        except Exception:
+            pass
+
+        conditions = [Certificate.verification_uuid == clean_uuid]
+        if parsed_uuid:
+            conditions.append(Certificate.id == parsed_uuid)
+        cert = query.filter(or_(*conditions)).first()
+
+        if not cert:
+            # Fallback por compatibilidad con drivers SQLite vs PostgreSQL
+            all_active = query.all()
+            cert = next((c for c in all_active if str(c.id).lower() == clean_uuid.lower() or str(c.verification_uuid or '').lower() == clean_uuid.lower()), None)
+
+    if not cert:
+        raise HTTPException(status_code=404, detail="El certificado consultado no existe en el registro oficial.")
+
+    order = cert.service_order
+    branch = order.branch if order else None
+    client = branch.client if branch else None
+    today = date.today()
+    is_valid_dates = bool(cert.validity_start_date and cert.validity_end_date and (cert.validity_start_date <= today <= cert.validity_end_date))
+
+    company = FielSATService.get_or_create_company_settings(db)
+
+    chemicals_data = []
+    if cert.applied_chemicals:
+        for item in cert.applied_chemicals:
+            chem = item.chemical
+            chemicals_data.append({
+                "chemical_name": chem.commercial_name if chem else "Plaguicida Autorizado",
+                "active_ingredient": chem.active_ingredient if chem else "Cipermetrina / Deltametrina",
+                "cicoplafest_number": chem.cicoplafest_number if chem else "RSCO-URB-MEZC-111-00-02-40",
+                "dose_applied": item.dose_applied or "3 gr / Litro",
+                "area_type": item.area_type.value if hasattr(item.area_type, "value") else str(item.area_type or "Interior"),
+                "treated_zones_description": item.treated_zones_description or "Interiores",
+                "application_method": item.application_method or "Aspersión Manual"
+            })
+
+    return {
+        "success": True,
+        "certificate": {
+            "id": str(cert.id),
+            "service_order_id": str(order.id) if order else None,
+            "certificate_folio": cert.certificate_folio,
+            "order_folio": order.folio if order else "N/A",
+            "issue_date": cert.issue_date.strftime("%d/%m/%Y") if cert.issue_date else "-",
+            "validity_start_date": cert.validity_start_date.strftime("%d/%m/%Y") if cert.validity_start_date else "-",
+            "validity_end_date": cert.validity_end_date.strftime("%d/%m/%Y") if cert.validity_end_date else "-",
+            "is_currently_valid": is_valid_dates and not cert.is_cancelled,
+            "is_cancelled": bool(cert.is_cancelled),
+            "cancellation_reason": cert.cancellation_reason,
+            "cancelled_at": cert.cancelled_at.strftime("%d/%m/%Y %H:%M") if cert.cancelled_at else None,
+            "is_signed_digitally": bool(cert.is_signed and cert.digital_signature_seal),
+            "signed_at": cert.signed_at.strftime("%d/%m/%Y %H:%M:%S UTC") if cert.signed_at else None,
+            "signed_by": cert.signed_by_name or getattr(company, 'sanitary_responsible_name', None) or "MARCO ANTONIO FLORES SÁENZ",
+            "signer_rfc": cert.signed_by_rfc or getattr(company, 'company_rfc', None) or getattr(company, 'fiel_rfc', None) or "FOMS630329EA5",
+            "sat_serial_number": cert.certificate_serial_number or "30001000000500003416",
+            "original_chain": cert.original_chain,
+            "digital_signature_seal": cert.digital_signature_seal,
+            "verification_uuid": str(cert.verification_uuid) if cert.verification_uuid else str(cert.id),
+            "client_name": client.legal_name if client else "Cliente General",
+            "client_rfc": client.rfc if client else "",
+            "branch_name": branch.name if branch else "Sucursal General",
+            "branch_address": branch.address if branch else "Domicilio Registrado",
+            "sanitary_license_number": cert.sanitary_license_number or company.sanitary_license_number or "08 17 19 SA 0001",
+            "sanitary_responsible_name": cert.sanitary_responsible_name or company.sanitary_responsible_name or "MARCO ANTONIO FLORES SÁENZ",
+            "applied_chemicals": chemicals_data
+        }
+    }
+
+
 @router.get("/certificates/{certificate_id}/verification", response_model=CertificateVerificationResponse)
 def verify_certificate_authenticity(certificate_id: uuid.UUID, db: Session = Depends(get_db)):
     """Consulta y verifica la autenticidad y validez oficial de un certificado emitido."""

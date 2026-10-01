@@ -366,3 +366,27 @@ def test_pdf_generation_with_signed_seal(db_session):
     assert pdf_bytes is not None
     assert pdf_bytes.startswith(b"%PDF")
     assert len(pdf_bytes) > 1000
+
+
+def test_qr_verification_lookup_and_html_page(client, db_session):
+    data = seed_fiel_test_data(db_session)
+    cert = data["cert"]
+
+    # 1. Probar que la página HTML de verificación carga correctamente
+    res_page = client.get(f"/verificar?folio={cert.certificate_folio}")
+    assert res_page.status_code == 200
+    assert "PORTAL DE VALIDACIÓN Y AUTENTICIDAD" in res_page.text
+
+    # 2. Probar el endpoint de lookup por folio
+    res_lookup = client.get(f"/api/v1/certificates/verify-lookup?folio={cert.certificate_folio}")
+    assert res_lookup.status_code == 200
+    lookup_data = res_lookup.json()
+    assert lookup_data["success"] is True
+    assert lookup_data["certificate"]["certificate_folio"] == cert.certificate_folio
+    assert lookup_data["certificate"]["sanitary_license_number"] is not None
+    assert len(lookup_data["certificate"]["applied_chemicals"]) >= 1
+
+    # 3. Probar el endpoint de lookup por UUID
+    res_lookup_uuid = client.get(f"/api/v1/certificates/verify-lookup?uuid={cert.id}")
+    assert res_lookup_uuid.status_code == 200
+    assert res_lookup_uuid.json()["certificate"]["id"] == str(cert.id)

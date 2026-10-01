@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+from typing import Optional
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -51,6 +52,7 @@ TEMPLATES_DIR = Path(__file__).parent / "templates"
 ASSETS_DIR = Path(__file__).parent / "assets"
 DASHBOARD_HTML_PATH = TEMPLATES_DIR / "dashboard.html"
 CLIENT_PORTAL_HTML_PATH = TEMPLATES_DIR / "client_portal.html"
+VERIFY_HTML_PATH = TEMPLATES_DIR / "verify_certificate.html"
 
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -89,6 +91,17 @@ def get_client_portal_page(portal_slug: str):
         with open(CLIENT_PORTAL_HTML_PATH, "r", encoding="utf-8") as f:
             return f.read()
     return "<h1>Portal de Cliente no disponible</h1>"
+
+
+@app.get("/verificar", response_class=HTMLResponse, tags=["Verificación Oficial"])
+@app.get("/verify", response_class=HTMLResponse, tags=["Verificación Oficial"])
+@app.get("/verificar/{folio}", response_class=HTMLResponse, tags=["Verificación Oficial"])
+def get_verify_page(folio: Optional[str] = None):
+    """Sirve la página oficial de validación pública de certificados sanitarios (QR)."""
+    if VERIFY_HTML_PATH.exists():
+        with open(VERIFY_HTML_PATH, "r", encoding="utf-8") as f:
+            return f.read()
+    return "<h1>Portal de Verificación no disponible</h1>"
 
 
 @app.get("/health", tags=["Health"])
