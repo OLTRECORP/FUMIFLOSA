@@ -5288,7 +5288,11 @@
                 // Actualizar UI del usuario logueado
                 renderAuthenticatedUser(data.user);
                 const loginModal = document.getElementById('modal-auth-login');
-                if (loginModal) loginModal.classList.add('hidden');
+                if (loginModal) {
+                    loginModal.classList.add('hidden');
+                    loginModal.classList.remove('flex');
+                    loginModal.style.setProperty('display', 'none', 'important');
+                }
 
                 // Cargar datos del dashboard de manera segura sin interrumpir la sesión
                 try { if (typeof loadCompanyConfig === 'function') loadCompanyConfig(); } catch(errCfg) { console.warn('loadCompanyConfig:', errCfg); }
@@ -5315,7 +5319,13 @@
             if (confirm('¿Deseas cerrar tu sesión del Panel de Super Usuario?')) {
                 localStorage.removeItem('fumiflosa_auth_token');
                 localStorage.removeItem('fumiflosa_auth_user');
-                document.getElementById('modal-auth-login').classList.remove('hidden');
+                const loginModal = document.getElementById('modal-auth-login');
+                if (loginModal) {
+                    loginModal.classList.remove('hidden');
+                    loginModal.classList.add('flex');
+                    loginModal.style.removeProperty('display');
+                    loginModal.style.display = 'flex';
+                }
                 document.getElementById('login-input-password').value = '';
                 document.getElementById('login-input-username').value = '';
                 hideLoginError();
@@ -5331,7 +5341,11 @@
                 try {
                     const user = JSON.parse(userStr);
                     renderAuthenticatedUser(user);
-                    if (loginModal) loginModal.classList.add('hidden');
+                    if (loginModal) {
+                        loginModal.classList.add('hidden');
+                        loginModal.classList.remove('flex');
+                        loginModal.style.setProperty('display', 'none', 'important');
+                    }
                     try { if (typeof loadCompanyConfig === 'function') loadCompanyConfig(); } catch(e){}
                     try { if (typeof loadSummaryStats === 'function') loadSummaryStats(); } catch(e){}
                     try { if (typeof loadChronologicalCalendar === 'function') loadChronologicalCalendar(); } catch(e){}
@@ -5342,7 +5356,12 @@
             }
 
             // Si no hay sesión, mostrar modal de login
-            if (loginModal) loginModal.classList.remove('hidden');
+            if (loginModal) {
+                loginModal.classList.remove('hidden');
+                loginModal.classList.add('flex');
+                loginModal.style.removeProperty('display');
+                loginModal.style.display = 'flex';
+            }
         }
 
         function downloadCSVTemplate() {
