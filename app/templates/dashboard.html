@@ -1116,7 +1116,7 @@
                     <span id="login-error-text" class="leading-tight">Credenciales inválidas. Por favor verifica.</span>
                 </div>
 
-                <form onsubmit="handleMasterLogin(event)" class="space-y-4">
+                <form id="form-auth-login" onsubmit="event.preventDefault(); handleMasterLogin(event); return false;" class="space-y-4">
                     <div>
                         <label class="block text-xs font-bold text-slate-700 mb-1">Usuario o Correo:</label>
                         <div class="relative">
@@ -1124,6 +1124,7 @@
                                 <i class="fa-solid fa-user-shield text-xs"></i>
                             </div>
                             <input type="text" id="login-input-username" required placeholder="Usuario o correo electrónico" autocomplete="username"
+                                onkeydown="if(event.key === 'Enter'){ event.preventDefault(); handleMasterLogin(event); }"
                                 class="w-full pl-9 pr-3 py-2.5 text-xs font-mono font-bold bg-slate-50 border border-slate-300 rounded-xl focus:bg-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500 focus:outline-none transition" />
                         </div>
                     </div>
@@ -1138,6 +1139,7 @@
                                 <i class="fa-solid fa-lock text-xs"></i>
                             </div>
                             <input type="password" id="login-input-password" required placeholder="••••••••" autocomplete="current-password"
+                                onkeydown="if(event.key === 'Enter'){ event.preventDefault(); handleMasterLogin(event); }"
                                 class="w-full pl-9 pr-10 py-2.5 text-xs font-mono font-bold bg-slate-50 border border-slate-300 rounded-xl focus:bg-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500 focus:outline-none transition" />
                             <button type="button" onclick="toggleLoginPassword()" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600">
                                 <i id="toggle-pwd-icon" class="fa-solid fa-eye text-xs"></i>
@@ -1145,7 +1147,7 @@
                         </div>
                     </div>
 
-                    <button type="submit" id="btn-login-submit"
+                    <button type="button" id="btn-login-submit" onclick="handleMasterLogin(event)"
                         class="w-full bg-brand-600 hover:bg-brand-700 text-white font-extrabold py-3 px-4 rounded-xl text-xs shadow-lg shadow-brand-600/25 flex items-center justify-center gap-2 transition hover:-translate-y-0.5 active:translate-y-0">
                         <i class="fa-solid fa-arrow-right-to-bracket"></i> Iniciar Sesión Super Usuario
                     </button>
@@ -5241,8 +5243,9 @@
         }
 
         async function handleMasterLogin(e) {
-            if (e && typeof e.preventDefault === 'function') {
-                e.preventDefault();
+            if (e) {
+                if (typeof e.preventDefault === 'function') e.preventDefault();
+                if (typeof e.stopPropagation === 'function') e.stopPropagation();
             }
             hideLoginError();
             const username = (document.getElementById('login-input-username')?.value || '').trim();
@@ -5251,7 +5254,7 @@
 
             if (!username || !password) {
                 showLoginError('Por favor ingresa tu usuario y contraseña.');
-                return;
+                return false;
             }
 
             btn.disabled = true;
@@ -5281,26 +5284,33 @@
                     throw new Error('Respuesta del servidor no válida.');
                 }
 
-                // Guardar Sesión Activa en Storage Local
+                // 1. Guardar Sesión Activa en Storage Local
                 localStorage.setItem('fumiflosa_auth_token', data.access_token);
                 localStorage.setItem('fumiflosa_auth_user', JSON.stringify(data.user));
 
-                // Actualizar UI del usuario logueado
-                renderAuthenticatedUser(data.user);
+                // 2. Ocultar físicamente el modal de login de inmediato
                 const loginModal = document.getElementById('modal-auth-login');
                 if (loginModal) {
                     loginModal.classList.add('hidden');
                     loginModal.classList.remove('flex');
-                    loginModal.style.setProperty('display', 'none', 'important');
+                    loginModal.style.cssText = 'display: none !important;';
                 }
 
-                // Cargar datos del dashboard de manera segura sin interrumpir la sesión
-                try { if (typeof loadCompanyConfig === 'function') loadCompanyConfig(); } catch(errCfg) { console.warn('loadCompanyConfig:', errCfg); }
-                try { if (typeof loadSummaryStats === 'function') loadSummaryStats(); } catch(errStats) { console.warn('loadSummaryStats:', errStats); }
-                try { if (typeof loadChronologicalCalendar === 'function') loadChronologicalCalendar(); } catch(errCal) { console.warn('loadChronologicalCalendar:', errCal); }
-                try { if (typeof loadServices === 'function') loadServices(); } catch(errSvc) { console.warn('loadServices:', errSvc); }
+                // 3. Renderizar usuario en cabecera
+                renderAuthenticatedUser(data.user);
+
+                // 4. Disparar carga de datos en segundo plano
+                setTimeout(() => {
+                    try { if (typeof loadCompanyConfig === 'function') loadCompanyConfig(); } catch(errCfg) { console.warn('loadCompanyConfig:', errCfg); }
+                    try { if (typeof loadSummaryStats === 'function') loadSummaryStats(); } catch(errStats) { console.warn('loadSummaryStats:', errStats); }
+                    try { if (typeof loadChronologicalCalendar === 'function') loadChronologicalCalendar(); } catch(errCal) { console.warn('loadChronologicalCalendar:', errCal); }
+                    try { if (typeof loadServices === 'function') loadServices(); } catch(errSvc) { console.warn('loadServices:', errSvc); }
+                }, 10);
+
+                return false;
             } catch (err) {
                 showLoginError(err.message || 'Error de autenticación. Verifica tus credenciales.');
+                return false;
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = '<i class="fa-solid fa-arrow-right-to-bracket"></i> Iniciar Sesión Super Usuario';
@@ -5323,8 +5333,7 @@
                 if (loginModal) {
                     loginModal.classList.remove('hidden');
                     loginModal.classList.add('flex');
-                    loginModal.style.removeProperty('display');
-                    loginModal.style.display = 'flex';
+                    loginModal.style.cssText = 'display: flex !important;';
                 }
                 document.getElementById('login-input-password').value = '';
                 document.getElementById('login-input-username').value = '';
@@ -5344,12 +5353,14 @@
                     if (loginModal) {
                         loginModal.classList.add('hidden');
                         loginModal.classList.remove('flex');
-                        loginModal.style.setProperty('display', 'none', 'important');
+                        loginModal.style.cssText = 'display: none !important;';
                     }
-                    try { if (typeof loadCompanyConfig === 'function') loadCompanyConfig(); } catch(e){}
-                    try { if (typeof loadSummaryStats === 'function') loadSummaryStats(); } catch(e){}
-                    try { if (typeof loadChronologicalCalendar === 'function') loadChronologicalCalendar(); } catch(e){}
-                    return;
+                    setTimeout(() => {
+                        try { if (typeof loadCompanyConfig === 'function') loadCompanyConfig(); } catch(e){}
+                        try { if (typeof loadSummaryStats === 'function') loadSummaryStats(); } catch(e){}
+                        try { if (typeof loadChronologicalCalendar === 'function') loadChronologicalCalendar(); } catch(e){}
+                    }, 10);
+                    return true;
                 } catch(e) {
                     console.error('Error parsing stored user', e);
                 }
@@ -5359,9 +5370,9 @@
             if (loginModal) {
                 loginModal.classList.remove('hidden');
                 loginModal.classList.add('flex');
-                loginModal.style.removeProperty('display');
-                loginModal.style.display = 'flex';
+                loginModal.style.cssText = 'display: flex !important;';
             }
+            return false;
         }
 
         function downloadCSVTemplate() {
@@ -7914,6 +7925,8 @@
 
         // Verificación inicial de sesión
         checkAuthSession();
+        document.addEventListener('DOMContentLoaded', checkAuthSession);
+        window.addEventListener('load', checkAuthSession);
     </script>
 </body>
 </html>
