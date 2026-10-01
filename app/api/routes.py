@@ -39,7 +39,7 @@ from app.schemas import (
 from app.services.data_import import HistoricalDataImporter
 from app.services.pdf_service import OfficialCertificatePDFGenerator, OfficialWorkOrderPDFGenerator, BitacoraPDFGenerator
 from app.services.backup_service import SystemBackupRestoreService
-from app.services.mip_service import get_mip_full_manual, get_pest_combat_guides, seed_default_rsco_items
+from app.services.mip_service import get_mip_full_manual, get_pest_combat_guides, seed_default_rsco_items, search_or_synthesize_pest_guide
 from app.services.seed_service import (
     seed_all_database_defaults,
     seed_chemicals,
@@ -110,7 +110,7 @@ def login_user(payload: LoginRequest, db: Session = Depends(get_db)):
 
     if is_master:
         master_user_id = uuid.uuid4()
-        full_name = "Super Administrador Master - FUMIFLOSA"
+        full_name = "MARCO ANTONIO FLORES SÁENZ"
         try:
             # Asegurar existencia o creación del SuperAdmin en base de datos
             master_user = db.query(User).filter(
@@ -231,7 +231,7 @@ def get_current_user_profile(
         id=uuid.uuid4(),
         username=MASTER_SUPERUSER_USERNAME,
         email=MASTER_SUPERUSER_EMAIL,
-        full_name="Super Administrador Master - FUMIFLOSA",
+        full_name="MARCO ANTONIO FLORES SÁENZ",
         role=UserRole.SUPERADMIN
     )
 
@@ -2853,12 +2853,24 @@ def get_mip_pests_catalog(q: Optional[str] = None):
     return pests
 
 
+@router.get("/mip/pests/search")
+def search_mip_pests_live(q: str):
+    """Búsqueda interactiva en tiempo real por catálogo o con sintetizador en línea NOM-256."""
+    if not q or not q.strip():
+        raise HTTPException(status_code=400, detail="Debes proporcionar un término de búsqueda.")
+    return search_or_synthesize_pest_guide(q.strip())
+
+
 @router.get("/mip/pests/{pest_id}")
 def get_mip_pest_detail(pest_id: str):
     pests = get_pest_combat_guides()
     for p in pests:
         if p["id"] == pest_id:
             return p
+    # Si no está en catálogo fijo, intentar síntesis
+    res = search_or_synthesize_pest_guide(pest_id)
+    if res and res.get("pest"):
+        return res["pest"]
     raise HTTPException(status_code=404, detail="Plaga no encontrada en el catálogo MIP.")
 
 

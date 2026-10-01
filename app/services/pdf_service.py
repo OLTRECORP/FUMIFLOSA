@@ -489,20 +489,29 @@ class OfficialWorkOrderPDFGenerator:
         company_name = getattr(company, 'trade_name', None) or "FLOSA CONTROL DE PLAGAS"
         company_legal = getattr(company, 'company_name', None) or "Marco Antonio Flores Sáenz"
         company_rfc = getattr(company, 'rfc', None) or "FOMS630329EA5"
-        company_tel = getattr(company, 'phone', None) or "6258373393"
+        company_tel = getattr(company, 'phone', None) or "625-837-3393"
+        license_no = getattr(company, 'sanitary_license_number', None) or "08 17 19 SA 0001"
 
         status_label = (getattr(order, 'status', None) or 'COMPLETADO').upper()
         cert_obj = getattr(order, 'certificate', None)
         cert_folio_str = getattr(cert_obj, 'certificate_folio', None) if cert_obj else 'En Trámite / Programado'
         order_folio_str = getattr(order, 'folio', 'ORD-00001')
 
+        from reportlab.platypus import Image as RLImage
+        logo_cell = []
+        if LOGO_PATH.exists():
+            logo_cell = [RLImage(str(LOGO_PATH), width=110, height=48)]
+        else:
+            logo_cell = [Paragraph(f"<b>{(company_name or '').upper()}</b>", title_style)]
+
         hdr_table_data = [
             [
-                Paragraph(f"<b>{(company_name or '').upper()}</b><br/><font size=7 color='#4A5568'>{company_legal} • RFC: {company_rfc} • Tel: {company_tel}</font><br/><b>HOJA TÉCNICA DE ORDEN DE SERVICIO OPERATIVO</b>", title_style),
+                logo_cell[0],
+                Paragraph(f"<b>{(company_name or '').upper()}</b><br/><font size=7 color='#4A5568'>{company_legal} • RFC: {company_rfc} • Tel: {company_tel}<br/>Licencia Sanitaria COFEPRIS: <b>{license_no}</b></font><br/><b>HOJA TÉCNICA DE ORDEN DE SERVICIO OPERATIVO</b>", title_style),
                 Paragraph(f"<b>FOLIO DE ORDEN:</b><br/>{order_folio_str}<br/><font color='#4A5568' size=7>Certificado: {cert_folio_str}</font><br/><font color='#2B6CB0' size=7.5>Estado: {status_label}</font>", folio_style)
             ]
         ]
-        hdr_table = Table(hdr_table_data, colWidths=[380, 160])
+        hdr_table = Table(hdr_table_data, colWidths=[115, 275, 150])
         hdr_table.setStyle(TableStyle([
             ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
             ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
@@ -520,6 +529,10 @@ class OfficialWorkOrderPDFGenerator:
 
         client_legal = _safe_str(getattr(client, 'legal_name', None) or 'CLIENTE GENERAL')
         client_rfc_str = _safe_str(getattr(client, 'rfc', None) or 'XAXX010101000')
+
+        tech_full_name = getattr(tech, 'full_name', None) or "MARCO ANTONIO FLORES SÁENZ"
+        if "Super Administrador" in tech_full_name or "Master" in tech_full_name:
+            tech_full_name = "MARCO ANTONIO FLORES SÁENZ"
 
         info_rows = [
             [
@@ -541,10 +554,10 @@ class OfficialWorkOrderPDFGenerator:
                 Paragraph(_safe_str(branch.responsible_contact_name if branch else 'N/A') or "N/A", val_style)
             ],
             [
-                Paragraph("TÉCNICO APLICADOR:", label_style),
-                Paragraph(_safe_str(tech.full_name if tech else 'Técnico Asignado'), val_style),
-                Paragraph("REGISTRO STPS DC-3:", label_style),
-                Paragraph(_safe_str(getattr(tech, 'stps_registration_number', None) if tech else None) or "DC3-VIGENTE", val_style)
+                Paragraph("RESPONSABLE TÉCNICO:", label_style),
+                Paragraph(tech_full_name, val_style),
+                Paragraph("LICENCIA SANITARIA:", label_style),
+                Paragraph(license_no, val_style)
             ],
             [
                 Paragraph("INICIO DE SERVICIO:", label_style),
@@ -676,7 +689,7 @@ class OfficialWorkOrderPDFGenerator:
         # 6. FIRMAS DE CONFORMIDAD
         sig_data = [
             [
-                Paragraph(f"_____________________________<br/><b>{tech.full_name if tech else 'Técnico Aplicador'}</b><br/>Técnico Certificado STPS<br/>Reg: {(tech.stps_registration_number if tech else None) or 'DC3-VIGENTE'}", subtitle_style),
+                Paragraph(f"_____________________________<br/><b>{tech_full_name}</b><br/>Responsable Técnico Operativo<br/>No. De Licencia Sanitaria: {license_no}", subtitle_style),
                 Paragraph(f"_____________________________<br/><b>{branch.responsible_contact_name or 'Responsable en Sitio'}</b><br/>Recepción y Conformidad del Cliente<br/>Firma y Sello de la Unidad", subtitle_style)
             ]
         ]

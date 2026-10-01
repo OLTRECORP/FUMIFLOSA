@@ -293,7 +293,7 @@ class HistoricalDataImporter:
                 default_tech = User(
                     username="FOSM630329EA5",
                     email="admin@fumiflosa.mx",
-                    full_name="Super Administrador Master - FUMIFLOSA",
+                    full_name="MARCO ANTONIO FLORES SÁENZ",
                     hashed_password="hash_FLOSA6303",
                     role=UserRole.SUPERADMIN,
                     is_active=True

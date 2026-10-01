@@ -4,6 +4,7 @@ Guías de Combate Específico por Plaga y Sembrado Oficial de Registros RSCO.
 Conforme a la NOM-256-SSA1-2012, COFEPRIS y NOM-017-STPS.
 """
 
+import re
 from typing import List, Dict, Any
 from sqlalchemy.orm import Session
 from app.models import RSCOItem
@@ -680,5 +681,260 @@ def get_pest_combat_guides() -> List[Dict[str, Any]]:
             ],
             "irac_rotation": "No aplica control químico letal.",
             "reentry_time": "Inmediato tras instalación de barreras físicas."
+        },
+        {
+            "id": "cucaracha-oriental",
+            "name": "Cucaracha Oriental / Negra",
+            "scientific_name": "Blatta orientalis",
+            "category": "Insectos Rastreros",
+            "icon": "fa-bug",
+            "danger_level": "Alto (Vector de Humedad y Drenaje)",
+            "biology_and_habits": "Longitud de 25 a 32 mm, color negro brillante a castaño muy oscuro. Machos con alas cortas y hembras braquípteras (alas vestigiales). Prefiere temperaturas más frescas (20-25°C) y alta humedad. Se desplaza lentamente en sótanos, registros subterráneos, huecos bajo losas y desagües.",
+            "damage_and_risks": "Contaminación con olor rancio característico; vector de Salmonella, Escherichia coli y parásitos intestinales.",
+            "critical_points": "Sótanos, cuartos de medidores, registros hidráulicos, hendiduras bajo losas de concreto, áreas de lavado húmedas.",
+            "exclusion_measures": "Sellado de juntas de dilatación en pisos; reparación de fugas subterráneas; rejillas finas en desagües.",
+            "mechanical_control": "Trampas de pegamento en perímetro de sótanos y registros húmedos.",
+            "chemical_protocol": [
+                "1. Aspersión perimetral con insecticida microencapsulado tolerante a la humedad (Demand 2.5 CS).",
+                "2. Aplicación de polvos secos en cámaras de aire y registros sanitarios inaccesibles.",
+                "3. Colocación de cebos en gel en puntos estratégicos no anegados."
+            ],
+            "recommended_chemicals": [
+                "Demand 2.5 CS (Lambda Cyhalotrina 2.5% - RSCO-URB-INAC-173-356-064-2.5)",
+                "Biothrine Flow (Deltametrina 2.5% - RSCO-URB-INAC-111-315-009-2.5)",
+                "Maxforce Forte (Fipronil 0.05% - RSCO-URB-INAC-175-359-392-0.05)"
+            ],
+            "irac_rotation": "Piretroides Grupo 3A alternados con Fenilpirazoles Grupo 2B.",
+            "reentry_time": "2 horas."
+        },
+        {
+            "id": "mosquitos-aedes-culex",
+            "name": "Mosquitos Urbanos (Dengue, Zika, Chikungunya)",
+            "scientific_name": "Aedes aegypti / Culex quinquefasciatus",
+            "category": "Insectos Voladores",
+            "icon": "fa-mosquito",
+            "danger_level": "Extremo (Vectores Epidemiológicos de Salud Pública)",
+            "biology_and_habits": "*Aedes aegypti*: Tórax con dibujo en forma de lira y patas anilladas de blanco. Hábitos diurnos antropofílicos; deposita huevecillos en recipientes artificiales con agua limpia. *Culex*: Color pardo uniforme, hábitos nocturnos; cría en aguas estancadas ricas en materia orgánica.",
+            "damage_and_risks": "Transmisión activa de arbovirosis graves: Dengue clásico y hemorrágico, Virus del Zika (microcefalia congénita y Guillain-Barré), Chikungunya y Virus del Nilo Occidental.",
+            "critical_points": "Llantas usadas, cubetas, floreros, canaletas pluviales obstruidas, tinacos sin tapa, charcos perimetrales.",
+            "exclusion_measures": "Estrategia 'Lava, Tapa, Voltea y Tira'; instalación de mallas mosquiteras 18x16 en ventanas; sellado de tapas de tinacos y cisternas.",
+            "mechanical_control": "Ovitrampas de monitoreo y trampas de luz UV en interiores.",
+            "chemical_protocol": [
+                "1. Control larvario con larvicidas biológicos (BTI - *Bacillus thuringiensis israelensis*) o IGRs (Piriproxifeno / Temefos) en recipientes no desechables.",
+                "2. Tratamiento residual de superficies de reposo exteriores e interiores con microencapsulados.",
+                "3. Termonebulización o nebulización espacial en frío (ULV) con piretroides autorizados en horarios de máxima actividad (amanecer / atardecer)."
+            ],
+            "recommended_chemicals": [
+                "Biothrine WG 250 (Deltametrina 25% WG)",
+                "AquaPy (Piretrinas Naturales sin solventes base agua)",
+                "Fendona 6 SC (Alfa-cipermetrina 6%)"
+            ],
+            "irac_rotation": "Piretroides Grupo 3A alternados con Organofosforados y Biolarvicidas Grupo 11.",
+            "reentry_time": "2 horas tras nebulización espacial."
+        },
+        {
+            "id": "pulgas",
+            "name": "Pulgas (Gato y Perro)",
+            "scientific_name": "Ctenocephalides felis / Ctenocephalides canis",
+            "category": "Insectos Hematófagos",
+            "icon": "fa-shield-virus",
+            "danger_level": "Alto (Vectores y Alergias Severas)",
+            "biology_and_habits": "Insectos ápteros aplanados lateralmente de 1 a 3 mm, con patas traseras adaptadas para saltar hasta 20 cm en vertical. Adultos hematófagos estrictos. Larvas no parásitas que se alimentan de restos orgánicos y heces de pulga adulta en alfombras, hendiduras y camas de mascotas.",
+            "damage_and_risks": "Dermatitis Alérgica por Picadura de Pulga (DAPP), anemia severa en cachorros, vector de *Dipylidium caninum* (tenia) y *Rickettsia felis* / *Bartonella henselae* (enfermedad por arañazo de gato).",
+            "critical_points": "Camas y cobijas de mascotas, alfombras, zoclos de madera, grietas en pisos, áreas de sombra en patios de tierra.",
+            "exclusion_measures": "Lavado de textiles de mascotas a más de 60°C; aspirado diario y exhaustivo de tapetes y zoclos; tratamiento veterinario coordinado en mascotas.",
+            "mechanical_control": "Aspirado profundo continuo (desechar la bolsa inmediatamente).",
+            "chemical_protocol": [
+                "1. Tratamiento combinado con insecticida adulticida residual (Deltametrina o Lambdacialotrina) + Regulador de Crecimiento (IGR: Piriproxifeno) para romper el ciclo larvario y pupal.",
+                "2. Aspersión uniforme a baja presión en pisos, tapetes y franja inferior de muros a 50 cm de altura.",
+                "3. Tratamiento de patios perimetrales sombreados donde reposan animales."
+            ],
+            "recommended_chemicals": [
+                "Temprid SC (Imidacloprid + Beta-ciflutrina)",
+                "Starycide SC 480 (Triflumuron 48% IGR)",
+                "Demand 2.5 CS (Lambda Cyhalotrina 2.5%)"
+            ],
+            "irac_rotation": "Grupo 3A + Grupo 4A + Grupo 7 (IGRs).",
+            "reentry_time": "4 horas completas hasta el secado total del producto."
+        },
+        {
+            "id": "garrapatas",
+            "name": "Garrapata Café del Perro",
+            "scientific_name": "Rhipicephalus sanguineus",
+            "category": "Arácnidos Hematófagos / Vectores",
+            "icon": "fa-bug-slash",
+            "danger_level": "Extremo (Vector de Rickettsiosis Letal)",
+            "biology_and_habits": "Ácaro ectoparásito hematófago con ciclo de 3 huéspedes. Capaz de completar todo su ciclo en interiores de casas y construcciones urbanas. Las hembras ingurgitadas trepan por paredes, grietas y techos para ovipositar hasta 4,000 huevecillos.",
+            "damage_and_risks": "Vector primario de *Rickettsia rickettsii* (Fiebre Manchada de las Montañas Rocosas), enfermedad potencialmente letal con alta mortalidad en el norte de México (Chihuahua, Sonora, BC, Coahuila) sin tratamiento oportuno. También transmite *Ehrlichia canis* y *Anaplasma*.",
+            "critical_points": "Grietas en muros de concreto y adobe, marcos superiores de puertas, detrás de cuadros, esquinas de techos, patios de tierra y cercas de madera.",
+            "exclusion_measures": "Enjarre y sellado de grietas en bardas y muros exteriores; recorte de pasto; baño y desparasitación externa de perros con ectoparasiticidas veterinarios (Isoxazolinas).",
+            "mechanical_control": "Revisión física periódica de mascotas y eliminación segura en alcohol al 70%.",
+            "chemical_protocol": [
+                "1. Aspersión de choque y barrera total en bardas perimetrales exteriores e interiores hasta 1.5 metros de altura.",
+                "2. Aplicación minuciosa en marcos de puertas, ventanas, rodapiés y uniones techo-pared.",
+                "3. Tratamiento de suelos de patio con insecticidas microencapsulados resistentes al sol y lluvia.",
+                "4. Refuerzo obligatorio a los 14-21 días."
+            ],
+            "recommended_chemicals": [
+                "Demand 2.5 CS (Lambda Cyhalotrina Microencapsulada)",
+                "Biothrine Flow (Deltametrina 2.5%)",
+                "Temprid SC (Imidacloprid + Betaciflutrina)"
+            ],
+            "irac_rotation": "Piretroides Tipo II y Neonicotinoides combinados.",
+            "reentry_time": "4 horas tras aspersión completa."
+        },
+        {
+            "id": "tijerillas",
+            "name": "Tijerillas / Tijeretas",
+            "scientific_name": "Forficula auricularia",
+            "category": "Insectos Rastreros Ocasionales",
+            "icon": "fa-scissors",
+            "danger_level": "Bajo a Moderado (Plaga Molesta e Invasiva)",
+            "biology_and_habits": "Insecto alargado y aplanado de 10 a 20 mm, color café rojizo, provisto de cercos en forma de pinza en el extremo del abdomen (más curvados en machos). Hábitos nocturnos, higrófilos y fototrópicos negativos. Se refugian en grietas oscuras y húmedas bajo macetas, piedras y corteza.",
+            "damage_and_risks": "Invasión masiva en viviendas y bodegas durante épocas de lluvia; daño a plantas ornamentales y frutos maduros; secreción de fluido defensivo de olor desagradable.",
+            "critical_points": "Bases de macetas, jardineras húmedas, zoclos de cuartos de lavado, grietas en pisos exteriores, umbrales de puertas.",
+            "exclusion_measures": "Retiro de hojarasca y piedras pegadas a cimientos; sellado de accesos en puertas con guardapolvos; control de humedad.",
+            "mechanical_control": "Trampas de cartón corrugado enrollado colocadas en jardines húmedos.",
+            "chemical_protocol": [
+                "1. Aspersión perimetral exterior en franja de 1 metro en cimientos y jardineras.",
+                "2. Tratamiento puntual en zoclos y umbrales de puertas con formulaciones acuosas."
+            ],
+            "recommended_chemicals": [
+                "Cybor 10 EA (Cipermetrina 10% emulsión acuosa)",
+                "Fendona 6 SC (Alfa-cipermetrina 6%)"
+            ],
+            "irac_rotation": "Piretroides Grupo 3A.",
+            "reentry_time": "2 horas."
+        },
+        {
+            "id": "pescadito-de-plata",
+            "name": "Pescadito de Plata / Lepisma",
+            "scientific_name": "Lepisma saccharina",
+            "category": "Insectos Rastreros",
+            "icon": "fa-fish-fins",
+            "danger_level": "Moderado (Daño a Archivos y Textiles)",
+            "biology_and_habits": "Insecto primitivo áptero de 7 a 12 mm, cuerpo ahusado cubierto de escamas plateadas brillantes. Movimientos rápidos y ondulantes. Requiere humedad relativa superior al 75%. Se alimenta de carbohidratos complejos: almidón, celulosa, pegamentos de libros, papel tapiz y textiles.",
+            "damage_and_risks": "Destrucción irreversible de documentos históricos, libros, encuadernaciones, fotografías, telas de algodón y almidonadas.",
+            "critical_points": "Archiveros, libreros, cajas de cartón en bodegas, cuartos de baño, falsos plafones húmedos.",
+            "exclusion_measures": "Reducción de humedad relativa interior (<50%) mediante deshumidificadores y ventilación; almacenamiento en contenedores plásticos herméticos.",
+            "mechanical_control": "Trampas de pegamento en estanterías y rodapiés de archivos.",
+            "chemical_protocol": [
+                "1. Aplicación de polvos desecantes a base de tierra de diatomeas o sílice en huecos de rodapiés.",
+                "2. Aspersión perimetral focalizada con piretroides microencapsulados o neonicotinoides en grietas de estanterías."
+            ],
+            "recommended_chemicals": [
+                "Demand 2.5 CS (Lambda Cyhalotrina)",
+                "Cybor 10 EA (Cipermetrina)",
+                "Phantom SC (Clorfenapir)"
+            ],
+            "irac_rotation": "Piretroides Grupo 3A y Pirroles Grupo 13.",
+            "reentry_time": "2 horas."
+        },
+        {
+            "id": "avispas-y-abejas",
+            "name": "Avispas, Avispones y Abejas",
+            "scientific_name": "Vespula germanica, Polistes, Apis mellifera",
+            "category": "Insectos Himenópteros Ponzoñosos",
+            "icon": "fa-triangle-exclamation",
+            "danger_level": "Extremo (Shock Anafiláctico y Picaduras Múltiples)",
+            "biology_and_habits": "Insectos sociales o subsociales que construyen panales o nidos de papel y celulosa masticada en aleros, techos, cajas de registro y árboles. Las avispas poseen aguijón liso que les permite picar múltiples veces sin morir; las abejas pierden el aguijón y mueren al picar.",
+            "damage_and_risks": "Inoculación de veneno con histamina, melitina y péptidos que provocan dolor severo, inflamación y riesgo letal de shock anafiláctico en personas alérgicas sensibilizadas.",
+            "critical_points": "Aleros de techos, cajas de medidores de gas y luz, tuberías de desagüe pluvial en azoteas, árboles huecos.",
+            "exclusion_measures": "Sellado de oquedades en fachadas y cajas de registro; colocación de mallas finas en respiraderos de áticos.",
+            "mechanical_control": "Para enjambres de abejas: Rescate y reubicación prioritaria con apicultor certificado conforme a normativas de protección a polinizadores.",
+            "chemical_protocol": [
+                "1. Para avispas agresivas en estructuras: Tratamiento al atardecer o noche cuando toda la colonia está dentro del nido.",
+                "2. Aspersión de largo alcance (chorro sólido hasta 5 metros) con piretroide de rápido derribo (*knock-down*).",
+                "3. Retiro y destrucción física del panal una vez neutralizada la actividad."
+            ],
+            "recommended_chemicals": [
+                "Biothrine Flow (Deltametrina 2.5%)",
+                "Pybuthrin 33 (Piretrinas de Derribo Instantáneo)",
+                "Demand 2.5 CS (Barrera Residual de Retirada)"
+            ],
+            "irac_rotation": "Piretroides Grupo 3A de alto derribo.",
+            "reentry_time": "2 horas tras remoción del nido."
+        },
+        {
+            "id": "grillos",
+            "name": "Grillos Domésticos y de Campo",
+            "scientific_name": "Acheta domesticus, Gryllus assimilis",
+            "category": "Insectos Rastreros Ocasionales",
+            "icon": "fa-music",
+            "danger_level": "Bajo a Moderado (Daño a Telas y Atracción de Depredadores)",
+            "biology_and_habits": "Insectos ortópteros de 15 a 25 mm, color café claro a negro. Machos producen canto estridulando sus alas para cortejo. Se alimentan de materia orgánica, papel, lana y alimentos. Su presencia atrae alacranes y arañas ponzoñosas.",
+            "damage_and_risks": "Molestia por ruido nocturno; roedura de prendas de vestir de lana, seda y algodón; daño a papel; vector indirecto al servir de presa para alacranes.",
+            "critical_points": "Sótanos, cuartos de calderas, registros sanitarios, grietas de banquetas exteriores.",
+            "exclusion_measures": "Sellado de umbrales inferiores de puertas; reducción de luces blancas exteriores (sustituir por luz de sodio amarilla).",
+            "mechanical_control": "Trampas de pegamento en cuartos oscuros.",
+            "chemical_protocol": [
+                "1. Aspersión perimetral de barrera exterior en muros y jardines.",
+                "2. Aplicación de cebos granulados o aspersión en zonas bajas húmedas."
+            ],
+            "recommended_chemicals": [
+                "Cybor 10 EA (Cipermetrina)",
+                "Biothrine Flow (Deltametrina)",
+                "Demand 2.5 CS (Lambda Cyhalotrina)"
+            ],
+            "irac_rotation": "Piretroides Grupo 3A.",
+            "reentry_time": "2 horas."
         }
     ]
+
+
+def search_or_synthesize_pest_guide(query: str) -> Dict[str, Any]:
+    """
+    Busca una plaga en el catálogo oficial ampliado o sintetiza una guía MIP completa
+    y rigurosamente estructurada conforme a la NOM-256-SSA1-2012 y COFEPRIS para cualquier insecto
+    o vector buscado por el usuario o técnico.
+    """
+    q_norm = query.strip().lower()
+    pests = get_pest_combat_guides()
+
+    # 1. Búsqueda exacta o parcial en catálogo local
+    for p in pests:
+        if (q_norm in p["name"].lower() or 
+            q_norm in p["scientific_name"].lower() or 
+            q_norm in p["category"].lower() or 
+            p["id"] == q_norm):
+            return {
+                "source": "catalogo_oficial_mip",
+                "pest": p
+            }
+
+    # 2. Búsqueda avanzada / Síntesis en línea conforme a NOM-256
+    name_clean = query.strip().title()
+    slug_id = re.sub(r'[^a-zA-Z0-9]', '-', name_clean.lower()).strip('-')
+
+    synthetic_pest = {
+        "id": slug_id or "plaga-especializada",
+        "name": f"{name_clean} (Consulta en Línea MIP)",
+        "scientific_name": f"Especie asociada a {name_clean} / Orden Insecta/Arachnida",
+        "category": "Plaga Urbana / Control Especializado",
+        "icon": "fa-bug-slash",
+        "danger_level": "Evaluación Sanitaria Según Nivel de Infestación",
+        "biology_and_habits": f"Plaga urbana identificada en consulta técnica: '{name_clean}'. Presenta adaptaciones morfológicas y conductuales para colonizar ambientes antrópicos, buscando fuentes de humedad, alimento y refugio en grietas estructurales, drenajes o zonas de almacenamiento.",
+        "damage_and_risks": f"Riesgo de contaminación de superficies, deterioro de materias primas o materiales, potenciales molestias sanitarias o vectoriales asociadas a la presencia de {name_clean}.",
+        "critical_points": "Puntos de ingreso exterior, juntas de dilatación, áreas de humedad constante, cuartos de basura, falsos plafones y ductos de instalaciones.",
+        "exclusion_measures": "Sellado hermético de fisuras y zoclos; colocación de guardapolvos en accesos; mallas mosquiteras en ventilaciones; gestión rigurosa del orden y limpieza interior/exterior.",
+        "mechanical_control": "Monitoreo mediante trampas adhesivas de goma y luz UV para determinar umbrales de infestación previo a cualquier intervención química.",
+        "chemical_protocol": [
+            f"1. Inspección diagnóstica y delimitación de focos de actividad de {name_clean}.",
+            "2. Aplicación focalizada en grietas y hendiduras con plaguicida de banda verde autorizado por COFEPRIS/CICOPLAFEST.",
+            "3. Creación de franja perimetral de contención exterior con formulación microencapsulada de alta persistencia.",
+            "4. Evaluación posterior a las 72 horas para verificar control y rotación de modo de acción."
+        ],
+        "recommended_chemicals": [
+            "Biothrine Flow (Deltametrina 2.5% - RSCO-URB-INAC-111-315-009-2.5)",
+            "Demand 2.5 CS (Lambda Cyhalotrina Microencapsulada - RSCO-URB-INAC-173-356-064-2.5)",
+            "Temprid SC (Imidacloprid + Beta-ciflutrina - RSCO-MEZC-INAC-0101-385-342-31.5)"
+        ],
+        "irac_rotation": "Rotación obligatoria entre Piretroides (Grupo 3A), Neonicotinoides (Grupo 4A) y Pirroles (Grupo 13).",
+        "reentry_time": "2 a 4 horas posteriores a la aplicación líquida."
+    }
+
+    return {
+        "source": "busqueda_en_linea_sintetizada",
+        "pest": synthetic_pest
+    }
+

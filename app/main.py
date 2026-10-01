@@ -77,10 +77,29 @@ app.add_middleware(
 # Incluir Rutas Principales de la API
 app.include_router(api_router)
 
-# Rutas de los archivos HTML
+# Rutas de los archivos HTML y Assets
 TEMPLATES_DIR = Path(__file__).parent / "templates"
+ASSETS_DIR = Path(__file__).parent / "assets"
 DASHBOARD_HTML_PATH = TEMPLATES_DIR / "dashboard.html"
 CLIENT_PORTAL_HTML_PATH = TEMPLATES_DIR / "client_portal.html"
+
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+
+if ASSETS_DIR.exists():
+    app.mount("/static-assets", StaticFiles(directory=str(ASSETS_DIR)), name="static_assets")
+
+
+@app.get("/assets/logo.png", tags=["Assets"])
+@app.get("/assets/logo_flosa.png", tags=["Assets"])
+def get_logo_image():
+    """Devuelve el logo oficial de FLOSA Control de Plagas."""
+    logo_path = ASSETS_DIR / "certificates" / "logo_flosa.png"
+    if not logo_path.exists():
+        logo_path = ASSETS_DIR / "logo_flosa.png"
+    if logo_path.exists():
+        return FileResponse(str(logo_path), media_type="image/png")
+    return HTMLResponse("", status_code=404)
 
 
 @app.get("/", response_class=HTMLResponse, tags=["Dashboard"])

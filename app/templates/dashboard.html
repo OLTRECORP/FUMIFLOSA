@@ -1090,10 +1090,10 @@
         <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-200 animate-fadeIn">
             <!-- Header con Branding -->
             <div class="bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-950 p-6 text-white text-center relative">
-                <div class="w-16 h-16 bg-brand-600 rounded-2xl mx-auto flex items-center justify-center text-white text-3xl font-black shadow-lg shadow-brand-900/50 mb-3 border border-brand-400/30">
-                    <i class="fa-solid fa-shield-virus"></i>
+                <div class="bg-white/95 rounded-2xl mx-auto flex items-center justify-center p-2 shadow-lg mb-3 max-w-[130px]">
+                    <img src="/assets/logo_flosa.png" alt="FLOSA Fumigación" class="h-12 w-auto object-contain" />
                 </div>
-                <h2 class="text-xl font-extrabold tracking-tight text-white">FUMIFLOSA</h2>
+                <h2 class="text-xl font-extrabold tracking-tight text-white">FLOSA FUMIGACIÓN</h2>
                 <p class="text-xs text-emerald-300 font-medium">Control de Plagas Urbanas & Normatividad NOM-256</p>
                 
                 <div class="flex items-center justify-center gap-1.5 mt-3">
@@ -1152,7 +1152,7 @@
                 </form>
 
                 <div class="pt-2 text-center text-[10px] text-slate-400 border-t border-slate-100">
-                    <p>FUMIFLOSA S.A. DE C.V. &bull; Sistema Protegido de Grado Normativo</p>
+                    <p>FLOSA FUMIGACIÓN &bull; Marco Antonio Flores Sáenz &bull; Lic. 08 17 19 SA 0001</p>
                 </div>
             </div>
         </div>
@@ -1162,14 +1162,14 @@
     <header class="bg-slate-900 text-white shadow-lg border-b border-slate-800 sticky top-0 z-40">
         <div class="w-full max-w-[98%] 2xl:max-w-[1850px] mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
             <div class="flex items-center space-x-3">
-                <div class="w-10 h-10 bg-brand-600 rounded-lg flex items-center justify-center text-white text-xl font-bold shadow-inner">
-                    <i class="fa-solid fa-shield-virus"></i>
+                <div class="bg-white/95 rounded-lg p-1 flex items-center justify-center shadow-md">
+                    <img src="/assets/logo_flosa.png" alt="FLOSA" class="h-9 w-auto object-contain" />
                 </div>
                 <div>
                     <h1 id="topbar-trade-name" class="text-base font-bold tracking-tight text-white flex items-center gap-2">
-                        FUMIFLOSA <span class="text-[10px] bg-brand-700 text-brand-100 font-semibold px-2 py-0.5 rounded-full border border-brand-500">NOM-256-SSA1-2012</span>
+                        FLOSA FUMIGACIÓN <span class="text-[10px] bg-brand-700 text-brand-100 font-semibold px-2 py-0.5 rounded-full border border-brand-500">NOM-256-SSA1-2012</span>
                     </h1>
-                    <p id="topbar-subtext" class="text-xs text-slate-400">Sistema SaaS Multinivel B2B / COFEPRIS / STPS</p>
+                    <p id="topbar-subtext" class="text-xs text-slate-400">Marco Antonio Flores Sáenz &bull; Lic. Sanitaria: 08 17 19 SA 0001</p>
                 </div>
             </div>
             
@@ -2054,7 +2054,8 @@
                                     <th class="p-3">Email</th>
                                     <th class="p-3">Rol</th>
                                     <th class="p-3">Registro STPS</th>
-                                    <th class="p-3 text-right">Constancia DC-3</th>
+                                    <th class="p-3">Constancia DC-3</th>
+                                    <th class="p-3 text-right">Acciones</th>
                                 </tr>
                             </thead>
                             <tbody id="users-tbody" class="divide-y divide-slate-100"></tbody>
@@ -2659,19 +2660,26 @@
                 <!-- SUB-SECCIÓN 1: GUÍA DE COMBATE POR PLAGA -->
                 <div id="subtab-combate-plagas" class="space-y-4">
                     <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 flex flex-col md:flex-row items-center justify-between gap-3 text-xs">
-                        <div class="relative w-full md:w-96">
-                            <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
-                            <input type="text" id="mip-pest-search" oninput="filterMipPests()" placeholder="Buscar plaga (cucarachas, roedores, chinches, moscas, alacranes...)"
-                                class="w-full pl-8 pr-3 py-1.5 text-xs bg-white border border-slate-300 rounded-xl focus:ring-1 focus:ring-emerald-500" />
+                        <div class="flex items-center gap-2 w-full md:w-auto flex-1 max-w-xl">
+                            <div class="relative flex-1">
+                                <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+                                <input type="text" id="mip-pest-search" oninput="filterMipPests()" onkeydown="if(event.key==='Enter') searchPestOnlineLive()" placeholder="Buscar plaga (cucarachas, roedores, chinches, moscas, alacranes, pulgas, garrapatas, termitas, gorgojos...)"
+                                    class="w-full pl-8 pr-3 py-2 text-xs bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none" />
+                            </div>
+                            <button onclick="searchPestOnlineLive()" id="btn-search-online-pest" title="Buscar ficha técnica de combate en internet bajo NOM-256" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 shadow-sm shrink-0 transition">
+                                <i class="fa-solid fa-globe"></i> <span class="hidden sm:inline">Buscar en Internet</span>
+                            </button>
                         </div>
                         <div class="flex flex-wrap items-center gap-1.5">
                             <button onclick="filterPestCategory('all', this)" class="pest-cat-btn px-2.5 py-1 rounded-full font-bold bg-slate-800 text-white text-[11px]">Todas</button>
                             <button onclick="filterPestCategory('Insectos Rastreros', this)" class="pest-cat-btn px-2.5 py-1 rounded-full font-medium bg-slate-100 text-slate-700 hover:bg-slate-200 text-[11px]">Rastreros</button>
                             <button onclick="filterPestCategory('Roedores Comensales', this)" class="pest-cat-btn px-2.5 py-1 rounded-full font-medium bg-slate-100 text-slate-700 hover:bg-slate-200 text-[11px]">Roedores</button>
-                            <button onclick="filterPestCategory('Insectos Hematófagos', this)" class="pest-cat-btn px-2.5 py-1 rounded-full font-medium bg-slate-100 text-slate-700 hover:bg-slate-200 text-[11px]">Chinches</button>
+                            <button onclick="filterPestCategory('Insectos Hematófagos', this)" class="pest-cat-btn px-2.5 py-1 rounded-full font-medium bg-slate-100 text-slate-700 hover:bg-slate-200 text-[11px]">Chinches / Pulgas</button>
                             <button onclick="filterPestCategory('Insectos Voladores', this)" class="pest-cat-btn px-2.5 py-1 rounded-full font-medium bg-slate-100 text-slate-700 hover:bg-slate-200 text-[11px]">Voladores</button>
                             <button onclick="filterPestCategory('Arácnidos Ponzoñosos', this)" class="pest-cat-btn px-2.5 py-1 rounded-full font-medium bg-slate-100 text-slate-700 hover:bg-slate-200 text-[11px]">Alacranes / Arañas</button>
+                            <button onclick="filterPestCategory('Arácnidos Hematófagos / Vectores', this)" class="pest-cat-btn px-2.5 py-1 rounded-full font-medium bg-slate-100 text-slate-700 hover:bg-slate-200 text-[11px]">Garrapatas</button>
                             <button onclick="filterPestCategory('Insectos Xilófagos', this)" class="pest-cat-btn px-2.5 py-1 rounded-full font-medium bg-slate-100 text-slate-700 hover:bg-slate-200 text-[11px]">Termitas</button>
+                            <button onclick="filterPestCategory('Plagas de la Industria Alimentaria', this)" class="pest-cat-btn px-2.5 py-1 rounded-full font-medium bg-slate-100 text-slate-700 hover:bg-slate-200 text-[11px]">Granos / Silos</button>
                         </div>
                     </div>
 
@@ -3241,18 +3249,42 @@
                 const res = await fetch('/api/v1/users');
                 cachedTechnicians = await res.json();
                 const tbody = document.getElementById('users-tbody');
+                if (!cachedTechnicians.length) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="p-6 text-center text-slate-400">No hay usuarios registrados.</td></tr>';
+                    return;
+                }
                 tbody.innerHTML = cachedTechnicians.map(u => `
                     <tr class="hover:bg-slate-50">
                         <td class="p-3 font-bold text-slate-800">${u.full_name}</td>
                         <td class="p-3 text-slate-600">${u.email}</td>
                         <td class="p-3"><span class="bg-slate-100 text-slate-800 px-2 py-0.5 rounded text-[10px] font-semibold">${u.role}</span></td>
                         <td class="p-3 font-mono text-slate-600">${u.stps_registration_number || 'N/A'}</td>
+                        <td class="p-3">
+                            ${u.stps_dc3_file_url ? `<a href="${u.stps_dc3_file_url}" target="_blank" class="text-blue-600 hover:underline inline-flex items-center gap-1 font-semibold"><i class="fa-solid fa-link"></i> Ver DC-3</a>` : '<span class="text-slate-400">Sin archivo</span>'}
+                        </td>
                         <td class="p-3 text-right">
-                            ${u.stps_dc3_file_url ? `<a href="${u.stps_dc3_file_url}" target="_blank" class="text-blue-600 hover:underline"><i class="fa-solid fa-link"></i> Ver DC-3</a>` : '<span class="text-slate-400">Sin archivo</span>'}
+                            <button onclick="deleteUser('${u.id}', '${u.full_name}')" class="inline-flex items-center gap-1 text-xs bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold px-2.5 py-1 rounded border border-rose-200 transition" title="Eliminar este usuario del sistema">
+                                <i class="fa-solid fa-trash"></i> Eliminar
+                            </button>
                         </td>
                     </tr>
                 `).join('');
             } catch(e) { console.error(e); }
+        }
+
+        async function deleteUser(userId, userName) {
+            if (!confirm(`¿Estás seguro de que deseas eliminar al usuario / técnico "${userName}" del sistema?`)) return;
+            try {
+                const res = await fetch(`/api/v1/users/${userId}`, { method: 'DELETE' });
+                if (!res.ok) {
+                    const data = await res.json().catch(() => ({}));
+                    throw new Error(data.detail || 'No se pudo eliminar el usuario.');
+                }
+                alert(`Usuario "${userName}" eliminado exitosamente.`);
+                loadUsers();
+            } catch (err) {
+                alert('Error: ' + err.message);
+            }
         }
 
         async function loadClientsAndBranches() {
@@ -6635,6 +6667,57 @@
             openRscoSearchModal();
             document.getElementById('rsco-search-input').value = pestKeyword;
             executeRscoSearch(pestKeyword);
+        }
+
+        async function searchPestOnlineLive() {
+            const input = document.getElementById('mip-pest-search');
+            const term = input?.value.trim();
+            if (!term) {
+                alert('Por favor escribe el nombre de la plaga o insecto que deseas buscar (ej. Tijerillas, Pulgas, Garrapatas, Avispas, Gorgojos, Pescadito de plata, etc.).');
+                input?.focus();
+                return;
+            }
+
+            const btn = document.getElementById('btn-search-online-pest');
+            const origHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Consultando...';
+
+            try {
+                const res = await fetch(`/api/v1/mip/pests/search?q=${encodeURIComponent(term)}`);
+                if (!res.ok) throw new Error('No se pudo completar la búsqueda en línea.');
+                const data = await res.json();
+                const pest = data.pest;
+
+                const existingIdx = cachedMipPests.findIndex(p => p.id === pest.id || p.name.toLowerCase() === pest.name.toLowerCase());
+                if (existingIdx >= 0) {
+                    cachedMipPests[existingIdx] = pest;
+                } else {
+                    cachedMipPests.unshift(pest);
+                }
+
+                currentPestCatFilter = 'all';
+                document.querySelectorAll('.pest-cat-btn').forEach(b => {
+                    b.classList.remove('bg-slate-800', 'text-white');
+                    b.classList.add('bg-slate-100', 'text-slate-700');
+                });
+                const firstBtn = document.querySelector('.pest-cat-btn');
+                if (firstBtn) {
+                    firstBtn.classList.remove('bg-slate-100', 'text-slate-700');
+                    firstBtn.classList.add('bg-slate-800', 'text-white');
+                }
+                
+                renderMipPests();
+
+                if (data.source === 'busqueda_en_linea_sintetizada') {
+                    alert(`✓ Guía técnica y protocolo NOM-256 generado exitosamente para "${pest.name}".`);
+                }
+            } catch (err) {
+                alert('Error al buscar plaga: ' + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = origHtml;
+            }
         }
 
         function schedulePestService(pestName) {

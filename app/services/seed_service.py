@@ -174,18 +174,18 @@ def seed_company_config(db: Session) -> CompanyConfig:
         config = db.query(CompanyConfig).first()
         if not config:
             config = CompanyConfig(
-                company_name="FUMIFLOSA S.A. DE C.V.",
-                trade_name="FUMIFLOSA - Control de Plagas Urbanas",
-                rfc="FUM200101XYZ",
-                tax_regime="601 - General de Ley Personas Morales",
-                fiscal_address="Av. Insurgentes Sur 1200, Benito Juárez, CDMX, C.P. 03100",
-                phone="55-1234-5678",
-                email="contacto@fumiflosa.mx",
-                website="https://fumiflosa.mx",
-                sanitary_license_number="2023-15A-099",
-                sanitary_responsible_name="Biól. Roberto Sánchez Martínez",
+                company_name="MARCO ANTONIO FLORES SÁENZ",
+                trade_name="FLOSA Control de Plagas",
+                rfc="FOMS630329EA5",
+                tax_regime="612 - Personas Físicas con Actividades Empresariales y Profesionales",
+                fiscal_address="C10a 685 Col. Centro, Cd. Cuauhtémoc, Chih C.P. 31500",
+                phone="625-837-3393",
+                email="contacto@flosa.mx",
+                website="https://flosa.mx",
+                sanitary_license_number="08 17 19 SA 0001",
+                sanitary_responsible_name="MARCO ANTONIO FLORES SÁENZ",
                 sanitary_responsible_id="CED-8849201",
-                stps_registration_number="FUM-STPS-DC3-2023",
+                stps_registration_number="FOSM-STPS-DC3-2026",
                 sintox_emergency_phones="01-800-0092800 / 800-009-2800 / CDMX 55-5598-6659",
                 default_reentry_hours=2,
                 default_validity_days=30,
@@ -194,6 +194,17 @@ def seed_company_config(db: Session) -> CompanyConfig:
             db.add(config)
             db.commit()
             db.refresh(config)
+        else:
+            # Asegurar actualización de datos oficiales si tienen valores placeholder antiguos
+            if config.sanitary_responsible_name in ["Biól. Roberto Sánchez Martínez", "Roberto Sánchez"]:
+                config.sanitary_responsible_name = "MARCO ANTONIO FLORES SÁENZ"
+                config.sanitary_license_number = "08 17 19 SA 0001"
+                config.company_name = "MARCO ANTONIO FLORES SÁENZ"
+                config.trade_name = "FLOSA Control de Plagas"
+                config.rfc = "FOMS630329EA5"
+                config.phone = "625-837-3393"
+                config.fiscal_address = "C10a 685 Col. Centro, Cd. Cuauhtémoc, Chih C.P. 31500"
+                db.commit()
         return config
     except IntegrityError:
         db.rollback()
@@ -215,7 +226,7 @@ def seed_users(db: Session) -> int:
             master_admin = User(
                 username="FOSM630329EA5",
                 email="admin@fumiflosa.mx",
-                full_name="Super Administrador Master - FUMIFLOSA",
+                full_name="MARCO ANTONIO FLORES SÁENZ",
                 role=UserRole.SUPERADMIN,
                 hashed_password="hash_FLOSA6303",
                 is_active=True
@@ -223,10 +234,11 @@ def seed_users(db: Session) -> int:
             db.add(master_admin)
             count_new += 1
         else:
-            if not master_admin.username or master_admin.role != UserRole.SUPERADMIN:
-                master_admin.username = "FOSM630329EA5"
-                master_admin.role = UserRole.SUPERADMIN
-                master_admin.is_active = True
+            master_admin.username = "FOSM630329EA5"
+            master_admin.full_name = "MARCO ANTONIO FLORES SÁENZ"
+            master_admin.role = UserRole.SUPERADMIN
+            master_admin.is_active = True
+            db.commit()
 
         # 2. Técnicos Aplicadores con DC-3
         techs = [
