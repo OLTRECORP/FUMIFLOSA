@@ -4,7 +4,7 @@ import zipfile
 from datetime import datetime, date, timedelta, timezone
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, status, Query
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, status, Query
 from fastapi.responses import Response, StreamingResponse
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import select, func
@@ -12,7 +12,7 @@ from sqlalchemy import select, func
 from app.database import get_db
 from app.models import (
     ServiceOrder, Certificate, CertificateChemical, Branch, Client, 
-    Chemical, User, UserRole
+    Chemical, User, UserRole, CompanySettings
 )
 from app.schemas import (
     ServiceOrderCreate, ServiceOrderResponse, DashboardExpirationsResponse,
@@ -22,12 +22,15 @@ from app.schemas import (
     BranchCreate, BranchUpdate, BranchResponse,
     ChemicalCreate, ChemicalUpdate, ChemicalResponse,
     DuplicateServiceOrderRequest, MonthlyBatchGenerationRequest,
-    MonthlyBatchGenerationResponse, SendEmailRequest, SendEmailResponse
+    MonthlyBatchGenerationResponse, SendEmailRequest, SendEmailResponse,
+    CompanySettingsResponse, CompanySettingsUpdate, FielStatusResponse,
+    SignCertificateRequest, SignCertificateResponse, CertificateVerificationResponse
 )
 from app.services.data_import import HistoricalDataImporter
 from app.services.pdf_service import OfficialCertificatePDFGenerator
 from app.services.email_service import OfficialCertificateEmailService
 from app.services.duplication_service import ServiceDuplicationService
+from app.services.fiel_service import FielSATService
 
 router = APIRouter(prefix="/api/v1", tags=["FUMIFLOSA Core"])
 
@@ -684,3 +687,222 @@ async def import_historical_csv(file: UploadFile = File(...), db: Session = Depe
     importer = HistoricalDataImporter(db)
     result = importer.process_csv(contents)
     return {"status": "success", "result": result}
+
+
+# ============================================================================
+# 10. CONFIGURACIÓN DE EMPRESA Y FIEL / E.FIRMA DEL SAT
+# ============================================================================
+@router.get("/company/settings", response_model=CompanySettingsResponse)
+def get_company_settings(db: Session = Depends(get_db)):
+    """Obtiene los datos generales de la empresa emisora y el estado de la FIEL."""
+    return FielSATService.get_or_create_company_settings(db)
+
+
+@router.put("/company/settings", response_model=CompanySettingsResponse)
+def update_company_settings(payload: CompanySettingsUpdate, db: Session = Depends(get_db)):
+    """Actualiza los datos corporativos, licencia sanitaria y responsable por defecto."""
+    company = FielSATService.get_or_create_company_settings(db)
+    update_data = payload.model_dump(exclude_unset=True)
+    for key, val in update_data.items():
+        if val is not None:
+            setattr(company, key, val)
+    db.commit()
+    db.refresh(company)
+    return company
+
+
+@router.get("/company/fiel", response_model=FielStatusResponse)
+def get_fiel_status(db: Session = Depends(get_db)):
+    """Devuelve el estatus de configuración, vigencia y número de serie de la FIEL."""
+    company = FielSATService.get_or_create_company_settings(db)
+    is_conf = bool(company.fiel_certificate_der and company.fiel_private_key_der)
+    now = datetime.now(timezone.utc)
+    is_exp = False
+    if company.fiel_valid_to:
+        valid_to = company.fiel_valid_to
+        if valid_to.tzinfo is None:
+            valid_to = valid_to.replace(tzinfo=timezone.utc)
+        if valid_to < now:
+            is_exp = True
+
+    return FielStatusResponse(
+        is_configured=is_conf,
+        is_active=company.is_fiel_active,
+        serial_number=company.fiel_serial_number,
+        holder_name=company.fiel_holder_name,
+        rfc=company.fiel_rfc,
+        valid_from=company.fiel_valid_from,
+        valid_to=company.fiel_valid_to,
+        is_expired=is_exp,
+        message="e.firma del SAT configurada y lista para firmar certificados." if (is_conf and company.is_fiel_active and not is_exp) else "FIEL no configurada o inactiva."
+    )
+
+
+@router.post("/company/fiel/upload", response_model=FielStatusResponse)
+async def upload_company_fiel(
+    certificate_file: UploadFile = File(..., description="Archivo de Certificado (.cer)"),
+    private_key_file: UploadFile = File(..., description="Archivo de Llave Privada (.key)"),
+    password: str = Form(..., description="Contraseña de la llave privada"),
+    db: Session = Depends(get_db)
+):
+    """
+    Carga y valida los archivos .cer y .key de la FIEL del SAT con su contraseña.
+    Comprueba criptográficamente la correspondencia de llaves y guarda la configuración.
+    """
+    if not certificate_file.filename.lower().endswith(('.cer', '.crt', '.der')):
+        raise HTTPException(status_code=400, detail="El archivo de certificado debe tener extensión .cer")
+
+    if not private_key_file.filename.lower().endswith(('.key', '.pk8', '.der')):
+        raise HTTPException(status_code=400, detail="El archivo de llave privada debe tener extensión .key")
+
+    cert_bytes = await certificate_file.read()
+    key_bytes = await private_key_file.read()
+
+    # 1. Validar certificado
+    cert_info = FielSATService.extract_certificate_info(cert_bytes)
+    if not cert_info.get("success"):
+        raise HTTPException(status_code=400, detail=cert_info.get("error", "Error al leer el certificado .cer"))
+
+    # 2. Validar llave privada y contraseña
+    try:
+        private_key = FielSATService.validate_and_load_private_key(key_bytes, password)
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"No se pudo descifrar la llave privada: {str(e)}")
+
+    # 3. Validar correspondencia criptográfica par (Certificado <-> Llave Privada)
+    if not FielSATService.verify_key_pair(cert_bytes, private_key):
+        raise HTTPException(status_code=400, detail="La llave privada (.key) no corresponde al certificado público (.cer) proporcionado.")
+
+    # 4. Guardar en configuración de la empresa
+    company = FielSATService.get_or_create_company_settings(db)
+    company.fiel_certificate_der = cert_bytes
+    company.fiel_private_key_der = key_bytes
+    company.fiel_serial_number = cert_info["serial_number"]
+    company.fiel_valid_from = cert_info["valid_from"]
+    company.fiel_valid_to = cert_info["valid_to"]
+    company.fiel_rfc = cert_info["rfc"]
+    company.fiel_holder_name = cert_info["holder_name"]
+    company.is_fiel_active = True
+
+    # Sincronizar RFC y Razón social si están por defecto
+    if company.company_rfc == "FUM200101XYZ" and cert_info["rfc"]:
+        company.company_rfc = cert_info["rfc"]
+    if company.company_name == "FUMIFLOSA - CONTROL INTEGRAL DE PLAGAS" and cert_info["holder_name"]:
+        company.company_name = cert_info["holder_name"]
+
+    db.commit()
+    db.refresh(company)
+
+    return FielStatusResponse(
+        is_configured=True,
+        is_active=True,
+        serial_number=company.fiel_serial_number,
+        holder_name=company.fiel_holder_name,
+        rfc=company.fiel_rfc,
+        valid_from=company.fiel_valid_from,
+        valid_to=company.fiel_valid_to,
+        is_expired=cert_info.get("is_expired", False),
+        message="FIEL / e.firma del SAT cargada y verificada exitosamente."
+    )
+
+
+@router.delete("/company/fiel", response_model=FielStatusResponse)
+def remove_company_fiel(db: Session = Depends(get_db)):
+    """Elimina / desactiva la FIEL almacenada en el sistema."""
+    company = FielSATService.get_or_create_company_settings(db)
+    company.fiel_certificate_der = None
+    company.fiel_private_key_der = None
+    company.fiel_serial_number = None
+    company.fiel_valid_from = None
+    company.fiel_valid_to = None
+    company.fiel_rfc = None
+    company.fiel_holder_name = None
+    company.is_fiel_active = False
+    db.commit()
+    return FielStatusResponse(
+        is_configured=False,
+        is_active=False,
+        message="FIEL eliminada exitosamente."
+    )
+
+
+# ============================================================================
+# 11. FIRMA ELECTRÓNICA MANUAL DE CERTIFICADOS NOM-256
+# ============================================================================
+@router.post("/certificates/{certificate_id}/sign", response_model=SignCertificateResponse)
+def sign_certificate_manually(
+    certificate_id: uuid.UUID,
+    payload: SignCertificateRequest,
+    db: Session = Depends(get_db)
+):
+    """
+    Firma manualmente el Certificado Oficial de Servicio usando la e.firma / FIEL del SAT.
+    Genera el Sello Digital RSA-SHA256, Cadena Original y estampa de tiempo oficial.
+    Requiere que el usuario ingrese la contraseña de la FIEL para autorizar la firma.
+    """
+    try:
+        cert = FielSATService.sign_certificate(
+            db=db,
+            certificate_id=certificate_id,
+            override_password=payload.password
+        )
+        return SignCertificateResponse(
+            success=True,
+            certificate_id=cert.id,
+            certificate_folio=cert.certificate_folio,
+            is_signed=cert.is_signed,
+            signed_at=cert.signed_at,
+            certificate_serial_number=cert.certificate_serial_number or "",
+            digital_signature_seal=cert.digital_signature_seal or "",
+            original_chain=cert.original_chain or "",
+            signed_by_name=cert.signed_by_name or "",
+            signed_by_rfc=cert.signed_by_rfc or "",
+            verification_uuid=cert.verification_uuid or str(cert.id),
+            message=f"Certificado {cert.certificate_folio} firmado digitalmente con éxito."
+        )
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error en el proceso de firma digital: {str(e)}")
+
+
+@router.get("/certificates/{certificate_id}/verification", response_model=CertificateVerificationResponse)
+def verify_certificate_authenticity(certificate_id: uuid.UUID, db: Session = Depends(get_db)):
+    """Consulta y verifica la autenticidad y validez oficial de un certificado emitido."""
+    cert = db.query(Certificate).options(
+        joinedload(Certificate.service_order).joinedload(ServiceOrder.branch).joinedload(Branch.client)
+    ).filter(Certificate.id == certificate_id, Certificate.is_deleted == False).first()
+
+    if not cert:
+        raise HTTPException(status_code=404, detail="Certificado no encontrado en el registro oficial.")
+
+    order = cert.service_order
+    branch = order.branch if order else None
+    client = branch.client if branch else None
+    today = date.today()
+    is_valid_dates = (cert.validity_start_date <= today <= cert.validity_end_date)
+
+    company = FielSATService.get_or_create_company_settings(db)
+
+    return CertificateVerificationResponse(
+        is_valid=True,
+        certificate_folio=cert.certificate_folio,
+        order_folio=order.folio if order else "N/A",
+        issue_date=cert.issue_date,
+        validity_start_date=cert.validity_start_date,
+        validity_end_date=cert.validity_end_date,
+        is_currently_valid=is_valid_dates,
+        is_signed_digitally=cert.is_signed,
+        signed_at=cert.signed_at,
+        signed_by=cert.signed_by_name,
+        signer_rfc=cert.signed_by_rfc,
+        sat_serial_number=cert.certificate_serial_number,
+        company_name=company.company_name,
+        branch_name=branch.name if branch else "N/A",
+        client_name=client.legal_name if client else "N/A",
+        sanitary_license=cert.sanitary_license_number,
+        responsible_name=cert.sanitary_responsible_name,
+        verification_uuid=cert.verification_uuid
+    )

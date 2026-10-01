@@ -218,13 +218,13 @@ class OfficialCertificatePDFGenerator:
         legal_table.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor("#FFF5F5")),
             ('BOX', (0, 0), (-1, -1), 0.5, colors.HexColor("#FEB2B2")),
-            ('TOPPADDING', (0, 0), (-1, -1), 4),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+            ('TOPPADDING', (0, 0), (-1, -1), 3),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
         ]))
         elements.append(legal_table)
-        elements.append(Spacer(1, 12))
+        elements.append(Spacer(1, 6))
 
-        # 6. FIRMAS Y ESPACIO PARA SELLO INSTITUCIONAL
+        # 6. FIRMAS TRADICIONALES
         signatures_data = [
             [
                 Paragraph(f"_____________________________<br/><b>{cert.sanitary_responsible_name}</b><br/>Responsable Sanitario<br/>Céd. Prof. {cert.sanitary_responsible_id or 'En Trámite'}", subtitle_style),
@@ -236,10 +236,78 @@ class OfficialCertificatePDFGenerator:
         sig_table.setStyle(TableStyle([
             ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
             ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-            ('TOPPADDING', (0, 0), (-1, -1), 8),
+            ('TOPPADDING', (0, 0), (-1, -1), 4),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
         ]))
-        
-        elements.append(KeepTogether(sig_table))
+        elements.append(sig_table)
+        elements.append(Spacer(1, 6))
+
+        # 7. BLOQUE DE FIRMA ELECTRÓNICA AVANZADA (FIEL / E.FIRMA SAT)
+        from reportlab.graphics.barcode.qr import QrCodeWidget
+        from reportlab.graphics.shapes import Drawing
+
+        seal_style = ParagraphStyle(
+            'SealStyle',
+            parent=styles['Normal'],
+            fontName='Courier',
+            fontSize=5.5,
+            leading=7,
+            textColor=colors.HexColor("#2D3748")
+        )
+        seal_meta_style = ParagraphStyle(
+            'SealMetaStyle',
+            parent=styles['Normal'],
+            fontName='Helvetica',
+            fontSize=6,
+            leading=8,
+            textColor=colors.HexColor("#4A5568")
+        )
+
+        if cert.is_signed and cert.digital_signature_seal:
+            qr_data = f"https://fumiflosa.mx/verificar?folio={cert.certificate_folio}&uuid={cert.verification_uuid or cert.id}&rfc={cert.signed_by_rfc or 'RFC'}"
+            qr_widget = QrCodeWidget(qr_data)
+            qr_widget.barWidth = 60
+            qr_widget.barHeight = 60
+            qr_drawing = Drawing(60, 60)
+            qr_drawing.add(qr_widget)
+
+            fiel_info_html = (
+                f"<b>FIRMA ELECTRÓNICA AVANZADA (e.firma / FIEL del SAT) - VALIDEZ OFICIAL NOM-256</b><br/>"
+                f"<b>Serie Certificado SAT:</b> {cert.certificate_serial_number or 'N/A'} &nbsp;|&nbsp; "
+                f"<b>Fecha de Firma:</b> {cert.signed_at.strftime('%Y-%m-%d %H:%M:%S UTC') if cert.signed_at else 'N/A'} &nbsp;|&nbsp; "
+                f"<b>RFC Firmante:</b> {cert.signed_by_rfc or 'N/A'} ({cert.signed_by_name or 'FUMIFLOSA'})<br/>"
+                f"<b>Cadena Original:</b><br/>"
+                f"<font face='Courier' size='5'>{cert.original_chain or '||...||'}</font><br/>"
+                f"<b>Sello Digital:</b><br/>"
+                f"<font face='Courier' size='5'>{cert.digital_signature_seal}</font>"
+            )
+
+            fiel_table_data = [
+                [qr_drawing, Paragraph(fiel_info_html, seal_style)]
+            ]
+            fiel_table = Table(fiel_table_data, colWidths=[65, 475])
+            fiel_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor("#F0FDF4")),
+                ('BOX', (0, 0), (-1, -1), 0.5, colors.HexColor("#86EFAC")),
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                ('TOPPADDING', (0, 0), (-1, -1), 3),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
+            ]))
+            elements.append(KeepTogether(fiel_table))
+        else:
+            pending_html = (
+                "<b>ESTADO DE CERTIFICACIÓN:</b> DOCUMENTO PENDIENTE DE FIRMA ELECTRÓNICA AVANZADA (FIEL DEL SAT). "
+                "<i>Este documento se encuentra en estado de borrador o revisión previa. Una vez validado por el responsable sanitario, "
+                "se estampará la firma digital con validez plena ante COFEPRIS y Protección Civil.</i>"
+            )
+            pending_table = Table([[Paragraph(pending_html, seal_meta_style)]], colWidths=[540])
+            pending_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor("#FEFCE8")),
+                ('BOX', (0, 0), (-1, -1), 0.5, colors.HexColor("#FDE047")),
+                ('TOPPADDING', (0, 0), (-1, -1), 4),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+            ]))
+            elements.append(KeepTogether(pending_table))
 
         doc.build(elements)
         buffer.seek(0)

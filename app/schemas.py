@@ -165,6 +165,16 @@ class CertificateResponse(BaseModel):
     sanitary_responsible_name: str
     sanitary_responsible_id: Optional[str] = None
     applied_chemicals: List[CertificateChemicalResponse] = []
+    
+    # Firma Electrónica Avanzada (FIEL / e.firma del SAT)
+    is_signed: bool = False
+    signed_at: Optional[datetime] = None
+    digital_signature_seal: Optional[str] = None
+    certificate_serial_number: Optional[str] = None
+    original_chain: Optional[str] = None
+    signed_by_name: Optional[str] = None
+    signed_by_rfc: Optional[str] = None
+    verification_uuid: Optional[str] = None
     model_config = ConfigDict(from_attributes=True)
 
 
@@ -340,3 +350,82 @@ class SendEmailResponse(BaseModel):
     mode: Optional[str] = None
     message: Optional[str] = None
     error: Optional[str] = None
+
+
+# ----------------------------------------------------------------------------
+# 8. Configuración de Empresa y FIEL / e.firma SAT
+# ----------------------------------------------------------------------------
+class CompanySettingsResponse(BaseModel):
+    id: uuid.UUID
+    company_name: str
+    company_rfc: str
+    sanitary_license_number: str
+    sanitary_responsible_name: str
+    sanitary_responsible_id: Optional[str] = None
+    is_fiel_active: bool
+    fiel_serial_number: Optional[str] = None
+    fiel_holder_name: Optional[str] = None
+    fiel_rfc: Optional[str] = None
+    fiel_valid_from: Optional[datetime] = None
+    fiel_valid_to: Optional[datetime] = None
+    model_config = ConfigDict(from_attributes=True)
+
+
+class CompanySettingsUpdate(BaseModel):
+    company_name: Optional[str] = None
+    company_rfc: Optional[str] = None
+    sanitary_license_number: Optional[str] = None
+    sanitary_responsible_name: Optional[str] = None
+    sanitary_responsible_id: Optional[str] = None
+
+
+class FielStatusResponse(BaseModel):
+    is_configured: bool
+    is_active: bool
+    serial_number: Optional[str] = None
+    holder_name: Optional[str] = None
+    rfc: Optional[str] = None
+    valid_from: Optional[datetime] = None
+    valid_to: Optional[datetime] = None
+    is_expired: bool = False
+    message: Optional[str] = None
+
+
+class SignCertificateRequest(BaseModel):
+    password: str = Field(..., description="Contraseña de la llave privada (.key) de la FIEL del SAT")
+
+
+class SignCertificateResponse(BaseModel):
+    success: bool
+    certificate_id: uuid.UUID
+    certificate_folio: str
+    is_signed: bool
+    signed_at: datetime
+    certificate_serial_number: str
+    digital_signature_seal: str
+    original_chain: str
+    signed_by_name: str
+    signed_by_rfc: str
+    verification_uuid: str
+    message: str
+
+
+class CertificateVerificationResponse(BaseModel):
+    is_valid: bool
+    certificate_folio: str
+    order_folio: str
+    issue_date: date
+    validity_start_date: date
+    validity_end_date: date
+    is_currently_valid: bool
+    is_signed_digitally: bool
+    signed_at: Optional[datetime] = None
+    signed_by: Optional[str] = None
+    signer_rfc: Optional[str] = None
+    sat_serial_number: Optional[str] = None
+    company_name: str
+    branch_name: str
+    client_name: str
+    sanitary_license: str
+    responsible_name: str
+    verification_uuid: Optional[str] = None

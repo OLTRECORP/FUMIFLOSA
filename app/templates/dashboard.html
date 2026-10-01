@@ -49,6 +49,9 @@
                 <a href="/docs" target="_blank" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-md border border-slate-700 flex items-center gap-1.5 transition">
                     <i class="fa-solid fa-code"></i> API Swagger
                 </a>
+                <span id="top-fiel-status-badge" class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-800 text-slate-300 border border-slate-700">
+                    <span class="w-2 h-2 mr-1.5 bg-amber-400 rounded-full"></span> FIEL SAT
+                </span>
                 <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-950 text-emerald-300 border border-emerald-800">
                     <span class="w-2 h-2 mr-1.5 bg-emerald-400 rounded-full animate-pulse"></span> Sistema Activo
                 </span>
@@ -103,6 +106,9 @@
                     <button onclick="switchTab('tab-ordenes')" id="btn-tab-ordenes" class="tab-btn py-3.5 px-3 border-b-2 border-transparent font-medium text-xs text-slate-500 hover:text-slate-800 flex items-center gap-1.5">
                         <i class="fa-solid fa-file-lines"></i> Órdenes y Certificados PDF
                     </button>
+                    <button onclick="switchTab('tab-empresa')" id="btn-tab-empresa" class="tab-btn py-3.5 px-3 border-b-2 border-transparent font-medium text-xs text-slate-500 hover:text-slate-800 flex items-center gap-1.5">
+                        <i class="fa-solid fa-stamp text-amber-600"></i> Configuración Empresa & FIEL SAT
+                    </button>
                     <button onclick="switchTab('tab-clientes')" id="btn-tab-clientes" class="tab-btn py-3.5 px-3 border-b-2 border-transparent font-medium text-xs text-slate-500 hover:text-slate-800 flex items-center gap-1.5">
                         <i class="fa-solid fa-building"></i> Clientes Matriz y Sucursales
                     </button>
@@ -148,7 +154,7 @@
                     </div>
                     <h2 class="text-lg font-bold">Generador Automático de Órdenes y Certificados Mensuales</h2>
                     <p class="text-xs text-purple-200 max-w-3xl leading-relaxed">
-                        Diseñado para contratos recurrentes con decenas o cientos de unidades (ej. IMSS con 100+ unidades, OXXO, hospitales). Clona automáticamente la última configuración registrada de cada sucursal (químicos, dosis, plagas, procedimientos) actualizando las fechas de aplicación, vigencia a 30 días, y generando folios únicos consecutivos. Opcionalmente envía los certificados oficiales en PDF por correo electrónico.
+                        Diseñado para contratos recurrentes con decenas o cientos de unidades (ej. IMSS con 100+ unidades, OXXO, hospitales). Clona automáticamente la última configuración registrada de cada sucursal (químicos, dosis, plagas, procedimientos) actualizando las fechas de aplicación, vigencia a 30 días, y generando folios únicos consecutivos.
                     </p>
                 </div>
 
@@ -370,7 +376,7 @@
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                     <div>
                         <h2 class="text-base font-bold text-slate-900">Historial de Órdenes y Certificados</h2>
-                        <p class="text-xs text-slate-500">Duplica órdenes para renovación mensual, envía certificados por correo o imprime en PDF.</p>
+                        <p class="text-xs text-slate-500">Firma certificados manualmente con la e.firma del SAT, duplica para renovación mensual o envía por correo.</p>
                     </div>
                     <button onclick="loadOrders()" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg font-semibold flex items-center gap-1.5">
                         <i class="fa-solid fa-rotate"></i> Actualizar
@@ -384,8 +390,8 @@
                                 <th class="p-3">Folio Certificado</th>
                                 <th class="p-3">Cliente / Sucursal</th>
                                 <th class="p-3">Técnico</th>
-                                <th class="p-3">Fecha Servicio</th>
                                 <th class="p-3">Vigencia (30 Días)</th>
+                                <th class="p-3">Firma FIEL SAT</th>
                                 <th class="p-3 text-right">Acciones Rápidas</th>
                             </tr>
                         </thead>
@@ -395,7 +401,106 @@
             </div>
 
             <!-- ============================================================= -->
-            <!-- 5. PESTAÑA: CLIENTES MATRIZ Y SUCURSALES -->
+            <!-- 5. PESTAÑA: CONFIGURACIÓN DE EMPRESA Y FIEL SAT -->
+            <!-- ============================================================= -->
+            <div id="tab-empresa" class="p-6 space-y-6 hidden">
+                <div>
+                    <h2 class="text-base font-bold text-slate-900">Configuración de Empresa Emisora y Firma Electrónica (FIEL / e.firma del SAT)</h2>
+                    <p class="text-xs text-slate-500">Administra los datos sanitarios empresariales y carga los certificados criptográficos del SAT para la firma manual de certificados oficiales.</p>
+                </div>
+
+                <!-- Estado de la FIEL -->
+                <div id="fiel-status-card" class="bg-slate-50 p-5 rounded-2xl border border-slate-200 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                    <div class="flex items-center gap-3">
+                        <div id="fiel-status-icon" class="w-12 h-12 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center text-xl font-bold">
+                            <i class="fa-solid fa-key"></i>
+                        </div>
+                        <div>
+                            <h3 id="fiel-status-title" class="font-bold text-slate-900 text-sm">FIEL SAT no configurada</h3>
+                            <p id="fiel-status-desc" class="text-xs text-slate-500">Carga los archivos .cer y .key proporcionados por el SAT para habilitar la firma digital.</p>
+                        </div>
+                    </div>
+                    <div id="fiel-active-actions" class="hidden">
+                        <button onclick="handleRemoveFiel()" class="text-xs bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold px-3 py-2 rounded-lg border border-rose-200 transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-trash"></i> Eliminar FIEL
+                        </button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Formulario Cargar FIEL SAT -->
+                    <div class="bg-slate-50 p-5 rounded-xl border border-slate-200 space-y-4">
+                        <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2">
+                            <i class="fa-solid fa-file-shield text-amber-600"></i> Cargar / Actualizar e.firma (FIEL del SAT)
+                        </h3>
+                        <p class="text-xs text-slate-500">
+                            Sube el Certificado Público (<code>.cer</code>) y la Llave Privada (<code>.key</code>) junto con la contraseña. El sistema validará criptográficamente la correspondencia de llaves.
+                        </p>
+                        
+                        <form id="form-upload-fiel" onsubmit="handleUploadFiel(event)" class="space-y-3 text-xs">
+                            <div>
+                                <label class="block text-slate-700 font-semibold mb-1">Certificado Público (.cer) *</label>
+                                <input type="file" id="fiel-cer-file" accept=".cer,.crt,.der" required class="block w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-amber-100 file:text-amber-800 hover:file:bg-amber-200 cursor-pointer bg-white border border-slate-300 rounded-lg" />
+                            </div>
+                            <div>
+                                <label class="block text-slate-700 font-semibold mb-1">Llave Privada (.key) *</label>
+                                <input type="file" id="fiel-key-file" accept=".key,.pk8,.der" required class="block w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-amber-100 file:text-amber-800 hover:file:bg-amber-200 cursor-pointer bg-white border border-slate-300 rounded-lg" />
+                            </div>
+                            <div>
+                                <label class="block text-slate-700 font-semibold mb-1">Contraseña de la Llave Privada *</label>
+                                <input type="password" id="fiel-password" required placeholder="••••••••••••" class="w-full bg-white border border-slate-300 rounded-lg p-2" />
+                            </div>
+                            
+                            <button type="submit" id="btn-upload-fiel" class="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold py-2.5 rounded-lg text-xs flex items-center justify-center gap-2 shadow-sm transition">
+                                <i class="fa-solid fa-upload"></i> Guardar y Validar e.firma SAT
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Formulario Datos Generales Empresa -->
+                    <div class="bg-slate-50 p-5 rounded-xl border border-slate-200 space-y-4">
+                        <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2">
+                            <i class="fa-solid fa-building-circle-check text-brand-600"></i> Datos Sanitarios de la Empresa Emisora
+                        </h3>
+                        <p class="text-xs text-slate-500">
+                            Información corporativa impresa en los certificados conforme a la NOM-256-SSA1-2012.
+                        </p>
+
+                        <form id="form-company-settings" onsubmit="handleSaveCompanySettings(event)" class="space-y-3 text-xs">
+                            <div>
+                                <label class="block text-slate-700 font-semibold mb-1">Razón Social Emisora *</label>
+                                <input type="text" id="comp-name" required class="w-full bg-white border border-slate-300 rounded-lg p-2" />
+                            </div>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-slate-700 font-semibold mb-1">RFC Emisor *</label>
+                                    <input type="text" id="comp-rfc" required maxlength="13" class="w-full bg-white border border-slate-300 rounded-lg p-2 uppercase font-mono" />
+                                </div>
+                                <div>
+                                    <label class="block text-slate-700 font-semibold mb-1">Licencia Sanitaria *</label>
+                                    <input type="text" id="comp-license" required class="w-full bg-white border border-slate-300 rounded-lg p-2" />
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-slate-700 font-semibold mb-1">Responsable Sanitario *</label>
+                                    <input type="text" id="comp-resp-name" required class="w-full bg-white border border-slate-300 rounded-lg p-2" />
+                                </div>
+                                <div>
+                                    <label class="block text-slate-700 font-semibold mb-1">Cédula Profesional</label>
+                                    <input type="text" id="comp-resp-id" class="w-full bg-white border border-slate-300 rounded-lg p-2 font-mono" />
+                                </div>
+                            </div>
+                            <button type="submit" id="btn-save-company" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-2.5 rounded-lg text-xs transition">
+                                Guardar Datos de Empresa
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================================= -->
+            <!-- 6. PESTAÑA: CLIENTES MATRIZ Y SUCURSALES -->
             <!-- ============================================================= -->
             <div id="tab-clientes" class="p-6 space-y-6 hidden">
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -495,7 +600,7 @@
             </div>
 
             <!-- ============================================================= -->
-            <!-- 6. PESTAÑA: CATÁLOGO DE QUÍMICOS -->
+            <!-- 7. PESTAÑA: CATÁLOGO DE QUÍMICOS -->
             <!-- ============================================================= -->
             <div id="tab-quimicos" class="p-6 space-y-6 hidden">
                 <div class="bg-slate-50 p-5 rounded-xl border border-slate-200 space-y-3">
@@ -556,7 +661,7 @@
             </div>
 
             <!-- ============================================================= -->
-            <!-- 7. PESTAÑA: USUARIOS Y TÉCNICOS STPS DC-3 -->
+            <!-- 8. PESTAÑA: USUARIOS Y TÉCNICOS STPS DC-3 -->
             <!-- ============================================================= -->
             <div id="tab-usuarios" class="p-6 space-y-6 hidden">
                 <div class="bg-slate-50 p-5 rounded-xl border border-slate-200 space-y-3">
@@ -614,7 +719,7 @@
             </div>
 
             <!-- ============================================================= -->
-            <!-- 8. PESTAÑA: INGESTA MASIVA HISTÓRICA CSV -->
+            <!-- 9. PESTAÑA: INGESTA MASIVA HISTÓRICA CSV -->
             <!-- ============================================================= -->
             <div id="tab-importacion" class="p-6 space-y-6 hidden">
                 <div>
@@ -652,7 +757,7 @@
         <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-4 flex items-start gap-3">
             <i class="fa-solid fa-circle-check text-emerald-600 text-lg mt-0.5"></i>
             <div class="text-xs text-emerald-900 leading-relaxed">
-                <span class="font-bold">Acreditación Sanitaria y Legal:</span> Este sistema genera constancias bajo la <b>NOM-256-SSA1-2012</b>, calcula automáticamente la vigencia obligatoria a 30 días, registra ingredientes activos autorizados por <b>COFEPRIS/CICOPLAFEST</b> e incorpora el protocolo oficial de emergencias toxicológicas <b>SINTOX (01-800-0092800 / 800-009-2800)</b>.
+                <span class="font-bold">Acreditación Sanitaria y Legal:</span> Este sistema genera constancias bajo la <b>NOM-256-SSA1-2012</b>, calcula automáticamente la vigencia obligatoria a 30 días, registra ingredientes activos autorizados por <b>COFEPRIS/CICOPLAFEST</b>, permite firma digital avanzada con <b>e.firma / FIEL del SAT</b> e incorpora el protocolo oficial de emergencias toxicológicas <b>SINTOX (01-800-0092800 / 800-009-2800)</b>.
             </div>
         </div>
     </main>
@@ -772,6 +877,61 @@
         </div>
     </div>
 
+    <!-- ============================================================= -->
+    <!-- MODAL 3: FIRMA DIGITAL MANUAL CON FIEL DEL SAT -->
+    <!-- ============================================================= -->
+    <div id="modal-sign" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-200">
+            <div class="bg-gradient-to-r from-amber-900 to-amber-700 p-4 text-white flex justify-between items-center">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 bg-amber-500/30 rounded-lg flex items-center justify-center font-bold text-amber-200">
+                        <i class="fa-solid fa-stamp"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-sm">Firma Electrónica Manual (e.firma SAT)</h3>
+                        <p id="sign-modal-folio" class="text-[11px] text-amber-200">Certificado</p>
+                    </div>
+                </div>
+                <button onclick="closeSignModal()" class="text-white/80 hover:text-white text-base">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <form id="form-sign-certificate" onsubmit="handleSignSubmit(event)" class="p-5 space-y-4 text-xs">
+                <input type="hidden" id="sign-cert-id" />
+
+                <div class="bg-amber-50 border border-amber-200 p-3.5 rounded-xl space-y-1 text-amber-900">
+                    <p class="font-bold flex items-center gap-1.5">
+                        <i class="fa-solid fa-triangle-exclamation text-amber-600"></i> Firma Oficial Criptográfica
+                    </p>
+                    <p class="text-[11px] leading-relaxed text-amber-800">
+                        Al firmar manualmente este certificado, se estampará el <b>Sello Digital RSA-SHA256</b>, la <b>Cadena Original</b> y el <b>Código QR</b> con validez legal ante COFEPRIS y Protección Civil.
+                    </p>
+                </div>
+
+                <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 space-y-1">
+                    <p class="font-bold text-slate-700">Sucursal / Unidad:</p>
+                    <p id="sign-branch-info" class="text-slate-600 font-medium"></p>
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Contraseña de la Llave Privada (.key) *</label>
+                    <input type="password" id="sign-password" required placeholder="Ingresa tu contraseña de FIEL para autorizar" class="w-full bg-white border border-slate-300 rounded-lg p-2.5" />
+                    <p class="text-[10px] text-slate-400 mt-1">La contraseña es requerida para desencriptar la llave privada y estampar la firma.</p>
+                </div>
+
+                <div id="sign-status-msg" class="hidden p-3 rounded-lg text-xs"></div>
+
+                <div class="flex justify-end gap-2 pt-2 border-t border-slate-100">
+                    <button type="button" onclick="closeSignModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-lg">Cancelar</button>
+                    <button type="submit" id="btn-submit-sign" class="px-5 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-lg flex items-center gap-1.5 shadow">
+                        <i class="fa-solid fa-stamp"></i> Estampar Firma Digital SAT
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- SCRIPT JS DE CONTROL COMPLETO -->
     <script>
         let cachedBranches = [];
@@ -779,6 +939,8 @@
         let cachedChemicals = [];
         let cachedClients = [];
         let cachedOrders = [];
+        let cachedCompany = null;
+        let cachedFielStatus = null;
 
         function switchTab(tabId) {
             document.querySelectorAll('[id^="tab-"]').forEach(el => el.classList.add('hidden'));
@@ -797,6 +959,7 @@
             if(tabId === 'tab-vencimientos') loadDashboardData();
             if(tabId === 'tab-masivo') prepareMonthlyBatchForm();
             if(tabId === 'tab-ordenes') loadOrders();
+            if(tabId === 'tab-empresa') loadCompanySettingsAndFiel();
             if(tabId === 'tab-clientes') loadClientsAndBranches();
             if(tabId === 'tab-quimicos') loadChemicals();
             if(tabId === 'tab-usuarios') loadUsers();
@@ -817,8 +980,26 @@
             } catch(e) { console.error(e); }
         }
 
+        async function loadFielTopBadge() {
+            try {
+                const res = await fetch('/api/v1/company/fiel');
+                if(!res.ok) return;
+                const fiel = await res.json();
+                cachedFielStatus = fiel;
+                const badge = document.getElementById('top-fiel-status-badge');
+                if (fiel.is_configured && fiel.is_active && !fiel.is_expired) {
+                    badge.className = "inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-950 text-emerald-300 border border-emerald-800";
+                    badge.innerHTML = `<span class="w-2 h-2 mr-1.5 bg-emerald-400 rounded-full"></span> e.firma SAT Activa (${fiel.rfc || 'FIEL'})`;
+                } else {
+                    badge.className = "inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-950 text-amber-300 border border-amber-800";
+                    badge.innerHTML = `<span class="w-2 h-2 mr-1.5 bg-amber-400 rounded-full"></span> e.firma SAT Pendiente`;
+                }
+            } catch(e) { console.error(e); }
+        }
+
         async function loadDashboardData() {
             loadSummaryStats();
+            loadFielTopBadge();
             try {
                 const res = await fetch('/api/v1/dashboard/expirations');
                 const data = await res.json();
@@ -909,17 +1090,30 @@
                 tbody.innerHTML = cachedOrders.map(o => {
                     const branchName = o.branch ? o.branch.name : 'N/A';
                     const branchEmail = o.branch && o.branch.responsible_contact_email ? o.branch.responsible_contact_email : '';
-                    const certFolio = o.certificate ? o.certificate.certificate_folio : 'N/A';
+                    const cert = o.certificate;
+                    const certFolio = cert ? cert.certificate_folio : 'N/A';
+                    const certId = cert ? cert.id : null;
+                    const isSigned = cert && cert.is_signed;
+
+                    let signBadge = isSigned
+                        ? `<span class="inline-flex items-center gap-1 bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded text-[10px]"><i class="fa-solid fa-certificate text-emerald-600"></i> Firmado SAT</span>`
+                        : `<span class="inline-flex items-center gap-1 bg-amber-100 text-amber-800 font-semibold px-2 py-0.5 rounded text-[10px]"><i class="fa-solid fa-clock text-amber-600"></i> Borrador (Sin Firmar)</span>`;
+
                     return `
                         <tr class="hover:bg-slate-50">
                             <td class="p-3 font-mono font-bold text-slate-900">${o.folio}</td>
                             <td class="p-3 font-mono text-slate-600">${certFolio}</td>
                             <td class="p-3 font-medium text-slate-800">${branchName}</td>
                             <td class="p-3 text-slate-600">${o.technician ? o.technician.full_name : 'N/A'}</td>
-                            <td class="p-3 text-slate-600">${new Date(o.service_start_date).toLocaleDateString()}</td>
-                            <td class="p-3 text-slate-600">${o.certificate ? o.certificate.validity_end_date : 'N/A'}</td>
+                            <td class="p-3 text-slate-600">${cert ? cert.validity_start_date + ' al ' + cert.validity_end_date : 'N/A'}</td>
+                            <td class="p-3">${signBadge}</td>
                             <td class="p-3 text-right">
                                 <div class="inline-flex items-center gap-1.5">
+                                    ${certId ? `
+                                        <button onclick="openSignModal('${certId}', '${certFolio}', '${branchName.replace(/'/g, "\\'")}')" title="Firmar manualmente con FIEL SAT" class="bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold px-2 py-1 rounded border border-amber-200 flex items-center gap-1">
+                                            <i class="fa-solid fa-stamp"></i> ${isSigned ? 'Re-Firmar' : 'Firmar FIEL'}
+                                        </button>
+                                    ` : ''}
                                     <button onclick="openDuplicateModal('${o.id}', '${o.folio}', '${branchName.replace(/'/g, "\\'")}', '${branchEmail}')" title="Duplicar para nuevo mes" class="bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold px-2 py-1 rounded border border-purple-200 flex items-center gap-1">
                                         <i class="fa-solid fa-clone"></i> Duplicar Mes
                                     </button>
@@ -935,6 +1129,203 @@
                     `;
                 }).join('');
             } catch(e) { console.error(e); }
+        }
+
+        // =============================================================
+        // CONFIGURACIÓN DE EMPRESA Y FIEL SAT
+        // =============================================================
+        async function loadCompanySettingsAndFiel() {
+            try {
+                const [resComp, resFiel] = await Promise.all([
+                    fetch('/api/v1/company/settings'),
+                    fetch('/api/v1/company/fiel')
+                ]);
+                cachedCompany = await resComp.json();
+                cachedFielStatus = await resFiel.json();
+
+                // Llenar formulario de datos de empresa
+                document.getElementById('comp-name').value = cachedCompany.company_name || '';
+                document.getElementById('comp-rfc').value = cachedCompany.company_rfc || '';
+                document.getElementById('comp-license').value = cachedCompany.sanitary_license_number || '';
+                document.getElementById('comp-resp-name').value = cachedCompany.sanitary_responsible_name || '';
+                document.getElementById('comp-resp-id').value = cachedCompany.sanitary_responsible_id || '';
+
+                // Actualizar tarjeta de estado de la FIEL
+                const card = document.getElementById('fiel-status-card');
+                const icon = document.getElementById('fiel-status-icon');
+                const title = document.getElementById('fiel-status-title');
+                const desc = document.getElementById('fiel-status-desc');
+                const actions = document.getElementById('fiel-active-actions');
+
+                if (cachedFielStatus.is_configured && cachedFielStatus.is_active && !cachedFielStatus.is_expired) {
+                    card.className = "bg-emerald-50 p-5 rounded-2xl border border-emerald-200 flex flex-col md:flex-row items-start md:items-center justify-between gap-4";
+                    icon.className = "w-12 h-12 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-xl font-bold";
+                    icon.innerHTML = '<i class="fa-solid fa-shield-check"></i>';
+                    title.className = "font-bold text-emerald-950 text-sm";
+                    title.innerText = `e.firma del SAT Activa y Verificada - ${cachedFielStatus.rfc || ''}`;
+                    desc.className = "text-xs text-emerald-800 mt-0.5 leading-relaxed";
+                    desc.innerHTML = `<b>Titular:</b> ${cachedFielStatus.holder_name || 'Empresa'} &nbsp;|&nbsp; ` +
+                        `<b>Serie SAT:</b> ${cachedFielStatus.serial_number || 'N/A'} &nbsp;|&nbsp; ` +
+                        `<b>Vigencia:</b> Hasta ${cachedFielStatus.valid_to ? new Date(cachedFielStatus.valid_to).toLocaleDateString() : 'N/A'}`;
+                    actions.classList.remove('hidden');
+                } else if (cachedFielStatus.is_expired) {
+                    card.className = "bg-rose-50 p-5 rounded-2xl border border-rose-200 flex flex-col md:flex-row items-start md:items-center justify-between gap-4";
+                    icon.className = "w-12 h-12 rounded-xl bg-rose-100 text-rose-700 flex items-center justify-center text-xl font-bold";
+                    icon.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i>';
+                    title.className = "font-bold text-rose-950 text-sm";
+                    title.innerText = "e.firma del SAT Expirada";
+                    desc.className = "text-xs text-rose-800 mt-0.5";
+                    desc.innerText = "El certificado cargado ha expirado. Por favor sube tus archivos .cer y .key actualizados.";
+                    actions.classList.remove('hidden');
+                } else {
+                    card.className = "bg-amber-50 p-5 rounded-2xl border border-amber-200 flex flex-col md:flex-row items-start md:items-center justify-between gap-4";
+                    icon.className = "w-12 h-12 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center text-xl font-bold";
+                    icon.innerHTML = '<i class="fa-solid fa-key"></i>';
+                    title.className = "font-bold text-amber-950 text-sm";
+                    title.innerText = "FIEL / e.firma del SAT no configurada";
+                    desc.className = "text-xs text-amber-800 mt-0.5";
+                    desc.innerText = "Carga tu archivo de Certificado (.cer), Llave Privada (.key) y contraseña para estampar firmas electrónicas en certificados.";
+                    actions.classList.add('hidden');
+                }
+                loadFielTopBadge();
+            } catch(e) { console.error(e); }
+        }
+
+        async function handleSaveCompanySettings(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btn-save-company');
+            btn.disabled = true;
+            btn.innerText = 'Guardando...';
+
+            const payload = {
+                company_name: document.getElementById('comp-name').value,
+                company_rfc: document.getElementById('comp-rfc').value.toUpperCase(),
+                sanitary_license_number: document.getElementById('comp-license').value,
+                sanitary_responsible_name: document.getElementById('comp-resp-name').value,
+                sanitary_responsible_id: document.getElementById('comp-resp-id').value || null
+            };
+
+            try {
+                const res = await fetch('/api/v1/company/settings', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if(!res.ok) throw new Error(data.detail || 'Error al guardar');
+                alert('Datos de la empresa actualizados exitosamente.');
+                loadCompanySettingsAndFiel();
+            } catch(err) {
+                alert('Error: ' + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerText = 'Guardar Datos de Empresa';
+            }
+        }
+
+        async function handleUploadFiel(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btn-upload-fiel');
+            const cerFile = document.getElementById('fiel-cer-file').files[0];
+            const keyFile = document.getElementById('fiel-key-file').files[0];
+            const pwd = document.getElementById('fiel-password').value;
+
+            if(!cerFile || !keyFile || !pwd) {
+                alert('Por favor selecciona ambos archivos (.cer y .key) e ingresa la contraseña.');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Validando Criptográficamente...';
+
+            const formData = new FormData();
+            formData.append('certificate_file', cerFile);
+            formData.append('private_key_file', keyFile);
+            formData.append('password', pwd);
+
+            try {
+                const res = await fetch('/api/v1/company/fiel/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+                if(!res.ok) throw new Error(data.detail || 'Error al validar FIEL');
+                alert(`¡e.firma del SAT cargada y validada con éxito!\nRFC: ${data.rfc}\nTitular: ${data.holder_name}\nNo. Serie: ${data.serial_number}`);
+                document.getElementById('form-upload-fiel').reset();
+                loadCompanySettingsAndFiel();
+            } catch(err) {
+                alert('Error en FIEL: ' + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-upload"></i> Guardar y Validar e.firma SAT';
+            }
+        }
+
+        async function handleRemoveFiel() {
+            if(!confirm('¿Estás seguro de que deseas eliminar la FIEL del SAT guardada?')) return;
+            try {
+                const res = await fetch('/api/v1/company/fiel', { method: 'DELETE' });
+                if(res.ok) {
+                    alert('FIEL eliminada.');
+                    loadCompanySettingsAndFiel();
+                }
+            } catch(e) { alert('Error: ' + e.message); }
+        }
+
+        // =============================================================
+        // MODAL DE FIRMA DIGITAL MANUAL
+        // =============================================================
+        function openSignModal(certId, folio, branchName) {
+            document.getElementById('sign-cert-id').value = certId;
+            document.getElementById('sign-modal-folio').innerText = `Certificado: ${folio}`;
+            document.getElementById('sign-branch-info').innerText = branchName;
+            document.getElementById('sign-password').value = '';
+            const msg = document.getElementById('sign-status-msg');
+            msg.classList.add('hidden');
+            msg.innerText = '';
+            document.getElementById('modal-sign').classList.remove('hidden');
+        }
+
+        function closeSignModal() {
+            document.getElementById('modal-sign').classList.add('hidden');
+        }
+
+        async function handleSignSubmit(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btn-submit-sign');
+            const certId = document.getElementById('sign-cert-id').value;
+            const pwd = document.getElementById('sign-password').value;
+            const msg = document.getElementById('sign-status-msg');
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Estampando Firma Criptográfica...';
+            msg.classList.add('hidden');
+
+            try {
+                const res = await fetch(`/api/v1/certificates/${certId}/sign`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password: pwd })
+                });
+                const data = await res.json();
+                if(!res.ok) throw new Error(data.detail || 'Error al firmar certificado');
+
+                msg.className = "p-3 rounded-lg text-xs bg-emerald-50 text-emerald-800 border border-emerald-200";
+                msg.innerHTML = `<b>¡Certificado Firmado Exitosamente!</b><br/>Serie SAT: ${data.certificate_serial_number}<br/>Sello generado con validez NOM-256.`;
+                msg.classList.remove('hidden');
+
+                setTimeout(() => {
+                    closeSignModal();
+                    loadOrders();
+                }, 1800);
+            } catch(err) {
+                msg.className = "p-3 rounded-lg text-xs bg-rose-50 text-rose-800 border border-rose-200";
+                msg.innerText = 'Error al firmar: ' + err.message;
+                msg.classList.remove('hidden');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-stamp"></i> Estampar Firma Digital SAT';
+            }
         }
 
         async function prepareMonthlyBatchForm() {
