@@ -206,6 +206,8 @@ class ChemicalBase(BaseModel):
     safety_interval_hours: int = Field(default=2, ge=0)
     compatible_methods: str = Field(..., max_length=255)
     toxicological_category: str = Field(..., max_length=50)
+    technical_sheet_url: Optional[str] = None
+    safety_sheet_url: Optional[str] = None
 
 
 class ChemicalCreate(ChemicalBase):
@@ -220,6 +222,8 @@ class ChemicalUpdate(BaseModel):
     safety_interval_hours: Optional[int] = None
     compatible_methods: Optional[str] = None
     toxicological_category: Optional[str] = None
+    technical_sheet_url: Optional[str] = None
+    safety_sheet_url: Optional[str] = None
 
 
 class ChemicalResponse(ChemicalBase):
@@ -290,6 +294,8 @@ class RSCOSearchResult(BaseModel):
     toxicological_category: str
     in_local_catalog: bool = False
     local_id: Optional[uuid.UUID] = None
+    technical_sheet_url: Optional[str] = None
+    safety_sheet_url: Optional[str] = None
 
 
 class ServiceOrderCreate(BaseModel):
@@ -505,6 +511,8 @@ class RSCOItemBase(BaseModel):
     toxicological_category: str = Field(default="Banda Verde / Precaución", max_length=100)
     safety_interval_hours: int = Field(default=2, ge=0)
     is_active: bool = True
+    technical_sheet_url: Optional[str] = None
+    safety_sheet_url: Optional[str] = None
 
 
 class RSCOItemCreate(RSCOItemBase):
@@ -522,6 +530,8 @@ class RSCOItemUpdate(BaseModel):
     toxicological_category: Optional[str] = None
     safety_interval_hours: Optional[int] = None
     is_active: Optional[bool] = None
+    technical_sheet_url: Optional[str] = None
+    safety_sheet_url: Optional[str] = None
 
 
 class RSCOItemResponse(RSCOItemBase):

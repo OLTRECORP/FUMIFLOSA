@@ -40,6 +40,12 @@ def startup_db_sync():
             # Columnas para chemicals
             conn.execute(text("ALTER TABLE chemicals ADD COLUMN IF NOT EXISTS toxicological_category VARCHAR(50);"))
             conn.execute(text("ALTER TABLE chemicals ADD COLUMN IF NOT EXISTS compatible_methods VARCHAR(255);"))
+            conn.execute(text("ALTER TABLE chemicals ADD COLUMN IF NOT EXISTS technical_sheet_url VARCHAR(500);"))
+            conn.execute(text("ALTER TABLE chemicals ADD COLUMN IF NOT EXISTS safety_sheet_url VARCHAR(500);"))
+
+            # Columnas para rsco_items
+            conn.execute(text("ALTER TABLE rsco_items ADD COLUMN IF NOT EXISTS technical_sheet_url VARCHAR(500);"))
+            conn.execute(text("ALTER TABLE rsco_items ADD COLUMN IF NOT EXISTS safety_sheet_url VARCHAR(500);"))
             
             # Columnas para certificates (Cancelación)
             conn.execute(text("ALTER TABLE certificates ADD COLUMN IF NOT EXISTS is_cancelled BOOLEAN DEFAULT FALSE;"))

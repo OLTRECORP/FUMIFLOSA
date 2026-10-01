@@ -185,6 +185,8 @@ class Chemical(Base, TimestampMixin, SoftDeleteMixin):
     safety_interval_hours: Mapped[int] = mapped_column(Integer, default=2, nullable=False)  # Tiempo de reentrada
     compatible_methods: Mapped[str] = mapped_column(String(255), nullable=False)  # ej. "Aspersión, Nebulización UBV"
     toxicological_category: Mapped[str] = mapped_column(String(50), nullable=False)  # ej. "Banda Verde / Precaución"
+    technical_sheet_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)  # URL oficial Ficha Técnica
+    safety_sheet_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)  # URL oficial Hoja de Seguridad HDS
 
 
 # ============================================================================
@@ -307,6 +309,8 @@ class RSCOItem(Base, TimestampMixin, SoftDeleteMixin):
     toxicological_category: Mapped[str] = mapped_column(String(100), nullable=False, default="Banda Verde / Precaución")
     safety_interval_hours: Mapped[int] = mapped_column(Integer, default=2, nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    technical_sheet_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    safety_sheet_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
 
 
 # ============================================================================

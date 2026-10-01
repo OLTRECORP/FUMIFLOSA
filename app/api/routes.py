@@ -1,11 +1,12 @@
 import io
+import re
 import uuid
 import zipfile
 from datetime import datetime, date, timedelta, timezone
 from typing import List, Optional, Dict, Any
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, status, Header
-from fastapi.responses import Response, StreamingResponse
+from fastapi.responses import Response, StreamingResponse, RedirectResponse
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import select, func, or_, and_, desc
 
@@ -39,6 +40,11 @@ from app.services.data_import import HistoricalDataImporter
 from app.services.pdf_service import OfficialCertificatePDFGenerator, OfficialWorkOrderPDFGenerator, BitacoraPDFGenerator
 from app.services.backup_service import SystemBackupRestoreService
 from app.services.mip_service import get_mip_full_manual, get_pest_combat_guides, seed_default_rsco_items
+from app.services.pesticide_sheet_service import (
+    lookup_online_sheets_by_rsco,
+    OfficialTechnicalSheetPDFGenerator,
+    OfficialSafetyDataSheetPDFGenerator
+)
 
 router = APIRouter(prefix="/api/v1", tags=["FUMIFLOSA Core"])
 
@@ -948,6 +954,7 @@ def search_rsco_chemicals(q: str = "", db: Session = Depends(get_db)):
         for ri in rsco_query.limit(40).all():
             rsco_norm = ri.cicoplafest_number.strip().upper()
             seen_rsco.add(rsco_norm)
+            sheet_info = lookup_online_sheets_by_rsco(ri.cicoplafest_number, ri.commercial_name)
             results.append(RSCOSearchResult(
                 commercial_name=f"{ri.commercial_name} ({ri.manufacturer})",
                 active_ingredient=ri.active_ingredient,
@@ -957,7 +964,9 @@ def search_rsco_chemicals(q: str = "", db: Session = Depends(get_db)):
                 compatible_methods=f"Formulación: {ri.formulation}",
                 toxicological_category=ri.toxicological_category,
                 in_local_catalog=True,
-                local_id=ri.id
+                local_id=ri.id,
+                technical_sheet_url=ri.technical_sheet_url or sheet_info.get("technical_sheet_url"),
+                safety_sheet_url=ri.safety_sheet_url or sheet_info.get("safety_sheet_url")
             ))
     except Exception as e:
         print(f"[RSCO SEARCH WARNING]: {e}")
@@ -978,6 +987,7 @@ def search_rsco_chemicals(q: str = "", db: Session = Depends(get_db)):
             if rsco_norm in seen_rsco:
                 continue
             seen_rsco.add(rsco_norm)
+            sheet_info = lookup_online_sheets_by_rsco(lc.cicoplafest_number, lc.commercial_name)
             results.append(RSCOSearchResult(
                 commercial_name=lc.commercial_name,
                 active_ingredient=lc.active_ingredient,
@@ -987,7 +997,9 @@ def search_rsco_chemicals(q: str = "", db: Session = Depends(get_db)):
                 compatible_methods=lc.compatible_methods,
                 toxicological_category=lc.toxicological_category,
                 in_local_catalog=True,
-                local_id=lc.id
+                local_id=lc.id,
+                technical_sheet_url=lc.technical_sheet_url or sheet_info.get("technical_sheet_url"),
+                safety_sheet_url=lc.safety_sheet_url or sheet_info.get("safety_sheet_url")
             ))
     except Exception as e:
         print(f"[LOCAL CHEMS SEARCH WARNING]: {e}")
@@ -1002,6 +1014,7 @@ def search_rsco_chemicals(q: str = "", db: Session = Depends(get_db)):
             search_term in ref["active_ingredient"].lower() or
             search_term in ref["cicoplafest_number"].lower()
         ):
+            sheet_info = lookup_online_sheets_by_rsco(ref["cicoplafest_number"], ref["commercial_name"])
             results.append(RSCOSearchResult(
                 commercial_name=ref["commercial_name"],
                 active_ingredient=ref["active_ingredient"],
@@ -1011,7 +1024,9 @@ def search_rsco_chemicals(q: str = "", db: Session = Depends(get_db)):
                 compatible_methods=ref["compatible_methods"],
                 toxicological_category=ref["toxicological_category"],
                 in_local_catalog=False,
-                local_id=None
+                local_id=None,
+                technical_sheet_url=sheet_info.get("technical_sheet_url"),
+                safety_sheet_url=sheet_info.get("safety_sheet_url")
             ))
             seen_rsco.add(rsco_norm)
 
@@ -1029,6 +1044,15 @@ def create_chemical(payload: ChemicalCreate, db: Session = Depends(get_db)):
     if existing:
         raise HTTPException(status_code=400, detail="El número de registro CICOPLAFEST ya existe.")
 
+    tech_url = payload.technical_sheet_url
+    safe_url = payload.safety_sheet_url
+    if not tech_url or not safe_url:
+        lookup_data = lookup_online_sheets_by_rsco(payload.cicoplafest_number, payload.commercial_name)
+        if not tech_url:
+            tech_url = lookup_data.get("technical_sheet_url")
+        if not safe_url:
+            safe_url = lookup_data.get("safety_sheet_url")
+
     chem = Chemical(
         commercial_name=payload.commercial_name,
         active_ingredient=payload.active_ingredient,
@@ -1036,7 +1060,9 @@ def create_chemical(payload: ChemicalCreate, db: Session = Depends(get_db)):
         authorized_dose_per_liter=payload.authorized_dose_per_liter,
         safety_interval_hours=payload.safety_interval_hours,
         compatible_methods=payload.compatible_methods,
-        toxicological_category=payload.toxicological_category
+        toxicological_category=payload.toxicological_category,
+        technical_sheet_url=tech_url,
+        safety_sheet_url=safe_url
     )
     db.add(chem)
     db.commit()
@@ -1054,6 +1080,13 @@ def update_chemical(chemical_id: uuid.UUID, payload: ChemicalUpdate, db: Session
     for key, value in update_data.items():
         setattr(chem, key, value)
 
+    if not chem.technical_sheet_url or not chem.safety_sheet_url:
+        lookup_data = lookup_online_sheets_by_rsco(chem.cicoplafest_number, chem.commercial_name)
+        if not chem.technical_sheet_url:
+            chem.technical_sheet_url = lookup_data.get("technical_sheet_url")
+        if not chem.safety_sheet_url:
+            chem.safety_sheet_url = lookup_data.get("safety_sheet_url")
+
     db.commit()
     db.refresh(chem)
     return chem
@@ -1067,6 +1100,334 @@ def delete_chemical(chemical_id: uuid.UUID, db: Session = Depends(get_db)):
     chem.soft_delete()
     db.commit()
     return None
+
+
+# ----------------------------------------------------------------------------
+# ENDPOINTS DE FICHAS TÉCNICAS Y HOJAS DE SEGURIDAD (HDS NOM-018 / NOM-256)
+# ----------------------------------------------------------------------------
+
+@router.get("/chemicals/sheets/lookup")
+def lookup_chemical_sheets(rsco: str = "", name: str = ""):
+    """Obtiene en línea la información técnica, enlaces de descarga y HDS según folio RSCO o nombre."""
+    return lookup_online_sheets_by_rsco(rsco=rsco, commercial_name=name)
+
+
+@router.get("/chemicals/{chemical_id}/technical-sheet")
+def download_chemical_technical_sheet(
+    chemical_id: uuid.UUID,
+    redirect: bool = False,
+    db: Session = Depends(get_db)
+):
+    """
+    Descarga o visualiza la Ficha Técnica Oficial del plaguicida conforme a NOM-256.
+    Si redirect=True y tiene enlace externo oficial directo, redirige al PDF del fabricante.
+    De lo contrario, genera el PDF oficial estructurado del sistema.
+    """
+    chem = db.query(Chemical).filter(Chemical.id == chemical_id, Chemical.is_deleted == False).first()
+    if not chem:
+        raise HTTPException(status_code=404, detail="Químico no encontrado.")
+
+    if redirect and chem.technical_sheet_url and chem.technical_sheet_url.startswith("http"):
+        return RedirectResponse(url=chem.technical_sheet_url, status_code=302)
+
+    company = db.query(CompanyConfig).first()
+    sheet_data = lookup_online_sheets_by_rsco(chem.cicoplafest_number, chem.commercial_name)
+    merged = {
+        **sheet_data,
+        "commercial_name": chem.commercial_name,
+        "active_ingredient": chem.active_ingredient,
+        "cicoplafest_number": chem.cicoplafest_number,
+        "authorized_dose_per_liter": chem.authorized_dose_per_liter,
+        "safety_interval_hours": chem.safety_interval_hours,
+        "compatible_methods": chem.compatible_methods,
+        "toxicological_category": chem.toxicological_category,
+        "technical_sheet_url": chem.technical_sheet_url or sheet_data.get("technical_sheet_url"),
+        "safety_sheet_url": chem.safety_sheet_url or sheet_data.get("safety_sheet_url")
+    }
+
+    pdf_bytes = OfficialTechnicalSheetPDFGenerator.generate(merged, company)
+    safe_name = re.sub(r'[^a-zA-Z0-9_-]', '_', chem.commercial_name)
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'inline; filename="Ficha_Tecnica_{safe_name}.pdf"'}
+    )
+
+
+@router.get("/chemicals/{chemical_id}/safety-sheet")
+def download_chemical_safety_sheet(
+    chemical_id: uuid.UUID,
+    redirect: bool = False,
+    db: Session = Depends(get_db)
+):
+    """
+    Descarga o visualiza la Hoja de Datos de Seguridad (HDS) oficial en 16 secciones
+    conforme a la NOM-018-STPS-2015 (Sistema Globalmente Armonizado / SGA) y NOM-256-SSA1-2012.
+    """
+    chem = db.query(Chemical).filter(Chemical.id == chemical_id, Chemical.is_deleted == False).first()
+    if not chem:
+        raise HTTPException(status_code=404, detail="Químico no encontrado.")
+
+    if redirect and chem.safety_sheet_url and chem.safety_sheet_url.startswith("http"):
+        return RedirectResponse(url=chem.safety_sheet_url, status_code=302)
+
+    company = db.query(CompanyConfig).first()
+    sheet_data = lookup_online_sheets_by_rsco(chem.cicoplafest_number, chem.commercial_name)
+    merged = {
+        **sheet_data,
+        "commercial_name": chem.commercial_name,
+        "active_ingredient": chem.active_ingredient,
+        "cicoplafest_number": chem.cicoplafest_number,
+        "authorized_dose_per_liter": chem.authorized_dose_per_liter,
+        "safety_interval_hours": chem.safety_interval_hours,
+        "compatible_methods": chem.compatible_methods,
+        "toxicological_category": chem.toxicological_category,
+        "technical_sheet_url": chem.technical_sheet_url or sheet_data.get("technical_sheet_url"),
+        "safety_sheet_url": chem.safety_sheet_url or sheet_data.get("safety_sheet_url")
+    }
+
+    pdf_bytes = OfficialSafetyDataSheetPDFGenerator.generate(merged, company)
+    safe_name = re.sub(r'[^a-zA-Z0-9_-]', '_', chem.commercial_name)
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'inline; filename="HDS_{safe_name}.pdf"'}
+    )
+
+
+@router.get("/rsco/items/{item_id}/technical-sheet")
+def download_rsco_item_technical_sheet(
+    item_id: uuid.UUID,
+    redirect: bool = False,
+    db: Session = Depends(get_db)
+):
+    """Descarga la Ficha Técnica Oficial de un registro del Catálogo RSCO en Línea."""
+    item = db.query(RSCOItem).filter(RSCOItem.id == item_id, RSCOItem.is_deleted == False).first()
+    if not item:
+        raise HTTPException(status_code=404, detail="Registro RSCO no encontrado.")
+
+    if redirect and item.technical_sheet_url and item.technical_sheet_url.startswith("http"):
+        return RedirectResponse(url=item.technical_sheet_url, status_code=302)
+
+    company = db.query(CompanyConfig).first()
+    sheet_data = lookup_online_sheets_by_rsco(item.cicoplafest_number, item.commercial_name)
+    merged = {
+        **sheet_data,
+        "commercial_name": item.commercial_name,
+        "active_ingredient": item.active_ingredient,
+        "cicoplafest_number": item.cicoplafest_number,
+        "authorized_dose": item.authorized_dose,
+        "safety_interval_hours": item.safety_interval_hours,
+        "formulation": item.formulation,
+        "manufacturer": item.manufacturer,
+        "target_pests": item.target_pests,
+        "toxicological_category": item.toxicological_category,
+        "technical_sheet_url": item.technical_sheet_url or sheet_data.get("technical_sheet_url"),
+        "safety_sheet_url": item.safety_sheet_url or sheet_data.get("safety_sheet_url")
+    }
+
+    pdf_bytes = OfficialTechnicalSheetPDFGenerator.generate(merged, company)
+    safe_name = re.sub(r'[^a-zA-Z0-9_-]', '_', item.commercial_name)
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'inline; filename="Ficha_Tecnica_RSCO_{safe_name}.pdf"'}
+    )
+
+
+@router.get("/rsco/items/{item_id}/safety-sheet")
+def download_rsco_item_safety_sheet(
+    item_id: uuid.UUID,
+    redirect: bool = False,
+    db: Session = Depends(get_db)
+):
+    """Descarga la Hoja de Datos de Seguridad (HDS NOM-018-STPS) de un registro del Catálogo RSCO."""
+    item = db.query(RSCOItem).filter(RSCOItem.id == item_id, RSCOItem.is_deleted == False).first()
+    if not item:
+        raise HTTPException(status_code=404, detail="Registro RSCO no encontrado.")
+
+    if redirect and item.safety_sheet_url and item.safety_sheet_url.startswith("http"):
+        return RedirectResponse(url=item.safety_sheet_url, status_code=302)
+
+    company = db.query(CompanyConfig).first()
+    sheet_data = lookup_online_sheets_by_rsco(item.cicoplafest_number, item.commercial_name)
+    merged = {
+        **sheet_data,
+        "commercial_name": item.commercial_name,
+        "active_ingredient": item.active_ingredient,
+        "cicoplafest_number": item.cicoplafest_number,
+        "authorized_dose": item.authorized_dose,
+        "safety_interval_hours": item.safety_interval_hours,
+        "formulation": item.formulation,
+        "manufacturer": item.manufacturer,
+        "target_pests": item.target_pests,
+        "toxicological_category": item.toxicological_category,
+        "technical_sheet_url": item.technical_sheet_url or sheet_data.get("technical_sheet_url"),
+        "safety_sheet_url": item.safety_sheet_url or sheet_data.get("safety_sheet_url")
+    }
+
+    pdf_bytes = OfficialSafetyDataSheetPDFGenerator.generate(merged, company)
+    safe_name = re.sub(r'[^a-zA-Z0-9_-]', '_', item.commercial_name)
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'inline; filename="HDS_RSCO_{safe_name}.pdf"'}
+    )
+
+
+@router.get("/rsco/by-code/technical-sheet")
+def download_rsco_code_technical_sheet(
+    rsco: str,
+    name: str = "",
+    redirect: bool = False,
+    db: Session = Depends(get_db)
+):
+    """Obtiene y descarga la Ficha Técnica Oficial directamente por código RSCO."""
+    # Buscar si existe en BD primero
+    norm_rsco = rsco.strip()
+    item = db.query(RSCOItem).filter(RSCOItem.cicoplafest_number == norm_rsco, RSCOItem.is_deleted == False).first()
+    chem = db.query(Chemical).filter(Chemical.cicoplafest_number == norm_rsco, Chemical.is_deleted == False).first() if not item else None
+
+    company = db.query(CompanyConfig).first()
+    sheet_data = lookup_online_sheets_by_rsco(norm_rsco, name or (chem.commercial_name if chem else (item.commercial_name if item else "")))
+
+    if chem:
+        sheet_data.update({
+            "commercial_name": chem.commercial_name,
+            "active_ingredient": chem.active_ingredient,
+            "cicoplafest_number": chem.cicoplafest_number,
+            "authorized_dose_per_liter": chem.authorized_dose_per_liter,
+            "safety_interval_hours": chem.safety_interval_hours
+        })
+    elif item:
+        sheet_data.update({
+            "commercial_name": item.commercial_name,
+            "active_ingredient": item.active_ingredient,
+            "cicoplafest_number": item.cicoplafest_number,
+            "authorized_dose": item.authorized_dose,
+            "safety_interval_hours": item.safety_interval_hours
+        })
+
+    target_url = sheet_data.get("technical_sheet_url")
+    if redirect and target_url and target_url.startswith("http"):
+        return RedirectResponse(url=target_url, status_code=302)
+
+    pdf_bytes = OfficialTechnicalSheetPDFGenerator.generate(sheet_data, company)
+    safe_name = re.sub(r'[^a-zA-Z0-9_-]', '_', sheet_data.get("commercial_name", "RSCO"))
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'inline; filename="Ficha_Tecnica_{safe_name}.pdf"'}
+    )
+
+
+@router.get("/rsco/by-code/safety-sheet")
+def download_rsco_code_safety_sheet(
+    rsco: str,
+    name: str = "",
+    redirect: bool = False,
+    db: Session = Depends(get_db)
+):
+    """Obtiene y descarga la Hoja de Datos de Seguridad (HDS) directamente por código RSCO."""
+    norm_rsco = rsco.strip()
+    item = db.query(RSCOItem).filter(RSCOItem.cicoplafest_number == norm_rsco, RSCOItem.is_deleted == False).first()
+    chem = db.query(Chemical).filter(Chemical.cicoplafest_number == norm_rsco, Chemical.is_deleted == False).first() if not item else None
+
+    company = db.query(CompanyConfig).first()
+    sheet_data = lookup_online_sheets_by_rsco(norm_rsco, name or (chem.commercial_name if chem else (item.commercial_name if item else "")))
+
+    if chem:
+        sheet_data.update({
+            "commercial_name": chem.commercial_name,
+            "active_ingredient": chem.active_ingredient,
+            "cicoplafest_number": chem.cicoplafest_number,
+            "authorized_dose_per_liter": chem.authorized_dose_per_liter,
+            "safety_interval_hours": chem.safety_interval_hours
+        })
+    elif item:
+        sheet_data.update({
+            "commercial_name": item.commercial_name,
+            "active_ingredient": item.active_ingredient,
+            "cicoplafest_number": item.cicoplafest_number,
+            "authorized_dose": item.authorized_dose,
+            "safety_interval_hours": item.safety_interval_hours
+        })
+
+    target_url = sheet_data.get("safety_sheet_url")
+    if redirect and target_url and target_url.startswith("http"):
+        return RedirectResponse(url=target_url, status_code=302)
+
+    pdf_bytes = OfficialSafetyDataSheetPDFGenerator.generate(sheet_data, company)
+    safe_name = re.sub(r'[^a-zA-Z0-9_-]', '_', sheet_data.get("commercial_name", "RSCO"))
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'inline; filename="HDS_{safe_name}.pdf"'}
+    )
+
+
+@router.get("/services/{service_order_id}/pesticide-sheets/zip")
+def download_service_pesticide_sheets_zip(
+    service_order_id: uuid.UUID,
+    db: Session = Depends(get_db)
+):
+    """
+    Descarga en un solo archivo ZIP todas las Fichas Técnicas y Hojas de Datos de Seguridad (HDS)
+    de los plaguicidas dosificados en una orden de servicio/certificado específico.
+    Esencial para carpetas de auditoría sanitaria COFEPRIS / STPS.
+    """
+    order = db.query(ServiceOrder).options(
+        joinedload(ServiceOrder.certificate).joinedload(Certificate.applied_chemicals).joinedload(CertificateChemical.chemical)
+    ).filter(ServiceOrder.id == service_order_id, ServiceOrder.is_deleted == False).first()
+
+    if not order or not order.certificate:
+        raise HTTPException(status_code=404, detail="Orden o Certificado no encontrado.")
+
+    applied_chems = order.certificate.applied_chemicals or []
+    if not applied_chems:
+        raise HTTPException(status_code=400, detail="Este certificado no tiene plaguicidas dosificados registrados.")
+
+    company = db.query(CompanyConfig).first()
+    zip_buffer = io.BytesIO()
+
+    with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
+        seen_chems = set()
+        for idx, app_chem in enumerate(applied_chems, 1):
+            chem = app_chem.chemical
+            if not chem or chem.id in seen_chems:
+                continue
+            seen_chems.add(chem.id)
+
+            safe_name = re.sub(r'[^a-zA-Z0-9_-]', '_', chem.commercial_name)
+            sheet_data = lookup_online_sheets_by_rsco(chem.cicoplafest_number, chem.commercial_name)
+            merged = {
+                **sheet_data,
+                "commercial_name": chem.commercial_name,
+                "active_ingredient": chem.active_ingredient,
+                "cicoplafest_number": chem.cicoplafest_number,
+                "authorized_dose_per_liter": chem.authorized_dose_per_liter,
+                "safety_interval_hours": chem.safety_interval_hours,
+                "compatible_methods": chem.compatible_methods,
+                "toxicological_category": chem.toxicological_category,
+                "technical_sheet_url": chem.technical_sheet_url or sheet_data.get("technical_sheet_url"),
+                "safety_sheet_url": chem.safety_sheet_url or sheet_data.get("safety_sheet_url")
+            }
+
+            # 1. Generar Ficha Técnica PDF
+            ft_pdf = OfficialTechnicalSheetPDFGenerator.generate(merged, company)
+            zip_file.writestr(f"Fichas_Tecnicas/FT_{safe_name}.pdf", ft_pdf)
+
+            # 2. Generar Hoja de Seguridad HDS PDF
+            hds_pdf = OfficialSafetyDataSheetPDFGenerator.generate(merged, company)
+            zip_file.writestr(f"Hojas_Seguridad_HDS/HDS_{safe_name}.pdf", hds_pdf)
+
+    zip_buffer.seek(0)
+    safe_folio = re.sub(r'[^a-zA-Z0-9_-]', '_', order.folio)
+    return StreamingResponse(
+        zip_buffer,
+        media_type="application/zip",
+        headers={"Content-Disposition": f'attachment; filename="Fichas_y_HDS_Servicio_{safe_folio}.zip"'}
+    )
 
 
 # ============================================================================

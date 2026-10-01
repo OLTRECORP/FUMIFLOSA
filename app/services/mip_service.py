@@ -180,7 +180,13 @@ def seed_default_rsco_items(db: Session) -> int:
     ]
 
     added = 0
+    from app.services.pesticide_sheet_service import lookup_online_sheets_by_rsco
+
     for data in defaults:
+        sheets = lookup_online_sheets_by_rsco(data.get("cicoplafest_number", ""), data.get("commercial_name", ""))
+        data["technical_sheet_url"] = sheets.get("technical_sheet_url")
+        data["safety_sheet_url"] = sheets.get("safety_sheet_url")
+
         existing = db.query(RSCOItem).filter(
             RSCOItem.cicoplafest_number == data["cicoplafest_number"]
         ).first()
