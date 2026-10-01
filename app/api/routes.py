@@ -1454,7 +1454,9 @@ def download_service_pesticide_sheets_zip(
 @router.get("/services", response_model=List[ServiceOrderResponse])
 def get_service_orders(
     branch_id: Optional[uuid.UUID] = None, 
-    limit: int = 100, 
+    client_id: Optional[uuid.UUID] = None,
+    status: Optional[str] = None,
+    limit: Optional[int] = 500, 
     db: Session = Depends(get_db)
 ):
     if db.query(ServiceOrder).filter(ServiceOrder.is_deleted == False).count() == 0:
@@ -1468,8 +1470,15 @@ def get_service_orders(
     
     if branch_id:
         query = query.filter(ServiceOrder.branch_id == branch_id)
+    if client_id:
+        query = query.join(Branch).filter(Branch.client_id == client_id)
+    if status:
+        query = query.filter(ServiceOrder.status == status)
         
-    return query.order_by(ServiceOrder.service_start_date.desc()).limit(limit).all()
+    query = query.order_by(ServiceOrder.service_start_date.desc())
+    if limit:
+        query = query.limit(limit)
+    return query.all()
 
 
 @router.post("/services", response_model=ServiceOrderResponse, status_code=status.HTTP_201_CREATED)

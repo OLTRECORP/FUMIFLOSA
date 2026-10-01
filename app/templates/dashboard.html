@@ -1374,21 +1374,38 @@
             <div id="tab-vencimientos" class="p-6 space-y-4 hidden">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                     <div>
-                        <h2 class="text-base font-bold text-slate-900">Vigencias Sanitarias (Calculadas a 30 Días - NOM-256)</h2>
-                        <p class="text-xs text-slate-500">Cada certificado cuenta con una vigencia legal estricta de 30 días naturales posteriores a su expedición.</p>
+                        <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                            <i class="fa-solid fa-clock text-amber-600"></i> Vigencias Sanitarias (Calculadas a 30 Días - NOM-256)
+                        </h2>
+                        <p class="text-xs text-slate-500">Muestra por defecto clientes con certificados vigentes (≤30d). Filtra por cliente para consultar históricos o vencidos.</p>
                     </div>
                     <div class="flex flex-wrap items-center gap-2">
                         <div class="bg-slate-100 p-1 rounded-lg border border-slate-200 flex text-xs font-semibold">
-                            <button onclick="setExpFilter('all')" id="btn-exp-all" class="exp-filter-btn px-2.5 py-1 rounded bg-white text-slate-900 shadow-sm font-bold">Todos</button>
-                            <button onclick="setExpFilter('vigentes')" id="btn-exp-vigentes" class="exp-filter-btn px-2.5 py-1 rounded text-emerald-700 hover:text-emerald-900">Vigentes (≤30d)</button>
+                            <button onclick="setExpFilter('vigentes')" id="btn-exp-vigentes" class="exp-filter-btn px-2.5 py-1 rounded bg-white text-slate-900 shadow-sm font-bold">Vigentes (≤30d)</button>
                             <button onclick="setExpFilter('criticos')" id="btn-exp-criticos" class="exp-filter-btn px-2.5 py-1 rounded text-rose-700 hover:text-rose-900">Críticos (≤7d)</button>
                             <button onclick="setExpFilter('vencidos')" id="btn-exp-vencidos" class="exp-filter-btn px-2.5 py-1 rounded text-slate-600 hover:text-slate-900">Vencidos (>30d)</button>
+                            <button onclick="setExpFilter('all')" id="btn-exp-all" class="exp-filter-btn px-2.5 py-1 rounded text-slate-600 hover:text-slate-900">Todos</button>
                         </div>
                         <button onclick="loadDashboardData()" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg font-semibold flex items-center gap-1.5 transition">
                             <i class="fa-solid fa-rotate"></i> Actualizar
                         </button>
                     </div>
                 </div>
+
+                <!-- Barra de Filtrado de Cliente Matriz y Búsqueda -->
+                <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-xs flex flex-col md:flex-row items-center justify-between gap-3 text-xs">
+                    <div class="flex flex-1 items-center gap-2 w-full md:w-auto">
+                        <span class="font-bold text-slate-600 whitespace-nowrap"><i class="fa-solid fa-filter text-indigo-500"></i> Filtrar Cliente:</span>
+                        <select id="exp-client-select" onchange="onExpClientSelectChange()" class="border border-slate-300 rounded-lg p-1.5 bg-white font-medium text-slate-800 flex-1 md:max-w-md focus:ring-1 focus:ring-indigo-500">
+                            <option value="all">-- Todos los clientes (Certificados vigentes por defecto) --</option>
+                        </select>
+                    </div>
+                    <div class="w-full md:w-72 relative">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+                        <input type="text" id="exp-search-input" oninput="onExpSearchChange()" placeholder="Buscar cliente, RFC o sucursal..." class="w-full pl-8 pr-3 py-1.5 border border-slate-300 rounded-lg text-xs bg-white focus:ring-1 focus:ring-indigo-500">
+                    </div>
+                </div>
+
                 <div id="expirations-container" class="space-y-4">
                     <p class="text-xs text-slate-400 text-center py-8">Cargando vencimientos...</p>
                 </div>
@@ -1664,15 +1681,48 @@
             <!-- 4. PESTAÑA: LISTA DE ÓRDENES Y CERTIFICADOS PDF -->
             <!-- ============================================================= -->
             <div id="tab-ordenes" class="p-6 space-y-4 hidden">
-                <div class="flex justify-between items-center">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                     <div>
                         <h2 class="text-base font-bold text-slate-900">Historial de Órdenes y Certificados NOM-256</h2>
-                        <p class="text-xs text-slate-500">Consulta los folios generados, descarga el Certificado Oficial en PDF y edita o elimina registros.</p>
+                        <p class="text-xs text-slate-500">Consulta los folios generados (20 por página por defecto), busca por cliente o folio, descarga PDFs y administra registros.</p>
                     </div>
-                    <button onclick="loadOrders()" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg font-semibold flex items-center gap-1.5">
-                        <i class="fa-solid fa-rotate"></i> Actualizar
-                    </button>
+                    <div class="flex items-center gap-2">
+                        <button onclick="loadOrders()" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg font-semibold flex items-center gap-1.5 transition">
+                            <i class="fa-solid fa-rotate"></i> Actualizar
+                        </button>
+                    </div>
                 </div>
+
+                <!-- Barra de Búsqueda, Filtro de Estado y Selector por Página -->
+                <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-xs flex flex-col md:flex-row items-center justify-between gap-3 text-xs">
+                    <div class="flex flex-1 items-center gap-2 w-full md:w-auto">
+                        <div class="relative flex-1">
+                            <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+                            <input type="text" id="orders-search-input" oninput="handleOrdersFilterChange()" placeholder="Buscar por folio orden, certificado, cliente, sucursal o técnico..." class="w-full pl-8 pr-3 py-1.5 border border-slate-300 rounded-lg text-xs bg-white focus:ring-1 focus:ring-brand-500">
+                        </div>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2 w-full md:w-auto justify-end">
+                        <div class="flex items-center gap-1.5">
+                            <span class="font-semibold text-slate-600 text-[11px]">Estado:</span>
+                            <select id="orders-status-filter" onchange="handleOrdersFilterChange()" class="border border-slate-300 rounded-lg p-1.5 bg-white font-medium text-slate-800 text-xs focus:ring-1 focus:ring-brand-500">
+                                <option value="all">Todos los estados</option>
+                                <option value="completed">Completados</option>
+                                <option value="scheduled">Agendados</option>
+                                <option value="cancelled">Cancelados</option>
+                            </select>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <span class="font-semibold text-slate-600 text-[11px]">Mostrar:</span>
+                            <select id="orders-page-size" onchange="handleOrdersPageSizeChange()" class="border border-slate-300 rounded-lg p-1.5 bg-white font-medium text-slate-800 text-xs focus:ring-1 focus:ring-brand-500">
+                                <option value="20" selected>20 por página</option>
+                                <option value="50">50 por página</option>
+                                <option value="100">100 por página</option>
+                                <option value="all">Todos</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="overflow-x-auto border border-slate-200 rounded-xl bg-white shadow-sm">
                     <table class="w-full text-left text-xs">
                         <thead class="bg-slate-50 text-slate-600 font-bold uppercase text-[10px] border-b border-slate-200">
@@ -1688,6 +1738,16 @@
                         </thead>
                         <tbody id="orders-tbody" class="divide-y divide-slate-100"></tbody>
                     </table>
+                </div>
+
+                <!-- Barra de Paginación -->
+                <div id="orders-pagination-container" class="bg-white p-3 rounded-xl border border-slate-200 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+                    <div id="orders-pagination-info" class="text-slate-500 text-xs font-medium">
+                        Mostrando 0 de 0 órdenes
+                    </div>
+                    <div id="orders-pagination-controls" class="flex items-center gap-1">
+                        <!-- Botones de paginación generados dinámicamente -->
+                    </div>
                 </div>
             </div>
 
@@ -2991,15 +3051,66 @@
         }
 
         let cachedDashboardData = null;
-        let currentExpFilter = 'all';
+        let currentExpFilter = 'vigentes';
+        let expSelectedClientId = 'all';
+        let expSearchQuery = '';
 
         function setExpFilter(filterType) {
             currentExpFilter = filterType;
             document.querySelectorAll('.exp-filter-btn').forEach(b => {
                 b.classList.remove('bg-white', 'text-slate-900', 'shadow-sm', 'font-bold');
+                b.classList.add('text-slate-600');
             });
             const activeBtn = document.getElementById('btn-exp-' + filterType);
-            if (activeBtn) activeBtn.classList.add('bg-white', 'text-slate-900', 'shadow-sm', 'font-bold');
+            if (activeBtn) {
+                activeBtn.classList.remove('text-slate-600');
+                activeBtn.classList.add('bg-white', 'text-slate-900', 'shadow-sm', 'font-bold');
+            }
+            renderExpirations();
+        }
+
+        function onExpClientSelectChange() {
+            const sel = document.getElementById('exp-client-select');
+            expSelectedClientId = sel ? sel.value : 'all';
+            renderExpirations();
+        }
+
+        function onExpSearchChange() {
+            const input = document.getElementById('exp-search-input');
+            expSearchQuery = input ? input.value.trim().toLowerCase() : '';
+            renderExpirations();
+        }
+
+        function populateExpClientSelect() {
+            const select = document.getElementById('exp-client-select');
+            if (!select || !cachedDashboardData || !cachedDashboardData.clients) return;
+            const currentVal = select.value || 'all';
+            let optionsHtml = '<option value="all">-- Todos los clientes (Certificados vigentes por defecto) --</option>';
+            cachedDashboardData.clients.forEach(c => {
+                const totalActive = (c.expiring_7_days ? c.expiring_7_days.length : 0) + 
+                                    (c.expiring_15_days ? c.expiring_15_days.length : 0) + 
+                                    (c.expiring_30_days ? c.expiring_30_days.length : 0);
+                const totalExpired = (c.expired ? c.expired.length : 0);
+                optionsHtml += `<option value="${c.client_id}">${c.legal_name} (${totalActive} vigentes / ${totalExpired} vencidos)</option>`;
+            });
+            select.innerHTML = optionsHtml;
+            select.value = currentVal;
+        }
+
+        function selectSpecificClientInExp(clientId) {
+            expSelectedClientId = clientId;
+            const select = document.getElementById('exp-client-select');
+            if (select) select.value = clientId;
+            currentExpFilter = 'all';
+            document.querySelectorAll('.exp-filter-btn').forEach(b => {
+                b.classList.remove('bg-white', 'text-slate-900', 'shadow-sm', 'font-bold');
+                b.classList.add('text-slate-600');
+            });
+            const allBtn = document.getElementById('btn-exp-all');
+            if (allBtn) {
+                allBtn.classList.remove('text-slate-600');
+                allBtn.classList.add('bg-white', 'text-slate-900', 'shadow-sm', 'font-bold');
+            }
             renderExpirations();
         }
 
@@ -3008,12 +3119,14 @@
             try {
                 const res = await fetch('/api/v1/dashboard/expirations');
                 cachedDashboardData = await res.json();
+                populateExpClientSelect();
                 renderExpirations();
             } catch(e) { console.error(e); }
         }
 
         function renderExpirations() {
             const container = document.getElementById('expirations-container');
+            if (!container) return;
             if (!cachedDashboardData || !cachedDashboardData.clients || cachedDashboardData.clients.length === 0) {
                 container.innerHTML = `
                     <div class="text-center py-10 bg-slate-50 rounded-xl border border-slate-200">
@@ -3029,15 +3142,59 @@
             let totalShownGroups = 0;
 
             cachedDashboardData.clients.forEach(client => {
+                // Client dropdown filtering
+                if (expSelectedClientId !== 'all' && client.client_id !== expSelectedClientId) {
+                    return;
+                }
+
+                // Text search filtering (client legal name, rfc, or branch name / certificate folio)
+                if (expSearchQuery) {
+                    const clientMatch = (client.legal_name && client.legal_name.toLowerCase().includes(expSearchQuery)) ||
+                                        (client.rfc && client.rfc.toLowerCase().includes(expSearchQuery));
+                    const anyCertMatch = [...(client.expiring_7_days || []), ...(client.expiring_15_days || []), ...(client.expiring_30_days || []), ...(client.expired || [])].some(item => 
+                        (item.certificate_folio && item.certificate_folio.toLowerCase().includes(expSearchQuery)) ||
+                        (item.branch_name && item.branch_name.toLowerCase().includes(expSearchQuery))
+                    );
+                    if (!clientMatch && !anyCertMatch) return;
+                }
+
                 let items = [];
-                if (currentExpFilter === 'all') {
-                    items = [...client.expiring_7_days, ...client.expiring_15_days, ...client.expiring_30_days, ...(client.expired || [])];
-                } else if (currentExpFilter === 'vigentes') {
-                    items = [...client.expiring_7_days, ...client.expiring_15_days, ...client.expiring_30_days];
-                } else if (currentExpFilter === 'criticos') {
-                    items = [...client.expiring_7_days];
-                } else if (currentExpFilter === 'vencidos') {
-                    items = [...(client.expired || [])];
+                const activeItems = [...(client.expiring_7_days || []), ...(client.expiring_15_days || []), ...(client.expiring_30_days || [])];
+                const expiredItems = [...(client.expired || [])];
+
+                // If specific client is selected:
+                if (expSelectedClientId !== 'all') {
+                    if (currentExpFilter === 'vigentes') {
+                        items = activeItems;
+                    } else if (currentExpFilter === 'criticos') {
+                        items = [...(client.expiring_7_days || [])];
+                    } else if (currentExpFilter === 'vencidos') {
+                        items = expiredItems;
+                    } else { // 'all'
+                        items = [...activeItems, ...expiredItems];
+                    }
+                } else {
+                    // Global view across all clients:
+                    if (currentExpFilter === 'vigentes') {
+                        items = activeItems;
+                    } else if (currentExpFilter === 'criticos') {
+                        items = [...(client.expiring_7_days || [])];
+                    } else if (currentExpFilter === 'vencidos') {
+                        items = expiredItems;
+                    } else { // 'all'
+                        // Default to active items to prevent overflowing the DOM
+                        items = activeItems;
+                    }
+                }
+
+                if (expSearchQuery) {
+                    items = items.filter(item => {
+                        const clientName = client.legal_name ? client.legal_name.toLowerCase() : '';
+                        const clientRfc = client.rfc ? client.rfc.toLowerCase() : '';
+                        const folio = item.certificate_folio ? item.certificate_folio.toLowerCase() : '';
+                        const branch = item.branch_name ? item.branch_name.toLowerCase() : '';
+                        return clientName.includes(expSearchQuery) || clientRfc.includes(expSearchQuery) || folio.includes(expSearchQuery) || branch.includes(expSearchQuery);
+                    });
                 }
 
                 if (items.length === 0) return;
@@ -3050,9 +3207,12 @@
                                 <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2">
                                     <i class="fa-solid fa-building text-brand-700"></i> ${client.legal_name}
                                 </h3>
-                                <p class="text-xs text-slate-400">RFC: ${client.rfc} • ${items.length} certificados mostrados</p>
+                                <p class="text-xs text-slate-400">RFC: ${client.rfc} • ${items.length} certificados mostrados ${expiredItems.length > 0 && expSelectedClientId === 'all' && currentExpFilter === 'vigentes' ? `(<button onclick="selectSpecificClientInExp('${client.client_id}')" class="text-indigo-600 hover:underline font-semibold font-mono">${expiredItems.length} vencidos disponibles</button>)` : ''}</p>
                             </div>
-                            <div class="flex items-center gap-2">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <button onclick="selectSpecificClientInExp('${client.client_id}')" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-2.5 py-1.5 rounded-lg flex items-center gap-1 transition" title="Filtrar solo este cliente">
+                                    <i class="fa-solid fa-filter text-slate-500"></i> Ver Historial Cliente
+                                </button>
                                 <a href="/portal/c/${client.portal_slug}" target="_blank" class="text-xs bg-brand-50 hover:bg-brand-100 text-brand-700 border border-brand-300 font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition">
                                     <i class="fa-solid fa-arrow-up-right-from-square"></i> Portal Cliente
                                 </a>
@@ -3119,7 +3279,8 @@
                 container.innerHTML = `
                     <div class="text-center py-10 bg-slate-50 rounded-xl border border-slate-200">
                         <i class="fa-solid fa-filter text-2xl text-slate-300 mb-2"></i>
-                        <p class="text-sm font-semibold text-slate-600">No hay certificados para el filtro seleccionado ("${currentExpFilter}")</p>
+                        <p class="text-sm font-semibold text-slate-600">No hay certificados para el filtro seleccionado</p>
+                        <p class="text-xs text-slate-400 mt-1">Prueba seleccionando un cliente específico o cambiando el filtro de vigencia.</p>
                     </div>
                 `;
             } else {
@@ -3127,83 +3288,206 @@
             }
         }
 
+        let cachedOrdersList = [];
+        let filteredOrdersList = [];
+        let ordersCurrentPage = 1;
+        let ordersPageSize = 20;
+
         async function loadOrders() {
             try {
-                const res = await fetch('/api/v1/services?limit=150');
-                const orders = await res.json();
-                const tbody = document.getElementById('orders-tbody');
-                if(!orders.length) {
-                    tbody.innerHTML = '<tr><td colspan="7" class="p-6 text-center text-slate-400">No hay órdenes registradas.</td></tr>';
+                const res = await fetch('/api/v1/services?limit=500');
+                cachedOrdersList = await res.json();
+                applyOrdersFilter();
+            } catch(e) { 
+                console.error(e); 
+            }
+        }
+
+        function handleOrdersFilterChange() {
+            ordersCurrentPage = 1;
+            applyOrdersFilter();
+        }
+
+        function handleOrdersPageSizeChange() {
+            const select = document.getElementById('orders-page-size');
+            const val = select ? select.value : '20';
+            ordersPageSize = (val === 'all') ? 999999 : parseInt(val, 10);
+            ordersCurrentPage = 1;
+            renderOrdersTable();
+        }
+
+        function applyOrdersFilter() {
+            const searchInput = document.getElementById('orders-search-input');
+            const statusFilter = document.getElementById('orders-status-filter');
+            const query = searchInput ? searchInput.value.trim().toLowerCase() : '';
+            const statusVal = statusFilter ? statusFilter.value : 'all';
+
+            filteredOrdersList = cachedOrdersList.filter(o => {
+                const isCertCancelled = o.certificate && o.certificate.is_cancelled;
+                const isOrderCancelled = (o.status === 'cancelled') || isCertCancelled;
+                const isScheduled = (o.status === 'scheduled') && !o.certificate;
+                const isCompleted = !isOrderCancelled && !isScheduled;
+
+                // Status check
+                if (statusVal === 'completed' && !isCompleted) return false;
+                if (statusVal === 'scheduled' && !isScheduled) return false;
+                if (statusVal === 'cancelled' && !isOrderCancelled) return false;
+
+                // Text query check
+                if (query) {
+                    const folio = (o.folio || '').toLowerCase();
+                    const certFolio = (o.certificate && o.certificate.certificate_folio || '').toLowerCase();
+                    const clientName = (o.branch && o.branch.client && o.branch.client.legal_name || '').toLowerCase();
+                    const branchName = (o.branch && o.branch.name || '').toLowerCase();
+                    const techName = (o.technician && o.technician.full_name || '').toLowerCase();
+                    
+                    const match = folio.includes(query) || 
+                                  certFolio.includes(query) || 
+                                  clientName.includes(query) || 
+                                  branchName.includes(query) || 
+                                  techName.includes(query);
+                    if (!match) return false;
+                }
+
+                return true;
+            });
+
+            renderOrdersTable();
+        }
+
+        function renderOrdersTable() {
+            const tbody = document.getElementById('orders-tbody');
+            const infoElem = document.getElementById('orders-pagination-info');
+            const controlsElem = document.getElementById('orders-pagination-controls');
+            if (!tbody) return;
+
+            if (!filteredOrdersList || filteredOrdersList.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="p-6 text-center text-slate-400">No se encontraron órdenes con los criterios especificados.</td></tr>';
+                if (infoElem) infoElem.innerText = 'Mostrando 0 de 0 órdenes';
+                if (controlsElem) controlsElem.innerHTML = '';
+                return;
+            }
+
+            const total = filteredOrdersList.length;
+            const totalPages = Math.ceil(total / ordersPageSize) || 1;
+            if (ordersCurrentPage > totalPages) ordersCurrentPage = totalPages;
+            if (ordersCurrentPage < 1) ordersCurrentPage = 1;
+
+            const startIndex = (ordersCurrentPage - 1) * ordersPageSize;
+            const endIndex = Math.min(startIndex + ordersPageSize, total);
+            const pageItems = filteredOrdersList.slice(startIndex, endIndex);
+
+            tbody.innerHTML = pageItems.map(o => {
+                const isCertCancelled = o.certificate && o.certificate.is_cancelled;
+                const isOrderCancelled = (o.status === 'cancelled') || isCertCancelled;
+                const isScheduled = (o.status === 'scheduled') && !o.certificate;
+
+                let statusBadge = '';
+                if (isOrderCancelled) {
+                    statusBadge = `<span class="bg-rose-100 text-rose-700 font-bold px-2 py-0.5 rounded text-[10px] inline-flex items-center gap-1"><i class="fa-solid fa-ban"></i> CANCELADO</span>`;
+                } else if (isScheduled) {
+                    statusBadge = `<span class="bg-blue-100 text-blue-700 font-bold px-2 py-0.5 rounded text-[10px] inline-flex items-center gap-1"><i class="fa-solid fa-calendar-check"></i> AGENDADO</span>`;
+                } else {
+                    statusBadge = `<span class="bg-emerald-100 text-emerald-700 font-bold px-2 py-0.5 rounded text-[10px] inline-flex items-center gap-1"><i class="fa-solid fa-check"></i> COMPLETADO</span>`;
+                }
+
+                let certCell = 'N/A';
+                if (o.certificate) {
+                    if (isCertCancelled) {
+                        certCell = `<div><span class="line-through text-slate-400 font-mono text-[11px]">${o.certificate.certificate_folio}</span><br/><span class="text-[10px] text-rose-600 font-semibold italic">${o.certificate.cancellation_reason || 'Cancelado'}</span></div>`;
+                    } else {
+                        certCell = `<span class="font-mono font-bold text-brand-700">${o.certificate.certificate_folio}</span>`;
+                    }
+                } else if (isScheduled) {
+                    certCell = `<span class="text-blue-600 font-medium text-[11px] italic">En Programación</span>`;
+                }
+
+                let validityCell = 'N/A';
+                if (o.certificate) {
+                    validityCell = isCertCancelled ? '<span class="text-rose-600 font-bold text-[11px]">Cancelado</span>' : `<span class="text-slate-700 font-medium">${o.certificate.validity_end_date}</span>`;
+                }
+
+                return `
+                <tr class="hover:bg-slate-50 ${isOrderCancelled ? 'bg-rose-50/20' : ''}">
+                    <td class="p-3 font-mono font-bold text-slate-900">
+                        ${o.folio}
+                        <div class="mt-0.5">${statusBadge}</div>
+                    </td>
+                    <td class="p-3">${certCell}</td>
+                    <td class="p-3 font-medium text-slate-800">${o.branch && o.branch.client ? `${o.branch.client.legal_name} <span class="text-slate-500 font-normal text-[11px]">(${o.branch.name})</span>` : (o.branch ? o.branch.name : 'N/A')}</td>
+                    <td class="p-3 text-slate-600">${o.technician ? o.technician.full_name : 'N/A'}</td>
+                    <td class="p-3 text-slate-600">${new Date(o.service_start_date).toLocaleDateString()}</td>
+                    <td class="p-3">${validityCell}</td>
+                    <td class="p-3 text-right">
+                        <div class="flex items-center justify-end gap-1.5 flex-wrap">
+                            ${o.certificate ? `
+                            <a href="/api/v1/certificates/${o.certificate.id}/pdf" target="_blank" title="Descargar Certificado Oficial Sanitario NOM-256" class="inline-flex items-center gap-1 bg-brand-50 hover:bg-brand-100 text-brand-700 font-bold px-2 py-1 rounded border border-brand-200 text-xs shadow-xs">
+                                <i class="fa-solid fa-file-pdf"></i> Certificado
+                            </a>` : ''}
+                            <a href="/api/v1/services/${o.id}/order-pdf" target="_blank" title="Descargar Hoja Técnica de Orden de Servicio" class="inline-flex items-center gap-1 bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold px-2 py-1 rounded border border-slate-300 text-xs shadow-xs">
+                                <i class="fa-solid fa-file-lines text-slate-500"></i> Orden
+                            </a>
+                            <a href="/api/v1/services/${o.id}/pesticide-sheets/zip" target="_blank" title="Descargar Fichas Técnicas y Hojas de Seguridad HDS (ZIP)" class="inline-flex items-center gap-1 bg-teal-50 hover:bg-teal-100 text-teal-800 font-bold px-2 py-1 rounded border border-teal-200 text-xs shadow-xs">
+                                <i class="fa-solid fa-file-zipper text-teal-600"></i> Fichas/HDS
+                            </a>
+                            ${o.certificate && !isCertCancelled ? `
+                            <button onclick="openCancelCertModal('${o.certificate.id}', '${o.certificate.certificate_folio}')" title="Cancelar este certificado si no se llevó a cabo" class="inline-flex items-center gap-1 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold px-2 py-1 rounded border border-rose-200 text-xs">
+                                <i class="fa-solid fa-ban"></i> Cancelar
+                            </button>` : ''}
+                            <button onclick="openEditServiceModal('${o.id}')" title="Editar orden" class="inline-flex items-center gap-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-2 py-1 rounded border border-slate-300 text-xs">
+                                <i class="fa-solid fa-pen-to-square"></i>
+                            </button>
+                            <button onclick="deleteService('${o.id}', '${o.folio}')" title="Eliminar orden" class="inline-flex items-center gap-1 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold px-2 py-1 rounded border border-rose-200 text-xs">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>`;
+            }).join('');
+
+            // Pagination info text
+            if (infoElem) {
+                infoElem.innerText = `Mostrando ${startIndex + 1} a ${endIndex} de ${total} órdenes (Página ${ordersCurrentPage} de ${totalPages})`;
+            }
+
+            // Pagination buttons
+            if (controlsElem) {
+                if (totalPages <= 1) {
+                    controlsElem.innerHTML = '';
                     return;
                 }
-                tbody.innerHTML = orders.map(o => {
-                    const isCertCancelled = o.certificate && o.certificate.is_cancelled;
-                    const isOrderCancelled = (o.status === 'cancelled') || isCertCancelled;
-                    const isScheduled = (o.status === 'scheduled') && !o.certificate;
 
-                    let statusBadge = '';
-                    if (isOrderCancelled) {
-                        statusBadge = `<span class="bg-rose-100 text-rose-700 font-bold px-2 py-0.5 rounded text-[10px] inline-flex items-center gap-1"><i class="fa-solid fa-ban"></i> CANCELADO</span>`;
-                    } else if (isScheduled) {
-                        statusBadge = `<span class="bg-blue-100 text-blue-700 font-bold px-2 py-0.5 rounded text-[10px] inline-flex items-center gap-1"><i class="fa-solid fa-calendar-check"></i> AGENDADO</span>`;
-                    } else {
-                        statusBadge = `<span class="bg-emerald-100 text-emerald-700 font-bold px-2 py-0.5 rounded text-[10px] inline-flex items-center gap-1"><i class="fa-solid fa-check"></i> COMPLETADO</span>`;
-                    }
+                let controlsHtml = '';
+                // First & Prev
+                controlsHtml += `<button onclick="goToOrdersPage(1)" ${ordersCurrentPage === 1 ? 'disabled' : ''} class="px-2.5 py-1 rounded-lg border border-slate-200 bg-white font-bold text-slate-700 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed text-xs" title="Primera página"><i class="fa-solid fa-angles-left"></i></button>`;
+                controlsHtml += `<button onclick="goToOrdersPage(${ordersCurrentPage - 1})" ${ordersCurrentPage === 1 ? 'disabled' : ''} class="px-2.5 py-1 rounded-lg border border-slate-200 bg-white font-bold text-slate-700 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed text-xs" title="Página anterior"><i class="fa-solid fa-angle-left"></i> Anterior</button>`;
 
-                    let certCell = 'N/A';
-                    if (o.certificate) {
-                        if (isCertCancelled) {
-                            certCell = `<div><span class="line-through text-slate-400 font-mono text-[11px]">${o.certificate.certificate_folio}</span><br/><span class="text-[10px] text-rose-600 font-semibold italic">${o.certificate.cancellation_reason || 'Cancelado'}</span></div>`;
-                        } else {
-                            certCell = `<span class="font-mono font-bold text-brand-700">${o.certificate.certificate_folio}</span>`;
-                        }
-                    } else if (isScheduled) {
-                        certCell = `<span class="text-blue-600 font-medium text-[11px] italic">En Programación</span>`;
-                    }
+                // Sliding window of page numbers (5 items max)
+                let startPage = Math.max(1, ordersCurrentPage - 2);
+                let endPage = Math.min(totalPages, ordersCurrentPage + 2);
+                if (ordersCurrentPage <= 3) {
+                    endPage = Math.min(totalPages, 5);
+                }
+                if (ordersCurrentPage >= totalPages - 2) {
+                    startPage = Math.max(1, totalPages - 4);
+                }
 
-                    let validityCell = 'N/A';
-                    if (o.certificate) {
-                        validityCell = isCertCancelled ? '<span class="text-rose-600 font-bold text-[11px]">Cancelado</span>' : `<span class="text-slate-700 font-medium">${o.certificate.validity_end_date}</span>`;
-                    }
+                for (let p = startPage; p <= endPage; p++) {
+                    const isActive = (p === ordersCurrentPage);
+                    controlsHtml += `<button onclick="goToOrdersPage(${p})" class="px-3 py-1 rounded-lg border text-xs font-bold ${isActive ? 'bg-brand-600 text-white border-brand-600 shadow-xs' : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'}">${p}</button>`;
+                }
 
-                    return `
-                    <tr class="hover:bg-slate-50 ${isOrderCancelled ? 'bg-rose-50/20' : ''}">
-                        <td class="p-3 font-mono font-bold text-slate-900">
-                            ${o.folio}
-                            <div class="mt-0.5">${statusBadge}</div>
-                        </td>
-                        <td class="p-3">${certCell}</td>
-                        <td class="p-3 font-medium text-slate-800">${o.branch && o.branch.client ? `${o.branch.client.legal_name} <span class="text-slate-500 font-normal text-[11px]">(${o.branch.name})</span>` : (o.branch ? o.branch.name : 'N/A')}</td>
-                        <td class="p-3 text-slate-600">${o.technician ? o.technician.full_name : 'N/A'}</td>
-                        <td class="p-3 text-slate-600">${new Date(o.service_start_date).toLocaleDateString()}</td>
-                        <td class="p-3">${validityCell}</td>
-                        <td class="p-3 text-right">
-                            <div class="flex items-center justify-end gap-1.5 flex-wrap">
-                                ${o.certificate ? `
-                                <a href="/api/v1/certificates/${o.certificate.id}/pdf" target="_blank" title="Descargar Certificado Oficial Sanitario NOM-256" class="inline-flex items-center gap-1 bg-brand-50 hover:bg-brand-100 text-brand-700 font-bold px-2 py-1 rounded border border-brand-200 text-xs shadow-xs">
-                                    <i class="fa-solid fa-file-pdf"></i> Certificado
-                                </a>` : ''}
-                                <a href="/api/v1/services/${o.id}/order-pdf" target="_blank" title="Descargar Hoja Técnica de Orden de Servicio" class="inline-flex items-center gap-1 bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold px-2 py-1 rounded border border-slate-300 text-xs shadow-xs">
-                                    <i class="fa-solid fa-file-lines text-slate-500"></i> Orden
-                                </a>
-                                <a href="/api/v1/services/${o.id}/pesticide-sheets/zip" target="_blank" title="Descargar Fichas Técnicas y Hojas de Seguridad HDS (ZIP)" class="inline-flex items-center gap-1 bg-teal-50 hover:bg-teal-100 text-teal-800 font-bold px-2 py-1 rounded border border-teal-200 text-xs shadow-xs">
-                                    <i class="fa-solid fa-file-zipper text-teal-600"></i> Fichas/HDS
-                                </a>
-                                ${o.certificate && !isCertCancelled ? `
-                                <button onclick="openCancelCertModal('${o.certificate.id}', '${o.certificate.certificate_folio}')" title="Cancelar este certificado si no se llevó a cabo" class="inline-flex items-center gap-1 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold px-2 py-1 rounded border border-rose-200 text-xs">
-                                    <i class="fa-solid fa-ban"></i> Cancelar
-                                </button>` : ''}
-                                <button onclick="openEditServiceModal('${o.id}')" title="Editar orden" class="inline-flex items-center gap-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-2 py-1 rounded border border-slate-300 text-xs">
-                                    <i class="fa-solid fa-pen-to-square"></i>
-                                </button>
-                                <button onclick="deleteService('${o.id}', '${o.folio}')" title="Eliminar orden" class="inline-flex items-center gap-1 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold px-2 py-1 rounded border border-rose-200 text-xs">
-                                    <i class="fa-solid fa-trash"></i>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>`;
-                }).join('');
-            } catch(e) { console.error(e); }
+                // Next & Last
+                controlsHtml += `<button onclick="goToOrdersPage(${ordersCurrentPage + 1})" ${ordersCurrentPage === totalPages ? 'disabled' : ''} class="px-2.5 py-1 rounded-lg border border-slate-200 bg-white font-bold text-slate-700 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed text-xs" title="Página siguiente">Siguiente <i class="fa-solid fa-angle-right"></i></button>`;
+                controlsHtml += `<button onclick="goToOrdersPage(${totalPages})" ${ordersCurrentPage === totalPages ? 'disabled' : ''} class="px-2.5 py-1 rounded-lg border border-slate-200 bg-white font-bold text-slate-700 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed text-xs" title="Última página"><i class="fa-solid fa-angles-right"></i></button>`;
+
+                controlsElem.innerHTML = controlsHtml;
+            }
+        }
+
+        function goToOrdersPage(page) {
+            ordersCurrentPage = page;
+            renderOrdersTable();
         }
 
         async function loadChemicals() {
