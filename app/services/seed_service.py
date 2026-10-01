@@ -293,11 +293,8 @@ def seed_chemicals(db: Session) -> int:
 def seed_clients_and_services(db: Session) -> int:
     """
     Inserta clientes institucionales, sucursales y certificados de ejemplo con
-    distintas vigencias si la tabla de clientes está vacía.
+    distintas vigencias de forma idempotente y segura.
     """
-    if db.query(Client).filter(Client.is_deleted == False).count() > 0:
-        return 0
-
     # Obtener un técnico y químicos para asociar
     tech = db.query(User).filter(User.role == UserRole.TECNICO_CAMPO, User.is_active == True).first()
     if not tech:
@@ -424,85 +421,99 @@ def seed_clients_and_services(db: Session) -> int:
     total_services_created = 0
 
     for c_data in demo_clients:
-        client = Client(
-            legal_name=c_data["legal_name"],
-            rfc=c_data["rfc"],
-            portal_slug=c_data["portal_slug"],
-            master_contract_number=c_data["contract"],
-            portal_is_enabled=True
-        )
-        db.add(client)
-        db.commit()
-        db.refresh(client)
+        try:
+            client = db.query(Client).filter(Client.rfc == c_data["rfc"]).first()
+            if not client:
+                client = Client(
+                    legal_name=c_data["legal_name"],
+                    rfc=c_data["rfc"],
+                    portal_slug=c_data["portal_slug"],
+                    master_contract_number=c_data["contract"],
+                    portal_is_enabled=True
+                )
+                db.add(client)
+                db.commit()
+                db.refresh(client)
 
-        for b_data in c_data["branches"]:
-            branch = Branch(
-                client_id=client.id,
-                name=b_data["name"],
-                unit_code=b_data.get("unit_code"),
-                full_address=b_data["address"],
-                phone=b_data["phone"],
-                branch_contact_name=b_data["contact"],
-                classification=b_data["classification"]
-            )
-            db.add(branch)
-            db.commit()
-            db.refresh(branch)
-
-            # Crear Servicio y Certificado
-            svc_date = today - timedelta(days=b_data["service_days_ago"])
-            start_dt = datetime.combine(svc_date, datetime.min.time().replace(hour=8, minute=0)).replace(tzinfo=timezone.utc)
-            end_dt = datetime.combine(svc_date, datetime.min.time().replace(hour=11, minute=0)).replace(tzinfo=timezone.utc)
-            validity_end = svc_date + timedelta(days=30)
-
-            service_order = ServiceOrder(
-                branch_id=branch.id,
-                technician_id=tech.id if tech else None,
-                folio=b_data["folio"],
-                status="completed",
-                service_start_date=start_dt,
-                service_end_date=end_dt,
-                scheduled_for=start_dt,
-                pest_detected=b_data["pests"],
-                areas_treated=b_data["areas"],
-                application_method=b_data["method"],
-                general_observations="Servicio mensual preventivo y correctivo conforme a la NOM-256-SSA1-2012."
-            )
-            db.add(service_order)
-            db.commit()
-            db.refresh(service_order)
-
-            certificate = Certificate(
-                service_order_id=service_order.id,
-                issue_date=svc_date,
-                validity_end_date=validity_end,
-                reentry_safety_hours=2,
-                sanitary_license_number_snapshot="2023-15A-099",
-                sanitary_responsible_name_snapshot="Biól. Roberto Sánchez Martínez",
-                is_cancelled=False
-            )
-            db.add(certificate)
-            db.commit()
-            db.refresh(certificate)
-
-            # Químicos aplicados
-            for chem in b_data.get("quimicos", []):
-                if chem:
-                    app_chem = CertificateChemical(
-                        certificate_id=certificate.id,
-                        chemical_id=chem.id,
-                        chemical_name_snapshot=chem.commercial_name,
-                        active_ingredient_snapshot=chem.active_ingredient,
-                        cicoplafest_snapshot=chem.cicoplafest_number,
-                        dose_applied_snapshot=chem.authorized_dose_per_liter,
-                        applied_area_snapshot=b_data["areas"],
-                        application_method_snapshot=b_data["method"],
-                        area_type=AreaType.INTERIOR
+            for b_data in c_data["branches"]:
+                branch = db.query(Branch).filter(
+                    Branch.client_id == client.id,
+                    Branch.name == b_data["name"]
+                ).first()
+                if not branch:
+                    branch = Branch(
+                        client_id=client.id,
+                        name=b_data["name"],
+                        unit_code=b_data.get("unit_code"),
+                        full_address=b_data["address"],
+                        phone=b_data["phone"],
+                        branch_contact_name=b_data["contact"],
+                        classification=b_data["classification"]
                     )
-                    db.add(app_chem)
+                    db.add(branch)
+                    db.commit()
+                    db.refresh(branch)
 
-            db.commit()
-            total_services_created += 1
+                # Verificar si la orden ya existe
+                existing_order = db.query(ServiceOrder).filter(ServiceOrder.folio == b_data["folio"]).first()
+                if not existing_order:
+                    svc_date = today - timedelta(days=b_data["service_days_ago"])
+                    start_dt = datetime.combine(svc_date, datetime.min.time().replace(hour=8, minute=0)).replace(tzinfo=timezone.utc)
+                    end_dt = datetime.combine(svc_date, datetime.min.time().replace(hour=11, minute=0)).replace(tzinfo=timezone.utc)
+                    validity_end = svc_date + timedelta(days=30)
+
+                    service_order = ServiceOrder(
+                        branch_id=branch.id,
+                        technician_id=tech.id if tech else None,
+                        folio=b_data["folio"],
+                        status="completed",
+                        service_start_date=start_dt,
+                        service_end_date=end_dt,
+                        scheduled_for=start_dt,
+                        pest_detected=b_data["pests"],
+                        areas_treated=b_data["areas"],
+                        application_method=b_data["method"],
+                        general_observations="Servicio mensual preventivo y correctivo conforme a la NOM-256-SSA1-2012."
+                    )
+                    db.add(service_order)
+                    db.commit()
+                    db.refresh(service_order)
+
+                    certificate = Certificate(
+                        service_order_id=service_order.id,
+                        issue_date=svc_date,
+                        validity_end_date=validity_end,
+                        reentry_safety_hours=2,
+                        sanitary_license_number_snapshot="2023-15A-099",
+                        sanitary_responsible_name_snapshot="Biól. Roberto Sánchez Martínez",
+                        is_cancelled=False
+                    )
+                    db.add(certificate)
+                    db.commit()
+                    db.refresh(certificate)
+
+                    # Químicos aplicados
+                    for chem in b_data.get("quimicos", []):
+                        if chem:
+                            app_chem = CertificateChemical(
+                                certificate_id=certificate.id,
+                                chemical_id=chem.id,
+                                chemical_name_snapshot=chem.commercial_name,
+                                active_ingredient_snapshot=chem.active_ingredient,
+                                cicoplafest_snapshot=chem.cicoplafest_number,
+                                dose_applied_snapshot=chem.authorized_dose_per_liter,
+                                applied_area_snapshot=b_data["areas"],
+                                application_method_snapshot=b_data["method"],
+                                area_type=AreaType.INTERIOR
+                            )
+                            db.add(app_chem)
+
+                    db.commit()
+                    total_services_created += 1
+        except IntegrityError:
+            db.rollback()
+        except Exception:
+            db.rollback()
 
     return total_services_created
 

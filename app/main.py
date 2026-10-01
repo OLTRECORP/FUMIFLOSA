@@ -84,6 +84,7 @@ CLIENT_PORTAL_HTML_PATH = TEMPLATES_DIR / "client_portal.html"
 
 
 @app.get("/", response_class=HTMLResponse, tags=["Dashboard"])
+@app.head("/", tags=["Dashboard"])
 @app.get("/dashboard", response_class=HTMLResponse, tags=["Dashboard"])
 def get_dashboard():
     """Sirve la interfaz web visual del Panel de Control de FUMIFLOSA."""
@@ -103,6 +104,7 @@ def get_client_portal_page(portal_slug: str):
 
 
 @app.get("/health", tags=["Health"])
+@app.head("/health", tags=["Health"])
 def health_check():
     return {
         "status": "healthy",
