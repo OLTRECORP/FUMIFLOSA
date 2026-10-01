@@ -1,7 +1,7 @@
 import io
 import os
 from datetime import date, datetime
-from typing import Optional
+from typing import Optional, Any, List, Dict
 from pathlib import Path
 
 from reportlab.lib.pagesizes import letter, landscape
