@@ -383,7 +383,7 @@ def get_mip_full_manual() -> Dict[str, Any]:
 
 
 # ============================================================================
-# CATÁLOGO ENCICLOPÉDICO DE PLAGAS URBANAS E INDUSTRIALES (30+ ESPECIES REALES)
+# CATÁLOGO ENCICLOPÉDICO DE PLAGAS URBANAS E INDUSTRIALES (CATEGORÍAS CANÓNICAS)
 # ============================================================================
 
 PEST_ENCYCLOPEDIA: List[Dict[str, Any]] = [
@@ -391,7 +391,7 @@ PEST_ENCYCLOPEDIA: List[Dict[str, Any]] = [
         "id": "cucaracha-alemana",
         "name": "Cucaracha Germánica / Alemana",
         "scientific_name": "Blattella germanica",
-        "category": "Insectos Rastreros (Blattodea)",
+        "category": "Insectos Rastreros",
         "icon": "fa-bug",
         "danger_level": "Alto (Vector Mecánico y Alérgeno)",
         "biology_and_habits": "Mide de 10 a 15 mm, color café claro con dos franjas longitudinales oscuras paralelas en el pronoto. Es la plaga urbana más prolífica en cocinas, restaurantes y hospitales. Hábitos estrictamente nocturnos y tigmotácticos (busca refugios estrechos donde su cuerpo haga contacto simultáneo con dos superficies). Una hembra produce de 4 a 8 ootecas a lo largo de su vida, cada una con 30 a 48 embriones, con un ciclo biológico de apenas 60 días a 28°C.",
@@ -418,7 +418,7 @@ PEST_ENCYCLOPEDIA: List[Dict[str, Any]] = [
         "id": "cucaracha-americana",
         "name": "Cucaracha Americana / De Drenaje",
         "scientific_name": "Periplaneta americana",
-        "category": "Insectos Rastreros (Blattodea)",
+        "category": "Insectos Rastreros",
         "icon": "fa-bug",
         "danger_level": "Alto (Vector de Alcantarillado)",
         "biology_and_habits": "La especie comensal más grande (35 a 50 mm), color café rojizo brillante. Posee alas funcionales y capacidad de planeo. Habita preferentemente en redes de drenaje, cañerías, registros eléctricos subterráneos, calderas, sótanos y cámaras de vapor con alta humedad y temperaturas superiores a 25°C.",
@@ -443,7 +443,7 @@ PEST_ENCYCLOPEDIA: List[Dict[str, Any]] = [
         "id": "cucaracha-oriental",
         "name": "Cucaracha Oriental / Negra",
         "scientific_name": "Blatta orientalis",
-        "category": "Insectos Rastreros (Blattodea)",
+        "category": "Insectos Rastreros",
         "icon": "fa-bug",
         "danger_level": "Alto (Vector de Humedad y Drenaje)",
         "biology_and_habits": "Longitud de 25 a 32 mm, color negro brillante a castaño muy oscuro. Machos con alas que cubren 2/3 del abdomen y hembras braquípteras (alas vestigiales). Prefiere temperaturas más frescas (20-25°C) y alta humedad. Se desplaza lentamente en sótanos, registros subterráneos, huecos bajo losas y desagües.",
@@ -468,7 +468,7 @@ PEST_ENCYCLOPEDIA: List[Dict[str, Any]] = [
         "id": "cucaracha-banda-cafe",
         "name": "Cucaracha de Banda Café",
         "scientific_name": "Supella longipalpa",
-        "category": "Insectos Rastreros (Blattodea)",
+        "category": "Insectos Rastreros",
         "icon": "fa-bug",
         "danger_level": "Moderado a Alto (Infestación en Altura)",
         "biology_and_habits": "Insecto pequeño de 10 a 14 mm con dos bandas transversales claras en el tórax y abdomen. A diferencia de la alemana, prefiere áreas cálidas y secas (>30°C) y suele anidar en partes altas de las habitaciones: techos, molduras, detrás de cuadros, motores de televisores y libreros.",
@@ -493,7 +493,7 @@ PEST_ENCYCLOPEDIA: List[Dict[str, Any]] = [
         "id": "rata-alcantarilla",
         "name": "Rata Noruega / De Alcantarilla",
         "scientific_name": "Rattus norvegicus",
-        "category": "Roedores Comensales (Rodentia)",
+        "category": "Roedores Comensales",
         "icon": "fa-shield-cat",
         "danger_level": "Crítico (Daño Sanitario y Estructural)",
         "biology_and_habits": "Roedor robusto de 20 a 25 cm (sin cola), peso de 300 a 500 g. Hocico chato, orejas cortas y cola más corta que la longitud del cuerpo. Excava madrigueras subterráneas con salidas de emergencia cerca de cimientos, basureros y drenajes. Excelente nadadora y buceadora capaz de ingresar a través de tazas sanitarias.",
@@ -518,7 +518,7 @@ PEST_ENCYCLOPEDIA: List[Dict[str, Any]] = [
         "id": "rata-tejado",
         "name": "Rata de Tejado / Negra",
         "scientific_name": "Rattus rattus",
-        "category": "Roedores Comensales (Rodentia)",
+        "category": "Roedores Comensales",
         "icon": "fa-shield-cat",
         "danger_level": "Crítico (Daño en Altura y Almacenes)",
         "biology_and_habits": "Roedor ágil de 16 a 22 cm, cuerpo esbelto, hocico puntiagudo, orejas grandes que dobladas cubren los ojos, cola más larga que la longitud cabeza-cuerpo. Extraordinaria trepadora que anida en copas de árboles, techos, falsos plafones, vigas y áticos.",
@@ -542,7 +542,7 @@ PEST_ENCYCLOPEDIA: List[Dict[str, Any]] = [
         "id": "raton-casero",
         "name": "Ratón Casero / Doméstico",
         "scientific_name": "Mus musculus",
-        "category": "Roedores Comensales (Rodentia)",
+        "category": "Roedores Comensales",
         "icon": "fa-paw",
         "danger_level": "Alto (Contaminación de Alimentos)",
         "biology_and_habits": "Roedor pequeño de 6 a 9 cm, peso de 15 a 25 g. Hocico puntiagudo, orejas grandes y cola delgada igual o más larga que el cuerpo. Territorio muy reducido (radio de 3 a 5 metros del nido). Curioso ante objetos nuevos (neofílico). Capaz de pasar por orificios de tan solo 6 mm de diámetro (tamaño de un lápiz).",
@@ -566,7 +566,7 @@ PEST_ENCYCLOPEDIA: List[Dict[str, Any]] = [
         "id": "chinche-cama",
         "name": "Chinche de Cama Común",
         "scientific_name": "Cimex lectularius",
-        "category": "Insectos Hematófagos (Hemiptera)",
+        "category": "Insectos Hematófagos",
         "icon": "fa-bed",
         "danger_level": "Alto (Molestia Severa y Salud Pública)",
         "biology_and_habits": "Insecto áptero, aplanado dorsoventralmente, color café rojizo, de 4 a 7 mm. Hematófago obligado en todas sus etapas ninfales y adultas. Se alimenta durante la noche mientras el huésped duerme (duración de la picadura: 5 a 10 minutos). Puede sobrevivir hasta un año sin alimentarse a temperaturas templadas. Se dispersa pasivamente en equipaje, ropa y muebles de segunda mano.",
@@ -592,7 +592,7 @@ PEST_ENCYCLOPEDIA: List[Dict[str, Any]] = [
         "id": "chinche-besucona",
         "name": "Chinche Besucona / Triatómino",
         "scientific_name": "Triatoma infestans / Triatoma dimidiata / Meccus phyllosomus",
-        "category": "Insectos Hematófagos (Hemiptera / Reduviidae)",
+        "category": "Insectos Hematófagos",
         "icon": "fa-heart-crack",
         "danger_level": "Extremo (Vector de la Enfermedad de Chagas)",
         "biology_and_habits": "Insecto hematófago de 20 a 35 mm, cuerpo aplanado con reborde abdominal (conexivo) bandeado de negro y naranja/rojo. Hábitos nocturnos; se oculta durante el día en grietas de paredes de adobe, techos de palma, gallineros y corrales. Pica alrededor de la boca o los ojos del durmiente y defeca mientras se alimenta.",
@@ -617,7 +617,7 @@ PEST_ENCYCLOPEDIA: List[Dict[str, Any]] = [
         "id": "alacranes",
         "name": "Alacranes / Escorpiones Urbanos",
         "scientific_name": "Centruroides spp. (C. limpidus, C. sculpturatus, C. suffusus)",
-        "category": "Arácnidos Ponzoñosos (Scorpiones)",
+        "category": "Arácnidos Ponzoñosos",
         "icon": "fa-skull-crossbones",
         "danger_level": "Extremo (Veneno Neurotóxico Potencialmente Letal)",
         "biology_and_habits": "Arácnidos nocturnos provistos de pedipalpos en pinza y metasoma (cola) con aguijón conectado a glándulas venenosas. En México las especies de mayor toxicidad pertenecen al género Centruroides (color amarillo pajizo o pardo claro, pinzas delgadas y dientecillo subaculear bajo el aguijón). Se refugian en escombros, madera, calzado y grietas.",
@@ -642,7 +642,7 @@ PEST_ENCYCLOPEDIA: List[Dict[str, Any]] = [
         "id": "arana-violinista",
         "name": "Araña Violinista / De Rincón",
         "scientific_name": "Loxosceles reclusa / Loxosceles boneti / Loxosceles laeta",
-        "category": "Arácnidos Ponzoñosos (Araneae / Sicariidae)",
+        "category": "Arácnidos Ponzoñosos",
         "icon": "fa-spider",
         "danger_level": "Extremo (Veneno Necrótico y Hemolítico)",
         "biology_and_habits": "Araña de 10 a 15 mm, color pardo uniforme sin manchas en las patas. Característica diagnóstica: 6 ojos dispuestos en 3 pares (díadas en tríada ocular) y mancha oscura en forma de violín sobre el cefalotórax. Hábitos tímidos, sedentarios y nocturnos; huye de la luz.",
@@ -666,7 +666,7 @@ PEST_ENCYCLOPEDIA: List[Dict[str, Any]] = [
         "id": "arana-viuda-negra",
         "name": "Araña Viuda Negra / Capulina",
         "scientific_name": "Latrodectus mactans / Latrodectus hesperus",
-        "category": "Arácnidos Ponzoñosos (Araneae / Theridiidae)",
+        "category": "Arácnidos Ponzoñosos",
         "icon": "fa-spider",
         "danger_level": "Extremo (Veneno Neurotóxico Alfa-latrotoxina)",
         "biology_and_habits": "Hembra de 12 a 15 mm, abdomen globular negro azabache brillante con característica mancha roja brillante en forma de reloj de arena en la cara ventral. Construye telas tridimensionales irregulares y muy resistentes en zonas bajas oscuras.",
@@ -690,7 +690,7 @@ PEST_ENCYCLOPEDIA: List[Dict[str, Any]] = [
         "id": "garrapatas",
         "name": "Garrapata Café del Perro",
         "scientific_name": "Rhipicephalus sanguineus",
-        "category": "Arácnidos Hematófagos (Ixodida / Ixodidae)",
+        "category": "Arácnidos Hematófagos / Vectores",
         "icon": "fa-bug-slash",
         "danger_level": "Extremo (Vector de Rickettsiosis Letal)",
         "biology_and_habits": "Ácaro ectoparásito hematófago con ciclo de 3 huéspedes. Capaz de completar todo su ciclo en interiores de casas y construcciones urbanas. Las hembras ingurgitadas trepan por paredes, grietas y techos para ovipositar de 2,000 a 4,000 huevecillos.",
@@ -716,7 +716,7 @@ PEST_ENCYCLOPEDIA: List[Dict[str, Any]] = [
         "id": "pulgas",
         "name": "Pulgas (Gato y Perro)",
         "scientific_name": "Ctenocephalides felis / Ctenocephalides canis",
-        "category": "Insectos Hematófagos (Siphonaptera)",
+        "category": "Insectos Hematófagos",
         "icon": "fa-shield-virus",
         "danger_level": "Alto (Vectores y Alergias Severas)",
         "biology_and_habits": "Insectos ápteros aplanados lateralmente de 1 a 3 mm, con patas traseras adaptadas para saltar hasta 20 cm en vertical. Adultos hematófagos estrictos. Larvas no parásitas que se alimentan de restos orgánicos y heces de pulga adulta en alfombras, hendiduras y camas de mascotas.",
@@ -741,7 +741,7 @@ PEST_ENCYCLOPEDIA: List[Dict[str, Any]] = [
         "id": "mosca-domestica",
         "name": "Mosca Doméstica",
         "scientific_name": "Musca domestica",
-        "category": "Insectos Voladores (Diptera / Muscidae)",
+        "category": "Insectos Voladores",
         "icon": "fa-feather",
         "danger_level": "Alto (Vector Mecánico Entérico)",
         "biology_and_habits": "Insecto volador díptero de 6 a 7 mm. Ojos compuestos grandes, aparato bucal adaptado para lamer y esponjar alimentos líquidos. Para ingerir sólidos regurgita saliva y jugos gástricos. Una hembra oviposita de 500 a 1,000 huevos en materia orgánica húmeda en descomposición (estiércol, basura, carne). En clima cálido su ciclo completo huevo-adulto dura apenas 7 a 10 días.",
@@ -766,7 +766,7 @@ PEST_ENCYCLOPEDIA: List[Dict[str, Any]] = [
         "id": "mosca-drenaje",
         "name": "Mosca del Drenaje / De la Humedad",
         "scientific_name": "Psychoda alternata / Clogmia albipunctata",
-        "category": "Insectos Voladores (Diptera / Psychodidae)",
+        "category": "Insectos Voladores",
         "icon": "fa-water",
         "danger_level": "Moderado (Vector Mecánico en Sanitarios)",
         "biology_and_habits": "Díptero pequeño de 2 a 5 mm, cuerpo y alas cubiertos de abundante pilosidad que le da aspecto de pequeña polilla. Vuelo torpe e irregular. Las larvas se desarrollan en la biopelícula mucosa y lodo orgánico que recubre el interior de tuberías de drenaje, sifones y rebosaderos de lavabos.",
@@ -791,7 +791,7 @@ PEST_ENCYCLOPEDIA: List[Dict[str, Any]] = [
         "id": "mosca-fruta",
         "name": "Mosca del Vinagre / De la Fruta",
         "scientific_name": "Drosophila melanogaster",
-        "category": "Insectos Voladores (Diptera / Drosophilidae)",
+        "category": "Insectos Voladores",
         "icon": "fa-wine-bottle",
         "danger_level": "Moderado (Contaminación en Bares y Restaurantes)",
         "biology_and_habits": "Insecto diminuto de 2.5 a 3.5 mm con ojos rojos brillantes y cuerpo amarillento. Ciclo vital extraordinariamente rápido (8 a 10 días a 25°C). Se reproduce en sustratos con fermentación alcohólica o acética: frutas maduras, botellas de licor abiertas, trapos húmedos de barra y fondos de botes de basura.",
@@ -815,7 +815,7 @@ PEST_ENCYCLOPEDIA: List[Dict[str, Any]] = [
         "id": "mosquitos-aedes-culex",
         "name": "Mosquitos Urbanos (Dengue, Zika, Chikungunya)",
         "scientific_name": "Aedes aegypti / Culex quinquefasciatus",
-        "category": "Insectos Voladores (Diptera / Culicidae)",
+        "category": "Insectos Voladores",
         "icon": "fa-mosquito",
         "danger_level": "Extremo (Vectores Epidemiológicos de Salud Pública)",
         "biology_and_habits": "Aedes aegypti: Tórax con dibujo en forma de lira y patas anilladas de blanco. Hábitos diurnos antropofílicos; oviposita en recipientes artificiales con agua limpia. Culex: Color pardo uniforme, hábitos nocturnos; cría en aguas estancadas ricas en materia orgánica.",
@@ -840,7 +840,7 @@ PEST_ENCYCLOPEDIA: List[Dict[str, Any]] = [
         "id": "hormigas-urbanas",
         "name": "Hormigas Urbanas (Loca, Argentina, Fantasma)",
         "scientific_name": "Linepithema humile, Paratrechina longicornis, Tapinoma melanocephalum",
-        "category": "Insectos Rastreros (Hymenoptera / Formicidae)",
+        "category": "Insectos Rastreros",
         "icon": "fa-cubes-stacked",
         "danger_level": "Moderado a Alto (Vector Hospitalario)",
         "biology_and_habits": "Insectos sociales que viven en colonias complejas con una o múltiples reinas (poliginia). Forman senderos persistentes de forrajeo siguiendo feromonas de pista. Fenómeno de gemación (budding): si se aplica insecticida repelente de contacto, la colonia se fragmenta en múltiples nidos satélites multiplicando la infestación.",
@@ -865,7 +865,7 @@ PEST_ENCYCLOPEDIA: List[Dict[str, Any]] = [
         "id": "hormiga-fuego",
         "name": "Hormiga de Fuego / Brava",
         "scientific_name": "Solenopsis invicta / Solenopsis geminata",
-        "category": "Insectos Ponzoñosos (Hymenoptera / Formicidae)",
+        "category": "Insectos Rastreros",
         "icon": "fa-fire",
         "danger_level": "Alto a Extremo (Picadura Venenosa Dolorosa)",
         "biology_and_habits": "Hormigas de 2 a 6 mm, color café rojizo con abdomen oscuro. Construyen montículos de tierra cónicos en jardines, campos y orillas de banquetas. Extremadamente agresivas: ante perturbación salen en masa, muerden con sus mandíbulas y clavan repetidamente su aguijón inyectando solenopsina (alcaloide tóxico).",
@@ -890,7 +890,7 @@ PEST_ENCYCLOPEDIA: List[Dict[str, Any]] = [
         "id": "avispas-y-abejas",
         "name": "Avispas, Avispones y Abejas",
         "scientific_name": "Vespula germanica, Polistes, Apis mellifera",
-        "category": "Insectos Himenópteros Ponzoñosos",
+        "category": "Insectos Voladores",
         "icon": "fa-triangle-exclamation",
         "danger_level": "Extremo (Shock Anafiláctico y Picaduras Múltiples)",
         "biology_and_habits": "Insectos sociales o subsociales que construyen panales o nidos de papel y celulosa masticada en aleros, techos, cajas de registro y árboles. Las avispas poseen aguijón liso que les permite picar múltiples veces sin morir; las abejas pierden el aguijón y mueren al picar.",
@@ -915,7 +915,7 @@ PEST_ENCYCLOPEDIA: List[Dict[str, Any]] = [
         "id": "termitas",
         "name": "Termita Subterránea",
         "scientific_name": "Reticulitermes spp., Coptotermes formosanus",
-        "category": "Insectos Xilófagos (Blattodea / Isoptera)",
+        "category": "Insectos Xilófagos",
         "icon": "fa-tree",
         "danger_level": "Extremo (Colapso Estructural)",
         "biology_and_habits": "Insectos coloniales que se alimentan de celulosa (madera, papel, cartón). Viven en nidos subterráneos en el suelo y construyen tubos de lodo y saliva para desplazarse hacia las estructuras de madera sin deshidratarse por la luz y el aire.",
@@ -939,7 +939,7 @@ PEST_ENCYCLOPEDIA: List[Dict[str, Any]] = [
         "id": "termita-madera-seca",
         "name": "Termita de Madera Seca",
         "scientific_name": "Cryptotermes brevis / Incisitermes snyderi",
-        "category": "Insectos Xilófagos (Blattodea / Isoptera)",
+        "category": "Insectos Xilófagos",
         "icon": "fa-chair",
         "danger_level": "Alto (Daño a Muebles y Obras de Arte)",
         "biology_and_habits": "No requieren contacto con el suelo ni fuentes de humedad externa; obtienen el agua metabólica de la madera seca (<10% humedad). Viven en colonias pequeñas enteramente dentro de la pieza de madera infestada. Expulsan pellets fecales hexagonales diminutos ('aserrín en bolitas') a través de orificios de expulsión.",
@@ -964,7 +964,7 @@ PEST_ENCYCLOPEDIA: List[Dict[str, Any]] = [
         "id": "carcoma-madera",
         "name": "Carcoma / Barrenador de la Madera",
         "scientific_name": "Anobium punctatum / Hylotrupes bajulus / Lyctus brunneus",
-        "category": "Insectos Xilófagos (Coleoptera / Ptinidae / Cerambycidae)",
+        "category": "Insectos Xilófagos",
         "icon": "fa-cubes",
         "danger_level": "Alto (Degradación de Maderas y Estructuras)",
         "biology_and_habits": "Escarabajos cuyas larvas xilófagas taladran túneles y galerías en el interior de la madera durante 2 a 5 años alimentándose de la celulosa y almidón. El adulto perfora un orificio circular de salida (1 a 3 mm) y expulsa aserrín fino o polvillo harinoso.",
@@ -989,7 +989,7 @@ PEST_ENCYCLOPEDIA: List[Dict[str, Any]] = [
         "id": "gorgojo-granos",
         "name": "Gorgojos de Granos Almacenados (Arroz, Trigo, Maíz)",
         "scientific_name": "Sitophilus oryzae / Sitophilus zeamais / Sitophilus granarius",
-        "category": "Plagas de la Industria Alimentaria (Coleoptera / Curculionidae)",
+        "category": "Plagas de la Industria Alimentaria",
         "icon": "fa-wheat-awn",
         "danger_level": "Alto (Pérdidas Económicas e Inocuidad)",
         "biology_and_habits": "Coleópteros de 3 a 5 mm con cabeza prolongada en una trompa o pico característico (rostro). La hembra perfora el grano entero de cereal, deposita un huevo en su interior y sella el orificio con una secreción gelatinosa. La larva se desarrolla y empupa totalmente dentro del grano, emergiendo el adulto dejando un orificio redondo visible.",
@@ -1014,7 +1014,7 @@ PEST_ENCYCLOPEDIA: List[Dict[str, Any]] = [
         "id": "polillas-harina",
         "name": "Polillas de la Harina y Frutos Secos",
         "scientific_name": "Plodia interpunctella / Ephestia kuehniella",
-        "category": "Plagas de la Industria Alimentaria (Lepidoptera / Pyralidae)",
+        "category": "Plagas de la Industria Alimentaria",
         "icon": "fa-wheat-awn",
         "danger_level": "Alto (Contaminación de Alimentos Terminados)",
         "biology_and_habits": "Pequeñas mariposas nocturnas de 8 a 10 mm. Plodia presenta alas anteriores bicolores (tercio basal gris claro y dos tercios distales color bronce rojizo). Los adultos no comen; las larvas devoran harinas, cereales, galletas, chocolates y frutos secos, tejiendo densas telarañas de seda que apelmazan el producto.",
@@ -1038,7 +1038,7 @@ PEST_ENCYCLOPEDIA: List[Dict[str, Any]] = [
         "id": "polilla-ropa",
         "name": "Polilla de la Ropa y Tejidos",
         "scientific_name": "Tineola bisselliella",
-        "category": "Plagas de Textiles (Lepidoptera / Tineidae)",
+        "category": "Plagas de Textiles y Museos",
         "icon": "fa-vest",
         "danger_level": "Moderado a Alto (Destrucción de Fibras Naturales)",
         "biology_and_habits": "Pequeña polilla dorada uniforme de 6 a 8 mm. Huye activamente de la luz. La larva es el único estadio dañino: posee queratinasa para digerir queratina presente en lana, seda, plumas, pieles y alfombras naturales, construyendo tubos de seda y restos de fibra.",
@@ -1062,7 +1062,7 @@ PEST_ENCYCLOPEDIA: List[Dict[str, Any]] = [
         "id": "escarabajo-alfombras",
         "name": "Escarabajo de las Alfombras / Derméstido",
         "scientific_name": "Anthrenus verbasci / Attagenus pellio",
-        "category": "Plagas de Textiles y Museos (Coleoptera / Dermestidae)",
+        "category": "Plagas de Textiles y Museos",
         "icon": "fa-rug",
         "danger_level": "Moderado a Alto (Daño a Telas y Alergias)",
         "biology_and_habits": "Escarabajo pequeño redondeado de 2 a 3 mm con escamas multicolores (blanco, amarillo y marrón). Adultos comen polen en flores; las larvas son muy pilosas y se alimentan de lana, pelo, plumas, cuero, insectos disecados y pieles.",
@@ -1087,7 +1087,7 @@ PEST_ENCYCLOPEDIA: List[Dict[str, Any]] = [
         "id": "pescadito-de-plata",
         "name": "Pescadito de Plata / Lepisma",
         "scientific_name": "Lepisma saccharina",
-        "category": "Insectos Rastreros (Zygentoma / Lepismatidae)",
+        "category": "Insectos Rastreros",
         "icon": "fa-fish-fins",
         "danger_level": "Moderado (Daño a Archivos, Libros y Papel)",
         "biology_and_habits": "Insecto primitivo áptero de 7 a 12 mm, cuerpo ahusado cubierto de escamas plateadas brillantes. Movimientos rápidos y ondulantes. Requiere humedad relativa superior al 75%. Se alimenta de carbohidratos complejos: almidón, celulosa, pegamentos de libros, papel tapiz y textiles.",
@@ -1111,7 +1111,7 @@ PEST_ENCYCLOPEDIA: List[Dict[str, Any]] = [
         "id": "tijerillas",
         "name": "Tijerillas / Tijeretas",
         "scientific_name": "Forficula auricularia",
-        "category": "Insectos Rastreros (Dermaptera / Forficulidae)",
+        "category": "Insectos Rastreros",
         "icon": "fa-scissors",
         "danger_level": "Bajo a Moderado (Plaga Molesta e Invasiva)",
         "biology_and_habits": "Insecto alargado y aplanado de 10 a 20 mm, color café rojizo, provisto de cercos en forma de pinza en el extremo del abdomen (más curvados en machos). Hábitos nocturnos, higrófilos y fototrópicos negativos. Se refugian en grietas oscuras y húmedas bajo macetas, piedras y corteza.",
@@ -1135,7 +1135,7 @@ PEST_ENCYCLOPEDIA: List[Dict[str, Any]] = [
         "id": "grillos",
         "name": "Grillos Domésticos y de Campo",
         "scientific_name": "Acheta domesticus / Gryllus assimilis",
-        "category": "Insectos Rastreros (Orthoptera / Gryllidae)",
+        "category": "Insectos Rastreros",
         "icon": "fa-music",
         "danger_level": "Bajo a Moderado (Daño a Telas y Atracción de Depredadores)",
         "biology_and_habits": "Insectos ortópteros de 15 a 25 mm, color café claro a negro. Machos producen canto estridulando sus alas para cortejo. Se alimentan de materia orgánica, papel, lana y alimentos. Su presencia atrae alacranes y arañas ponzoñosas.",
@@ -1159,7 +1159,7 @@ PEST_ENCYCLOPEDIA: List[Dict[str, Any]] = [
         "id": "ciempies-milpies",
         "name": "Ciempiés y Ciempiés Casero",
         "scientific_name": "Scutigera coleoptrata / Scolopendra viridis",
-        "category": "Miriápodos (Chilopoda)",
+        "category": "Miriápodos y Crustáceos",
         "icon": "fa-worm",
         "danger_level": "Moderado a Alto (Mordedura Dolorosa con Forcípulas)",
         "biology_and_habits": "Scutigera (ciempiés casero): 15 pares de patas larguísimas, se desplaza velozmente en paredes húmedas cazando otros insectos. Scolopendra: cuerpo aplanado con forcípulas venenosas en el primer segmento que inoculan toxinas en presas o humanos ante manipulación.",
@@ -1182,7 +1182,7 @@ PEST_ENCYCLOPEDIA: List[Dict[str, Any]] = [
         "id": "cochinillas-humedad",
         "name": "Cochinillas de Humedad / Bichos Bola",
         "scientific_name": "Armadillidium vulgare / Porcellio scaber",
-        "category": "Crustáceos Terrestres (Isopoda)",
+        "category": "Miriápodos y Crustáceos",
         "icon": "fa-circle-dot",
         "danger_level": "Bajo (Indicador de Humedad Excesiva)",
         "biology_and_habits": "Únicos crustáceos adaptados a la vida terrestre. Respiran por pseudotráqueas branquiales modificadas que requieren 100% de humedad ambiental. Armadillidium rueda sobre sí mismo formando una esfera compacta ante amenazas (conglobación). Comen materia orgánica vegetal en descomposición.",
@@ -1205,7 +1205,7 @@ PEST_ENCYCLOPEDIA: List[Dict[str, Any]] = [
         "id": "paloma-comun",
         "name": "Paloma Común / Aves Nocivas",
         "scientific_name": "Columba livia",
-        "category": "Aves Urbanas (Columbiformes)",
+        "category": "Aves Urbanas",
         "icon": "fa-dove",
         "danger_level": "Alto (Daño a Salud y Edificaciones)",
         "biology_and_habits": "Ave comensal gregaria de 30 a 35 cm. Anida en cornisas, techos, marquesinas y sistemas de ventilación de edificios. Produce hasta 12 kg de heces ácidas por ave al año.",
@@ -1226,10 +1226,13 @@ PEST_ENCYCLOPEDIA: List[Dict[str, Any]] = [
     }
 ]
 
+# Registro persistente de nuevas plagas consultadas o sintetizadas en línea
+CUSTOM_SYNTHESIZED_PESTS: Dict[str, Dict[str, Any]] = {}
+
 
 def get_pest_combat_guides() -> List[Dict[str, Any]]:
-    """Retorna las fichas técnicas detalladas de combate específico por plaga urbana."""
-    return PEST_ENCYCLOPEDIA
+    """Retorna las fichas técnicas detalladas de combate específico por plaga urbana incluyendo las agregadas."""
+    return list(PEST_ENCYCLOPEDIA) + list(CUSTOM_SYNTHESIZED_PESTS.values())
 
 
 # ============================================================================
@@ -1240,6 +1243,7 @@ def get_pest_combat_guides() -> List[Dict[str, Any]]:
 TAXONOMIC_TAXA_RULES: List[Dict[str, Any]] = [
     {
         "keywords": ["carcoma", "barrenador", "taladro", "termita", "polilla de madera", "xilofago", "xilofagos", "lyctus", "hylotrupes", "anobium"],
+        "category": "Insectos Xilófagos",
         "order": "Coleoptera / Blattodea (Insectos Xilófagos)",
         "icon": "fa-tree",
         "danger_level": "Alto a Extremo (Degradación y Colapso Estructural)",
@@ -1263,6 +1267,7 @@ TAXONOMIC_TAXA_RULES: List[Dict[str, Any]] = [
     },
     {
         "keywords": ["gorgojo", "taladrillo", "barrenador de grano", "sitophilus", "tribolium", "oryzaephilus", "rhizopertha", "trogoderma", "plaga de grano", "harina", "cereal"],
+        "category": "Plagas de la Industria Alimentaria",
         "order": "Coleoptera / Curculionoidea (Plagas de Granos y Harinas)",
         "icon": "fa-wheat-awn",
         "danger_level": "Alto (Pérdidas Económicas e Inocuidad Alimentaria)",
@@ -1285,6 +1290,7 @@ TAXONOMIC_TAXA_RULES: List[Dict[str, Any]] = [
     },
     {
         "keywords": ["chinche", "triatoma", "cimex", "besucona", "fitófaga", "lygaeidae", "pentatomidae", "chinche de campo", "chinchilla"],
+        "category": "Insectos Hematófagos",
         "order": "Hemiptera / Heteroptera (Chinches y Hemípteros)",
         "icon": "fa-shield-virus",
         "danger_level": "Alto a Extremo (Hematófagos Vectores o Fitófagos Invasivos)",
@@ -1308,6 +1314,7 @@ TAXONOMIC_TAXA_RULES: List[Dict[str, Any]] = [
     },
     {
         "keywords": ["mosca", "mosquito", "jejen", "zancudo", "simulido", "drosophila", "psychoda", "fannia", "tabano", "culicoides"],
+        "category": "Insectos Voladores",
         "order": "Diptera (Moscas, Mosquitos y Dípteros Urbanos)",
         "icon": "fa-mosquito",
         "danger_level": "Alto a Extremo (Vectores Epidemiológicos y Mecánicos)",
@@ -1331,6 +1338,7 @@ TAXONOMIC_TAXA_RULES: List[Dict[str, Any]] = [
     },
     {
         "keywords": ["arana", "araña", "alacran", "alacrán", "escorpion", "escorpión", "loxosceles", "latrodectus", "centruroides"],
+        "category": "Arácnidos Ponzoñosos",
         "order": "Arachnida (Araneae y Scorpiones Ponzoñosos)",
         "icon": "fa-spider",
         "danger_level": "Extremo (Veneno Necrótico o Neurotóxico)",
@@ -1353,6 +1361,7 @@ TAXONOMIC_TAXA_RULES: List[Dict[str, Any]] = [
     },
     {
         "keywords": ["acaro", "ácaro", "garrapata", "sarna", "scabies", "rhipicephalus", "dermatophagoides", "polvo"],
+        "category": "Arácnidos Hematófagos / Vectores",
         "order": "Arachnida / Acari (Ácaros y Garrapatas)",
         "icon": "fa-bug-slash",
         "danger_level": "Alto a Extremo (Vectores de Rickettsiosis o Alérgenos Respiratorios)",
@@ -1374,33 +1383,34 @@ TAXONOMIC_TAXA_RULES: List[Dict[str, Any]] = [
         "reentry": "4 horas tras aspersión."
     },
     {
-        "keywords": ["avispa", "avispón", "abeja", "hormiga", "polistes", "vespula", "solenopsis", "linepithema", "himenoptero"],
-        "order": "Hymenoptera (Hormigas, Avispas y Abejas Ponzoñosas/Sociales)",
+        "keywords": ["avispa", "avispón", "abeja", "polistes", "vespula", "himenoptero"],
+        "category": "Insectos Voladores",
+        "order": "Hymenoptera (Avispas y Abejas Ponzoñosas)",
         "icon": "fa-triangle-exclamation",
-        "danger_level": "Alto a Extremo (Shock Anafiláctico o Vector Nosocomial)",
-        "biology_template": "Insectos sociales organizados en castas (reinas, obreras, machos). Las avispas y abejas poseen ovipositor modificado en aguijón conectado a glándulas venenosas; las hormigas forman colonias con senderos feromonales hacia alimentos.",
-        "damage_template": "Picaduras venenosas múltiples con riesgo de anafilaxia letal; contaminación bacteriana de superficies estériles en hospitales.",
-        "exclusion_template": "Sellado de oquedades en fachadas y cajas de medidores; mallas en respiraderos; poda de ramas en contacto con techos.",
-        "mechanical_template": "Reubicación obligatoria de enjambres de abejas con apicultor certificado; trampas de atrayente dulce para avispas.",
+        "danger_level": "Alto a Extremo (Shock Anafiláctico)",
+        "biology_template": "Insectos sociales o solitarios con aguijón conectado a glándulas venenosas. Construyen nidos en aleros, techos y árboles.",
+        "damage_template": "Picaduras dolorosas múltiples con riesgo letal de shock anafiláctico.",
+        "exclusion_template": "Sellado de oquedades en fachadas y cajas de registro; mallas en respiraderos.",
+        "mechanical_template": "Reubicación de abejas con apicultor; trampas de atracción.",
         "chemical_steps": [
-            "1. Para avispas: aplicación nocturna con chorro continuo de derribo rápido directamente al nido.",
-            "2. Para hormigas: aplicación exclusiva de cebos en gel no repelentes para inducir trofalaxis y mortandad de reinas.",
-            "3. Aspersión de barrera perimetral exterior con no repelentes."
+            "1. Aplicación nocturna con chorro continuo de derribo rápido directamente al nido.",
+            "2. Remoción física del panal una vez neutralizada la actividad."
         ],
         "chemicals": [
-            "Optigard Ant Gel (Tiametoxam 0.01% - RSCO-URB-INAC-0102M-301-392-0.01)",
-            "Termidor 25 CE (Fipronil 2.5%)",
-            "Biothrine Flow (Deltametrina 2.5%)"
+            "Biothrine Flow (Deltametrina 2.5%)",
+            "Pybuthrin 33 (Piretrinas de Derribo)",
+            "Demand 2.5 CS (Lambda Cyhalotrina)"
         ],
-        "irac": "Neonicotinoides (IRAC 4A) y Fenilpirazoles (IRAC 2B).",
-        "reentry": "0 horas para cebos en gel; 2 horas para aspersión."
+        "irac": "Piretroides Grupo 3A de alto derribo.",
+        "reentry": "2 horas."
     },
     {
         "keywords": ["polilla", "oruga", "lepidoptero", "palomilla", "tinea", "plodia"],
+        "category": "Plagas de Textiles y Museos",
         "order": "Lepidoptera (Polillas y Palomillas)",
         "icon": "fa-vest",
         "danger_level": "Moderado a Alto (Daño a Telas y Granos)",
-        "biology_template": "Insectos holometábolos cuyas orugas masticadoras tejen sedas y consumen queratina (textiles) o almidones (harinas y frutos secos). Los adultos no se alimentan pero son responsables del apareamiento y dispersión de huevecillos.",
+        "biology_template": "Insectos holometábolos cuyas orugas masticadoras tejen sedas y consumen queratina (textiles) o almidones (harinas y frutos secos).",
         "damage_template": "Destrucción de ropa de lana, telas finas, tapices o merma total de lotes de granos y harinas.",
         "exclusion_template": "Almacenamiento hermético de textiles limpios y granos; mallas finas en ventanas y puertas.",
         "mechanical_template": "Trampas adhesivas Delta con feromonas sexuales específicas; aspirado profundo.",
@@ -1425,18 +1435,21 @@ def search_or_synthesize_pest_guide(query: str) -> Dict[str, Any]:
     Busca una plaga en el catálogo enciclopédico de FLOSA o ejecuta el Motor de
     Inteligencia Entomológica para generar una ficha biológica y técnica personalizada,
     fidedigna y no duplicada conforme a la NOM-256-SSA1-2012 y COFEPRIS.
+    Guarda automáticamente las nuevas búsquedas para que permanezcan en el catálogo.
     """
     if not query or not query.strip():
+        all_p = get_pest_combat_guides()
         return {
             "source": "catalogo_oficial_mip",
-            "pest": PEST_ENCYCLOPEDIA[0]
+            "pest": all_p[0] if all_p else PEST_ENCYCLOPEDIA[0]
         }
 
     q_raw = query.strip()
     q_norm = q_raw.lower()
 
-    # 1. BÚSQUEDA EXACTA O PARCIAL EN CATÁLOGO LOCAL (30+ ESPECIES)
-    for p in PEST_ENCYCLOPEDIA:
+    # 1. BÚSQUEDA EXACTA O PARCIAL EN CATÁLOGO LOCAL Y EN PLAGAS SINTETIZADAS GUARDADAS
+    all_pests = get_pest_combat_guides()
+    for p in all_pests:
         name_l = p["name"].lower()
         sci_l = p["scientific_name"].lower()
         cat_l = p["category"].lower()
@@ -1450,7 +1463,7 @@ def search_or_synthesize_pest_guide(query: str) -> Dict[str, Any]:
 
     # Búsqueda por palabras clave individuales
     words = [w for w in re.split(r'\s+', q_norm) if len(w) >= 3]
-    for p in PEST_ENCYCLOPEDIA:
+    for p in all_pests:
         text_corpus = f"{p['name']} {p['scientific_name']} {p['category']} {p['biology_and_habits']} {p['damage_and_risks']}".lower()
         if all(w in text_corpus for w in words) and words:
             return {
@@ -1475,14 +1488,14 @@ def search_or_synthesize_pest_guide(query: str) -> Dict[str, Any]:
     # Si no hubo coincidencia directa por palabra clave taxonómica, inferir por raíces
     if not matched_taxa:
         if any(term in q_norm for term in ["escarabajo", "gorgojo", "polilla de madera", "barrenillo", "coleoptero"]):
-            matched_taxa = TAXONOMIC_TAXA_RULES[1]  # Coleóptero
+            matched_taxa = TAXONOMIC_TAXA_RULES[1]  # Coleóptero grano
         elif any(term in q_norm for term in ["zancudo", "mosquito", "jejen", "mosca", "diptero"]):
             matched_taxa = TAXONOMIC_TAXA_RULES[3]  # Díptero
         elif any(term in q_norm for term in ["chinche", "pulgón", "hemiptero", "trips"]):
             matched_taxa = TAXONOMIC_TAXA_RULES[2]  # Hemíptero
         else:
-            # Fallback general para artrópodos urbanos no comunes (ej. pescaditos, tijeretas, ortópteros)
             matched_taxa = {
+                "category": "Insectos Rastreros",
                 "order": "Arthropoda / Insecta (Control Urbano Especializado)",
                 "icon": "fa-bug-slash",
                 "danger_level": "Evaluación Técnica Según Nivel Poblacional",
@@ -1510,7 +1523,7 @@ def search_or_synthesize_pest_guide(query: str) -> Dict[str, Any]:
         "id": slug_id or "plaga-especializada",
         "name": f"{name_clean}",
         "scientific_name": f"Taxón asociado a {name_clean} ({matched_taxa['order']})",
-        "category": matched_taxa["order"],
+        "category": matched_taxa.get("category", "Insectos Rastreros"),
         "icon": matched_taxa.get("icon", "fa-bug"),
         "danger_level": matched_taxa["danger_level"],
         "biology_and_habits": f"{matched_taxa['biology_template']} Especie consultada: {name_clean}.",
@@ -1523,6 +1536,9 @@ def search_or_synthesize_pest_guide(query: str) -> Dict[str, Any]:
         "irac_rotation": matched_taxa["irac"],
         "reentry_time": matched_taxa["reentry"]
     }
+
+    # Guardar en memoria persistente de la aplicación para que aparezca siempre en el catálogo
+    CUSTOM_SYNTHESIZED_PESTS[synthetic_pest["id"]] = synthetic_pest
 
     return {
         "source": "motor_entomologico_sintetizado",
