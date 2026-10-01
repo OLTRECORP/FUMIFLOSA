@@ -1,6 +1,6 @@
-"""0004_add_cancellation_and_scheduling
+"""0004_cancel_and_schedule
 
-Revision ID: 0004_add_cancellation_and_scheduling
+Revision ID: 0004_cancel_and_schedule
 Revises: 0003_add_user_username
 Create Date: 2026-09-30 19:00:00.000000
 
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '0004_add_cancellation_and_scheduling'
+revision: str = '0004_cancel_and_schedule'
 down_revision: Union[str, None] = '0003_add_user_username'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None

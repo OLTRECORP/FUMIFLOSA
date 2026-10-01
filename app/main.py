@@ -24,6 +24,9 @@ def startup_db_sync():
     try:
         Base.metadata.create_all(bind=engine)
         with engine.begin() as conn:
+            # Soporte para revisiones alembic largas
+            conn.execute(text("ALTER TABLE IF EXISTS alembic_version ALTER COLUMN version_num TYPE VARCHAR(128);"))
+
             # Columnas para users
             conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS username VARCHAR(100);"))
             conn.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS ix_users_username ON users (username);"))
