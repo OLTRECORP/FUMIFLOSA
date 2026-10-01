@@ -596,6 +596,13 @@ class EPPAnnualMatrixBatch(BaseModel):
     rows: List[EPPAnnualMatrixRow]
 
 
+class EPPAnnualRowCreate(BaseModel):
+    technician_name: str
+    year: int = 2026
+    epp_item: str
+    frequency: str = "MENSUAL"
+
+
 class EquipmentCalibrationBase(BaseModel):
     equipment_name: str = Field(..., max_length=255)
     serial_number: Optional[str] = Field(None, max_length=100)

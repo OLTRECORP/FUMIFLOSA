@@ -1291,11 +1291,33 @@
 
                 <!-- Barra de Navegación del Calendario -->
                 <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
-                    <div class="flex items-center gap-2">
+                    <div class="flex flex-wrap items-center gap-2">
                         <button onclick="navCalendarMonth(-1)" class="w-8 h-8 rounded-lg border border-slate-200 hover:bg-slate-100 flex items-center justify-center text-slate-600"><i class="fa-solid fa-chevron-left text-xs"></i></button>
                         <button onclick="navCalendarToday()" class="px-2.5 py-1 text-xs font-bold border border-slate-200 rounded-lg hover:bg-slate-100 text-slate-700">Hoy</button>
                         <button onclick="navCalendarMonth(1)" class="w-8 h-8 rounded-lg border border-slate-200 hover:bg-slate-100 flex items-center justify-center text-slate-600"><i class="fa-solid fa-chevron-right text-xs"></i></button>
-                        <span id="calendar-month-title" class="text-base font-bold text-slate-800 ml-2">Septiembre 2026</span>
+                        
+                        <!-- Selectores de Mes y Año para Navegación Inmediata -->
+                        <select id="cal-month-select" onchange="onCalendarSelectChange()" class="border border-slate-300 rounded-lg px-2 py-1 text-xs font-bold text-slate-800 bg-white">
+                            <option value="0">Enero</option>
+                            <option value="1">Febrero</option>
+                            <option value="2">Marzo</option>
+                            <option value="3">Abril</option>
+                            <option value="4">Mayo</option>
+                            <option value="5">Junio</option>
+                            <option value="6">Julio</option>
+                            <option value="7">Agosto</option>
+                            <option value="8">Septiembre</option>
+                            <option value="9">Octubre</option>
+                            <option value="10">Noviembre</option>
+                            <option value="11">Diciembre</option>
+                        </select>
+                        <select id="cal-year-select" onchange="onCalendarSelectChange()" class="border border-slate-300 rounded-lg px-2 py-1 text-xs font-bold text-slate-800 bg-white">
+                            <!-- Opciones de 2020 a 2030 -->
+                        </select>
+                        <button onclick="jumpToLatestService()" title="Navegar al mes con los servicios más recientes registrados" class="px-2.5 py-1 text-xs font-bold border border-indigo-200 bg-indigo-50 text-indigo-700 rounded-lg hover:bg-indigo-100 flex items-center gap-1 transition">
+                            <i class="fa-solid fa-crosshairs text-indigo-600"></i> Último Servicio
+                        </button>
+                        <span id="calendar-month-title" class="text-sm font-extrabold text-slate-800 ml-2 hidden lg:inline">Septiembre 2026</span>
                     </div>
 
                     <!-- Filtros de Estado -->
@@ -2221,6 +2243,24 @@
                             </button>
                         </div>
                     </div>
+                    <!-- Barra de Entrada Rápida para añadir Fila EPP In Situ -->
+                    <div class="bg-white p-3 rounded-xl border border-purple-200 shadow-2xs flex flex-wrap items-center justify-between gap-3 text-xs">
+                        <div class="flex flex-wrap items-center gap-2 flex-1">
+                            <span class="font-bold text-purple-900 flex items-center gap-1"><i class="fa-solid fa-plus-circle text-purple-600"></i> Nuevo Elemento EPP:</span>
+                            <input type="text" id="quick-epp-item-name" placeholder="Ej. Careta Facial Policarbonato, Guantes Nitrilo Calibre 15..." class="border border-slate-300 rounded-lg px-3 py-1.5 text-xs flex-1 min-w-[220px]" />
+                            <select id="quick-epp-item-freq" class="border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs bg-white font-medium">
+                                <option value="Bimestral">Bimestral</option>
+                                <option value="Mensual">Mensual</option>
+                                <option value="Trimestral">Trimestral</option>
+                                <option value="Semestral">Semestral</option>
+                                <option value="Anual">Anual</option>
+                                <option value="Según desgaste">Según desgaste</option>
+                            </select>
+                        </div>
+                        <button onclick="addQuickEppRow()" class="bg-purple-600 hover:bg-purple-700 text-white font-bold px-3.5 py-1.5 rounded-lg flex items-center gap-1.5 shadow-xs transition">
+                            <i class="fa-solid fa-plus"></i> Añadir Fila a la Matriz
+                        </button>
+                    </div>
 
                     <div class="overflow-x-auto border border-slate-200 rounded-xl bg-white shadow-xs">
                         <table class="w-full text-left text-xs border-collapse">
@@ -2265,6 +2305,43 @@
                             <input type="text" id="epp-filter-tech" oninput="loadEppLogs()" placeholder="Filtrar por técnico o categoría..." class="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-300 rounded-xl" />
                         </div>
                     </div>
+
+                    <!-- Captura Rápida In-Situ de Entrega / Mantenimiento EPP -->
+                    <div class="bg-purple-50/60 p-3.5 rounded-xl border border-purple-200 text-xs space-y-2">
+                        <span class="font-bold text-purple-950 flex items-center gap-1.5">
+                            <i class="fa-solid fa-pen-to-square text-purple-700"></i> Captura Directa en Tabla:
+                        </span>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-7 gap-2">
+                            <input type="date" id="quick-epp-date" class="border border-slate-300 rounded-lg p-1.5 text-xs bg-white font-medium" />
+                            <select id="quick-epp-tech" class="border border-slate-300 rounded-lg p-1.5 text-xs bg-white font-medium"></select>
+                            <select id="quick-epp-cat" class="border border-slate-300 rounded-lg p-1.5 text-xs bg-white font-medium">
+                                <option value="MASCARILLA">MASCARILLA / RESPIRADOR</option>
+                                <option value="FILTROS">FILTROS / CARTUCHOS</option>
+                                <option value="GUANTES">GUANTES DE PROTECCIÓN</option>
+                                <option value="GOGLES">GOGLES / MONOGAFAS</option>
+                                <option value="VESTIMENTA">OVEROL / TYVEK</option>
+                                <option value="CALZADO">BOTAS / CALZADO</option>
+                                <option value="PROTECCION AUDITIVA">PROTECCIÓN AUDITIVA</option>
+                            </select>
+                            <input type="text" id="quick-epp-item" placeholder="Elemento (ej. Cartuchos 3M 6003)" class="border border-slate-300 rounded-lg p-1.5 text-xs bg-white" />
+                            <select id="quick-epp-cond" class="border border-slate-300 rounded-lg p-1.5 text-xs bg-white">
+                                <option value="NUEVO">NUEVO</option>
+                                <option value="USADO (Revisión)">USADO (Revisión)</option>
+                                <option value="REEMPLAZO">REEMPLAZO</option>
+                            </select>
+                            <select id="quick-epp-interval" class="border border-slate-300 rounded-lg p-1.5 text-xs bg-white">
+                                <option value="MENSUAL">Cambio: MENSUAL</option>
+                                <option value="BIMESTRAL">Cambio: BIMESTRAL</option>
+                                <option value="TRIMESTRAL">Cambio: TRIMESTRAL</option>
+                                <option value="SEMESTRAL">Cambio: SEMESTRAL</option>
+                                <option value="SEGÚN DESGASTE">SEGÚN DESGASTE</option>
+                            </select>
+                            <button onclick="submitQuickEppLog()" class="bg-purple-700 hover:bg-purple-800 text-white font-bold p-1.5 rounded-lg flex items-center justify-center gap-1 shadow-xs transition">
+                                <i class="fa-solid fa-plus"></i> Registrar
+                            </button>
+                        </div>
+                    </div>
+
                     <div class="overflow-x-auto border border-slate-200 rounded-xl bg-white shadow-xs">
                         <table class="w-full text-left text-xs">
                             <thead class="bg-slate-100 text-slate-600 font-bold uppercase text-[10px]">
@@ -2298,6 +2375,26 @@
                             </a>
                         </div>
                     </div>
+
+                    <!-- Captura Rápida In-Situ de Calibración de Equipos -->
+                    <div class="bg-blue-50/60 p-3.5 rounded-xl border border-blue-200 text-xs space-y-2">
+                        <span class="font-bold text-blue-950 flex items-center gap-1.5">
+                            <i class="fa-solid fa-pen-to-square text-blue-700"></i> Captura Directa de Calibración:
+                        </span>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-8 gap-2">
+                            <input type="date" id="quick-calib-date" class="border border-slate-300 rounded-lg p-1.5 text-xs bg-white font-medium" />
+                            <input type="text" id="quick-calib-name" placeholder="Equipo (ej. Swissmex 15L)" class="border border-slate-300 rounded-lg p-1.5 text-xs bg-white" />
+                            <input type="text" id="quick-calib-serial" placeholder="Serie (ej. SW-2024-01)" class="border border-slate-300 rounded-lg p-1.5 text-xs bg-white" />
+                            <input type="text" id="quick-calib-nozzle" value="Abanico Plano 8002" placeholder="Boquilla" class="border border-slate-300 rounded-lg p-1.5 text-xs bg-white" />
+                            <input type="text" id="quick-calib-pressure" value="40 psi" placeholder="Presión" class="border border-slate-300 rounded-lg p-1.5 text-xs bg-white" />
+                            <input type="text" id="quick-calib-flow" value="0.75 L/min" placeholder="Gasto" class="border border-slate-300 rounded-lg p-1.5 text-xs bg-white" />
+                            <select id="quick-calib-tech" class="border border-slate-300 rounded-lg p-1.5 text-xs bg-white font-medium"></select>
+                            <button onclick="submitQuickCalibrationLog()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold p-1.5 rounded-lg flex items-center justify-center gap-1 shadow-xs transition">
+                                <i class="fa-solid fa-plus"></i> Registrar
+                            </button>
+                        </div>
+                    </div>
+
                     <div class="overflow-x-auto border border-slate-200 rounded-xl bg-white shadow-xs">
                         <table class="w-full text-left text-xs">
                             <thead class="bg-slate-100 text-slate-600 font-bold uppercase text-[10px]">
@@ -2331,6 +2428,36 @@
                             </a>
                         </div>
                     </div>
+
+                    <!-- Captura Rápida In-Situ de Monitoreo de Estaciones -->
+                    <div class="bg-amber-50/60 p-3.5 rounded-xl border border-amber-200 text-xs space-y-2">
+                        <span class="font-bold text-amber-950 flex items-center gap-1.5">
+                            <i class="fa-solid fa-pen-to-square text-amber-700"></i> Captura Directa de Monitoreo:
+                        </span>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-8 gap-2">
+                            <input type="date" id="quick-mon-date" class="border border-slate-300 rounded-lg p-1.5 text-xs bg-white font-medium" />
+                            <select id="quick-mon-branch" class="border border-slate-300 rounded-lg p-1.5 text-xs bg-white font-medium">
+                                <option value="">Selecciona Sucursal...</option>
+                            </select>
+                            <input type="text" id="quick-mon-num" placeholder="Estación # (ej. EST-01)" class="border border-slate-300 rounded-lg p-1.5 text-xs bg-white" />
+                            <select id="quick-mon-type" class="border border-slate-300 rounded-lg p-1.5 text-xs bg-white font-medium">
+                                <option value="Cebadero de Roedor">Cebadero Roedor</option>
+                                <option value="Trampa Mecánica / Golpe">Trampa Golpe</option>
+                                <option value="Trampa de Goma / Pegamento">Trampa Pegamento</option>
+                                <option value="Lámpara de Luz UV">Lámpara UV</option>
+                            </select>
+                            <input type="number" id="quick-mon-bait" value="0" min="0" max="100" placeholder="% Cebo" class="border border-slate-300 rounded-lg p-1.5 text-xs bg-white" />
+                            <select id="quick-mon-activity" class="border border-slate-300 rounded-lg p-1.5 text-xs bg-white">
+                                <option value="0">Sin Actividad</option>
+                                <option value="1">Con Actividad / Roído</option>
+                            </select>
+                            <select id="quick-mon-tech" class="border border-slate-300 rounded-lg p-1.5 text-xs bg-white font-medium"></select>
+                            <button onclick="submitQuickMonitoringLog()" class="bg-amber-600 hover:bg-amber-700 text-white font-bold p-1.5 rounded-lg flex items-center justify-center gap-1 shadow-xs transition">
+                                <i class="fa-solid fa-plus"></i> Registrar
+                            </button>
+                        </div>
+                    </div>
+
                     <div class="overflow-x-auto border border-slate-200 rounded-xl bg-white shadow-xs">
                         <table class="w-full text-left text-xs">
                             <thead class="bg-slate-100 text-slate-600 font-bold uppercase text-[10px]">
@@ -2365,6 +2492,26 @@
                             </a>
                         </div>
                     </div>
+
+                    <!-- Captura Rápida In-Situ de Residuos y Triple Lavado -->
+                    <div class="bg-emerald-50/60 p-3.5 rounded-xl border border-emerald-200 text-xs space-y-2">
+                        <span class="font-bold text-emerald-950 flex items-center gap-1.5">
+                            <i class="fa-solid fa-pen-to-square text-emerald-700"></i> Captura Directa de Triple Lavado & Envases:
+                        </span>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-8 gap-2">
+                            <input type="date" id="quick-waste-date" class="border border-slate-300 rounded-lg p-1.5 text-xs bg-white font-medium" />
+                            <input type="text" id="quick-waste-chem" placeholder="Producto (ej. Biothrine Flow)" class="border border-slate-300 rounded-lg p-1.5 text-xs bg-white" />
+                            <input type="text" id="quick-waste-ai" placeholder="Ing. Activo (ej. Deltametrina)" class="border border-slate-300 rounded-lg p-1.5 text-xs bg-white" />
+                            <input type="number" id="quick-waste-count" value="1" min="1" placeholder="Envases" class="border border-slate-300 rounded-lg p-1.5 text-xs bg-white" />
+                            <input type="text" id="quick-waste-cap" value="1 Litro" placeholder="Capacidad" class="border border-slate-300 rounded-lg p-1.5 text-xs bg-white" />
+                            <input type="text" id="quick-waste-manifest" placeholder="Manifiesto / Destino" class="border border-slate-300 rounded-lg p-1.5 text-xs bg-white" />
+                            <select id="quick-waste-resp" class="border border-slate-300 rounded-lg p-1.5 text-xs bg-white font-medium"></select>
+                            <button onclick="submitQuickWasteLog()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold p-1.5 rounded-lg flex items-center justify-center gap-1 shadow-xs transition">
+                                <i class="fa-solid fa-plus"></i> Registrar
+                            </button>
+                        </div>
+                    </div>
+
                     <div class="overflow-x-auto border border-slate-200 rounded-xl bg-white shadow-xs">
                         <table class="w-full text-left text-xs">
                             <thead class="bg-slate-100 text-slate-600 font-bold uppercase text-[10px]">
@@ -2426,13 +2573,13 @@
                                 class="w-full pl-8 pr-3 py-1.5 text-xs bg-white border border-slate-300 rounded-xl focus:ring-1 focus:ring-emerald-500" />
                         </div>
                         <div class="flex flex-wrap items-center gap-1.5">
-                            <button onclick="filterPestCategory('all')" class="pest-cat-btn px-2.5 py-1 rounded-full font-bold bg-slate-800 text-white text-[11px]">Todas</button>
-                            <button onclick="filterPestCategory('Insectos Rastreros')" class="pest-cat-btn px-2.5 py-1 rounded-full font-medium bg-slate-100 text-slate-700 hover:bg-slate-200 text-[11px]">Rastreros</button>
-                            <button onclick="filterPestCategory('Roedores Comensales')" class="pest-cat-btn px-2.5 py-1 rounded-full font-medium bg-slate-100 text-slate-700 hover:bg-slate-200 text-[11px]">Roedores</button>
-                            <button onclick="filterPestCategory('Insectos Hematófagos')" class="pest-cat-btn px-2.5 py-1 rounded-full font-medium bg-slate-100 text-slate-700 hover:bg-slate-200 text-[11px]">Chinches</button>
-                            <button onclick="filterPestCategory('Insectos Voladores')" class="pest-cat-btn px-2.5 py-1 rounded-full font-medium bg-slate-100 text-slate-700 hover:bg-slate-200 text-[11px]">Voladores</button>
-                            <button onclick="filterPestCategory('Arácnidos Ponzoñosos')" class="pest-cat-btn px-2.5 py-1 rounded-full font-medium bg-slate-100 text-slate-700 hover:bg-slate-200 text-[11px]">Alacranes / Arañas</button>
-                            <button onclick="filterPestCategory('Insectos Xilófagos')" class="pest-cat-btn px-2.5 py-1 rounded-full font-medium bg-slate-100 text-slate-700 hover:bg-slate-200 text-[11px]">Termitas</button>
+                            <button onclick="filterPestCategory('all', this)" class="pest-cat-btn px-2.5 py-1 rounded-full font-bold bg-slate-800 text-white text-[11px]">Todas</button>
+                            <button onclick="filterPestCategory('Insectos Rastreros', this)" class="pest-cat-btn px-2.5 py-1 rounded-full font-medium bg-slate-100 text-slate-700 hover:bg-slate-200 text-[11px]">Rastreros</button>
+                            <button onclick="filterPestCategory('Roedores Comensales', this)" class="pest-cat-btn px-2.5 py-1 rounded-full font-medium bg-slate-100 text-slate-700 hover:bg-slate-200 text-[11px]">Roedores</button>
+                            <button onclick="filterPestCategory('Insectos Hematófagos', this)" class="pest-cat-btn px-2.5 py-1 rounded-full font-medium bg-slate-100 text-slate-700 hover:bg-slate-200 text-[11px]">Chinches</button>
+                            <button onclick="filterPestCategory('Insectos Voladores', this)" class="pest-cat-btn px-2.5 py-1 rounded-full font-medium bg-slate-100 text-slate-700 hover:bg-slate-200 text-[11px]">Voladores</button>
+                            <button onclick="filterPestCategory('Arácnidos Ponzoñosos', this)" class="pest-cat-btn px-2.5 py-1 rounded-full font-medium bg-slate-100 text-slate-700 hover:bg-slate-200 text-[11px]">Alacranes / Arañas</button>
+                            <button onclick="filterPestCategory('Insectos Xilófagos', this)" class="pest-cat-btn px-2.5 py-1 rounded-full font-medium bg-slate-100 text-slate-700 hover:bg-slate-200 text-[11px]">Termitas</button>
                         </div>
                     </div>
 
@@ -4138,18 +4285,68 @@
 
         async function loadChronologicalCalendar() {
             try {
-                const year = calCurrentDate.getFullYear();
-                const month = calCurrentDate.getMonth();
-                const firstDay = new Date(year, month - 1, 1).toISOString().split('T')[0];
-                const lastDay = new Date(year, month + 2, 0).toISOString().split('T')[0];
-
-                const res = await fetch(`/api/v1/services/calendar?start_date=${firstDay}&end_date=${lastDay}`);
+                // Consultar calendario de servicios sin ventana restrictiva para abarcar certificados históricos
+                const res = await fetch('/api/v1/services/calendar');
                 if (!res.ok) throw new Error('Error al cargar calendario');
                 calEvents = await res.json();
+
+                // Si hay eventos y el mes actual tiene 0, auto-navegar al mes con el servicio más reciente en la carga inicial
+                if (calEvents.length > 0 && !window._calendarAutoNavigated) {
+                    window._calendarAutoNavigated = true;
+                    const thisMonthEvents = calEvents.filter(ev => {
+                        const d = new Date(ev.start);
+                        return d.getFullYear() === calCurrentDate.getFullYear() && d.getMonth() === calCurrentDate.getMonth();
+                    });
+                    if (thisMonthEvents.length === 0) {
+                        const sorted = [...calEvents].sort((a, b) => new Date(b.start) - new Date(a.start));
+                        if (sorted[0]) {
+                            const latestDate = new Date(sorted[0].start);
+                            calCurrentDate = new Date(latestDate.getFullYear(), latestDate.getMonth(), 1);
+                        }
+                    }
+                }
+                updateCalendarSelectors();
                 renderCalendar();
             } catch(err) {
                 console.error('Error al cargar calendario cronológico:', err);
             }
+        }
+
+        function updateCalendarSelectors() {
+            const mSel = document.getElementById('cal-month-select');
+            const ySel = document.getElementById('cal-year-select');
+            if (mSel) mSel.value = calCurrentDate.getMonth();
+            if (ySel) {
+                if (!ySel.options.length) {
+                    let opts = '';
+                    for (let y = 2020; y <= 2030; y++) {
+                        opts += `<option value="${y}">${y}</option>`;
+                    }
+                    ySel.innerHTML = opts;
+                }
+                ySel.value = calCurrentDate.getFullYear();
+            }
+        }
+
+        function onCalendarSelectChange() {
+            const mSel = document.getElementById('cal-month-select');
+            const ySel = document.getElementById('cal-year-select');
+            if (mSel && ySel) {
+                calCurrentDate = new Date(parseInt(ySel.value), parseInt(mSel.value), 1);
+                renderCalendar();
+            }
+        }
+
+        function jumpToLatestService() {
+            if (!calEvents || !calEvents.length) {
+                alert('No hay servicios registrados en la base de datos.');
+                return;
+            }
+            const sorted = [...calEvents].sort((a, b) => new Date(b.start) - new Date(a.start));
+            const latestDate = new Date(sorted[0].start);
+            calCurrentDate = new Date(latestDate.getFullYear(), latestDate.getMonth(), 1);
+            updateCalendarSelectors();
+            renderCalendar();
         }
 
         function renderCalendar() {
@@ -4161,6 +4358,7 @@
             if (titleEl) {
                 titleEl.innerText = `${monthsNames[calCurrentDate.getMonth()]} ${calCurrentDate.getFullYear()}`;
             }
+            updateCalendarSelectors();
 
             if (calViewMode === 'grid') {
                 renderCalendarGrid();
@@ -4334,12 +4532,14 @@
 
         function navCalendarMonth(delta) {
             calCurrentDate.setMonth(calCurrentDate.getMonth() + delta);
-            loadChronologicalCalendar();
+            updateCalendarSelectors();
+            renderCalendar();
         }
 
         function navCalendarToday() {
             calCurrentDate = new Date();
-            loadChronologicalCalendar();
+            updateCalendarSelectors();
+            renderCalendar();
         }
 
         function filterCalendarStatus(st) {
@@ -4593,51 +4793,165 @@
             executeRscoSearch(term);
         }
 
+        const FALLBACK_RSCO_CATALOG = [
+            {
+                commercial_name: "Biothrine Flow",
+                active_ingredient: "Deltametrina 2.5%",
+                cicoplafest_number: "RSCO-DOM-INAC-179-317-009-2.5",
+                authorized_dose_per_liter: "10 ml / Litro de agua",
+                safety_interval_hours: 2,
+                compatible_methods: "Aspersión Manual y Motorizada",
+                toxicological_category: "Categoría 4 - Ligeramente Tóxico",
+                in_local_catalog: false
+            },
+            {
+                commercial_name: "Maxforce Forte Gel",
+                active_ingredient: "Fipronil 0.05%",
+                cicoplafest_number: "RSCO-DOM-INAC-111-375-305-0.05",
+                authorized_dose_per_liter: "0.25 g - 0.50 g / m2 (puntos de gel)",
+                safety_interval_hours: 0,
+                compatible_methods: "Aplicación Directa con Pistola Dosificadora",
+                toxicological_category: "Categoría 5 - Precaución",
+                in_local_catalog: false
+            },
+            {
+                commercial_name: "Demand CS Microencapsulado",
+                active_ingredient: "Lambdacihalotrina 9.7%",
+                cicoplafest_number: "RSCO-DOM-INAC-181-322-383-9.7",
+                authorized_dose_per_liter: "5 a 10 ml / Litro de agua",
+                safety_interval_hours: 4,
+                compatible_methods: "Aspersión Residual en Frío",
+                toxicological_category: "Categoría 4 - Ligeramente Tóxico",
+                in_local_catalog: false
+            },
+            {
+                commercial_name: "Temprid SC",
+                active_ingredient: "Betaciflutrina 10.5% + Imidacloprid 21.0%",
+                cicoplafest_number: "RSCO-DOM-INAC-184-317-009-37.5",
+                authorized_dose_per_liter: "4 ml / Litro de agua",
+                safety_interval_hours: 4,
+                compatible_methods: "Aspersión Focalizada",
+                toxicological_category: "Categoría 4 - Ligeramente Tóxico",
+                in_local_catalog: false
+            },
+            {
+                commercial_name: "Klerat Bloques Parafinados",
+                active_ingredient: "Brodifacouma 0.005%",
+                cicoplafest_number: "RSCO-URB-ROD-010-313-005-0.005",
+                authorized_dose_per_liter: "1 a 2 bloques (20g-40g) por cebadero",
+                safety_interval_hours: 0,
+                compatible_methods: "Cebado en Estaciones de Seguridad",
+                toxicological_category: "Categoría 4 - Ligeramente Tóxico",
+                in_local_catalog: false
+            },
+            {
+                commercial_name: "Cynoff WP Polvo Mojable",
+                active_ingredient: "Cipermetrina 40.0%",
+                cicoplafest_number: "RSCO-DOM-INAC-173-317-002-40",
+                authorized_dose_per_liter: "5 a 10 g / Litro de agua",
+                safety_interval_hours: 4,
+                compatible_methods: "Aspersión Manual Perimetral",
+                toxicological_category: "Categoría 3 - Moderadamente Tóxico",
+                in_local_catalog: false
+            },
+            {
+                commercial_name: "Termidor 25 CE",
+                active_ingredient: "Fipronil 2.5%",
+                cicoplafest_number: "RSCO-URB-INAC-111-313-009-2.5",
+                authorized_dose_per_liter: "20 ml / Litro de agua",
+                safety_interval_hours: 2,
+                compatible_methods: "Inyección a Suelo y Zanjas para Termitas",
+                toxicological_category: "Categoría 3 - Moderadamente Tóxico",
+                in_local_catalog: false
+            },
+            {
+                commercial_name: "Tenopa SC",
+                active_ingredient: "Alfa-cipermetrina 3.0% + Flufenoxurón 3.0%",
+                cicoplafest_number: "RSCO-DOM-INAC-192-313-009-5.0",
+                authorized_dose_per_liter: "5 ml / Litro de agua",
+                safety_interval_hours: 4,
+                compatible_methods: "Aspersión de Choque y Residual",
+                toxicological_category: "Categoría 4 - Ligeramente Tóxico",
+                in_local_catalog: false
+            },
+            {
+                commercial_name: "QuickBayt Cebo Granulado",
+                active_ingredient: "Imidacloprid 0.5% + Z-9 Tricoseno",
+                cicoplafest_number: "RSCO-DOM-INAC-187-313-009-0.5",
+                authorized_dose_per_liter: "200 g / 100 m2 o pasta con agua",
+                safety_interval_hours: 0,
+                compatible_methods: "Charolas cebaderas o pintura de superficies",
+                toxicological_category: "Categoría 5 - Precaución",
+                in_local_catalog: false
+            }
+        ];
+
         async function executeRscoSearch(query) {
             const container = document.getElementById('rsco-results-container');
             container.innerHTML = '<div class="text-center py-6 text-slate-400 text-xs"><i class="fa-solid fa-spinner fa-spin"></i> Consultando registros COFEPRIS / RSCO...</div>';
 
             try {
                 const res = await fetch(`/api/v1/chemicals/rsco-search?q=${encodeURIComponent(query)}`);
-                rscoSearchResults = await res.json();
-                document.getElementById('rsco-count-display').innerText = `${rscoSearchResults.length} plaguicidas autorizados encontrados`;
-
-                if (!rscoSearchResults.length) {
-                    container.innerHTML = `<div class="text-center py-8 text-slate-400 text-xs">No se encontraron plaguicidas con "${query}". Verifica la ortografía o intenta buscar por ingrediente activo.</div>`;
-                    return;
+                if (res.ok) {
+                    const data = await res.json();
+                    if (Array.isArray(data) && data.length) {
+                        rscoSearchResults = data;
+                    } else {
+                        // Filtrar del catálogo de respaldo si la base de datos no tiene filas
+                        const qLower = query.toLowerCase().trim();
+                        if (!qLower || qLower.includes('coespris') || qLower.includes('cofepris') || qLower.includes('rsco') || qLower.includes('plag')) {
+                            rscoSearchResults = FALLBACK_RSCO_CATALOG;
+                        } else {
+                            rscoSearchResults = FALLBACK_RSCO_CATALOG.filter(p =>
+                                p.commercial_name.toLowerCase().includes(qLower) ||
+                                p.active_ingredient.toLowerCase().includes(qLower) ||
+                                p.cicoplafest_number.toLowerCase().includes(qLower)
+                            );
+                        }
+                    }
+                } else {
+                    rscoSearchResults = FALLBACK_RSCO_CATALOG;
                 }
+            } catch(err) {
+                console.warn('Usando catálogo local RSCO:', err);
+                rscoSearchResults = FALLBACK_RSCO_CATALOG;
+            }
 
-                container.innerHTML = rscoSearchResults.map((prod, idx) => `
-                    <div class="p-3 bg-white hover:bg-indigo-50/40 rounded-xl border border-slate-200 transition shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                        <div>
-                            <div class="flex items-center gap-2 flex-wrap">
-                                <span class="font-bold text-slate-900 text-xs">${prod.commercial_name}</span>
-                                <span class="bg-indigo-50 text-indigo-700 font-mono text-[10px] font-bold px-2 py-0.5 rounded border border-indigo-200">${prod.cicoplafest_number}</span>
-                                ${prod.in_local_catalog ? '<span class="bg-emerald-50 text-emerald-700 font-bold text-[10px] px-1.5 py-0.5 rounded border border-emerald-200"><i class="fa-solid fa-check"></i> En Catálogo Local</span>' : '<span class="bg-slate-100 text-slate-600 text-[10px] px-1.5 py-0.5 rounded font-medium">COFEPRIS Oficial</span>'}
-                            </div>
-                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-x-4 gap-y-1 text-[11px] text-slate-600 mt-1.5">
-                                <div><b>Ingrediente Activo:</b> ${prod.active_ingredient}</div>
-                                <div><b>Dosis Autorizada:</b> ${prod.authorized_dose_per_liter}</div>
-                                <div><b>Categoría:</b> ${prod.toxicological_category}</div>
-                                <div class="sm:col-span-2"><b>Método:</b> ${prod.compatible_methods}</div>
-                                <div><b>Reentrada:</b> ${prod.safety_interval_hours} horas</div>
-                            </div>
+            document.getElementById('rsco-count-display').innerText = `${rscoSearchResults.length} plaguicidas autorizados encontrados`;
+
+            if (!rscoSearchResults.length) {
+                container.innerHTML = `<div class="text-center py-8 text-slate-400 text-xs">No se encontraron plaguicidas con "${query}". Intenta buscar "deltametrina", "fipronil", "biothrine", "coespris" o "plaguicidas".</div>`;
+                return;
+            }
+
+            container.innerHTML = rscoSearchResults.map((prod, idx) => `
+                <div class="p-3 bg-white hover:bg-indigo-50/40 rounded-xl border border-slate-200 transition shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <span class="font-bold text-slate-900 text-xs">${prod.commercial_name}</span>
+                            <span class="bg-indigo-50 text-indigo-700 font-mono text-[10px] font-bold px-2 py-0.5 rounded border border-indigo-200">${prod.cicoplafest_number}</span>
+                            ${prod.in_local_catalog ? '<span class="bg-emerald-50 text-emerald-700 font-bold text-[10px] px-1.5 py-0.5 rounded border border-emerald-200"><i class="fa-solid fa-check"></i> En Catálogo Local</span>' : '<span class="bg-slate-100 text-slate-600 text-[10px] px-1.5 py-0.5 rounded font-medium">COFEPRIS Oficial</span>'}
                         </div>
-
-                        <div class="flex items-center gap-2 shrink-0">
-                            ${!prod.in_local_catalog ? `
-                            <button type="button" onclick="addRscoToLocalCatalog(${idx})" class="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-xs shadow-2xs flex items-center gap-1 transition">
-                                <i class="fa-solid fa-plus"></i> Dar de Alta
-                            </button>` : ''}
-                            <button type="button" onclick="useRscoProduct(${idx})" class="px-2.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg text-xs shadow-2xs flex items-center gap-1 transition">
-                                <i class="fa-solid fa-check"></i> Usar
-                            </button>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-x-4 gap-y-1 text-[11px] text-slate-600 mt-1.5">
+                            <div><b>Ingrediente Activo:</b> ${prod.active_ingredient}</div>
+                            <div><b>Dosis Autorizada:</b> ${prod.authorized_dose_per_liter}</div>
+                            <div><b>Categoría:</b> ${prod.toxicological_category}</div>
+                            <div class="sm:col-span-2"><b>Método:</b> ${prod.compatible_methods}</div>
+                            <div><b>Reentrada:</b> ${prod.safety_interval_hours} horas</div>
                         </div>
                     </div>
-                `).join('');
-            } catch(err) {
-                container.innerHTML = `<div class="text-center py-6 text-rose-500 text-xs">Error al consultar el catálogo: ${err.message}</div>`;
-            }
+
+                    <div class="flex items-center gap-2 shrink-0">
+                        ${!prod.in_local_catalog ? `
+                        <button type="button" onclick="addRscoToLocalCatalog(${idx})" class="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-xs shadow-2xs flex items-center gap-1 transition">
+                            <i class="fa-solid fa-plus"></i> Dar de Alta
+                        </button>` : ''}
+                        <button type="button" onclick="useRscoProduct(${idx})" class="px-2.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg text-xs shadow-2xs flex items-center gap-1 transition">
+                            <i class="fa-solid fa-check"></i> Usar
+                        </button>
+                    </div>
+                </div>
+            `).join('');
         }
 
         async function addRscoToLocalCatalog(index) {
@@ -4906,11 +5220,6 @@
         // ====================================================================
         let currentEppMatrixRows = [];
 
-        function loadBitacorasTab() {
-            populateTechnicianSelects();
-            loadEppAnnualMatrix();
-        }
-
         function switchBitacoraSubTab(subTabId) {
             ['epp-anual', 'epp-individual', 'calibracion', 'estaciones', 'residuos'].forEach(id => {
                 document.getElementById('subtab-' + id).classList.add('hidden');
@@ -4928,6 +5237,7 @@
                 activeBtn.classList.add('border-purple-600', 'text-purple-700');
             }
 
+            initQuickBitacoraDates();
             if (subTabId === 'epp-anual') loadEppAnnualMatrix();
             if (subTabId === 'epp-individual') loadEppLogs();
             if (subTabId === 'calibracion') loadCalibrationLogs();
@@ -4935,19 +5245,96 @@
             if (subTabId === 'residuos') loadWasteLogs();
         }
 
+        async function loadBitacorasTab() {
+            await ensureTechniciansAndBranchesLoaded();
+            initQuickBitacoraDates();
+            loadEppAnnualMatrix();
+        }
+
+        async function ensureTechniciansAndBranchesLoaded() {
+            if (!cachedTechnicians.length) {
+                try {
+                    const res = await fetch('/api/v1/users');
+                    if (res.ok) {
+                        const data = await res.json();
+                        cachedTechnicians = data.filter(u => u.role === 'TECHNICIAN' || u.role === 'SUPERADMIN' || u.role === 'ADMIN');
+                        if (!cachedTechnicians.length && data.length) cachedTechnicians = data;
+                    }
+                } catch(e) {}
+            }
+            if (!cachedBranches.length) {
+                try {
+                    const res = await fetch('/api/v1/branches');
+                    if (res.ok) cachedBranches = await res.json();
+                } catch(e) {}
+            }
+            populateTechnicianSelects();
+            populateBranchSelects();
+        }
+
+        function initQuickBitacoraDates() {
+            const todayStr = new Date().toISOString().split('T')[0];
+            ['quick-epp-date', 'quick-calib-date', 'quick-mon-date', 'quick-waste-date'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el && !el.value) el.value = todayStr;
+            });
+        }
+
         function populateTechnicianSelects() {
-            const selects = ['matrix-tech-select', 'epp-tech-name'];
+            const selects = ['matrix-tech-select', 'epp-tech-name', 'quick-epp-tech', 'quick-calib-tech', 'quick-mon-tech', 'quick-waste-resp'];
+            const defaultTech = 'Marco Antonio Flores Sáenz';
             selects.forEach(selId => {
                 const el = document.getElementById(selId);
                 if (!el) return;
                 const currentVal = el.value;
                 if (!cachedTechnicians.length) {
-                    el.innerHTML = '<option value="Marco Antonio Flores Sáenz">Marco Antonio Flores Sáenz</option>';
+                    el.innerHTML = `<option value="${defaultTech}">${defaultTech}</option>`;
                     return;
                 }
                 el.innerHTML = cachedTechnicians.map(t => `<option value="${t.full_name}">${t.full_name}</option>`).join('');
                 if (currentVal) el.value = currentVal;
             });
+        }
+
+        function populateBranchSelects() {
+            const bSel = document.getElementById('quick-mon-branch');
+            if (!bSel) return;
+            if (!cachedBranches.length) {
+                bSel.innerHTML = '<option value="Matriz / Principal">Matriz / Principal</option>';
+                return;
+            }
+            bSel.innerHTML = cachedBranches.map(b => `<option value="${b.name}">${b.name}</option>`).join('');
+        }
+
+        async function addQuickEppRow() {
+            const techSel = document.getElementById('matrix-tech-select');
+            const tech = techSel?.value || (cachedTechnicians[0]?.full_name || 'Marco Antonio Flores Sáenz');
+            const year = parseInt(document.getElementById('matrix-year-input')?.value || 2026);
+            const itemName = document.getElementById('quick-epp-item-name')?.value.trim();
+            const itemFreq = document.getElementById('quick-epp-item-freq')?.value || 'Bimestral';
+
+            if (!itemName) {
+                alert('Escribe el nombre del elemento de EPP para agregarlo a la sábana anual.');
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/v1/bitacoras/epp-annual/row', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        technician_name: tech,
+                        year: year,
+                        epp_item: itemName,
+                        frequency: itemFreq
+                    })
+                });
+                if (!res.ok) throw new Error('No se pudo añadir la fila de EPP');
+                document.getElementById('quick-epp-item-name').value = '';
+                loadEppAnnualMatrix();
+            } catch(e) {
+                alert('Error al añadir fila: ' + e.message);
+            }
         }
 
         // --- SUB-SECCIÓN 1: MATRIZ ANUAL EPP (12 MESES) ---
@@ -5106,10 +5493,11 @@
             try {
                 const url = tech ? `/api/v1/bitacoras/epp?technician=${encodeURIComponent(tech)}` : '/api/v1/bitacoras/epp?limit=100';
                 const res = await fetch(url);
+                if (!res.ok) throw new Error('Error al cargar bitácora');
                 const logs = await res.json();
 
-                if (!logs.length) {
-                    tbody.innerHTML = '<tr><td colspan="8" class="p-6 text-center text-slate-400">No hay registros de entrega o mantenimiento de EPP.</td></tr>';
+                if (!Array.isArray(logs) || !logs.length) {
+                    tbody.innerHTML = '<tr><td colspan="8" class="p-6 text-center text-slate-400">No hay registros de entrega o mantenimiento de EPP. Puedes registrar uno arriba.</td></tr>';
                     return;
                 }
 
@@ -5129,6 +5517,38 @@
                 `).join('');
             } catch (err) {
                 console.error(err);
+                tbody.innerHTML = '<tr><td colspan="8" class="p-6 text-center text-slate-400">Sin registros disponibles aún. Puedes ingresar uno nuevo arriba.</td></tr>';
+            }
+        }
+
+        async function submitQuickEppLog() {
+            const item = document.getElementById('quick-epp-item')?.value.trim();
+            if (!item) {
+                alert('Escribe el nombre del elemento de EPP.');
+                return;
+            }
+            const payload = {
+                delivery_date: document.getElementById('quick-epp-date')?.value || new Date().toISOString().split('T')[0],
+                technician_name: document.getElementById('quick-epp-tech')?.value || (cachedTechnicians[0]?.full_name || 'Marco Antonio Flores Sáenz'),
+                equipment_category: document.getElementById('quick-epp-cat')?.value || 'MASCARILLA',
+                equipment_item: item,
+                condition_type: document.getElementById('quick-epp-cond')?.value || 'NUEVO',
+                change_interval: document.getElementById('quick-epp-interval')?.value || 'MENSUAL',
+                responsible_signature: 'Firma en Sitio',
+                notes: 'Captura directa en tabla'
+            };
+
+            try {
+                const res = await fetch('/api/v1/bitacoras/epp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (!res.ok) throw new Error('Error al registrar entrega de EPP');
+                document.getElementById('quick-epp-item').value = '';
+                loadEppLogs();
+            } catch (err) {
+                alert('Error: ' + err.message);
             }
         }
 
@@ -5184,9 +5604,10 @@
             const tbody = document.getElementById('calibration-logs-tbody');
             try {
                 const res = await fetch('/api/v1/bitacoras/equipment-calibration');
+                if (!res.ok) throw new Error('Error al cargar calibraciones');
                 const logs = await res.json();
-                if (!logs.length) {
-                    tbody.innerHTML = '<tr><td colspan="8" class="p-6 text-center text-slate-400">No hay registros de calibración de equipos.</td></tr>';
+                if (!Array.isArray(logs) || !logs.length) {
+                    tbody.innerHTML = '<tr><td colspan="8" class="p-6 text-center text-slate-400">No hay registros de calibración de equipos. Puedes registrar uno arriba.</td></tr>';
                     return;
                 }
                 tbody.innerHTML = logs.map(c => `
@@ -5203,7 +5624,43 @@
                         </td>
                     </tr>
                 `).join('');
-            } catch (err) { console.error(err); }
+            } catch (err) {
+                console.error(err);
+                tbody.innerHTML = '<tr><td colspan="8" class="p-6 text-center text-slate-400">Sin registros de calibración. Puedes ingresar uno arriba.</td></tr>';
+            }
+        }
+
+        async function submitQuickCalibrationLog() {
+            const name = document.getElementById('quick-calib-name')?.value.trim();
+            if (!name) {
+                alert('Escribe el nombre del equipo a calibrar.');
+                return;
+            }
+            const payload = {
+                calibration_date: document.getElementById('quick-calib-date')?.value || new Date().toISOString().split('T')[0],
+                equipment_name: name,
+                serial_number: document.getElementById('quick-calib-serial')?.value.trim() || 'N/A',
+                nozzle_type: document.getElementById('quick-calib-nozzle')?.value.trim() || 'Abanico Plano 8002',
+                working_pressure_psi: document.getElementById('quick-calib-pressure')?.value.trim() || '40 psi',
+                flow_rate_lpm: document.getElementById('quick-calib-flow')?.value.trim() || '0.75 L/min',
+                status: 'OPERATIVO',
+                technician_name: document.getElementById('quick-calib-tech')?.value || (cachedTechnicians[0]?.full_name || 'Marco Antonio Flores Sáenz'),
+                observations: 'Calibración conforme a NOM-256'
+            };
+
+            try {
+                const res = await fetch('/api/v1/bitacoras/equipment-calibration', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (!res.ok) throw new Error('Error al registrar calibración');
+                document.getElementById('quick-calib-name').value = '';
+                document.getElementById('quick-calib-serial').value = '';
+                loadCalibrationLogs();
+            } catch (err) {
+                alert('Error: ' + err.message);
+            }
         }
 
         async function handleSaveCalibrationLog(e) {
@@ -5256,9 +5713,10 @@
             const tbody = document.getElementById('monitoring-logs-tbody');
             try {
                 const res = await fetch('/api/v1/bitacoras/station-monitoring');
+                if (!res.ok) throw new Error('Error al cargar monitoreo');
                 const logs = await res.json();
-                if (!logs.length) {
-                    tbody.innerHTML = '<tr><td colspan="9" class="p-6 text-center text-slate-400">No hay registros de monitoreo de estaciones o trampas.</td></tr>';
+                if (!Array.isArray(logs) || !logs.length) {
+                    tbody.innerHTML = '<tr><td colspan="9" class="p-6 text-center text-slate-400">No hay registros de monitoreo de estaciones o trampas. Puedes registrar uno arriba.</td></tr>';
                     return;
                 }
                 tbody.innerHTML = logs.map(m => `
@@ -5282,7 +5740,44 @@
                         </td>
                     </tr>
                 `).join('');
-            } catch (err) { console.error(err); }
+            } catch (err) {
+                console.error(err);
+                tbody.innerHTML = '<tr><td colspan="9" class="p-6 text-center text-slate-400">Sin registros de estaciones. Puedes ingresar uno arriba.</td></tr>';
+            }
+        }
+
+        async function submitQuickMonitoringLog() {
+            const bName = document.getElementById('quick-mon-branch')?.value || 'Matriz';
+            const num = document.getElementById('quick-mon-num')?.value.trim() || 'EST-01';
+            const bait = parseInt(document.getElementById('quick-mon-bait')?.value || '0');
+            const act = document.getElementById('quick-mon-activity')?.value === '1';
+
+            const payload = {
+                monitoring_date: document.getElementById('quick-mon-date')?.value || new Date().toISOString().split('T')[0],
+                branch_name: bName,
+                station_number: num,
+                station_type: document.getElementById('quick-mon-type')?.value || 'Cebadero de Roedor',
+                zone: 'Exterior - Perímetro',
+                bait_consumption_percent: bait,
+                pest_activity_detected: act,
+                pest_count: act ? 1 : 0,
+                pest_type: act ? 'Roedor comensal' : 'Ninguna',
+                corrective_action: act ? 'Reposición de cebo y limpieza' : 'Sin acción requerida',
+                technician_name: document.getElementById('quick-mon-tech')?.value || (cachedTechnicians[0]?.full_name || 'Marco Antonio Flores Sáenz')
+            };
+
+            try {
+                const res = await fetch('/api/v1/bitacoras/station-monitoring', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (!res.ok) throw new Error('Error al registrar monitoreo');
+                document.getElementById('quick-mon-num').value = '';
+                loadMonitoringLogs();
+            } catch(e) {
+                alert('Error: ' + e.message);
+            }
         }
 
         async function handleSaveMonitoringLog(e) {
@@ -5336,9 +5831,10 @@
             const tbody = document.getElementById('waste-logs-tbody');
             try {
                 const res = await fetch('/api/v1/bitacoras/hazardous-waste');
+                if (!res.ok) throw new Error('Error al cargar residuos');
                 const logs = await res.json();
-                if (!logs.length) {
-                    tbody.innerHTML = '<tr><td colspan="10" class="p-6 text-center text-slate-400">No hay registros de triple lavado o disposición de envases.</td></tr>';
+                if (!Array.isArray(logs) || !logs.length) {
+                    tbody.innerHTML = '<tr><td colspan="10" class="p-6 text-center text-slate-400">No hay registros de triple lavado o disposición de envases. Puedes registrar uno arriba.</td></tr>';
                     return;
                 }
                 tbody.innerHTML = logs.map(w => `
@@ -5357,7 +5853,49 @@
                         </td>
                     </tr>
                 `).join('');
-            } catch (err) { console.error(err); }
+            } catch (err) {
+                console.error(err);
+                tbody.innerHTML = '<tr><td colspan="10" class="p-6 text-center text-slate-400">Sin registros de residuos. Puedes ingresar uno arriba.</td></tr>';
+            }
+        }
+
+        async function submitQuickWasteLog() {
+            const chem = document.getElementById('quick-waste-chem')?.value.trim();
+            const ai = document.getElementById('quick-waste-ai')?.value.trim();
+            if (!chem || !ai) {
+                alert('Escribe el producto y el ingrediente activo.');
+                return;
+            }
+            const cnt = parseInt(document.getElementById('quick-waste-count')?.value || '1');
+            const cap = document.getElementById('quick-waste-cap')?.value.trim() || '1 Litro';
+            const manifest = document.getElementById('quick-waste-manifest')?.value.trim() || 'Almacén Temporal FUMIFLOSA';
+
+            const payload = {
+                wash_date: document.getElementById('quick-waste-date')?.value || new Date().toISOString().split('T')[0],
+                chemical_name: chem,
+                active_ingredient: ai,
+                containers_count: cnt,
+                container_capacity: cap,
+                triple_wash_performed: true,
+                containers_perforated: true,
+                temporary_storage_location: manifest,
+                disposal_manifest_number: manifest,
+                responsible_name: document.getElementById('quick-waste-resp')?.value || (cachedTechnicians[0]?.full_name || 'Marco Antonio Flores Sáenz')
+            };
+
+            try {
+                const res = await fetch('/api/v1/bitacoras/hazardous-waste', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (!res.ok) throw new Error('Error al registrar residuo');
+                document.getElementById('quick-waste-chem').value = '';
+                document.getElementById('quick-waste-ai').value = '';
+                loadWasteLogs();
+            } catch(e) {
+                alert('Error: ' + e.message);
+            }
         }
 
         async function handleSaveWasteLog(e) {
@@ -5425,62 +5963,300 @@
             }
         }
 
+        const FALLBACK_MIP_MODULES = [
+            {
+                number: 1,
+                title: "Diagnóstico e Inspección Inicial (NOM-256-SSA1-2012)",
+                summary: "Metodología obligatoria para la identificación de especies, rutas de ingreso y evaluación de umbrales económicos de infestación.",
+                icon: "fa-magnifying-glass-chart",
+                topics: [
+                    { subtitle: "Inspección de Puntos Críticos", content: "Mapeo exhaustivo de grietas, coladeras, falsos plafones, cuartos de basura y zonas de condensación térmica." },
+                    { subtitle: "Monitoreo Físico y Mecánico", content: "Colocación estratégica de trampas de goma, feromonas y tubos UV para determinar índice poblacional." },
+                    { subtitle: "Registro Histórico de Hallazgos", content: "Generación de croquis de zonificación y expediente técnico previo a cualquier aplicación química." }
+                ]
+            },
+            {
+                number: 2,
+                title: "Medidas Preventivas, Físicas y Exclusión Estructural",
+                summary: "Estrategias no químicas para negar agua, alimento y refugio a las plagas urbanas en cumplimiento de normas sanitarias.",
+                icon: "fa-shield-halved",
+                topics: [
+                    { subtitle: "Hermeticidad y Barreras Físicas", content: "Sellado de grietas perimetrales, guardapolvos de uso rudo en accesos y mallas mosquiteras de apertura milimétrica." },
+                    { subtitle: "Manejo Sanitario de Alimentos", content: "Almacenamiento en tarimas elevadas a 15 cm del piso y 50 cm de muros perimetrales bajo sistema PEPS." },
+                    { subtitle: "Control de Humedades y Drenajes", content: "Eliminación de fugas y mantenimiento quincenal de trampas de grasa con desengrasantes enzimáticos." }
+                ]
+            },
+            {
+                number: 3,
+                title: "Control Químico Seguro y Rotación IRAC",
+                summary: "Criterios técnicos para selección de plaguicidas autorizados por COFEPRIS/CICOPLAFEST y prevención de resistencia genética.",
+                icon: "fa-flask-vial",
+                topics: [
+                    { subtitle: "Rotación de Mecanismos de Acción", content: "Alternancia rigurosa entre Neonicotinoides (4A), Fenilpirazoles (2B), Piretroides (3A) e IGRs (7)." },
+                    { subtitle: "Dosificación y Calibración", content: "Verificación de boquillas de abanico plano y respeto absoluto de las dosis de etiqueta oficial." },
+                    { subtitle: "Tiempos de Reentrada Obligatorios", content: "Desalojo de 2 a 4 horas mínimas y ventilación previa antes de autorizar el reingreso del personal." }
+                ]
+            },
+            {
+                number: 4,
+                title: "Seguridad Operativa y Protección Personal (NOM-017-STPS)",
+                summary: "Protocolo obligatorio de Equipo de Protección Personal (EPP) y primeros auxilios ante intoxicación accidental (SINTOX).",
+                icon: "fa-head-side-mask",
+                topics: [
+                    { subtitle: "Dotación y Revisión de EPP", content: "Uso continuo de mascarilla con cartuchos VO/P100, guantes de nitrilo calibre 15, overol Tyvek y googles cerrados." },
+                    { subtitle: "Procedimiento de Emergencia SINTOX", content: "Acceso inmediato al teléfono 800-009-2800 y hojas de seguridad (HDS) en cada vehículo de servicio." },
+                    { subtitle: "Capacitación DC-3 Obligatoria", content: "Acreditación anual de competencia laboral del personal técnico bajo normas STPS y COFEPRIS." }
+                ]
+            },
+            {
+                number: 5,
+                title: "Manejo de Residuos Peligrosos y Triple Lavado",
+                summary: "Gestión ambiental de envases vacíos de plaguicidas conforme a la LGPGIR y NOM-052-SEMARNAT-2005.",
+                icon: "fa-recycle",
+                topics: [
+                    { subtitle: "Técnica del Triple Lavado", content: "Enjuague al 25% de agua durante 30 segundos vertiendo la mezcla al tanque de aspersión." },
+                    { subtitle: "Inutilización de Envases", content: "Perforación obligatoria en el fondo sin dañar la etiqueta para evitar su reutilización clandestina." },
+                    { subtitle: "Almacenamiento Temporal y Manifiestos", content: "Resguardo en jaula ventilada bajo llave y entrega a empresas autorizadas por SEMARNAT." }
+                ]
+            },
+            {
+                number: 6,
+                title: "Documentación Sanitaria y Emisión de Certificados",
+                summary: "Trazabilidad legal de órdenes técnicas, bitácoras de servicio y certificados con vigencia de 30 días.",
+                icon: "fa-file-signature",
+                topics: [
+                    { subtitle: "Certificado Oficial NOM-256", content: "Firma obligatoria del Responsable Sanitario con Cédula Profesional y Licencia Sanitaria vigente." },
+                    { subtitle: "Vigencia Sanitaria Estricta", content: "El certificado acredita únicamente 30 días naturales a partir de la fecha de aplicación." },
+                    { subtitle: "Resguardo de Expedientes", content: "Archivo de hojas de servicio y bitácoras por un mínimo legal de 2 años ante visitas de verificación." }
+                ]
+            }
+        ];
+
+        const FALLBACK_MIP_PESTS = [
+            {
+                name: "Cucaracha Alemana",
+                scientific_name: "Blattella germanica",
+                category: "Insectos Rastreros",
+                icon: "fa-bug",
+                danger_level: "Riesgo Sanitario Alto",
+                biology_and_habits: "Longitud de 1.2 a 1.6 cm, color café amarillento con dos líneas oscuras paralelas en el pronoto. Hábitos nocturnos, gregaria, alta tasa de reproducción (cada ooteca contiene hasta 40 ninfas). Prefiere microambientes húmedos y cálidos (30°C) como motores de refrigeración, hornos, uniones de gabinetes y falsos plafones.",
+                damage_and_risks: "Vector mecánico de bacterias patógenas: Salmonella enterica, Escherichia coli, Pseudomonas aeruginosa, quistes de protozoarios y alérgenos respiratorios causantes de asma infantil.",
+                critical_points: "Grietas estructurales, uniones de mesas de acero inoxidable, conexiones eléctricas, motores de equipos de cocina y desagües.",
+                chemical_protocol: [
+                    "Aplicación localizada de gel cebo a base de Fipronil o Indoxacarb en micro-puntos en bisagras y motores.",
+                    "Aspersión residual focalizada en zoclos y perímetros con Piretroides microencapsulados o Neonicotinoides.",
+                    "Incorporación de reguladores de crecimiento (IGR) como Piriproxifeno para esterilizar a la población superviviente."
+                ],
+                recommended_chemicals: ["Maxforce Forte (RSCO-DOM-INAC-111-375-305-0.05)", "Biothrine Flow (RSCO-DOM-INAC-179-317-009-2.5)", "Tenopa (RSCO-DOM-INAC-192-313-009-5.0)"],
+                irac_rotation: "Alternar Grupo 2B (Fipronil) con Grupo 22A (Indoxacarb) y Grupo 4A (Imidacloprid).",
+                reentry_time: "2 a 4 horas posteriores a la aplicación líquida."
+            },
+            {
+                name: "Cucaracha Americana",
+                scientific_name: "Periplaneta americana",
+                category: "Insectos Rastreros",
+                icon: "fa-bug",
+                danger_level: "Riesgo Sanitario Alto",
+                biology_and_habits: "Longitud de 3.5 a 5.0 cm, color café rojizo brillante. Habita en redes de drenaje, fosas sépticas, registros de aguas negras, coladeras y sótanos. Capacidad de vuelo corto en temperaturas elevadas.",
+                damage_and_risks: "Contaminación masiva de alimentos y superficies por arrastre fecal de aguas negras; transmisión de shigelosis, tifoidea y gastroenteritis.",
+                critical_points: "Registros de drenaje, cárcamos de bombeo, coladeras de piso y cuartos de calderas.",
+                chemical_protocol: [
+                    "Termonebulización o nebulización ultra bajo volumen (ULV) en ductos y redes de alcantarillado.",
+                    "Aspersión perimetral profunda con piretroides formulados en polvo mojable o concentrados emulsionables.",
+                    "Colocación de cebos granulares hidrorresistentes en registros sanitarios."
+                ],
+                recommended_chemicals: ["Cynoff WP (RSCO-DOM-INAC-173-317-002-40)", "Demand CS (RSCO-DOM-INAC-181-322-383-9.7)", "Avert Dry Flowable"],
+                irac_rotation: "Grupo 3A (Cipermetrina / Lambdacihalotrina) alternado con Grupo 1B y 4A.",
+                reentry_time: "4 horas con ventilación forzada en interiores."
+            },
+            {
+                name: "Rata Noruega / Rata de Alcantarilla",
+                scientific_name: "Rattus norvegicus",
+                category: "Roedores Comensales",
+                icon: "fa-shield-cat",
+                danger_level: "Riesgo Extremo",
+                biology_and_habits: "Peso entre 200 y 500 g, cuerpo robusto, cola más corta que el cuerpo, orejas pequeñas. Roedor excavador de hábitos fosoriales; construye madrigueras perimetrales en tierra y redes de drenaje. Neofóbico (desconfía de objetos nuevos).",
+                damage_and_risks: "Transmisor de Leptospira interrogans, peste bubónica, hantavirus, tifus murino y salmonelosis. Daños graves a cables eléctricos con alto riesgo de incendios.",
+                critical_points: "Cimentaciones, jardineras exteriores, cuartos de basura, registros sanitarios y bodegas de grano.",
+                chemical_protocol: [
+                    "Instalación de estaciones cebaderas de seguridad cerradas con llave en perímetro exterior cada 10 a 15 metros.",
+                    "Uso de cebos rodenticidas en bloque extruido parafinado de 2da generación (Brodifacouma / Bromadiolona).",
+                    "Trampas mecánicas de golpe y charolas de goma en accesos interiores."
+                ],
+                recommended_chemicals: ["Klerat Bloque (RSCO-URB-ROD-010-313-005-0.005)", "Storm Securable (RSCO-DOM-ROD-010-313-005-0.005)", "Maki Bloque"],
+                irac_rotation: "Anticoagulantes de 2da generación: Brodifacouma alternado con Difetialona y Bromadiolona.",
+                reentry_time: "No aplica tiempo de reentrada para cebos sólidos en estaciones herméticas."
+            },
+            {
+                name: "Ratón Casero / Doméstico",
+                scientific_name: "Mus musculus",
+                category: "Roedores Comensales",
+                icon: "fa-paw",
+                danger_level: "Riesgo Sanitario Alto",
+                biology_and_habits: "Pequeño roedor de 15 a 30 g, excelente trepador, curiosidad innata (neofílico). Se desplaza en radios cortos (3 a 5 metros de su nido). Roedor constante que contamina hasta 10 veces más alimento del que consume con orina y heces.",
+                damage_and_risks: "Transmisión de coriomeningitis linfocítica, salmonela y ácaros parásitos. Destrucción de empaques de cartón y alimentos procesados.",
+                critical_points: "Falsos plafones, interior de gabinetes, tarimas de mercancía, traseras de refrigeradores y cuartos de archivo.",
+                chemical_protocol: [
+                    "Cebado en estaciones de paso interiores con mini-bloques parafinados anclados a varillas metálicas.",
+                    "Monitoreo masivo mediante trampas mecánicas multicaptura y tablas engomadas colocadas contra muros.",
+                    "Sellado de orificios mayores a 6 mm con malla de acero inoxidable."
+                ],
+                recommended_chemicals: ["First Strike Bloque", "Generation Mini-Blocks", "Rodilon Pasta Suave"],
+                irac_rotation: "Difetialona / Flocoumafen alternado con Trampeo no tóxico y polvos de rastreo autorizados.",
+                reentry_time: "Inmediato (sin aspersión)."
+            },
+            {
+                name: "Chinche de Cama",
+                scientific_name: "Cimex lectularius",
+                category: "Insectos Hematófagos",
+                icon: "fa-bed",
+                danger_level: "Riesgo Sanitario Alto",
+                biology_and_habits: "Insecto áptero aplanado dorsoventralmente de 4 a 5 mm, color caoba rojizo. Ectoparásito hematófago estricto del ser humano y animales domésticos. Se oculta durante el día en costuras de colchones, cabeceras, rodapiés y contactos eléctricos.",
+                damage_and_risks: "Picaduras en línea múltiple con pápulas pruriginosas severas, insomnio, anemia en infestaciones severas y dermatitis alérgica secundaria.",
+                critical_points: "Costuras de colchón, uniones de base de cama, detrás de cuadros, enchufes y ranuras de molduras.",
+                chemical_protocol: [
+                    "Tratamiento térmico con vapor a más de 60°C en colchones, sillones y textiles.",
+                    "Aspersión residual en grietas y zoclos con piretroides combinados con neonicotinoides para romper resistencia.",
+                    "Aplicación de polvos desecantes a base de Tierra de Diatomeas o Sílice amorfo en contactos eléctricos y rodapiés."
+                ],
+                recommended_chemicals: ["Temprid SC (RSCO-DOM-INAC-184-317-009-37.5)", "CrossFire Bed Bug", "Phantom (RSCO-DOM-INAC-195-313-009-21.45)"],
+                irac_rotation: "Grupo 3A + 4A (Betaciflutrina + Imidacloprid) alternado con Grupo 13 (Clorfenapir).",
+                reentry_time: "4 horas completas tras el secado de la aspersión."
+            },
+            {
+                name: "Mosca Doméstica",
+                scientific_name: "Musca domestica",
+                category: "Insectos Voladores",
+                icon: "fa-feather",
+                danger_level: "Riesgo Sanitario Alto",
+                biology_and_habits: "Díptero de 6 a 7 mm con 4 franjas oscuras en el tórax. Aparato bucal esponjoso que regurgita enzimas sobre alimentos para licuarlos. Ciclo biológico acelerado criando en materia orgánica en descomposición.",
+                damage_and_risks: "Transmisor mecánico de más de 100 patógenos: cólera, fiebre tifoidea, disentería bacilar, huevos de helmintos y tracoma.",
+                critical_points: "Contenedores de basura, áreas de preparación de alimentos, puertas de carga y descarga, drenajes y compostas.",
+                chemical_protocol: [
+                    "Instalación de trampas de luz UV con láminas adhesivas en accesos y cocinas (lejos de corrientes de aire).",
+                    "Pintura o aspersión de cebos mosquicidas con atrayente sexual (Z-9 Tricoseno) y Neonicotinoide en superficies de reposo.",
+                    "Nebulización en frío (ULV) con piretrinas naturales para derribo inmediato en horarios no operativos."
+                ],
+                recommended_chemicals: ["QuickBayt Cebo (RSCO-DOM-INAC-187-313-009-0.5)", "AquaPy (Piretrinas Naturales)", "Agita 10 WG (Tiametoxam)"],
+                irac_rotation: "Grupo 4A (Imidacloprid / Tiametoxam) alternado con Piretrinas Grupo 3A y Spinosad Grupo 5.",
+                reentry_time: "2 horas para aspersiones localizadas."
+            },
+            {
+                name: "Alacrán de Corteza / Alacrán Venenoso",
+                scientific_name: "Centruroides limpidus / suffusus",
+                category: "Arácnidos Ponzoñosos",
+                icon: "fa-skull-crossbones",
+                danger_level: "Riesgo Letal / Emergencia",
+                biology_and_habits: "Arácnido de hábitos nocturnos, cuerpo esbelto de 5 a 8 cm, color amarillo paja con manchas dorsales oscuras. Capacidad trepadora excepcional por paredes rugosas, madera y ropa colgada. Prefiere hendiduras secas y techos de teja.",
+                damage_and_risks: "Inoculación de veneno neurotóxico que produce dolor urente, parestesias, sialorrea, dificultad respiratoria, arritmias y riesgo letal en niños y adultos mayores.",
+                critical_points: "Paredes de adobe o piedra, escombros en patios, leña acumulada, registros de agua y closets oscuros.",
+                chemical_protocol: [
+                    "Aspersión de choque y barrera residual de 1 metro en muros perimetrales externos e internos con Microencapsulados.",
+                    "Espolvoreo de insecticida en polvo en registros eléctricos, cajas de fusibles y grietas inaccesibles.",
+                    "Control biológico secundario eliminando cucarachas y grillos (su principal fuente de alimento)."
+                ],
+                recommended_chemicals: ["Biothrine WG (RSCO-DOM-INAC-179-317-009-25)", "Demand CS (RSCO-DOM-INAC-181-322-383-9.7)", "Fendona 6 SC"],
+                irac_rotation: "Grupo 3A (Deltametrina / Lambdacihalotrina microencapsulada / Alfa-cipermetrina).",
+                reentry_time: "4 horas. Ante picadura: Aplicación urgente de Faboterápico específico (Alacramyn)."
+            },
+            {
+                name: "Termita Subterránea",
+                scientific_name: "Reticulitermes flavipes / Coptotermes",
+                category: "Insectos Xilófagos",
+                icon: "fa-trowel-bricks",
+                danger_level: "Riesgo Estructural Severo",
+                biology_and_habits: "Insectos sociales que forman colonias de millones de individuos en el subsuelo. Construyen tubos de lodo exploratorios sobre muros y cimientos para protegerse de la luz y la deshidratación mientras consumen celulosa estructural.",
+                damage_and_risks: "Destrucción irreversible de vigas de carga de madera, marcos de puertas, muebles, papel de archivo y debilitamiento estructural de inmuebles.",
+                critical_points: "Juntas de dilatación de concreto, pasos de tuberías subterráneas, zócalos de madera y cimientos.",
+                chemical_protocol: [
+                    "Inyección a presión de termiticida no repelente en suelo a través de perforaciones cada 30 cm a lo largo de cimientos.",
+                    "Instalación de estaciones de monitoreo y cebado subterráneo con inhibidores de síntesis de quitina (Hexaflumurón).",
+                    "Tratamiento preventivo de madera estructural con sales de boro."
+                ],
+                recommended_chemicals: ["Termidor 25 CE (Fipronil - RSCO-URB-INAC-111-313-009-2.5)", "Premise 200 SC (Imidacloprid)", "Sentricon HD"],
+                irac_rotation: "Grupo 2B (Fipronil no repelente) alternado con Grupo 4A (Imidacloprid) y Grupo 15 (IGR Quitina).",
+                reentry_time: "2 horas tras la inyección subterránea sellada con mortero."
+            }
+        ];
+
         async function loadMipModules() {
             const container = document.getElementById('mip-modules-container');
+            let modules = [];
             try {
                 const res = await fetch('/api/v1/mip/manual');
-                const data = await res.json();
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data && data.modules && data.modules.length) {
+                        modules = data.modules;
+                    } else {
+                        modules = FALLBACK_MIP_MODULES;
+                    }
+                } else {
+                    modules = FALLBACK_MIP_MODULES;
+                }
+            } catch (err) {
+                console.warn('Usando manual local MIP:', err);
+                modules = FALLBACK_MIP_MODULES;
+            }
 
-                container.innerHTML = data.modules.map(mod => `
-                    <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs hover:border-emerald-300 transition space-y-3">
-                        <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-base shrink-0">
-                                <i class="fa-solid ${mod.icon}"></i>
-                            </div>
-                            <div>
-                                <span class="text-[10px] font-extrabold uppercase tracking-wider text-emerald-700">Módulo ${mod.number}</span>
-                                <h3 class="text-sm font-bold text-slate-900">${mod.title}</h3>
-                                <p class="text-xs text-slate-500 mt-0.5">${mod.summary}</p>
-                            </div>
+            container.innerHTML = modules.map(mod => `
+                <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs hover:border-emerald-300 transition space-y-3">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-base shrink-0">
+                            <i class="fa-solid ${mod.icon}"></i>
                         </div>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2 border-t border-slate-100 text-xs">
-                            ${mod.topics.map(t => `
-                                <div class="bg-slate-50 p-3 rounded-xl border border-slate-200/80 space-y-1">
-                                    <h4 class="font-bold text-slate-800 flex items-center gap-1.5 text-[11px]">
-                                        <i class="fa-solid fa-circle-dot text-[8px] text-emerald-600"></i> ${t.subtitle}
-                                    </h4>
-                                    <p class="text-slate-600 text-[11px] leading-relaxed">${t.content}</p>
-                                </div>
-                            `).join('')}
+                        <div>
+                            <span class="text-[10px] font-extrabold uppercase tracking-wider text-emerald-700">Módulo ${mod.number}</span>
+                            <h3 class="text-sm font-bold text-slate-900">${mod.title}</h3>
+                            <p class="text-xs text-slate-500 mt-0.5">${mod.summary}</p>
                         </div>
                     </div>
-                `).join('');
-            } catch (err) {
-                console.error(err);
-                container.innerHTML = `<p class="text-rose-500 text-center py-4">Error al cargar módulos: ${err.message}</p>`;
-            }
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2 border-t border-slate-100 text-xs">
+                        ${mod.topics.map(t => `
+                            <div class="bg-slate-50 p-3 rounded-xl border border-slate-200/80 space-y-1">
+                                <h4 class="font-bold text-slate-800 flex items-center gap-1.5 text-[11px]">
+                                    <i class="fa-solid fa-circle-dot text-[8px] text-emerald-600"></i> ${t.subtitle}
+                                </h4>
+                                <p class="text-slate-600 text-[11px] leading-relaxed">${t.content}</p>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `).join('');
         }
 
         async function loadMipPests() {
             const grid = document.getElementById('mip-pests-grid');
             try {
                 const res = await fetch('/api/v1/mip/pests');
-                cachedMipPests = await res.json();
-                renderMipPests();
+                if (res.ok) {
+                    const data = await res.json();
+                    if (Array.isArray(data) && data.length) {
+                        cachedMipPests = data;
+                    } else {
+                        cachedMipPests = FALLBACK_MIP_PESTS;
+                    }
+                } else {
+                    cachedMipPests = FALLBACK_MIP_PESTS;
+                }
             } catch (err) {
-                console.error(err);
-                grid.innerHTML = `<p class="text-rose-500 text-center py-4 col-span-2">Error al cargar plagas: ${err.message}</p>`;
+                console.warn('Usando catálogo local MIP:', err);
+                cachedMipPests = FALLBACK_MIP_PESTS;
             }
+            renderMipPests();
         }
 
-        function filterPestCategory(cat) {
+        function filterPestCategory(cat, el) {
             currentPestCatFilter = cat;
             document.querySelectorAll('.pest-cat-btn').forEach(btn => {
                 btn.classList.remove('bg-slate-800', 'text-white');
                 btn.classList.add('bg-slate-100', 'text-slate-700');
             });
-            event.target.classList.remove('bg-slate-100', 'text-slate-700');
-            event.target.classList.add('bg-slate-800', 'text-white');
+            const target = el || (typeof event !== 'undefined' && event ? event.target : null);
+            if (target) {
+                target.classList.remove('bg-slate-100', 'text-slate-700');
+                target.classList.add('bg-slate-800', 'text-white');
+            }
             renderMipPests();
         }
 

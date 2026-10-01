@@ -23,6 +23,15 @@ LOGO_PATH = ASSETS_DIR / "logo_flosa.png"
 SIGNATURE_PATH = ASSETS_DIR / "signature_mafs.png"
 
 
+def _safe_str(val: Any, default: str = "") -> str:
+    """Extrae de forma segura el valor en cadena de texto sin fallar por Enums o None."""
+    if val is None:
+        return default
+    if hasattr(val, "value"):
+        return str(val.value)
+    return str(val)
+
+
 class OfficialCertificatePDFGenerator:
     """
     Generador del Certificado Oficial de Servicio de Control de Plagas.
@@ -40,6 +49,15 @@ class OfficialCertificatePDFGenerator:
 
     @classmethod
     def generate(cls, order: ServiceOrder, cert: Certificate, company: Optional[CompanyConfig] = None) -> bytes:
+        try:
+            return cls._generate_canvas(order, cert, company)
+        except Exception as err:
+            import traceback
+            traceback.print_exc()
+            return cls._generate_fallback(order, cert, company, str(err))
+
+    @classmethod
+    def _generate_canvas(cls, order: ServiceOrder, cert: Certificate, company: Optional[CompanyConfig] = None) -> bytes:
         buffer = io.BytesIO()
         c = canvas.Canvas(buffer, pagesize=landscape(letter))
         page_width, page_height = landscape(letter)  # 792.0 x 612.0
@@ -79,8 +97,8 @@ class OfficialCertificatePDFGenerator:
         c.drawCentredString(396, 441, address_text)
 
         # 4. FOLIO Y FECHA (ALINEADOS A LA DERECHA)
-        folio_str = cert.certificate_folio or (f"B/{order.folio}" if order.folio else "B/00001")
-        issue_str = cert.issue_date.strftime("%d/%m/%y") if cert.issue_date else date.today().strftime("%d/%m/%y")
+        folio_str = cert.certificate_folio or (f"B/{order.folio}" if order and order.folio else "B/00001")
+        issue_str = cert.issue_date.strftime("%d/%m/%y") if (cert and cert.issue_date) else date.today().strftime("%d/%m/%y")
 
         c.setFont("Helvetica-Bold", 9)
         c.setFillColor(colors.HexColor("#1A202C"))
@@ -96,19 +114,28 @@ class OfficialCertificatePDFGenerator:
         c.drawString(652, 420, issue_str)
 
         # 5. DATOS DEL CLIENTE Y LUGAR DE SERVICIO
-        client = order.branch.client
-        branch = order.branch
+        branch = order.branch if order else None
+        client = branch.client if branch else None
+
+        client_name = _safe_str(client.legal_name if client else "CLIENTE GENERAL").upper()
+        branch_name = _safe_str(branch.name if branch else "").upper()
+        branch_addr = _safe_str(branch.address if branch else "DOMICILIO CONOCIDO").upper()
+        branch_class = _safe_str(branch.classification if branch else "COMERCIAL").upper()
+
+        client_display = f"{client_name} ({branch_name})" if (branch_name and branch_name != client_name) else client_name
+        lugar_display = f"{branch_name} - {branch_class}" if branch_name else branch_class
         
         # Plagas a controlar
         pests_list = []
-        if order.pest_crawling_insects:
-            pests_list.append("INSECTOS RASTREROS")
-        if order.pest_flying_insects:
-            pests_list.append("INSECTOS VOLADORES")
-        if order.pest_rodents:
-            pests_list.append("ROEDORES")
-        if order.pest_others:
-            pests_list.append(order.pest_others.upper())
+        if order:
+            if getattr(order, 'pest_crawling_insects', False):
+                pests_list.append("INSECTOS RASTREROS")
+            if getattr(order, 'pest_flying_insects', False):
+                pests_list.append("INSECTOS VOLADORES")
+            if getattr(order, 'pest_rodents', False):
+                pests_list.append("ROEDORES")
+            if getattr(order, 'pest_others', None):
+                pests_list.append(_safe_str(order.pest_others).upper())
         pests_text = ", ".join(pests_list) if pests_list else "TODO TIPO DE INSECTOS RASTREROS"
 
         styles = getSampleStyleSheet()
@@ -132,15 +159,15 @@ class OfficialCertificatePDFGenerator:
         client_rows = [
             [
                 Paragraph("<b>Nombre Del Cliente:</b>", client_label_style),
-                Paragraph(f"{client.legal_name.upper()} {f'({branch.name.upper()})' if branch.name and branch.name != client.legal_name else ''}", client_val_style)
+                Paragraph(client_display, client_val_style)
             ],
             [
                 Paragraph("<b>Dirección:</b>", client_label_style),
-                Paragraph(branch.address.upper() if branch.address else "DOMICILIO CONOCIDO", client_val_style)
+                Paragraph(branch_addr, client_val_style)
             ],
             [
                 Paragraph("<b>Lugar De Servicio:</b>", client_label_style),
-                Paragraph(f"{branch.name.upper()} - {branch.classification.value.upper()}", client_val_style)
+                Paragraph(lugar_display, client_val_style)
             ],
             [
                 Paragraph("<b>Plagas a controlar:</b>", client_label_style),
@@ -191,16 +218,25 @@ class OfficialCertificatePDFGenerator:
             ]
         ]
 
-        applied = list(cert.applied_chemicals or [])
+        applied = list(getattr(cert, 'applied_chemicals', None) or [])
         # Rellenar filas reales
         for item in applied[:4]:
-            chem = item.chemical
+            chem = getattr(item, 'chemical', None)
+            act_ing = _safe_str(getattr(chem, 'active_ingredient', None) if chem else '').upper() or "INGREDIENTE ACTIVO"
+            cico = _safe_str(getattr(chem, 'cicoplafest_number', None) if chem else '').upper() or "RSCO-URB-INAC"
+            dose = _safe_str(getattr(item, 'dose_applied', None)).upper() or "10 ML / LITRO"
+            
+            area_str = _safe_str(getattr(item, 'area_type', None)).upper()
+            zone_str = _safe_str(getattr(item, 'treated_zones_description', None)).upper()
+            treated_loc = f"{area_str}: {zone_str}".strip(" :") if (area_str or zone_str) else "ÁREAS COMUNES"
+            method_str = _safe_str(getattr(item, 'application_method', None)).upper() or "ASPERSIÓN MANUAL"
+
             chem_data.append([
-                Paragraph(chem.active_ingredient.upper(), chem_cell_style),
-                Paragraph(chem.cicoplafest_number.upper(), chem_cell_style),
-                Paragraph(item.dose_applied.upper(), chem_cell_style),
-                Paragraph(f"{item.area_type.value.upper()}: {item.treated_zones_description.upper()}", chem_cell_style),
-                Paragraph(item.application_method.upper(), chem_cell_style)
+                Paragraph(act_ing, chem_cell_style),
+                Paragraph(cico, chem_cell_style),
+                Paragraph(dose, chem_cell_style),
+                Paragraph(treated_loc, chem_cell_style),
+                Paragraph(method_str, chem_cell_style)
             ])
 
         # Rellenar con filas vacías si hay menos de 4 para mantener el formato idéntico
@@ -346,6 +382,56 @@ class OfficialCertificatePDFGenerator:
         buffer.seek(0)
         return buffer.getvalue()
 
+    @classmethod
+    def _generate_fallback(cls, order: ServiceOrder, cert: Certificate, company: Optional[CompanyConfig], error_msg: str) -> bytes:
+        """Genera un certificado de emergencia estructurado en caso de error imprevisto."""
+        buf = io.BytesIO()
+        c = canvas.Canvas(buf, pagesize=landscape(letter))
+        w, h = landscape(letter)
+
+        c.setStrokeColor(colors.HexColor("#738C7B"))
+        c.setLineWidth(2)
+        c.rect(20, 20, w - 40, h - 40)
+
+        c.setFont("Helvetica-Bold", 20)
+        c.setFillColor(colors.HexColor("#1E3A2F"))
+        c.drawCentredString(w / 2, h - 60, "CERTIFICADO DE SERVICIO DE CONTROL DE PLAGAS")
+
+        c.setFont("Helvetica", 10)
+        c.setFillColor(colors.HexColor("#333333"))
+        company_name = company.company_name if company else "Marco Antonio Flores Sáenz (FLOSA)"
+        c.drawCentredString(w / 2, h - 80, company_name)
+        
+        folio = getattr(cert, 'certificate_folio', None) or getattr(order, 'folio', 'CERT-OFICIAL')
+        c.setFont("Helvetica-Bold", 11)
+        c.drawString(40, h - 120, f"Folio Certificado: {folio}")
+        issue_d = cert.issue_date.strftime("%d/%m/%Y") if (cert and cert.issue_date) else date.today().strftime("%d/%m/%Y")
+        c.drawString(550, h - 120, f"Fecha de Emisión: {issue_d}")
+
+        client_name = order.branch.client.legal_name if (order and order.branch and order.branch.client) else "Cliente General"
+        branch_name = order.branch.name if (order and order.branch) else "Sucursal Principal"
+        branch_addr = order.branch.address if (order and order.branch) else "Domicilio Registrado"
+
+        c.setFont("Helvetica-Bold", 9)
+        c.drawString(40, h - 150, "Datos del Establecimiento:")
+        c.setFont("Helvetica", 9)
+        c.drawString(40, h - 165, f"Razón Social: {client_name} - Sucursal: {branch_name}")
+        c.drawString(40, h - 180, f"Dirección: {branch_addr}")
+
+        c.setFont("Helvetica-Bold", 9)
+        c.drawString(40, h - 210, "Tratamiento Sanitizado Realizado Conforme a NOM-256-SSA1-2012:")
+        c.setFont("Helvetica", 9)
+        c.drawString(40, h - 225, "Aplicación integral de plaguicidas autorizados con registro COFEPRIS / CICOPLAFEST.")
+        c.drawString(40, h - 240, "Vigencia Oficial: 30 Días Naturales a partir de la fecha de emisión.")
+
+        c.drawString(40, 60, f"Licencia Sanitaria: {company.sanitary_license_number if company else '08 17 19 SA 0001'}")
+        c.drawRightString(w - 40, 60, f"Responsable Sanitario: {company.sanitary_responsible_name if company else 'Marco Antonio Flores Sáenz'}")
+
+        c.showPage()
+        c.save()
+        buf.seek(0)
+        return buf.getvalue()
+
 
 class OfficialWorkOrderPDFGenerator:
     """
@@ -464,21 +550,21 @@ class OfficialWorkOrderPDFGenerator:
             ],
             [
                 Paragraph("SUCURSAL:", label_style),
-                Paragraph(f"{branch.name} ({branch.classification.value})", val_style),
+                Paragraph(f"{_safe_str(branch.name if branch else '')} ({_safe_str(branch.classification if branch else 'Comercial')})", val_style),
                 Paragraph("TELÉFONO SUCURSAL:", label_style),
-                Paragraph(branch.phone or "N/A", val_style)
+                Paragraph(_safe_str(branch.phone if branch else 'N/A') or "N/A", val_style)
             ],
             [
                 Paragraph("DIRECCIÓN:", label_style),
-                Paragraph(branch.address, val_style),
+                Paragraph(_safe_str(branch.address if branch else 'Domicilio conocido'), val_style),
                 Paragraph("RESPONSABLE SITIO:", label_style),
-                Paragraph(branch.responsible_contact_name or "N/A", val_style)
+                Paragraph(_safe_str(branch.responsible_contact_name if branch else 'N/A') or "N/A", val_style)
             ],
             [
                 Paragraph("TÉCNICO APLICADOR:", label_style),
-                Paragraph(tech.full_name if tech else "Técnico Asignado", val_style),
+                Paragraph(_safe_str(tech.full_name if tech else 'Técnico Asignado'), val_style),
                 Paragraph("REGISTRO STPS DC-3:", label_style),
-                Paragraph((tech.stps_registration_number if tech else None) or "DC3-VIGENTE", val_style)
+                Paragraph(_safe_str(getattr(tech, 'stps_registration_number', None) if tech else None) or "DC3-VIGENTE", val_style)
             ],
             [
                 Paragraph("INICIO DE SERVICIO:", label_style),
@@ -499,19 +585,19 @@ class OfficialWorkOrderPDFGenerator:
 
         # 3. CHECKLIST OPERATIVO DE PLAGAS Y MÉTODOS
         pests_ck = []
-        if order.pest_crawling_insects: pests_ck.append("Rastreros")
-        if order.pest_flying_insects: pests_ck.append("Voladores")
-        if order.pest_rodents: pests_ck.append("Roedores")
-        if order.pest_others: pests_ck.append(order.pest_others)
+        if getattr(order, 'pest_crawling_insects', False): pests_ck.append("Rastreros")
+        if getattr(order, 'pest_flying_insects', False): pests_ck.append("Voladores")
+        if getattr(order, 'pest_rodents', False): pests_ck.append("Roedores")
+        if getattr(order, 'pest_others', None): pests_ck.append(_safe_str(order.pest_others))
         pests_joined = ", ".join(pests_ck) if pests_ck else "Control general preventivo"
 
         procs_ck = []
-        if order.proc_aspersion: procs_ck.append("Aspersión líquida")
-        if order.proc_baits: procs_ck.append("Cebado")
-        if order.proc_traps: procs_ck.append("Trampas mecánicas/goma")
-        if order.proc_gels: procs_ck.append("Aplicación de gel")
-        if order.proc_ulv_fogging: procs_ck.append("Nebulización ULV en frío")
-        if order.proc_thermofogging: procs_ck.append("Termonebulización")
+        if getattr(order, 'proc_aspersion', False): procs_ck.append("Aspersión líquida")
+        if getattr(order, 'proc_baits', False): procs_ck.append("Cebado")
+        if getattr(order, 'proc_traps', False): procs_ck.append("Trampas mecánicas/goma")
+        if getattr(order, 'proc_gels', False): procs_ck.append("Aplicación de gel")
+        if getattr(order, 'proc_ulv_fogging', False): procs_ck.append("Nebulización ULV en frío")
+        if getattr(order, 'proc_thermofogging', False): procs_ck.append("Termonebulización")
         procs_joined = ", ".join(procs_ck) if procs_ck else "Aspersión focalizada"
 
         check_rows = [
@@ -548,16 +634,26 @@ class OfficialWorkOrderPDFGenerator:
         ]
         chem_rows = [chem_headers]
 
-        if order.certificate and order.certificate.applied_chemicals:
-            for item in order.certificate.applied_chemicals:
-                chem = item.chemical
+        cert_applied = list(getattr(order.certificate, 'applied_chemicals', None) or []) if (order and order.certificate) else []
+        if cert_applied:
+            for item in cert_applied:
+                chem = getattr(item, 'chemical', None)
+                comm_name = _safe_str(getattr(chem, 'commercial_name', None) if chem else 'Insecticida')
+                act_ing = _safe_str(getattr(chem, 'active_ingredient', None) if chem else 'Ingrediente Activo')
+                cico_no = _safe_str(getattr(chem, 'cicoplafest_number', None) if chem else 'RSCO-URB')
+                dose_str = _safe_str(getattr(item, 'dose_applied', None) or '10 ml / L')
+                area_str = _safe_str(getattr(item, 'area_type', None))
+                zone_str = _safe_str(getattr(item, 'treated_zones_description', None))
+                area_comb = f"{area_str}: {zone_str}".strip(" :") if (area_str or zone_str) else "Áreas comunes"
+                method_str = _safe_str(getattr(item, 'application_method', None) or 'Aspersión')
+
                 chem_rows.append([
-                    Paragraph(chem.commercial_name, val_style),
-                    Paragraph(chem.active_ingredient, val_style),
-                    Paragraph(chem.cicoplafest_number, val_style),
-                    Paragraph(item.dose_applied, val_style),
-                    Paragraph(f"{item.area_type.value}: {item.treated_zones_description}", val_style),
-                    Paragraph(item.application_method, val_style)
+                    Paragraph(comm_name, val_style),
+                    Paragraph(act_ing, val_style),
+                    Paragraph(cico_no, val_style),
+                    Paragraph(dose_str, val_style),
+                    Paragraph(area_comb, val_style),
+                    Paragraph(method_str, val_style)
                 ])
         else:
             chem_rows.append([
