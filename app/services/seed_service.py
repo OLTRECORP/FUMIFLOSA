@@ -732,6 +732,12 @@ def seed_bitacoras_and_equipment(db: Session) -> int:
 
 def seed_all_database_defaults(db: Session) -> dict:
     """Ejecuta todos los sembradores garantizando integridad y disponibilidad instantánea de datos."""
+    try:
+        from app.database import auto_migrate_schema
+        auto_migrate_schema(db.get_bind())
+    except Exception as e:
+        print(f"[SEED SCHEMA AUTO-MIGRATE NOTICE]: {e}")
+
     cfg = seed_company_config(db)
     u_count = seed_users(db)
     c_count = seed_chemicals(db)

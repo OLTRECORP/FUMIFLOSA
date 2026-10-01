@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from sqlalchemy import text
 from app.config import settings
-from app.database import engine
+from app.database import engine, auto_migrate_schema
 from app.models import Base
 from app.api.routes import router as api_router
 
@@ -18,37 +18,12 @@ app = FastAPI(
     redoc_url="/redoc"
 )
 
+
 @app.on_event("startup")
 def startup_db_sync():
     """Garantiza la creación y migración automática de columnas y tablas en PostgreSQL / SQLite."""
     try:
-        Base.metadata.create_all(bind=engine)
-        if engine.dialect.name == "postgresql":
-            with engine.begin() as conn:
-                for stmt in [
-                    "ALTER TABLE IF EXISTS alembic_version ALTER COLUMN version_num TYPE VARCHAR(128);",
-                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS username VARCHAR(100);",
-                    "CREATE UNIQUE INDEX IF NOT EXISTS ix_users_username ON users (username);",
-                    "ALTER TABLE clients ADD COLUMN IF NOT EXISTS portal_slug VARCHAR(100);",
-                    "ALTER TABLE clients ADD COLUMN IF NOT EXISTS portal_password VARCHAR(255);",
-                    "ALTER TABLE clients ADD COLUMN IF NOT EXISTS portal_is_enabled BOOLEAN DEFAULT TRUE;",
-                    "CREATE UNIQUE INDEX IF NOT EXISTS ix_clients_portal_slug ON clients (portal_slug);",
-                    "ALTER TABLE chemicals ADD COLUMN IF NOT EXISTS toxicological_category VARCHAR(50);",
-                    "ALTER TABLE chemicals ADD COLUMN IF NOT EXISTS compatible_methods VARCHAR(255);",
-                    "ALTER TABLE chemicals ADD COLUMN IF NOT EXISTS technical_sheet_url VARCHAR(500);",
-                    "ALTER TABLE chemicals ADD COLUMN IF NOT EXISTS safety_sheet_url VARCHAR(500);",
-                    "ALTER TABLE rsco_items ADD COLUMN IF NOT EXISTS technical_sheet_url VARCHAR(500);",
-                    "ALTER TABLE rsco_items ADD COLUMN IF NOT EXISTS safety_sheet_url VARCHAR(500);",
-                    "ALTER TABLE certificates ADD COLUMN IF NOT EXISTS is_cancelled BOOLEAN DEFAULT FALSE;",
-                    "ALTER TABLE certificates ADD COLUMN IF NOT EXISTS cancellation_reason VARCHAR(500);",
-                    "ALTER TABLE certificates ADD COLUMN IF NOT EXISTS cancelled_at TIMESTAMPTZ;",
-                    "ALTER TABLE service_orders ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'completed';",
-                    "ALTER TABLE service_orders ADD COLUMN IF NOT EXISTS scheduled_for TIMESTAMPTZ;"
-                ]:
-                    try:
-                        conn.execute(text(stmt))
-                    except Exception:
-                        pass
+        auto_migrate_schema(engine)
         
         # Sincronizar catálogo inicial RSCO, Químicos, Usuarios, Clientes, Certificados y Bitácoras
         from app.database import SessionLocal
