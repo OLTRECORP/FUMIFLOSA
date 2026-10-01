@@ -40,6 +40,13 @@ from app.services.data_import import HistoricalDataImporter
 from app.services.pdf_service import OfficialCertificatePDFGenerator, OfficialWorkOrderPDFGenerator, BitacoraPDFGenerator
 from app.services.backup_service import SystemBackupRestoreService
 from app.services.mip_service import get_mip_full_manual, get_pest_combat_guides, seed_default_rsco_items
+from app.services.seed_service import (
+    seed_all_database_defaults,
+    seed_chemicals,
+    seed_users,
+    seed_clients_and_services,
+    seed_bitacoras_and_equipment
+)
 from app.services.pesticide_sheet_service import (
     lookup_online_sheets_by_rsco,
     OfficialTechnicalSheetPDFGenerator,
@@ -540,6 +547,9 @@ def get_client_portal_data(
 @router.get("/dashboard/summary", response_model=DashboardSummaryStats)
 def get_dashboard_summary(db: Session = Depends(get_db)):
     """Devuelve estadísticas generales para el panel principal."""
+    if db.query(Client).filter(Client.is_deleted == False).count() == 0:
+        seed_all_database_defaults(db)
+
     total_clients = db.query(func.count(Client.id)).filter(Client.is_deleted == False).scalar() or 0
     total_branches = db.query(func.count(Branch.id)).filter(Branch.is_deleted == False).scalar() or 0
     total_technicians = db.query(func.count(User.id)).filter(User.is_deleted == False, User.role == UserRole.TECNICO_CAMPO).scalar() or 0
@@ -578,6 +588,8 @@ def get_dashboard_summary(db: Session = Depends(get_db)):
 # ============================================================================
 @router.get("/users", response_model=List[UserResponse])
 def get_users(role: Optional[UserRole] = None, db: Session = Depends(get_db)):
+    if db.query(User).filter(User.is_deleted == False).count() == 0:
+        seed_users(db)
     query = db.query(User).filter(User.is_deleted == False)
     if role:
         query = query.filter(User.role == role)
@@ -638,6 +650,8 @@ def delete_user(user_id: uuid.UUID, db: Session = Depends(get_db)):
 # ============================================================================
 @router.get("/clients", response_model=List[ClientResponse])
 def get_clients(db: Session = Depends(get_db)):
+    if db.query(Client).filter(Client.is_deleted == False).count() == 0:
+        seed_clients_and_services(db)
     clients = db.query(Client).filter(Client.is_deleted == False).order_by(Client.legal_name).all()
     # Mapear portal_has_password
     for c in clients:
@@ -699,6 +713,8 @@ def delete_client(client_id: uuid.UUID, db: Session = Depends(get_db)):
 # ============================================================================
 @router.get("/branches", response_model=List[BranchResponse])
 def get_branches(client_id: Optional[uuid.UUID] = None, db: Session = Depends(get_db)):
+    if db.query(Branch).filter(Branch.is_deleted == False).count() == 0:
+        seed_clients_and_services(db)
     query = db.query(Branch).options(joinedload(Branch.client)).filter(Branch.is_deleted == False)
     if client_id:
         query = query.filter(Branch.client_id == client_id)
@@ -1035,6 +1051,8 @@ def search_rsco_chemicals(q: str = "", db: Session = Depends(get_db)):
 
 @router.get("/chemicals", response_model=List[ChemicalResponse])
 def get_chemicals(db: Session = Depends(get_db)):
+    if db.query(Chemical).filter(Chemical.is_deleted == False).count() == 0:
+        seed_chemicals(db)
     return db.query(Chemical).filter(Chemical.is_deleted == False).order_by(Chemical.commercial_name).all()
 
 
@@ -1439,6 +1457,9 @@ def get_service_orders(
     limit: int = 100, 
     db: Session = Depends(get_db)
 ):
+    if db.query(ServiceOrder).filter(ServiceOrder.is_deleted == False).count() == 0:
+        seed_clients_and_services(db)
+
     query = db.query(ServiceOrder).options(
         joinedload(ServiceOrder.branch).joinedload(Branch.client),
         joinedload(ServiceOrder.technician),
@@ -2049,6 +2070,9 @@ def get_dashboard_expirations(db: Session = Depends(get_db)):
     Calcula estrictamente la vigencia a 30 días naturales posteriores a la fecha de expedición.
     Clasifica en: ≤7 días (crítico), ≤15 días (advertencia), ≤30 días (vigente) y Vencidos (>30 días).
     """
+    if db.query(Certificate).filter(Certificate.is_deleted == False).count() == 0:
+        seed_clients_and_services(db)
+
     today = date.today()
 
     certificates = db.query(Certificate).options(
@@ -2432,6 +2456,14 @@ def seed_rsco_defaults(db: Session = Depends(get_db)):
     """Puebla o sincroniza el catálogo con los principales productos RSCO oficiales de México."""
     seeded = seed_default_rsco_items(db)
     return {"status": "ok", "seeded_count": seeded, "message": f"Catálogo RSCO sincronizado con éxito ({seeded} registros actualizados)."}
+
+
+@router.post("/system/seed-defaults")
+def seed_system_defaults_endpoint(db: Session = Depends(get_db)):
+    """Puebla o sincroniza integralmente todos los datos base del sistema (empresa, usuarios, químicos, clientes y bitácoras)."""
+    summary = seed_all_database_defaults(db)
+    return {"status": "ok", "summary": summary, "message": "Base de datos y catálogos sincronizados exitosamente."}
+
 
 
 # ============================================================================

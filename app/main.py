@@ -56,11 +56,12 @@ def startup_db_sync():
             conn.execute(text("ALTER TABLE service_orders ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'completed';"))
             conn.execute(text("ALTER TABLE service_orders ADD COLUMN IF NOT EXISTS scheduled_for TIMESTAMPTZ;"))
         
-        # Sincronizar catálogo inicial RSCO en línea
+        # Sincronizar catálogo inicial RSCO, Químicos, Usuarios, Clientes y Bitácoras
         from app.database import SessionLocal
-        from app.services.mip_service import seed_default_rsco_items
+        from app.services.seed_service import seed_all_database_defaults
         with SessionLocal() as db_session:
-            seed_default_rsco_items(db_session)
+            seed_results = seed_all_database_defaults(db_session)
+            print(f"[STARTUP DB SEED COMPLETE]: {seed_results}")
     except Exception as e:
         print(f"[STARTUP DB SYNC WARNING]: {e}")
 
