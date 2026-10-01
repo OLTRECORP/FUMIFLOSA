@@ -4164,6 +4164,7 @@
                     if (loginModal) loginModal.classList.add('hidden');
                     loadCompanyConfig();
                     loadDashboardData();
+                    loadChronologicalCalendar();
                     return;
                 } catch(e) {
                     console.error('Error parsing stored user', e);
@@ -4493,21 +4494,23 @@
                 if (!res.ok) throw new Error('Error al cargar calendario');
                 calEvents = await res.json();
 
-                // Si hay eventos y el mes actual tiene 0, auto-navegar al mes con el servicio más reciente en la carga inicial
-                if (calEvents.length > 0 && !window._calendarAutoNavigated) {
-                    window._calendarAutoNavigated = true;
-                    const thisMonthEvents = calEvents.filter(ev => {
-                        const d = new Date(ev.start);
-                        return d.getFullYear() === calCurrentDate.getFullYear() && d.getMonth() === calCurrentDate.getMonth();
-                    });
-                    if (thisMonthEvents.length === 0) {
-                        const sorted = [...calEvents].sort((a, b) => new Date(b.start) - new Date(a.start));
-                        if (sorted[0]) {
-                            const latestDate = new Date(sorted[0].start);
-                            calCurrentDate = new Date(latestDate.getFullYear(), latestDate.getMonth(), 1);
-                        }
+                // Si el mes seleccionado actualmente no tiene eventos y existen eventos en la base de datos, auto-navegar al mes con el evento más reciente
+                const thisMonthEvents = calEvents.filter(ev => {
+                    if (!ev.start) return false;
+                    const datePart = ev.start.split('T')[0];
+                    const [y, m] = datePart.split('-').map(Number);
+                    return y === calCurrentDate.getFullYear() && (m - 1) === calCurrentDate.getMonth();
+                });
+
+                if (thisMonthEvents.length === 0 && calEvents.length > 0 && !window._userManuallyPickedMonth) {
+                    const sorted = [...calEvents].sort((a, b) => new Date(b.start) - new Date(a.start));
+                    if (sorted[0] && sorted[0].start) {
+                        const datePart = sorted[0].start.split('T')[0];
+                        const [y, m] = datePart.split('-').map(Number);
+                        calCurrentDate = new Date(y, m - 1, 1);
                     }
                 }
+
                 updateCalendarSelectors();
                 renderCalendar();
             } catch(err) {
@@ -4516,6 +4519,7 @@
         }
 
         function jumpToYear(y) {
+            window._userManuallyPickedMonth = true;
             calCurrentDate = new Date(y, calCurrentDate.getMonth(), 1);
             updateCalendarSelectors();
             renderCalendar();
@@ -4534,7 +4538,7 @@
             if (calEvents && calEvents.length) {
                 calEvents.forEach(ev => {
                     if (ev.start) {
-                        const y = new Date(ev.start).getFullYear();
+                        const y = parseInt(ev.start.split('T')[0].split('-')[0]);
                         if (!isNaN(y)) {
                             yearsSet.add(y);
                             if (y < startYear) startYear = y;
@@ -4567,6 +4571,7 @@
         }
 
         function onCalendarSelectChange() {
+            window._userManuallyPickedMonth = true;
             const mSel = document.getElementById('cal-month-select');
             const ySel = document.getElementById('cal-year-select');
             if (mSel && ySel) {
@@ -4580,11 +4585,15 @@
                 alert('No hay servicios registrados en la base de datos.');
                 return;
             }
+            window._userManuallyPickedMonth = true;
             const sorted = [...calEvents].sort((a, b) => new Date(b.start) - new Date(a.start));
-            const latestDate = new Date(sorted[0].start);
-            calCurrentDate = new Date(latestDate.getFullYear(), latestDate.getMonth(), 1);
-            updateCalendarSelectors();
-            renderCalendar();
+            if (sorted[0] && sorted[0].start) {
+                const datePart = sorted[0].start.split('T')[0];
+                const [y, m] = datePart.split('-').map(Number);
+                calCurrentDate = new Date(y, m - 1, 1);
+                updateCalendarSelectors();
+                renderCalendar();
+            }
         }
 
         function renderCalendar() {
@@ -4631,22 +4640,17 @@
 
             // Días del mes actual
             for (let day = 1; day <= totalDaysInMonth; day++) {
-                const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
                 const isToday = today.getFullYear() === year && today.getMonth() === month && today.getDate() === day;
 
-                // Filtrar eventos de este día (soporte robusto para fecha local y split)
+                // Filtrar eventos de este día (soporte robusto para fecha exacta sin desfase horario)
                 const dayEvents = calEvents.filter(ev => {
                     if (!ev.start) return false;
-                    const evD = new Date(ev.start);
-                    let matches = false;
-                    if (!isNaN(evD.getTime())) {
-                        if (evD.getFullYear() === year && evD.getMonth() === month && evD.getDate() === day) {
-                            matches = true;
-                        }
-                    }
-                    if (!matches && ev.start.includes(dateStr)) matches = true;
+                    const datePart = ev.start.split('T')[0];
+                    const [evY, evM, evD] = datePart.split('-').map(Number);
+                    const matches = (evY === year && (evM - 1) === month && evD === day);
                     if (!matches) return false;
-                    if (calStatusFilter !== 'all' && ev.status !== calStatusFilter) return false;
+                    const evStatus = (ev.status || 'completed').toLowerCase();
+                    if (calStatusFilter !== 'all' && evStatus !== calStatusFilter.toLowerCase()) return false;
                     return true;
                 });
 
@@ -4669,7 +4673,7 @@
                     eventsPills += `
                         <div onclick="openEventDetailModal('${ev.id}')" title="${ev.title} (${ev.status_text})" class="cursor-pointer text-[10px] p-1 rounded border ${pillBg} truncate font-medium flex items-center gap-1 shadow-2xs hover:opacity-80 transition">
                             <i class="fa-solid ${icon} text-[8px] flex-shrink-0"></i>
-                            <span class="font-bold flex-shrink-0">${timeStr}</span>
+                            <span class="font-bold flex-shrink-0">${timeStr || 'Servicio'}</span>
                             <span class="truncate">${ev.client_name}</span>
                         </div>`;
                 });
@@ -4704,7 +4708,8 @@
             if (!container) return;
 
             const filteredEvents = calEvents.filter(ev => {
-                if (calStatusFilter !== 'all' && ev.status !== calStatusFilter) return false;
+                const evStatus = (ev.status || 'completed').toLowerCase();
+                if (calStatusFilter !== 'all' && evStatus !== calStatusFilter.toLowerCase()) return false;
                 return true;
             });
 

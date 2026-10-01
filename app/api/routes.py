@@ -1543,6 +1543,237 @@ def create_service_order_with_certificate(
         raise HTTPException(status_code=500, detail=f"Error al crear el servicio: {str(e)}")
 
 
+# ============================================================================
+# 8. CALENDARIO CRONOLÓGICO Y AGENDAMIENTO DE SERVICIOS
+# ============================================================================
+@router.get("/services/calendar")
+def get_services_calendar(
+    start_date: Optional[date] = None,
+    end_date: Optional[date] = None,
+    client_id: Optional[uuid.UUID] = None,
+    branch_id: Optional[uuid.UUID] = None,
+    technician_id: Optional[uuid.UUID] = None,
+    status_filter: Optional[str] = None,
+    db: Session = Depends(get_db)
+):
+    """
+    Registro cronológico de servicios para visualización en calendario interactivo.
+    Devuelve servicios completados, agendados y cancelados con codificación de colores y metadatos.
+    """
+    query = db.query(ServiceOrder).options(
+        joinedload(ServiceOrder.branch).joinedload(Branch.client),
+        joinedload(ServiceOrder.technician),
+        joinedload(ServiceOrder.certificate)
+    ).filter(ServiceOrder.is_deleted == False)
+
+    if branch_id:
+        query = query.filter(ServiceOrder.branch_id == branch_id)
+    if client_id:
+        query = query.join(Branch).filter(Branch.client_id == client_id)
+    if technician_id:
+        query = query.filter(ServiceOrder.technician_id == technician_id)
+    if start_date:
+        start_dt = datetime.combine(start_date, datetime.min.time()).replace(tzinfo=timezone.utc)
+        query = query.filter(ServiceOrder.service_start_date >= start_dt)
+    if end_date:
+        end_dt = datetime.combine(end_date, datetime.max.time()).replace(tzinfo=timezone.utc)
+        query = query.filter(ServiceOrder.service_start_date <= end_dt)
+
+    orders = query.order_by(ServiceOrder.service_start_date.desc()).all()
+    today = date.today()
+
+    events = []
+    seen_service_ids = set()
+    seen_cert_ids = set()
+
+    for order in orders:
+        seen_service_ids.add(order.id)
+        branch = order.branch
+        client = branch.client if branch else None
+        cert = order.certificate
+        if cert:
+            seen_cert_ids.add(cert.id)
+
+        client_name = client.legal_name if client else "Cliente General"
+        branch_name = branch.name if branch else "Sucursal General"
+        branch_address = branch.address if branch else "Domicilio registrado"
+        branch_id_str = str(branch.id) if branch else ""
+        client_id_str = str(client.id) if client else ""
+        
+        is_cancelled = False
+        cancel_reason = None
+        if cert and getattr(cert, 'is_cancelled', False):
+            is_cancelled = True
+            cancel_reason = cert.cancellation_reason
+        elif getattr(order, 'status', 'completed') == 'cancelled':
+            is_cancelled = True
+            cancel_reason = order.observations
+
+        order_status = "cancelled" if is_cancelled else (getattr(order, 'status', None) or "completed")
+        
+        if status_filter and status_filter != 'all' and order_status.lower() != status_filter.lower():
+            continue
+
+        if is_cancelled:
+            color = "#EF4444"
+            status_text = "Cancelado"
+        elif order_status == "scheduled":
+            color = "#3B82F6"
+            status_text = "Agendado"
+        else:
+            if cert and cert.issue_date:
+                valid_end = cert.validity_end_date or (cert.issue_date + timedelta(days=30))
+                if (valid_end - today).days < 0:
+                    color = "#F59E0B"
+                    status_text = "Completado (Vencido)"
+                else:
+                    color = "#10B981"
+                    status_text = "Completado (Vigente)"
+            else:
+                color = "#10B981"
+                status_text = "Completado"
+
+        title = f"{client_name} ({branch_name})"
+        
+        # Fecha de inicio segura
+        if order.service_start_date:
+            start_iso = order.service_start_date.isoformat()
+        elif cert and cert.issue_date:
+            start_iso = datetime.combine(cert.issue_date, time(9, 0), tzinfo=timezone.utc).isoformat()
+        else:
+            start_iso = datetime.now(timezone.utc).isoformat()
+
+        # Fecha de fin segura
+        if order.service_end_date:
+            end_iso = order.service_end_date.isoformat()
+        else:
+            end_iso = start_iso
+
+        # Fecha de vigencia calculada
+        val_end_iso = None
+        if cert:
+            val_date = cert.validity_end_date or (cert.issue_date + timedelta(days=30) if cert.issue_date else None)
+            if val_date:
+                val_end_iso = val_date.isoformat()
+
+        events.append({
+            "id": str(order.id),
+            "service_order_id": str(order.id),
+            "certificate_id": str(cert.id) if cert else None,
+            "folio": order.folio,
+            "certificate_folio": cert.certificate_folio if cert else None,
+            "title": title,
+            "start": start_iso,
+            "end": end_iso,
+            "client_id": client_id_str,
+            "client_name": client_name,
+            "branch_id": branch_id_str,
+            "branch_name": branch_name,
+            "branch_address": branch_address,
+            "technician_id": str(order.technician_id) if order.technician_id else "",
+            "technician_name": order.technician.full_name if order.technician else "No Asignado",
+            "status": order_status,
+            "status_text": status_text,
+            "is_cancelled": is_cancelled,
+            "cancellation_reason": cancel_reason,
+            "validity_end_date": val_end_iso,
+            "color": color
+        })
+
+    # Verificar si existen certificados adicionales huérfanos o no asociados a órdenes listadas
+    all_certs = db.query(Certificate).options(
+        joinedload(Certificate.service_order).joinedload(ServiceOrder.branch).joinedload(Branch.client),
+        joinedload(Certificate.service_order).joinedload(ServiceOrder.technician)
+    ).filter(Certificate.is_deleted == False).all()
+
+    for c in all_certs:
+        if c.id in seen_cert_ids:
+            continue
+        seen_cert_ids.add(c.id)
+        
+        s_order = c.service_order
+        b = s_order.branch if s_order else None
+        cli = b.client if b else None
+        tech = s_order.technician if s_order else None
+
+        c_issue = c.issue_date or date.today()
+        c_start = datetime.combine(c_issue, time(9, 0), tzinfo=timezone.utc).isoformat()
+        c_val = (c.validity_end_date or (c_issue + timedelta(days=30))).isoformat()
+        is_canc = getattr(c, 'is_cancelled', False)
+        
+        events.append({
+            "id": str(c.id),
+            "service_order_id": str(s_order.id) if s_order else str(c.id),
+            "certificate_id": str(c.id),
+            "folio": s_order.folio if s_order else f"CERT-{c.certificate_folio}",
+            "certificate_folio": c.certificate_folio,
+            "title": f"{cli.legal_name if cli else 'Cliente General'} ({b.name if b else 'Sucursal General'})",
+            "start": c_start,
+            "end": c_start,
+            "client_id": str(cli.id) if cli else "",
+            "client_name": cli.legal_name if cli else "Cliente General",
+            "branch_id": str(b.id) if b else "",
+            "branch_name": b.name if b else "Sucursal General",
+            "branch_address": b.address if b else "Domicilio registrado",
+            "technician_id": str(tech.id) if tech else "",
+            "technician_name": tech.full_name if tech else "No Asignado",
+            "status": "cancelled" if is_canc else "completed",
+            "status_text": "Cancelado" if is_canc else "Completado",
+            "is_cancelled": is_canc,
+            "cancellation_reason": c.cancellation_reason if is_canc else None,
+            "validity_end_date": c_val,
+            "color": "#EF4444" if is_canc else "#10B981"
+        })
+
+    return events
+
+
+@router.post("/services/schedule", response_model=ServiceOrderResponse, status_code=status.HTTP_201_CREATED)
+def schedule_upcoming_service(payload: ScheduleServiceRequest, db: Session = Depends(get_db)):
+    """
+    Agenda un próximo servicio ligado a una sucursal, cliente o servicio operativo previo.
+    Crea la Orden de Servicio en estado 'scheduled' para seguimiento en el calendario.
+    """
+    branch = db.query(Branch).filter(Branch.id == payload.branch_id, Branch.is_deleted == False).first()
+    if not branch:
+        raise HTTPException(status_code=404, detail="Sucursal no encontrada.")
+
+    tech_id = payload.technician_id
+    if not tech_id:
+        first_tech = db.query(User).filter(User.is_active == True).first()
+        tech_id = first_tech.id if first_tech else None
+
+    if not tech_id:
+        raise HTTPException(status_code=400, detail="Debe existir al menos un técnico registrado en el sistema.")
+
+    count = db.execute(select(func.count(ServiceOrder.id))).scalar() or 0
+    order_folio = f"PROG-ORD-{count + 1:06d}"
+
+    start_dt = payload.scheduled_for
+    duration = payload.estimated_duration_minutes or 60
+    end_dt = start_dt + timedelta(minutes=duration)
+
+    try:
+        new_order = ServiceOrder(
+            folio=order_folio,
+            branch_id=payload.branch_id,
+            technician_id=tech_id,
+            status="scheduled",
+            scheduled_for=start_dt,
+            service_start_date=start_dt,
+            service_end_date=end_dt,
+            pest_others=payload.target_pests,
+            observations=f"[AGENDADO]: {payload.notes or 'Próximo servicio programado'}"
+        )
+        db.add(new_order)
+        db.commit()
+        db.refresh(new_order)
+        return new_order
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Error al agendar el servicio: {str(e)}")
+
+
 @router.get("/services/{service_id}", response_model=ServiceOrderResponse)
 def get_service_order_by_id(service_id: uuid.UUID, db: Session = Depends(get_db)):
     """Obtiene una orden de servicio individual con su certificado y químicos aplicados."""
@@ -1667,163 +1898,8 @@ def delete_certificate(certificate_id: uuid.UUID, db: Session = Depends(get_db))
 
 
 # ============================================================================
-# 9. GENERACIÓN Y DESCARGA DE PDF OFICIAL (NOM-256 / SINTOX) Y ORDEN TÉCNICA
+# 9. GESTIÓN Y CANCELACIÓN DE CERTIFICADOS OFICIALES
 # ============================================================================
-@router.get("/services/calendar")
-def get_services_calendar(
-    start_date: Optional[date] = None,
-    end_date: Optional[date] = None,
-    client_id: Optional[uuid.UUID] = None,
-    branch_id: Optional[uuid.UUID] = None,
-    technician_id: Optional[uuid.UUID] = None,
-    status_filter: Optional[str] = None,
-    db: Session = Depends(get_db)
-):
-    """
-    Registro cronológico de servicios para visualización en calendario interactivo.
-    Devuelve servicios completados, agendados y cancelados con codificación de colores y metadatos.
-    """
-    query = db.query(ServiceOrder).options(
-        joinedload(ServiceOrder.branch).joinedload(Branch.client),
-        joinedload(ServiceOrder.technician),
-        joinedload(ServiceOrder.certificate)
-    ).filter(ServiceOrder.is_deleted == False)
-
-    if branch_id:
-        query = query.filter(ServiceOrder.branch_id == branch_id)
-    if client_id:
-        query = query.join(Branch).filter(Branch.client_id == client_id)
-    if technician_id:
-        query = query.filter(ServiceOrder.technician_id == technician_id)
-    if start_date:
-        start_dt = datetime.combine(start_date, datetime.min.time()).replace(tzinfo=timezone.utc)
-        query = query.filter(ServiceOrder.service_start_date >= start_dt)
-    if end_date:
-        end_dt = datetime.combine(end_date, datetime.max.time()).replace(tzinfo=timezone.utc)
-        query = query.filter(ServiceOrder.service_start_date <= end_dt)
-
-    orders = query.order_by(ServiceOrder.service_start_date.desc()).all()
-    today = date.today()
-
-    events = []
-    for order in orders:
-        branch = order.branch
-        client = branch.client if branch else None
-        cert = order.certificate
-
-        client_name = client.legal_name if client else "Cliente General"
-        branch_name = branch.name if branch else "Sucursal General"
-        branch_address = branch.address if branch else "Domicilio registrado"
-        branch_id_str = str(branch.id) if branch else ""
-        client_id_str = str(client.id) if client else ""
-        
-        is_cancelled = False
-        cancel_reason = None
-        if cert and getattr(cert, 'is_cancelled', False):
-            is_cancelled = True
-            cancel_reason = cert.cancellation_reason
-        elif getattr(order, 'status', 'completed') == 'cancelled':
-            is_cancelled = True
-            cancel_reason = order.observations
-
-        order_status = "cancelled" if is_cancelled else getattr(order, 'status', 'completed')
-        
-        if status_filter and status_filter != 'all' and order_status != status_filter:
-            continue
-
-        if is_cancelled:
-            color = "#EF4444"
-            status_text = "Cancelado"
-        elif order_status == "scheduled":
-            color = "#3B82F6"
-            status_text = "Agendado"
-        else:
-            if cert:
-                valid_end = cert.issue_date + timedelta(days=30)
-                if (valid_end - today).days < 0:
-                    color = "#F59E0B"
-                    status_text = "Completado (Vencido)"
-                else:
-                    color = "#10B981"
-                    status_text = "Completado (Vigente)"
-            else:
-                color = "#10B981"
-                status_text = "Completado"
-
-        title = f"{client_name} ({branch_name})"
-        events.append({
-            "id": str(order.id),
-            "service_order_id": str(order.id),
-            "certificate_id": str(cert.id) if cert else None,
-            "folio": order.folio,
-            "certificate_folio": cert.certificate_folio if cert else None,
-            "title": title,
-            "start": order.service_start_date.isoformat(),
-            "end": order.service_end_date.isoformat(),
-            "client_id": client_id_str,
-            "client_name": client_name,
-            "branch_id": branch_id_str,
-            "branch_name": branch_name,
-            "branch_address": branch_address,
-            "technician_id": str(order.technician_id),
-            "technician_name": order.technician.full_name if order.technician else "No Asignado",
-            "status": order_status,
-            "status_text": status_text,
-            "is_cancelled": is_cancelled,
-            "cancellation_reason": cancel_reason,
-            "validity_end_date": (cert.issue_date + timedelta(days=30)).isoformat() if cert else None,
-            "color": color
-        })
-
-    return events
-
-
-@router.post("/services/schedule", response_model=ServiceOrderResponse, status_code=status.HTTP_201_CREATED)
-def schedule_upcoming_service(payload: ScheduleServiceRequest, db: Session = Depends(get_db)):
-    """
-    Agenda un próximo servicio ligado a una sucursal, cliente o servicio operativo previo.
-    Crea la Orden de Servicio en estado 'scheduled' para seguimiento en el calendario.
-    """
-    branch = db.query(Branch).filter(Branch.id == payload.branch_id, Branch.is_deleted == False).first()
-    if not branch:
-        raise HTTPException(status_code=404, detail="Sucursal no encontrada.")
-
-    tech_id = payload.technician_id
-    if not tech_id:
-        first_tech = db.query(User).filter(User.is_active == True).first()
-        tech_id = first_tech.id if first_tech else None
-
-    if not tech_id:
-        raise HTTPException(status_code=400, detail="Debe existir al menos un técnico registrado en el sistema.")
-
-    count = db.execute(select(func.count(ServiceOrder.id))).scalar() or 0
-    order_folio = f"PROG-ORD-{count + 1:06d}"
-
-    start_dt = payload.scheduled_for
-    duration = payload.estimated_duration_minutes or 60
-    end_dt = start_dt + timedelta(minutes=duration)
-
-    try:
-        new_order = ServiceOrder(
-            folio=order_folio,
-            branch_id=payload.branch_id,
-            technician_id=tech_id,
-            status="scheduled",
-            scheduled_for=start_dt,
-            service_start_date=start_dt,
-            service_end_date=end_dt,
-            pest_others=payload.target_pests,
-            observations=f"[AGENDADO]: {payload.notes or 'Próximo servicio programado'}"
-        )
-        db.add(new_order)
-        db.commit()
-        db.refresh(new_order)
-        return new_order
-    except Exception as e:
-        db.rollback()
-        raise HTTPException(status_code=500, detail=f"Error al agendar el servicio: {str(e)}")
-
-
 @router.post("/certificates/{certificate_id}/cancel")
 def cancel_certificate_by_id(
     certificate_id: uuid.UUID,
@@ -1986,22 +2062,29 @@ def get_dashboard_expirations(db: Session = Depends(get_db)):
     for cert in certificates:
         if getattr(cert, 'is_cancelled', False):
             continue
-        if not cert.service_order or not cert.service_order.branch or not cert.service_order.branch.client:
-            continue
 
-        branch = cert.service_order.branch
-        client = branch.client
+        branch = cert.service_order.branch if cert.service_order else None
+        client = branch.client if branch else None
 
-        # Conforme a NOM-256, vigencia estricta de 30 días naturales desde expedición
-        exact_validity_end = cert.issue_date + timedelta(days=30)
+        client_id = client.id if client else uuid.UUID("00000000-0000-0000-0000-000000000000")
+        client_legal_name = client.legal_name if client else "Cliente General (Sin Matriz)"
+        client_rfc = client.rfc if client else "GEN000000000"
+        portal_slug = client.portal_slug if client else "general"
+
+        branch_id = branch.id if branch else uuid.UUID("00000000-0000-0000-0000-000000000000")
+        branch_name = branch.name if branch else "Sucursal General"
+        branch_unit_code = branch.unit_code if branch else None
+
+        cert_issue = cert.issue_date or date.today()
+        exact_validity_end = cert.validity_end_date or (cert_issue + timedelta(days=30))
         days_left = (exact_validity_end - today).days
 
-        if client.id not in clients_map:
-            clients_map[client.id] = ClientExpirationsGroup(
-                client_id=client.id,
-                legal_name=client.legal_name,
-                rfc=client.rfc,
-                portal_slug=client.portal_slug,
+        if client_id not in clients_map:
+            clients_map[client_id] = ClientExpirationsGroup(
+                client_id=client_id,
+                legal_name=client_legal_name,
+                rfc=client_rfc,
+                portal_slug=portal_slug,
                 expiring_7_days=[],
                 expiring_15_days=[],
                 expiring_30_days=[],
@@ -2021,11 +2104,11 @@ def get_dashboard_expirations(db: Session = Depends(get_db)):
         exp_detail = ExpirationDetail(
             certificate_id=cert.id,
             certificate_folio=cert.certificate_folio,
-            service_order_id=cert.service_order_id,
-            branch_id=branch.id,
-            branch_name=branch.name,
-            branch_unit_code=branch.unit_code,
-            issue_date=cert.issue_date,
+            service_order_id=cert.service_order_id or cert.id,
+            branch_id=branch_id,
+            branch_name=branch_name,
+            branch_unit_code=branch_unit_code,
+            issue_date=cert_issue,
             validity_end_date=exact_validity_end,
             days_until_expiration=days_left,
             is_valid=is_valid,
@@ -2033,13 +2116,13 @@ def get_dashboard_expirations(db: Session = Depends(get_db)):
         )
 
         if not is_valid:
-            clients_map[client.id].expired.append(exp_detail)
+            clients_map[client_id].expired.append(exp_detail)
         elif days_left <= 7:
-            clients_map[client.id].expiring_7_days.append(exp_detail)
+            clients_map[client_id].expiring_7_days.append(exp_detail)
         elif days_left <= 15:
-            clients_map[client.id].expiring_15_days.append(exp_detail)
+            clients_map[client_id].expiring_15_days.append(exp_detail)
         else:
-            clients_map[client.id].expiring_30_days.append(exp_detail)
+            clients_map[client_id].expiring_30_days.append(exp_detail)
 
     return DashboardExpirationsResponse(
         report_generated_at=datetime.now(timezone.utc),
