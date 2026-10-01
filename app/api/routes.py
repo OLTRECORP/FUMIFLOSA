@@ -12,7 +12,9 @@ from sqlalchemy import select, func, or_, and_, desc
 from app.database import get_db
 from app.models import (
     ServiceOrder, Certificate, CertificateChemical, Branch, Client, 
-    Chemical, User, UserRole, CompanyConfig
+    Chemical, User, UserRole, CompanyConfig,
+    RSCOItem, EPPLog, EPPAnnualMatrix, EquipmentCalibrationLog,
+    StationMonitoringLog, HazardousWasteLog
 )
 from app.schemas import (
     LoginRequest, LoginResponse, AuthUserInfo,
@@ -25,11 +27,18 @@ from app.schemas import (
     CompanyConfigResponse, CompanyConfigUpdate,
     AdvancedAnalyticsResponse, ClientPortalAuthRequest, ClientPortalDataResponse,
     CloudRestoreRequest, RestoreSummaryResponse,
-    CertificateCancelRequest, ScheduleServiceRequest, RSCOSearchResult
+    CertificateCancelRequest, ScheduleServiceRequest, RSCOSearchResult,
+    RSCOItemCreate, RSCOItemUpdate, RSCOItemResponse,
+    EPPLogCreate, EPPLogResponse,
+    EPPAnnualMatrixRow, EPPAnnualMatrixBatch,
+    EquipmentCalibrationCreate, EquipmentCalibrationResponse,
+    StationMonitoringCreate, StationMonitoringResponse,
+    HazardousWasteCreate, HazardousWasteResponse
 )
 from app.services.data_import import HistoricalDataImporter
-from app.services.pdf_service import OfficialCertificatePDFGenerator, OfficialWorkOrderPDFGenerator
+from app.services.pdf_service import OfficialCertificatePDFGenerator, OfficialWorkOrderPDFGenerator, BitacoraPDFGenerator
 from app.services.backup_service import SystemBackupRestoreService
+from app.services.mip_service import get_mip_full_manual, get_pest_combat_guides, seed_default_rsco_items
 
 router = APIRouter(prefix="/api/v1", tags=["FUMIFLOSA Core"])
 
@@ -893,7 +902,33 @@ def search_rsco_chemicals(q: str = "", db: Session = Depends(get_db)):
     results: List[RSCOSearchResult] = []
     seen_rsco = set()
 
-    # 1. Base de datos local
+    # 1. Catálogo Oficial RSCO en Línea (dinámico y actualizable por el usuario)
+    rsco_query = db.query(RSCOItem).filter(RSCOItem.is_deleted == False)
+    if search_term:
+        rsco_query = rsco_query.filter(
+            or_(
+                func.lower(RSCOItem.commercial_name).contains(search_term),
+                func.lower(RSCOItem.active_ingredient).contains(search_term),
+                func.lower(RSCOItem.cicoplafest_number).contains(search_term),
+                func.lower(RSCOItem.manufacturer).contains(search_term),
+                func.lower(RSCOItem.target_pests).contains(search_term)
+            )
+        )
+    for ri in rsco_query.limit(20).all():
+        seen_rsco.add(ri.cicoplafest_number.strip().upper())
+        results.append(RSCOSearchResult(
+            commercial_name=f"{ri.commercial_name} ({ri.manufacturer})",
+            active_ingredient=ri.active_ingredient,
+            cicoplafest_number=ri.cicoplafest_number,
+            authorized_dose_per_liter=ri.authorized_dose,
+            safety_interval_hours=ri.safety_interval_hours,
+            compatible_methods=f"Formulación: {ri.formulation}",
+            toxicological_category=ri.toxicological_category,
+            in_local_catalog=True,
+            local_id=ri.id
+        ))
+
+    # 2. Químicos registrados en la empresa (Chemicals)
     local_query = db.query(Chemical).filter(Chemical.is_deleted == False)
     if search_term:
         local_query = local_query.filter(
@@ -903,9 +938,12 @@ def search_rsco_chemicals(q: str = "", db: Session = Depends(get_db)):
                 func.lower(Chemical.cicoplafest_number).contains(search_term)
             )
         )
-    local_chems = local_query.all()
+    local_chems = local_query.limit(20).all()
     for lc in local_chems:
-        seen_rsco.add(lc.cicoplafest_number.strip().upper())
+        rsco_norm = lc.cicoplafest_number.strip().upper()
+        if rsco_norm in seen_rsco:
+            continue
+        seen_rsco.add(rsco_norm)
         results.append(RSCOSearchResult(
             commercial_name=lc.commercial_name,
             active_ingredient=lc.active_ingredient,
@@ -918,7 +956,7 @@ def search_rsco_chemicals(q: str = "", db: Session = Depends(get_db)):
             local_id=lc.id
         ))
 
-    # 2. Catálogo de referencia COFEPRIS oficial
+    # 3. Catálogo de referencia COFEPRIS oficial fallback
     for ref in OFFICIAL_COFEPRIS_PESTICIDE_CATALOG:
         rsco_norm = ref["cicoplafest_number"].strip().upper()
         if rsco_norm in seen_rsco:
@@ -1835,4 +1873,437 @@ def restore_system_from_cloud_url(
             status_code=500,
             detail=f"Error al restaurar desde la nube ({payload.backup_url}): {str(e)}"
         )
+
+
+# ============================================================================
+# 16. CATÁLOGO EN LÍNEA RSCO / CICOPLAFEST
+# ============================================================================
+@router.get("/rsco/catalog", response_model=List[RSCOItemResponse])
+def get_rsco_catalog(
+    q: Optional[str] = None,
+    limit: int = 100,
+    db: Session = Depends(get_db)
+):
+    """Obtiene el catálogo de registros oficiales RSCO actualizable en línea."""
+    query = db.query(RSCOItem).filter(RSCOItem.is_deleted == False)
+    if q:
+        search = f"%{q.strip()}%"
+        query = query.filter(
+            or_(
+                RSCOItem.commercial_name.ilike(search),
+                RSCOItem.active_ingredient.ilike(search),
+                RSCOItem.cicoplafest_number.ilike(search),
+                RSCOItem.manufacturer.ilike(search),
+                RSCOItem.target_pests.ilike(search)
+            )
+        )
+    return query.order_by(RSCOItem.commercial_name).limit(limit).all()
+
+
+@router.post("/rsco/catalog", response_model=RSCOItemResponse, status_code=status.HTTP_201_CREATED)
+def create_rsco_item(payload: RSCOItemCreate, db: Session = Depends(get_db)):
+    """Da de alta un nuevo registro RSCO en línea."""
+    existing = db.query(RSCOItem).filter(
+        RSCOItem.cicoplafest_number == payload.cicoplafest_number.strip(),
+        RSCOItem.is_deleted == False
+    ).first()
+    if existing:
+        raise HTTPException(status_code=400, detail=f"El registro CICOPLAFEST/RSCO '{payload.cicoplafest_number}' ya existe en el catálogo.")
+    
+    item = RSCOItem(**payload.model_dump())
+    db.add(item)
+    db.commit()
+    db.refresh(item)
+    return item
+
+
+@router.put("/rsco/catalog/{item_id}", response_model=RSCOItemResponse)
+def update_rsco_item(item_id: uuid.UUID, payload: RSCOItemUpdate, db: Session = Depends(get_db)):
+    """Actualiza en línea los datos de un registro RSCO."""
+    item = db.query(RSCOItem).filter(RSCOItem.id == item_id, RSCOItem.is_deleted == False).first()
+    if not item:
+        raise HTTPException(status_code=404, detail="Registro RSCO no encontrado.")
+    
+    for key, val in payload.model_dump(exclude_unset=True).items():
+        setattr(item, key, val)
+    db.commit()
+    db.refresh(item)
+    return item
+
+
+@router.delete("/rsco/catalog/{item_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_rsco_item(item_id: uuid.UUID, db: Session = Depends(get_db)):
+    """Elimina lógicamente un registro RSCO del catálogo."""
+    item = db.query(RSCOItem).filter(RSCOItem.id == item_id, RSCOItem.is_deleted == False).first()
+    if not item:
+        raise HTTPException(status_code=404, detail="Registro RSCO no encontrado.")
+    item.soft_delete()
+    db.commit()
+    return None
+
+
+@router.post("/rsco/seed-defaults")
+def seed_rsco_defaults(db: Session = Depends(get_db)):
+    """Puebla o sincroniza el catálogo con los principales productos RSCO oficiales de México."""
+    seeded = seed_default_rsco_items(db)
+    return {"status": "ok", "seeded_count": seeded, "message": f"Catálogo RSCO sincronizado con éxito ({seeded} registros actualizados)."}
+
+
+# ============================================================================
+# 17. BITÁCORAS DEL MANUAL INTEGRAL DE CONTROL DE PLAGAS (NOM-256 / STPS)
+# ============================================================================
+
+# 17.1 Bitácora de EPP y Mantenimiento
+@router.get("/bitacoras/epp", response_model=List[EPPLogResponse])
+def get_epp_logs(
+    technician: Optional[str] = None,
+    category: Optional[str] = None,
+    limit: int = 100,
+    db: Session = Depends(get_db)
+):
+    query = db.query(EPPLog).filter(EPPLog.is_deleted == False)
+    if technician:
+        query = query.filter(EPPLog.technician_name.ilike(f"%{technician.strip()}%"))
+    if category:
+        query = query.filter(EPPLog.equipment_category == category)
+    return query.order_by(desc(EPPLog.delivery_date)).limit(limit).all()
+
+
+@router.post("/bitacoras/epp", response_model=EPPLogResponse, status_code=status.HTTP_201_CREATED)
+def create_epp_log(payload: EPPLogCreate, db: Session = Depends(get_db)):
+    log = EPPLog(**payload.model_dump())
+    db.add(log)
+    db.commit()
+    db.refresh(log)
+    return log
+
+
+@router.delete("/bitacoras/epp/{log_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_epp_log(log_id: uuid.UUID, db: Session = Depends(get_db)):
+    log = db.query(EPPLog).filter(EPPLog.id == log_id, EPPLog.is_deleted == False).first()
+    if not log:
+        raise HTTPException(status_code=404, detail="Registro de EPP no encontrado.")
+    log.soft_delete()
+    db.commit()
+    return None
+
+
+# 17.2 Matriz Anual de EPP (con las 21 categorías del CSV del usuario)
+DEFAULT_EPP_MATRIX_ITEMS = [
+    ("PLAYERA POLO", "ANUAL"),
+    ("PANTALÓN", "ANUAL"),
+    ("OVEROL", "ANUAL"),
+    ("ZAPATO INDUSTRIAL", "ANUAL"),
+    ("CASCO DE SEGURIDAD", "ANUAL"),
+    ("GAFAS DE SEGURIDAD", "CUANDO SE SOLICITE"),
+    ("GAFAS OSCURAS", "CUANDO SE SOLICITE"),
+    ("TAPONES AUDITIVOS", "MENSUAL (8 PZAS.)"),
+    ("CUBREBOCAS", "MENSUAL (4 PZAS.)"),
+    ("CUBREPOLVOS", "MENSUAL (4 PZAS.)"),
+    ("CHALECO FLUORESCENTE", "ANUAL"),
+    ("GUANTES LÁTEX", "MENSUAL (40 PARES)"),
+    ("GUANTES NEOPRENO", "CUANDO SE SOLICITE"),
+    ("TYVEK", "MENSUAL (8 PZAS.)"),
+    ("MASCARILLA MEDIA", "ANUAL"),
+    ("MASCARILLA COMPLETA", "ANUAL"),
+    ("VISOR", "CUANDO SE SOLICITE"),
+    ("CARTUCHOS", "SEMESTRAL"),
+    ("FILTROS", "MENSUAL"),
+    ("ARNÉS", "CUANDO SE SOLICITE"),
+    ("RETENEDORES", "CUANDO SE SOLICITE")
+]
+
+
+@router.get("/bitacoras/epp-annual", response_model=List[EPPAnnualMatrixRow])
+def get_epp_annual_matrix(
+    technician_name: str,
+    year: int = 2026,
+    db: Session = Depends(get_db)
+):
+    """Devuelve la matriz anual de EPP para un técnico. Si no existe, la inicializa con los 21 ítems oficiales."""
+    tech = technician_name.strip()
+    rows = db.query(EPPAnnualMatrix).filter(
+        EPPAnnualMatrix.technician_name == tech,
+        EPPAnnualMatrix.year == year,
+        EPPAnnualMatrix.is_deleted == False
+    ).order_by(EPPAnnualMatrix.created_at).all()
+
+    if not rows:
+        new_rows = []
+        for item_name, freq in DEFAULT_EPP_MATRIX_ITEMS:
+            entry = EPPAnnualMatrix(
+                technician_name=tech,
+                year=year,
+                epp_item=item_name,
+                frequency=freq
+            )
+            db.add(entry)
+            new_rows.append(entry)
+        db.commit()
+        for r in new_rows:
+            db.refresh(r)
+        rows = new_rows
+
+    return rows
+
+
+@router.post("/bitacoras/epp-annual/batch")
+def save_epp_annual_matrix_batch(
+    payload: EPPAnnualMatrixBatch,
+    db: Session = Depends(get_db)
+):
+    """Guarda o actualiza en bloque las casillas y firmas de la matriz anual de EPP."""
+    tech = payload.technician_name.strip()
+    year = payload.year
+    for row in payload.rows:
+        existing = None
+        if row.id:
+            existing = db.query(EPPAnnualMatrix).filter(EPPAnnualMatrix.id == row.id).first()
+        if not existing:
+            existing = db.query(EPPAnnualMatrix).filter(
+                EPPAnnualMatrix.technician_name == tech,
+                EPPAnnualMatrix.year == year,
+                EPPAnnualMatrix.epp_item == row.epp_item
+            ).first()
+        
+        if existing:
+            for field in [
+                'frequency', 'jan_date', 'jan_signed', 'feb_date', 'feb_signed',
+                'mar_date', 'mar_signed', 'apr_date', 'apr_signed', 'may_date', 'may_signed',
+                'jun_date', 'jun_signed', 'jul_date', 'jul_signed', 'aug_date', 'aug_signed',
+                'sep_date', 'sep_signed', 'oct_date', 'oct_signed', 'nov_date', 'nov_signed',
+                'dec_date', 'dec_signed'
+            ]:
+                val = getattr(row, field, None)
+                if val is not None:
+                    setattr(existing, field, val)
+        else:
+            new_entry = EPPAnnualMatrix(
+                technician_name=tech,
+                year=year,
+                epp_item=row.epp_item,
+                frequency=row.frequency,
+                jan_date=row.jan_date, jan_signed=row.jan_signed,
+                feb_date=row.feb_date, feb_signed=row.feb_signed,
+                mar_date=row.mar_date, mar_signed=row.mar_signed,
+                apr_date=row.apr_date, apr_signed=row.apr_signed,
+                may_date=row.may_date, may_signed=row.may_signed,
+                jun_date=row.jun_date, jun_signed=row.jun_signed,
+                jul_date=row.jul_date, jul_signed=row.jul_signed,
+                aug_date=row.aug_date, aug_signed=row.aug_signed,
+                sep_date=row.sep_date, sep_signed=row.sep_signed,
+                oct_date=row.oct_date, oct_signed=row.oct_signed,
+                nov_date=row.nov_date, nov_signed=row.nov_signed,
+                dec_date=row.dec_date, dec_signed=row.dec_signed,
+            )
+            db.add(new_entry)
+    db.commit()
+    return {"status": "ok", "message": "Matriz anual de EPP guardada correctamente."}
+
+
+# 17.3 Calibración de Equipos
+@router.get("/bitacoras/equipment-calibration", response_model=List[EquipmentCalibrationResponse])
+def get_equipment_calibrations(limit: int = 100, db: Session = Depends(get_db)):
+    return db.query(EquipmentCalibrationLog).filter(EquipmentCalibrationLog.is_deleted == False).order_by(desc(EquipmentCalibrationLog.calibration_date)).limit(limit).all()
+
+
+@router.post("/bitacoras/equipment-calibration", response_model=EquipmentCalibrationResponse, status_code=status.HTTP_201_CREATED)
+def create_equipment_calibration(payload: EquipmentCalibrationCreate, db: Session = Depends(get_db)):
+    cal = EquipmentCalibrationLog(**payload.model_dump())
+    db.add(cal)
+    db.commit()
+    db.refresh(cal)
+    return cal
+
+
+@router.delete("/bitacoras/equipment-calibration/{id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_equipment_calibration(id: uuid.UUID, db: Session = Depends(get_db)):
+    cal = db.query(EquipmentCalibrationLog).filter(EquipmentCalibrationLog.id == id, EquipmentCalibrationLog.is_deleted == False).first()
+    if not cal:
+        raise HTTPException(status_code=404, detail="Registro no encontrado.")
+    cal.soft_delete()
+    db.commit()
+    return None
+
+
+# 17.4 Monitoreo de Estaciones y Trampas
+@router.get("/bitacoras/station-monitoring", response_model=List[StationMonitoringResponse])
+def get_station_monitoring(limit: int = 100, db: Session = Depends(get_db)):
+    return db.query(StationMonitoringLog).filter(StationMonitoringLog.is_deleted == False).order_by(desc(StationMonitoringLog.monitoring_date)).limit(limit).all()
+
+
+@router.post("/bitacoras/station-monitoring", response_model=StationMonitoringResponse, status_code=status.HTTP_201_CREATED)
+def create_station_monitoring(payload: StationMonitoringCreate, db: Session = Depends(get_db)):
+    mon = StationMonitoringLog(**payload.model_dump())
+    db.add(mon)
+    db.commit()
+    db.refresh(mon)
+    return mon
+
+
+@router.delete("/bitacoras/station-monitoring/{id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_station_monitoring(id: uuid.UUID, db: Session = Depends(get_db)):
+    mon = db.query(StationMonitoringLog).filter(StationMonitoringLog.id == id, StationMonitoringLog.is_deleted == False).first()
+    if not mon:
+        raise HTTPException(status_code=404, detail="Registro no encontrado.")
+    mon.soft_delete()
+    db.commit()
+    return None
+
+
+# 17.5 Residuos Peligrosos y Triple Lavado
+@router.get("/bitacoras/hazardous-waste", response_model=List[HazardousWasteResponse])
+def get_hazardous_waste(limit: int = 100, db: Session = Depends(get_db)):
+    return db.query(HazardousWasteLog).filter(HazardousWasteLog.is_deleted == False).order_by(desc(HazardousWasteLog.wash_date)).limit(limit).all()
+
+
+@router.post("/bitacoras/hazardous-waste", response_model=HazardousWasteResponse, status_code=status.HTTP_201_CREATED)
+def create_hazardous_waste(payload: HazardousWasteCreate, db: Session = Depends(get_db)):
+    waste = HazardousWasteLog(**payload.model_dump())
+    db.add(waste)
+    db.commit()
+    db.refresh(waste)
+    return waste
+
+
+@router.delete("/bitacoras/hazardous-waste/{id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_hazardous_waste(id: uuid.UUID, db: Session = Depends(get_db)):
+    waste = db.query(HazardousWasteLog).filter(HazardousWasteLog.id == id, HazardousWasteLog.is_deleted == False).first()
+    if not waste:
+        raise HTTPException(status_code=404, detail="Registro no encontrado.")
+    waste.soft_delete()
+    db.commit()
+    return None
+
+
+# 17.6 Exportación de Bitácoras a PDF
+@router.get("/bitacoras/export-pdf/{bitacora_type}")
+def export_bitacora_pdf(
+    bitacora_type: str,
+    technician_name: Optional[str] = None,
+    year: int = 2026,
+    db: Session = Depends(get_db)
+):
+    """Genera la versión imprimible en PDF de cualquiera de las bitácoras oficiales."""
+    config = get_or_create_company_config(db)
+    
+    if bitacora_type == "epp-annual":
+        tech = technician_name or "Técnico General"
+        rows = db.query(EPPAnnualMatrix).filter(
+            EPPAnnualMatrix.technician_name == tech,
+            EPPAnnualMatrix.year == year,
+            EPPAnnualMatrix.is_deleted == False
+        ).all()
+        if not rows:
+            for item_name, freq in DEFAULT_EPP_MATRIX_ITEMS:
+                entry = EPPAnnualMatrix(technician_name=tech, year=year, epp_item=item_name, frequency=freq)
+                db.add(entry)
+            db.commit()
+            rows = db.query(EPPAnnualMatrix).filter(
+                EPPAnnualMatrix.technician_name == tech,
+                EPPAnnualMatrix.year == year,
+                EPPAnnualMatrix.is_deleted == False
+            ).all()
+        pdf_bytes = BitacoraPDFGenerator.generate_epp_annual_pdf(rows, tech, year, config)
+        filename = f"Bitacora_EPP_Anual_{tech.replace(' ', '_')}_{year}.pdf"
+
+    elif bitacora_type == "epp-logs":
+        logs = db.query(EPPLog).filter(EPPLog.is_deleted == False).order_by(desc(EPPLog.delivery_date)).all()
+        cols = ["Fecha", "Técnico", "Categoría", "Elemento", "Estado", "Cambio", "Firma"]
+        rows = [
+            [l.delivery_date.strftime('%d/%m/%Y'), l.technician_name, l.equipment_category, l.equipment_item, l.condition_type, l.change_interval or '-', l.responsible_signature or 'Registrado']
+            for l in logs
+        ]
+        pdf_bytes = BitacoraPDFGenerator.generate_generic_log_pdf(
+            "BITÁCORA DE MANTENIMIENTO Y ENTREGA DE EPP (NOM-017-STPS)",
+            "Control individual de entrega de equipo de protección personal",
+            cols, rows, config
+        )
+        filename = f"Bitacora_EPP_Mantenimiento_{datetime.now().strftime('%Y%m%d')}.pdf"
+
+    elif bitacora_type == "calibracion":
+        cals = db.query(EquipmentCalibrationLog).filter(EquipmentCalibrationLog.is_deleted == False).order_by(desc(EquipmentCalibrationLog.calibration_date)).all()
+        cols = ["Fecha", "Equipo", "Serie", "Boquilla", "Presión (psi)", "Gasto (L/min)", "Estado", "Técnico"]
+        rows = [
+            [c.calibration_date.strftime('%d/%m/%Y'), c.equipment_name, c.serial_number or '-', c.nozzle_type, c.working_pressure_psi or '-', c.flow_rate_lpm or '-', c.status, c.technician_name]
+            for c in cals
+        ]
+        pdf_bytes = BitacoraPDFGenerator.generate_generic_log_pdf(
+            "BITÁCORA DE CALIBRACIÓN Y MANTENIMIENTO DE EQUIPOS (NOM-256-SSA1-2012)",
+            "Inspección de gasto, boquillas, manómetros y hermeticidad de equipos de aplicación",
+            cols, rows, config
+        )
+        filename = f"Bitacora_Calibracion_Equipos_{datetime.now().strftime('%Y%m%d')}.pdf"
+
+    elif bitacora_type == "estaciones":
+        mons = db.query(StationMonitoringLog).filter(StationMonitoringLog.is_deleted == False).order_by(desc(StationMonitoringLog.monitoring_date)).all()
+        cols = ["Fecha", "Sucursal", "Estación", "Tipo", "Zona", "Consumo", "Actividad", "Acción Correctiva", "Técnico"]
+        rows = [
+            [m.monitoring_date.strftime('%d/%m/%Y'), m.branch_name, m.station_number, m.station_type, m.zone, f"{m.bait_consumption_percent}%", f"Sí ({m.pest_count})" if m.pest_activity_detected else "No", m.corrective_action or '-', m.technician_name]
+            for m in mons
+        ]
+        pdf_bytes = BitacoraPDFGenerator.generate_generic_log_pdf(
+            "BITÁCORA DE MONITOREO DE CEBADEROS Y DISPOSITIVOS MIP",
+            "Seguimiento y evaluación periódica de trampas, cebaderos y lámparas UV",
+            cols, rows, config
+        )
+        filename = f"Bitacora_Monitoreo_Estaciones_{datetime.now().strftime('%Y%m%d')}.pdf"
+
+    elif bitacora_type == "residuos":
+        wastes = db.query(HazardousWasteLog).filter(HazardousWasteLog.is_deleted == False).order_by(desc(HazardousWasteLog.wash_date)).all()
+        cols = ["Fecha", "Producto Químico", "Ingrediente Activo", "Piezas", "Capacidad", "Triple Lavado", "Perforado", "Almacén", "Responsable"]
+        rows = [
+            [w.wash_date.strftime('%d/%m/%Y'), w.chemical_name, w.active_ingredient, str(w.containers_count), w.container_capacity, "Sí" if w.triple_wash_performed else "No", "Sí" if w.containers_perforated else "No", w.temporary_storage_location, w.responsible_name]
+            for w in wastes
+        ]
+        pdf_bytes = BitacoraPDFGenerator.generate_generic_log_pdf(
+            "BITÁCORA DE RESIDUOS PELIGROSOS Y TRIPLE LAVADO (NOM-256 / SEMARNAT)",
+            "Inutilización de envases vacíos de plaguicidas previo a destino final AMOCALI",
+            cols, rows, config
+        )
+        filename = f"Bitacora_Residuos_TripleLavado_{datetime.now().strftime('%Y%m%d')}.pdf"
+
+    else:
+        raise HTTPException(status_code=400, detail="Tipo de bitácora no válido.")
+
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'inline; filename="{filename}"'}
+    )
+
+
+# ============================================================================
+# 18. CONSULTA DEL MANUAL INTEGRAL DE PLAGAS (MIP) & GUÍA DE COMBATE ESPECÍFICO
+# ============================================================================
+@router.get("/mip/manual")
+def get_mip_manual_content():
+    """Devuelve los módulos estructurados del Manual Integral de Control de Plagas conforme a NOM-256."""
+    return get_mip_full_manual()
+
+
+@router.get("/mip/pests")
+def get_mip_pests_catalog(q: Optional[str] = None):
+    """Devuelve el catálogo de combate específico contra diferentes plagas urbanas."""
+    pests = get_pest_combat_guides()
+    if q:
+        query_str = q.lower().strip()
+        pests = [
+            p for p in pests
+            if query_str in p["name"].lower()
+            or query_str in p["scientific_name"].lower()
+            or query_str in p["category"].lower()
+            or any(query_str in chem.lower() for chem in p.get("recommended_chemicals", []))
+        ]
+    return pests
+
+
+@router.get("/mip/pests/{pest_id}")
+def get_mip_pest_detail(pest_id: str):
+    pests = get_pest_combat_guides()
+    for p in pests:
+        if p["id"] == pest_id:
+            return p
+    raise HTTPException(status_code=404, detail="Plaga no encontrada en el catálogo MIP.")
+
 

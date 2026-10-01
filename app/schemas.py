@@ -489,3 +489,179 @@ class RestoreSummaryResponse(BaseModel):
     certificates_restored: int
     certificate_chemicals_restored: int
     message: str
+
+
+# ----------------------------------------------------------------------------
+# Catálogo Oficial RSCO / CICOPLAFEST en Línea
+# ----------------------------------------------------------------------------
+class RSCOItemBase(BaseModel):
+    commercial_name: str = Field(..., max_length=255)
+    active_ingredient: str = Field(..., max_length=255)
+    cicoplafest_number: str = Field(..., max_length=100)
+    formulation: str = Field(default="Suspensión Concentrada", max_length=100)
+    manufacturer: str = Field(default="N/A", max_length=255)
+    authorized_dose: str = Field(default="10 a 20 ml / L de agua", max_length=150)
+    target_pests: str = Field(default="Cucarachas, Chinches, Hormigas, Moscas", max_length=500)
+    toxicological_category: str = Field(default="Banda Verde / Precaución", max_length=100)
+    safety_interval_hours: int = Field(default=2, ge=0)
+    is_active: bool = True
+
+
+class RSCOItemCreate(RSCOItemBase):
+    pass
+
+
+class RSCOItemUpdate(BaseModel):
+    commercial_name: Optional[str] = None
+    active_ingredient: Optional[str] = None
+    cicoplafest_number: Optional[str] = None
+    formulation: Optional[str] = None
+    manufacturer: Optional[str] = None
+    authorized_dose: Optional[str] = None
+    target_pests: Optional[str] = None
+    toxicological_category: Optional[str] = None
+    safety_interval_hours: Optional[int] = None
+    is_active: Optional[bool] = None
+
+
+class RSCOItemResponse(RSCOItemBase):
+    id: uuid.UUID
+    created_at: datetime
+    updated_at: datetime
+    model_config = ConfigDict(from_attributes=True)
+
+
+# ----------------------------------------------------------------------------
+# Bitácoras NOM-256 / STPS / Manejo Integral de Plagas (MIP)
+# ----------------------------------------------------------------------------
+class EPPLogBase(BaseModel):
+    technician_name: str = Field(..., max_length=255)
+    equipment_category: str = Field(..., max_length=100) # MASCARILLA, GOGLES, GUANTES, VESTIMENTA, etc.
+    equipment_item: str = Field(..., max_length=255) # Filtros, Cartuchos, etc.
+    condition_type: str = Field(default="NUEVO", max_length=50) # NUEVO, USADO
+    delivery_date: date = Field(default_factory=date.today)
+    change_date: Optional[date] = None
+    change_interval: Optional[str] = Field(None, max_length=50) # 1 SEM, 2 SEM, 3 SEM, MENSUAL
+    change_time: Optional[str] = Field(None, max_length=50)
+    responsible_signature: Optional[str] = Field(None, max_length=255)
+    notes: Optional[str] = None
+
+
+class EPPLogCreate(EPPLogBase):
+    pass
+
+
+class EPPLogResponse(EPPLogBase):
+    id: uuid.UUID
+    created_at: datetime
+    model_config = ConfigDict(from_attributes=True)
+
+
+class EPPAnnualMatrixRow(BaseModel):
+    id: Optional[uuid.UUID] = None
+    technician_name: str
+    year: int = 2026
+    epp_item: str
+    frequency: str
+    jan_date: Optional[str] = None
+    jan_signed: bool = False
+    feb_date: Optional[str] = None
+    feb_signed: bool = False
+    mar_date: Optional[str] = None
+    mar_signed: bool = False
+    apr_date: Optional[str] = None
+    apr_signed: bool = False
+    may_date: Optional[str] = None
+    may_signed: bool = False
+    jun_date: Optional[str] = None
+    jun_signed: bool = False
+    jul_date: Optional[str] = None
+    jul_signed: bool = False
+    aug_date: Optional[str] = None
+    aug_signed: bool = False
+    sep_date: Optional[str] = None
+    sep_signed: bool = False
+    oct_date: Optional[str] = None
+    oct_signed: bool = False
+    nov_date: Optional[str] = None
+    nov_signed: bool = False
+    dec_date: Optional[str] = None
+    dec_signed: bool = False
+    model_config = ConfigDict(from_attributes=True)
+
+
+class EPPAnnualMatrixBatch(BaseModel):
+    technician_name: str
+    year: int = 2026
+    rows: List[EPPAnnualMatrixRow]
+
+
+class EquipmentCalibrationBase(BaseModel):
+    equipment_name: str = Field(..., max_length=255)
+    serial_number: Optional[str] = Field(None, max_length=100)
+    nozzle_type: str = Field(default="Abanico Plano 8002", max_length=100)
+    working_pressure_psi: Optional[str] = Field(default="40 psi", max_length=50)
+    flow_rate_lpm: Optional[str] = Field(default="0.75 L/min", max_length=50)
+    status: str = Field(default="OPERATIVO", max_length=50)
+    calibration_date: date = Field(default_factory=date.today)
+    next_calibration_date: Optional[date] = None
+    technician_name: str = Field(..., max_length=255)
+    observations: Optional[str] = None
+
+
+class EquipmentCalibrationCreate(EquipmentCalibrationBase):
+    pass
+
+
+class EquipmentCalibrationResponse(EquipmentCalibrationBase):
+    id: uuid.UUID
+    created_at: datetime
+    model_config = ConfigDict(from_attributes=True)
+
+
+class StationMonitoringBase(BaseModel):
+    branch_name: str = Field(..., max_length=255)
+    station_number: str = Field(..., max_length=50)
+    station_type: str = Field(default="Cebadero de Roedor", max_length=100)
+    zone: str = Field(default="Exterior - Perímetro", max_length=150)
+    bait_consumption_percent: int = Field(default=0, ge=0, le=100)
+    pest_activity_detected: bool = False
+    pest_count: int = Field(default=0, ge=0)
+    pest_type: Optional[str] = Field(None, max_length=150)
+    corrective_action: Optional[str] = Field(None, max_length=255)
+    monitoring_date: date = Field(default_factory=date.today)
+    technician_name: str = Field(..., max_length=255)
+
+
+class StationMonitoringCreate(StationMonitoringBase):
+    pass
+
+
+class StationMonitoringResponse(StationMonitoringBase):
+    id: uuid.UUID
+    created_at: datetime
+    model_config = ConfigDict(from_attributes=True)
+
+
+class HazardousWasteBase(BaseModel):
+    chemical_name: str = Field(..., max_length=255)
+    active_ingredient: str = Field(..., max_length=255)
+    containers_count: int = Field(default=1, ge=1)
+    container_capacity: str = Field(default="1 Litro", max_length=100)
+    triple_wash_performed: bool = True
+    containers_perforated: bool = True
+    wash_date: date = Field(default_factory=date.today)
+    temporary_storage_location: str = Field(default="Área de Residuos FUMIFLOSA", max_length=255)
+    disposal_manifest_number: Optional[str] = Field(None, max_length=150)
+    responsible_name: str = Field(..., max_length=255)
+
+
+class HazardousWasteCreate(HazardousWasteBase):
+    pass
+
+
+class HazardousWasteResponse(HazardousWasteBase):
+    id: uuid.UUID
+    created_at: datetime
+    model_config = ConfigDict(from_attributes=True)
+

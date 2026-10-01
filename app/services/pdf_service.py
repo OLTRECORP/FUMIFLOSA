@@ -615,3 +615,192 @@ class OfficialWorkOrderPDFGenerator:
         doc.build(elements)
         buffer.seek(0)
         return buffer.getvalue()
+
+
+class BitacoraPDFGenerator:
+    """Generador de reportes PDF oficiales para Bitácoras NOM-256 / STPS / MIP."""
+
+    @staticmethod
+    def generate_epp_annual_pdf(rows, technician_name: str, year: int, config) -> bytes:
+        """Genera la sábana anual de dotación y revisión de EPP en formato horizontal."""
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(
+            buffer,
+            pagesize=landscape(letter),
+            leftMargin=20,
+            rightMargin=20,
+            topMargin=20,
+            bottomMargin=20
+        )
+        elements = []
+        styles = getSampleStyleSheet()
+
+        title_style = ParagraphStyle(
+            'BitTitle',
+            parent=styles['Normal'],
+            fontName='Helvetica-Bold',
+            fontSize=12,
+            textColor=colors.HexColor('#1E3A8A'),
+            alignment=1
+        )
+        sub_style = ParagraphStyle(
+            'BitSub',
+            parent=styles['Normal'],
+            fontName='Helvetica',
+            fontSize=8,
+            textColor=colors.HexColor('#475569'),
+            alignment=1
+        )
+        cell_style = ParagraphStyle(
+            'BitCell',
+            parent=styles['Normal'],
+            fontName='Helvetica',
+            fontSize=6.5,
+            leading=7.5,
+            textColor=colors.HexColor('#1E293B')
+        )
+        cell_head = ParagraphStyle(
+            'BitHead',
+            parent=styles['Normal'],
+            fontName='Helvetica-Bold',
+            fontSize=6.5,
+            leading=7.5,
+            textColor=colors.white,
+            alignment=1
+        )
+
+        company_name = getattr(config, 'company_name', 'FUMIFLOSA S.A. DE C.V.')
+        elements.append(Paragraph(f"<b>{company_name}</b> - CONTROL INTEGRAL DE PLAGAS URBANAS", title_style))
+        elements.append(Paragraph(f"BITÁCORA ANUAL DE CONTROL Y ENTREGA DE EQUIPO DE PROTECCIÓN PERSONAL (EPP) - AÑO {year}", title_style))
+        elements.append(Paragraph(f"Técnico Responsable: <b>{technician_name}</b> | Conforme a la NOM-256-SSA1-2012 y NOM-017-STPS", sub_style))
+        elements.append(Spacer(1, 8))
+
+        # Tabla de 12 meses
+        headers = ["EPP", "FRECUENCIA", "ENE", "FEB", "MAR", "ABR", "MAY", "JUN", "JUL", "AGO", "SEP", "OCT", "NOV", "DIC"]
+        table_data = [[Paragraph(f"<b>{h}</b>", cell_head) for h in headers]]
+
+        for r in rows:
+            table_data.append([
+                Paragraph(getattr(r, 'epp_item', ''), cell_style),
+                Paragraph(getattr(r, 'frequency', ''), cell_style),
+                Paragraph("✓" if getattr(r, 'jan_signed', False) else (getattr(r, 'jan_date', '') or "-"), cell_style),
+                Paragraph("✓" if getattr(r, 'feb_signed', False) else (getattr(r, 'feb_date', '') or "-"), cell_style),
+                Paragraph("✓" if getattr(r, 'mar_signed', False) else (getattr(r, 'mar_date', '') or "-"), cell_style),
+                Paragraph("✓" if getattr(r, 'apr_signed', False) else (getattr(r, 'apr_date', '') or "-"), cell_style),
+                Paragraph("✓" if getattr(r, 'may_signed', False) else (getattr(r, 'may_date', '') or "-"), cell_style),
+                Paragraph("✓" if getattr(r, 'jun_signed', False) else (getattr(r, 'jun_date', '') or "-"), cell_style),
+                Paragraph("✓" if getattr(r, 'jul_signed', False) else (getattr(r, 'jul_date', '') or "-"), cell_style),
+                Paragraph("✓" if getattr(r, 'aug_signed', False) else (getattr(r, 'aug_date', '') or "-"), cell_style),
+                Paragraph("✓" if getattr(r, 'sep_signed', False) else (getattr(r, 'sep_date', '') or "-"), cell_style),
+                Paragraph("✓" if getattr(r, 'oct_signed', False) else (getattr(r, 'oct_date', '') or "-"), cell_style),
+                Paragraph("✓" if getattr(r, 'nov_signed', False) else (getattr(r, 'nov_date', '') or "-"), cell_style),
+                Paragraph("✓" if getattr(r, 'dec_signed', False) else (getattr(r, 'dec_date', '') or "-"), cell_style),
+            ])
+
+        col_widths = [140, 90] + [42] * 12
+        matrix_table = Table(table_data, colWidths=col_widths, repeatRows=1)
+        matrix_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1E3A8A')),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#CBD5E1')),
+            ('ALIGN', (2, 1), (-1, -1), 'CENTER'),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('TOPPADDING', (0, 0), (-1, -1), 3),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
+        ]))
+        elements.append(matrix_table)
+        elements.append(Spacer(1, 15))
+
+        # Firmas al pie
+        sig_data = [
+            [
+                Paragraph(f"______________________________________<br/><b>{technician_name}</b><br/>Firma de Recepción del Técnico", sub_style),
+                Paragraph(f"______________________________________<br/><b>{getattr(config, 'sanitary_responsible_name', 'Responsable Técnico')}</b><br/>Responsable Técnico Sanitario", sub_style)
+            ]
+        ]
+        sig_table = Table(sig_data, colWidths=[370, 370])
+        sig_table.setStyle(TableStyle([
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ]))
+        elements.append(KeepTogether(sig_table))
+
+        doc.build(elements)
+        buffer.seek(0)
+        return buffer.getvalue()
+
+    @staticmethod
+    def generate_generic_log_pdf(title: str, subtitle: str, columns: list, rows: list, config) -> bytes:
+        """Genera un reporte PDF estándar de auditoría para bitácoras operativas."""
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(
+            buffer,
+            pagesize=landscape(letter),
+            leftMargin=25,
+            rightMargin=25,
+            topMargin=25,
+            bottomMargin=25
+        )
+        elements = []
+        styles = getSampleStyleSheet()
+
+        title_style = ParagraphStyle(
+            'GenTitle',
+            parent=styles['Normal'],
+            fontName='Helvetica-Bold',
+            fontSize=13,
+            textColor=colors.HexColor('#0F172A'),
+            alignment=1
+        )
+        sub_style = ParagraphStyle(
+            'GenSub',
+            parent=styles['Normal'],
+            fontName='Helvetica',
+            fontSize=8,
+            textColor=colors.HexColor('#475569'),
+            alignment=1
+        )
+        cell_style = ParagraphStyle(
+            'GenCell',
+            parent=styles['Normal'],
+            fontName='Helvetica',
+            fontSize=7,
+            leading=8.5,
+            textColor=colors.HexColor('#1E293B')
+        )
+        cell_head = ParagraphStyle(
+            'GenHead',
+            parent=styles['Normal'],
+            fontName='Helvetica-Bold',
+            fontSize=7.5,
+            leading=9,
+            textColor=colors.white,
+            alignment=1
+        )
+
+        company_name = getattr(config, 'company_name', 'FUMIFLOSA S.A. DE C.V.')
+        elements.append(Paragraph(f"<b>{company_name}</b> - REGISTROS OPERATIVOS SANITARIOS", title_style))
+        elements.append(Paragraph(title, title_style))
+        elements.append(Paragraph(subtitle, sub_style))
+        elements.append(Spacer(1, 10))
+
+        table_data = [[Paragraph(f"<b>{c}</b>", cell_head) for c in columns]]
+        for row in rows:
+            table_data.append([Paragraph(str(val or '-'), cell_style) for val in row])
+
+        col_count = len(columns)
+        available_width = 742
+        col_width = available_width / col_count
+        log_table = Table(table_data, colWidths=[col_width] * col_count, repeatRows=1)
+        log_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#0284C7')),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#CBD5E1')),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('TOPPADDING', (0, 0), (-1, -1), 3),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
+        ]))
+        elements.append(log_table)
+
+        doc.build(elements)
+        buffer.seek(0)
+        return buffer.getvalue()
+

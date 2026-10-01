@@ -287,3 +287,133 @@ class CertificateChemical(Base, TimestampMixin):
     # Relaciones
     certificate: Mapped["Certificate"] = relationship("Certificate", back_populates="applied_chemicals")
     chemical: Mapped["Chemical"] = relationship("Chemical")
+
+
+# ============================================================================
+# 6. CATÁLOGO DINÁMICO EN LÍNEA RSCO / CICOPLAFEST
+# ============================================================================
+class RSCOItem(Base, TimestampMixin, SoftDeleteMixin):
+    """Catálogo Oficial RSCO / CICOPLAFEST actualizable en línea."""
+    __tablename__ = "rsco_items"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    commercial_name: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    active_ingredient: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    cicoplafest_number: Mapped[str] = mapped_column(String(100), unique=True, nullable=False, index=True)
+    formulation: Mapped[str] = mapped_column(String(100), nullable=False, default="Suspensión Concentrada")
+    manufacturer: Mapped[str] = mapped_column(String(255), nullable=False, default="N/A")
+    authorized_dose: Mapped[str] = mapped_column(String(150), nullable=False, default="10 a 20 ml / L de agua")
+    target_pests: Mapped[str] = mapped_column(String(500), nullable=False, default="Cucarachas, Chinches, Hormigas, Moscas")
+    toxicological_category: Mapped[str] = mapped_column(String(100), nullable=False, default="Banda Verde / Precaución")
+    safety_interval_hours: Mapped[int] = mapped_column(Integer, default=2, nullable=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+
+
+# ============================================================================
+# 7. BITÁCORAS DEL MANUAL INTEGRAL DE CONTROL DE PLAGAS (NOM-256 / STPS)
+# ============================================================================
+class EPPLog(Base, TimestampMixin, SoftDeleteMixin):
+    """Bitácora de Entrega y Mantenimiento de Equipo de Protección Personal (EPP)."""
+    __tablename__ = "epp_logs"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    technician_name: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    equipment_category: Mapped[str] = mapped_column(String(100), nullable=False) # MASCARILLA, GOGLES, GUANTES, VESTIMENTA, etc.
+    equipment_item: Mapped[str] = mapped_column(String(255), nullable=False) # Filtros, Cartuchos, Cintas de ajuste, Micas, Overol, Botas, etc.
+    condition_type: Mapped[str] = mapped_column(String(50), nullable=False, default="NUEVO") # NUEVO, USADO
+    delivery_date: Mapped[date] = mapped_column(Date, nullable=False, default=date.today)
+    change_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+    change_interval: Mapped[Optional[str]] = mapped_column(String(50), nullable=True) # 1 SEM, 2 SEM, 3 SEM, MENSUAL
+    change_time: Mapped[Optional[str]] = mapped_column(String(50), nullable=True) # ej. "08:30 hrs"
+    responsible_signature: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+
+
+class EPPAnnualMatrix(Base, TimestampMixin, SoftDeleteMixin):
+    """Bitácora Anual de EPP por Técnico conforme a matriz de dotación mensual."""
+    __tablename__ = "epp_annual_matrix"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    technician_name: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    year: Mapped[int] = mapped_column(Integer, nullable=False, default=2026, index=True)
+    epp_item: Mapped[str] = mapped_column(String(150), nullable=False) # ej. "PLAYERA POLO", "MASCARILLA COMPLETA"
+    frequency: Mapped[str] = mapped_column(String(100), nullable=False) # ej. "ANUAL", "MENSUAL (8 PZAS.)", "SEMESTRAL"
+    
+    # 12 Meses: fecha de entrega o check, y firma
+    jan_date: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    jan_signed: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    feb_date: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    feb_signed: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    mar_date: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    mar_signed: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    apr_date: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    apr_signed: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    may_date: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    may_signed: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    jun_date: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    jun_signed: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    jul_date: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    jul_signed: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    aug_date: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    aug_signed: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    sep_date: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    sep_signed: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    oct_date: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    oct_signed: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    nov_date: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    nov_signed: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    dec_date: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    dec_signed: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+
+
+class EquipmentCalibrationLog(Base, TimestampMixin, SoftDeleteMixin):
+    """Bitácora de Mantenimiento y Calibración de Equipos de Aplicación (NOM-256)."""
+    __tablename__ = "equipment_calibration_logs"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    equipment_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    serial_number: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    nozzle_type: Mapped[str] = mapped_column(String(100), nullable=False, default="Abanico Plano 8002")
+    working_pressure_psi: Mapped[Optional[str]] = mapped_column(String(50), nullable=True, default="40 psi")
+    flow_rate_lpm: Mapped[Optional[str]] = mapped_column(String(50), nullable=True, default="0.75 L/min")
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="OPERATIVO") # OPERATIVO, MANTENIMIENTO, FUERA DE SERVICIO
+    calibration_date: Mapped[date] = mapped_column(Date, nullable=False, default=date.today)
+    next_calibration_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+    technician_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    observations: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+
+
+class StationMonitoringLog(Base, TimestampMixin, SoftDeleteMixin):
+    """Bitácora de Inspección y Monitoreo de Estaciones, Cebaderos y Trampas (MIP)."""
+    __tablename__ = "station_monitoring_logs"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    branch_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    station_number: Mapped[str] = mapped_column(String(50), nullable=False) # ej. "CEB-01", "UV-02"
+    station_type: Mapped[str] = mapped_column(String(100), nullable=False, default="Cebadero de Roedor")
+    zone: Mapped[str] = mapped_column(String(150), nullable=False, default="Exterior - Perímetro")
+    bait_consumption_percent: Mapped[int] = mapped_column(Integer, nullable=False, default=0) # 0, 25, 50, 75, 100
+    pest_activity_detected: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    pest_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    pest_type: Mapped[Optional[str]] = mapped_column(String(150), nullable=True)
+    corrective_action: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    monitoring_date: Mapped[date] = mapped_column(Date, nullable=False, default=date.today)
+    technician_name: Mapped[str] = mapped_column(String(255), nullable=False)
+
+
+class HazardousWasteLog(Base, TimestampMixin, SoftDeleteMixin):
+    """Bitácora de Residuos Peligrosos y Triple Lavado de Envases (NOM-256 / SEMARNAT)."""
+    __tablename__ = "hazardous_waste_logs"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    chemical_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    active_ingredient: Mapped[str] = mapped_column(String(255), nullable=False)
+    containers_count: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    container_capacity: Mapped[str] = mapped_column(String(100), nullable=False, default="1 Litro")
+    triple_wash_performed: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    containers_perforated: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    wash_date: Mapped[date] = mapped_column(Date, nullable=False, default=date.today)
+    temporary_storage_location: Mapped[str] = mapped_column(String(255), nullable=False, default="Área de Residuos FUMIFLOSA")
+    disposal_manifest_number: Mapped[Optional[str]] = mapped_column(String(150), nullable=True)
+    responsible_name: Mapped[str] = mapped_column(String(255), nullable=False)
+

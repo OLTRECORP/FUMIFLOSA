@@ -46,6 +46,12 @@ def startup_db_sync():
             # Columnas para service_orders (Estado y Agendamiento)
             conn.execute(text("ALTER TABLE service_orders ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'completed';"))
             conn.execute(text("ALTER TABLE service_orders ADD COLUMN IF NOT EXISTS scheduled_for TIMESTAMPTZ;"))
+        
+        # Sincronizar catálogo inicial RSCO en línea
+        from app.database import SessionLocal
+        from app.services.mip_service import seed_default_rsco_items
+        with SessionLocal() as db_session:
+            seed_default_rsco_items(db_session)
     except Exception as e:
         print(f"[STARTUP DB SYNC WARNING]: {e}")
 
