@@ -1229,11 +1229,11 @@
         <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
             <div class="border-b border-slate-200 bg-slate-50/70 px-4 overflow-x-auto">
                 <nav class="flex space-x-2 sm:space-x-3 min-w-max">
-                    <button onclick="switchTab('tab-vencimientos')" id="btn-tab-vencimientos" class="tab-btn py-3.5 px-3 border-b-2 border-brand-600 font-bold text-xs text-brand-700 flex items-center gap-1.5">
-                        <i class="fa-solid fa-clock"></i> Calendario Vencimientos
-                    </button>
-                    <button onclick="switchTab('tab-cronologico')" id="btn-tab-cronologico" class="tab-btn py-3.5 px-3 border-b-2 border-transparent font-medium text-xs text-slate-500 hover:text-slate-800 flex items-center gap-1.5">
+                    <button onclick="switchTab('tab-cronologico')" id="btn-tab-cronologico" class="tab-btn py-3.5 px-3 border-b-2 border-brand-600 font-bold text-xs text-brand-700 flex items-center gap-1.5">
                         <i class="fa-solid fa-calendar-days text-indigo-600"></i> Calendario Cronológico & Citas
+                    </button>
+                    <button onclick="switchTab('tab-vencimientos')" id="btn-tab-vencimientos" class="tab-btn py-3.5 px-3 border-b-2 border-transparent font-medium text-xs text-slate-500 hover:text-slate-800 flex items-center gap-1.5">
+                        <i class="fa-solid fa-clock"></i> Calendario Vencimientos
                     </button>
                     <button onclick="switchTab('tab-analytics')" id="btn-tab-analytics" class="tab-btn py-3.5 px-3 border-b-2 border-transparent font-medium text-xs text-slate-500 hover:text-slate-800 flex items-center gap-1.5">
                         <i class="fa-solid fa-chart-pie text-indigo-600"></i> Métricas & Analytics
@@ -1272,35 +1272,9 @@
             </div>
 
             <!-- ============================================================= -->
-            <!-- 1. PESTAÑA: CALENDARIO DE VENCIMIENTOS -->
+            <!-- 1. PESTAÑA: CALENDARIO CRONOLÓGICO DE SERVICIOS Y CITAS -->
             <!-- ============================================================= -->
-            <div id="tab-vencimientos" class="p-6 space-y-4">
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                    <div>
-                        <h2 class="text-base font-bold text-slate-900">Vigencias Sanitarias (Calculadas a 30 Días - NOM-256)</h2>
-                        <p class="text-xs text-slate-500">Cada certificado cuenta con una vigencia legal estricta de 30 días naturales posteriores a su expedición.</p>
-                    </div>
-                    <div class="flex flex-wrap items-center gap-2">
-                        <div class="bg-slate-100 p-1 rounded-lg border border-slate-200 flex text-xs font-semibold">
-                            <button onclick="setExpFilter('all')" id="btn-exp-all" class="exp-filter-btn px-2.5 py-1 rounded bg-white text-slate-900 shadow-sm font-bold">Todos</button>
-                            <button onclick="setExpFilter('vigentes')" id="btn-exp-vigentes" class="exp-filter-btn px-2.5 py-1 rounded text-emerald-700 hover:text-emerald-900">Vigentes (≤30d)</button>
-                            <button onclick="setExpFilter('criticos')" id="btn-exp-criticos" class="exp-filter-btn px-2.5 py-1 rounded text-rose-700 hover:text-rose-900">Críticos (≤7d)</button>
-                            <button onclick="setExpFilter('vencidos')" id="btn-exp-vencidos" class="exp-filter-btn px-2.5 py-1 rounded text-slate-600 hover:text-slate-900">Vencidos (>30d)</button>
-                        </div>
-                        <button onclick="loadDashboardData()" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg font-semibold flex items-center gap-1.5 transition">
-                            <i class="fa-solid fa-rotate"></i> Actualizar
-                        </button>
-                    </div>
-                </div>
-                <div id="expirations-container" class="space-y-4">
-                    <p class="text-xs text-slate-400 text-center py-8">Cargando vencimientos...</p>
-                </div>
-            </div>
-
-            <!-- ============================================================= -->
-            <!-- PESTAÑA: CALENDARIO CRONOLÓGICO DE SERVICIOS Y CITAS -->
-            <!-- ============================================================= -->
-            <div id="tab-cronologico" class="p-6 space-y-6 hidden">
+            <div id="tab-cronologico" class="p-6 space-y-6">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                     <div>
                         <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
@@ -1391,6 +1365,32 @@
                     <div id="calendar-timeline-container" class="space-y-3">
                         <!-- Elementos de línea temporal -->
                     </div>
+                </div>
+            </div>
+
+            <!-- ============================================================= -->
+            <!-- 2. PESTAÑA: CALENDARIO DE VENCIMIENTOS -->
+            <!-- ============================================================= -->
+            <div id="tab-vencimientos" class="p-6 space-y-4 hidden">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                    <div>
+                        <h2 class="text-base font-bold text-slate-900">Vigencias Sanitarias (Calculadas a 30 Días - NOM-256)</h2>
+                        <p class="text-xs text-slate-500">Cada certificado cuenta con una vigencia legal estricta de 30 días naturales posteriores a su expedición.</p>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <div class="bg-slate-100 p-1 rounded-lg border border-slate-200 flex text-xs font-semibold">
+                            <button onclick="setExpFilter('all')" id="btn-exp-all" class="exp-filter-btn px-2.5 py-1 rounded bg-white text-slate-900 shadow-sm font-bold">Todos</button>
+                            <button onclick="setExpFilter('vigentes')" id="btn-exp-vigentes" class="exp-filter-btn px-2.5 py-1 rounded text-emerald-700 hover:text-emerald-900">Vigentes (≤30d)</button>
+                            <button onclick="setExpFilter('criticos')" id="btn-exp-criticos" class="exp-filter-btn px-2.5 py-1 rounded text-rose-700 hover:text-rose-900">Críticos (≤7d)</button>
+                            <button onclick="setExpFilter('vencidos')" id="btn-exp-vencidos" class="exp-filter-btn px-2.5 py-1 rounded text-slate-600 hover:text-slate-900">Vencidos (>30d)</button>
+                        </div>
+                        <button onclick="loadDashboardData()" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg font-semibold flex items-center gap-1.5 transition">
+                            <i class="fa-solid fa-rotate"></i> Actualizar
+                        </button>
+                    </div>
+                </div>
+                <div id="expirations-container" class="space-y-4">
+                    <p class="text-xs text-slate-400 text-center py-8">Cargando vencimientos...</p>
                 </div>
             </div>
 
@@ -4157,9 +4157,10 @@
                 renderAuthenticatedUser(data.user);
                 document.getElementById('modal-auth-login').classList.add('hidden');
 
-                // Cargar datos
+                // Cargar datos ligeros iniciales
                 loadCompanyConfig();
-                loadDashboardData();
+                loadSummaryStats();
+                loadChronologicalCalendar();
             } catch (err) {
                 showLoginError(err.message || 'Error de autenticación. Verifica tus credenciales.');
             } finally {
@@ -4198,7 +4199,7 @@
                     renderAuthenticatedUser(user);
                     if (loginModal) loginModal.classList.add('hidden');
                     loadCompanyConfig();
-                    loadDashboardData();
+                    loadSummaryStats();
                     loadChronologicalCalendar();
                     return;
                 } catch(e) {
