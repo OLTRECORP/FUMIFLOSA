@@ -194,17 +194,15 @@ def seed_company_config(db: Session) -> CompanyConfig:
             db.add(config)
             db.commit()
             db.refresh(config)
-        else:
-            # Asegurar actualización de datos oficiales si tienen valores placeholder antiguos
-            if config.sanitary_responsible_name in ["Biól. Roberto Sánchez Martínez", "Roberto Sánchez"]:
-                config.sanitary_responsible_name = "MARCO ANTONIO FLORES SÁENZ"
-                config.sanitary_license_number = "08 17 19 SA 0001"
-                config.company_name = "MARCO ANTONIO FLORES SÁENZ"
-                config.trade_name = "FLOSA Control de Plagas"
-                config.rfc = "FOMS630329EA5"
-                config.phone = "625-837-3393"
-                config.fiscal_address = "C10a 685 Col. Centro, Cd. Cuauhtémoc, Chih C.P. 31500"
-                db.commit()
+        if config.sanitary_responsible_name != "MARCO ANTONIO FLORES SÁENZ" or config.sanitary_license_number != "08 17 19 SA 0001":
+            config.sanitary_responsible_name = "MARCO ANTONIO FLORES SÁENZ"
+            config.sanitary_license_number = "08 17 19 SA 0001"
+            config.company_name = "MARCO ANTONIO FLORES SÁENZ"
+            config.trade_name = "FLOSA Control de Plagas"
+            config.rfc = "FOMS630329EA5"
+            config.phone = "625-837-3393"
+            config.fiscal_address = "C10a 685 Col. Centro, Cd. Cuauhtémoc, Chih C.P. 31500"
+            db.commit()
         return config
     except IntegrityError:
         db.rollback()
@@ -496,8 +494,8 @@ def seed_clients_and_services(db: Session) -> int:
                         issue_date=svc_date,
                         validity_end_date=validity_end,
                         reentry_safety_hours=2,
-                        sanitary_license_number_snapshot="2023-15A-099",
-                        sanitary_responsible_name_snapshot="Biól. Roberto Sánchez Martínez",
+                        sanitary_license_number_snapshot="08 17 19 SA 0001",
+                        sanitary_responsible_name_snapshot="MARCO ANTONIO FLORES SÁENZ",
                         is_cancelled=False
                     )
                     db.add(certificate)
@@ -611,8 +609,8 @@ def seed_bitacoras_and_equipment(db: Session) -> int:
     # 3. Residuos Peligrosos
     if db.query(HazardousWasteLog).filter(HazardousWasteLog.is_deleted == False).count() == 0:
         hwastes = [
-            ("Biothrine Flow", "Deltametrina 2.5%", 4, "1 Litro", True, True, date.today() - timedelta(days=10), "MAN-SEMARNAT-2026-088", "Biól. Roberto Sánchez Martínez"),
-            ("Temprid SC", "Imidacloprid 21% + Beta-ciflutrina 10.5%", 2, "1 Litro", True, True, date.today() - timedelta(days=12), "MAN-SEMARNAT-2026-089", "Biól. Roberto Sánchez Martínez")
+            ("Biothrine Flow", "Deltametrina 2.5%", 4, "1 Litro", True, True, date.today() - timedelta(days=10), "MAN-SEMARNAT-2026-088", "MARCO ANTONIO FLORES SÁENZ"),
+            ("Temprid SC", "Imidacloprid 21% + Beta-ciflutrina 10.5%", 2, "1 Litro", True, True, date.today() - timedelta(days=12), "MAN-SEMARNAT-2026-089", "MARCO ANTONIO FLORES SÁENZ")
         ]
         for chem_n, act_ing, cnt, cap, tw, perf, wdate, manif, resp in hwastes:
             hlog = HazardousWasteLog(

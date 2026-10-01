@@ -295,12 +295,14 @@ class OfficialCertificatePDFGenerator:
 
         c.setFont("Times-Bold", 9)
         c.setFillColor(colors.HexColor("#111111"))
-        resp_name = getattr(cert, 'sanitary_responsible_name', None) or (getattr(company, 'sanitary_responsible_name', None) if company else "Marco Antonio Flores Sáenz")
+        resp_name = "MARCO ANTONIO FLORES SÁENZ"
         c.drawCentredString(396, 96, resp_name)
         
         c.drawCentredString(396, 84, "Responsable Técnico")
 
         license_no = getattr(cert, 'sanitary_license_number', None) or (getattr(company, 'sanitary_license_number', None) if company else "08 17 19 SA 0001")
+        if not license_no or "08 17 19" not in str(license_no):
+            license_no = "08 17 19 SA 0001"
         c.drawCentredString(396, 72, f"No. De Licencia Sanitaria: {license_no}")
 
         # Recuadro SINTOX (Derecha)
@@ -397,8 +399,8 @@ class OfficialCertificatePDFGenerator:
         c.drawString(40, h - 225, "Aplicación integral de plaguicidas autorizados con registro COFEPRIS / CICOPLAFEST.")
         c.drawString(40, h - 240, "Vigencia Oficial: 30 Días Naturales a partir de la fecha de emisión.")
 
-        c.drawString(40, 60, f"Licencia Sanitaria: {company.sanitary_license_number if company else '08 17 19 SA 0001'}")
-        c.drawRightString(w - 40, 60, f"Responsable Sanitario: {company.sanitary_responsible_name if company else 'Marco Antonio Flores Sáenz'}")
+        c.drawString(40, 60, "Licencia Sanitaria: 08 17 19 SA 0001")
+        c.drawRightString(w - 40, 60, "Responsable Sanitario: MARCO ANTONIO FLORES SÁENZ")
 
         c.showPage()
         c.save()
