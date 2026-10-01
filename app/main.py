@@ -37,6 +37,15 @@ def startup_db_sync():
             # Columnas para chemicals
             conn.execute(text("ALTER TABLE chemicals ADD COLUMN IF NOT EXISTS toxicological_category VARCHAR(50);"))
             conn.execute(text("ALTER TABLE chemicals ADD COLUMN IF NOT EXISTS compatible_methods VARCHAR(255);"))
+            
+            # Columnas para certificates (Cancelación)
+            conn.execute(text("ALTER TABLE certificates ADD COLUMN IF NOT EXISTS is_cancelled BOOLEAN DEFAULT FALSE;"))
+            conn.execute(text("ALTER TABLE certificates ADD COLUMN IF NOT EXISTS cancellation_reason VARCHAR(500);"))
+            conn.execute(text("ALTER TABLE certificates ADD COLUMN IF NOT EXISTS cancelled_at TIMESTAMPTZ;"))
+
+            # Columnas para service_orders (Estado y Agendamiento)
+            conn.execute(text("ALTER TABLE service_orders ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'completed';"))
+            conn.execute(text("ALTER TABLE service_orders ADD COLUMN IF NOT EXISTS scheduled_for TIMESTAMPTZ;"))
     except Exception as e:
         print(f"[STARTUP DB SYNC WARNING]: {e}")
 

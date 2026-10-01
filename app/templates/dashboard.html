@@ -372,6 +372,215 @@
         </div>
     </div>
 
+    <!-- MODAL CANCELAR CERTIFICADO -->
+    <div id="modal-cancel-certificate" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 space-y-4 border border-rose-200 animate-fadeIn">
+            <div class="flex justify-between items-center border-b border-rose-100 pb-3">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 bg-rose-100 text-rose-700 rounded-lg flex items-center justify-center text-sm font-bold">
+                        <i class="fa-solid fa-ban"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-900">Cancelar Certificado Oficial</h3>
+                        <p id="cancel-cert-folio-display" class="text-[11px] text-rose-600 font-mono font-bold">Certificado: -</p>
+                    </div>
+                </div>
+                <button onclick="closeCancelCertModal()" class="text-slate-400 hover:text-slate-600 p-1"><i class="fa-solid fa-xmark text-base"></i></button>
+            </div>
+
+            <form onsubmit="submitCancelCertificate(event)" class="space-y-4 text-xs">
+                <input type="hidden" id="cancel-cert-id" />
+                <div class="bg-rose-50 border border-rose-200 rounded-lg p-3 text-rose-800 space-y-1">
+                    <p class="font-bold flex items-center gap-1.5"><i class="fa-solid fa-triangle-exclamation"></i> Acción Formal e Irreversible</p>
+                    <p class="text-[11px] leading-relaxed">Al cancelar este certificado, se invalidará en el SaaS, se excluirá del cumplimiento activo y en el PDF oficial se estampará la marca de agua permanente <b>CANCELADO</b>.</p>
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Motivo / Causa de Cancelación *</label>
+                    <textarea id="cancel-cert-reason" required rows="3" placeholder="Ej. El cliente no abrió las instalaciones / Servicio cancelado por contingencia climática / Error en datos..." class="w-full bg-white border border-slate-300 rounded-lg p-2.5 text-xs focus:ring-1 focus:ring-rose-500"></textarea>
+                </div>
+                <div class="flex justify-end gap-2 pt-2 border-t border-slate-100">
+                    <button type="button" onclick="closeCancelCertModal()" class="px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-100 rounded-lg font-medium">Volver</button>
+                    <button type="submit" class="px-4 py-1.5 text-xs bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-lg shadow-sm flex items-center gap-1.5">
+                        <i class="fa-solid fa-ban"></i> Confirmar Cancelación
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL AGENDAR PRÓXIMO SERVICIO -->
+    <div id="modal-agendar-servicio" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 space-y-4 border border-slate-200 max-h-[90vh] overflow-y-auto animate-fadeIn">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 bg-blue-100 text-blue-700 rounded-lg flex items-center justify-center text-sm font-bold">
+                        <i class="fa-solid fa-calendar-plus"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-900">Agendar Próximo Servicio</h3>
+                        <p class="text-[11px] text-slate-500">Programa una cita operativa en el calendario de servicios</p>
+                    </div>
+                </div>
+                <button onclick="closeScheduleModal()" class="text-slate-400 hover:text-slate-600 p-1"><i class="fa-solid fa-xmark text-base"></i></button>
+            </div>
+
+            <form onsubmit="submitScheduleService(event)" class="space-y-4 text-xs">
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Razón Social y Sucursal *</label>
+                    <select id="schedule-branch-id" required class="w-full bg-white border border-slate-300 rounded-lg p-2 focus:ring-1 focus:ring-brand-500"></select>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Fecha y Hora Programada *</label>
+                        <input type="datetime-local" id="schedule-datetime" required class="w-full bg-white border border-slate-300 rounded-lg p-2" />
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Duración Estimada</label>
+                        <select id="schedule-duration" class="w-full bg-white border border-slate-300 rounded-lg p-2">
+                            <option value="30">30 minutos</option>
+                            <option value="60" selected>1 hora</option>
+                            <option value="90">1 hora 30 min</option>
+                            <option value="120">2 horas</option>
+                            <option value="180">3 horas</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Técnico Asignado (STPS)</label>
+                    <select id="schedule-tech-id" class="w-full bg-white border border-slate-300 rounded-lg p-2 focus:ring-1 focus:ring-brand-500"></select>
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Plagas Objetivo / Enfoque</label>
+                    <input type="text" id="schedule-pests" placeholder="Ej. Cucarachas, Roedores, Insectos Rastreros..." class="w-full bg-white border border-slate-300 rounded-lg p-2" />
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Notas u Observaciones Operativas</label>
+                    <textarea id="schedule-notes" rows="2" placeholder="Indicaciones para el técnico o requisitos de acceso al inmueble..." class="w-full bg-white border border-slate-300 rounded-lg p-2"></textarea>
+                </div>
+                <div class="flex justify-end gap-2 pt-2 border-t border-slate-100">
+                    <button type="button" onclick="closeScheduleModal()" class="px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-100 rounded-lg font-medium">Cancelar</button>
+                    <button type="submit" class="px-4 py-1.5 text-xs bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-sm flex items-center gap-1.5">
+                        <i class="fa-solid fa-calendar-check"></i> Agendar en Calendario
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL BUSCADOR RSCO / PLAGUICIDAS COFEPRIS -->
+    <div id="modal-rsco-search" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-3xl w-full p-6 space-y-4 border border-slate-200 max-h-[90vh] flex flex-col animate-fadeIn">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3 flex-shrink-0">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 bg-indigo-100 text-indigo-700 rounded-lg flex items-center justify-center text-sm font-bold">
+                        <i class="fa-solid fa-flask-vial"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-900">Buscador Oficial RSCO / Plaguicidas COFEPRIS</h3>
+                        <p class="text-[11px] text-slate-500">Busca por marca comercial, ingrediente activo o número de registro CICOPLAFEST</p>
+                    </div>
+                </div>
+                <button onclick="closeRscoSearchModal()" class="text-slate-400 hover:text-slate-600 p-1"><i class="fa-solid fa-xmark text-base"></i></button>
+            </div>
+
+            <div class="flex-shrink-0 space-y-2">
+                <div class="relative">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-slate-400 text-xs"></i>
+                    <input type="text" id="rsco-search-input" oninput="debounceRscoSearch()" placeholder="Escribe ingrediente activo (ej. Cipermetrina), marca (ej. Biothrine) o registro RSCO..." class="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+                </div>
+                <div class="flex flex-wrap gap-1.5">
+                    <button type="button" onclick="quickFilterRsco('Cipermetrina')" class="text-[10px] bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-2 py-0.5 rounded">Cipermetrina</button>
+                    <button type="button" onclick="quickFilterRsco('Deltametrina')" class="text-[10px] bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-2 py-0.5 rounded">Deltametrina</button>
+                    <button type="button" onclick="quickFilterRsco('Fipronil')" class="text-[10px] bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-2 py-0.5 rounded">Fipronil</button>
+                    <button type="button" onclick="quickFilterRsco('Imidacloprid')" class="text-[10px] bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-2 py-0.5 rounded">Imidacloprid</button>
+                    <button type="button" onclick="quickFilterRsco('Bromadiolona')" class="text-[10px] bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-2 py-0.5 rounded">Bromadiolona</button>
+                    <button type="button" onclick="quickFilterRsco('Brodifacoum')" class="text-[10px] bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-2 py-0.5 rounded">Brodifacoum</button>
+                    <button type="button" onclick="quickFilterRsco('Indoxacarb')" class="text-[10px] bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-2 py-0.5 rounded">Indoxacarb</button>
+                </div>
+            </div>
+
+            <div class="flex-1 overflow-y-auto border border-slate-200 rounded-xl bg-slate-50/50 p-3">
+                <div id="rsco-results-container" class="space-y-2">
+                    <p class="text-center text-slate-400 py-8 text-xs">Ingresa un término de búsqueda para ver los productos autorizados.</p>
+                </div>
+            </div>
+
+            <div class="flex justify-between items-center pt-2 border-t border-slate-100 flex-shrink-0 text-xs">
+                <span id="rsco-count-display" class="text-slate-500 text-[11px]">0 productos encontrados</span>
+                <button type="button" onclick="closeRscoSearchModal()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-lg text-xs">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DETALLE DE EVENTO EN CALENDARIO -->
+    <div id="modal-event-detail" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 space-y-4 border border-slate-200 animate-fadeIn">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                <div class="flex items-center gap-2">
+                    <div id="event-modal-icon-bg" class="w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold bg-indigo-100 text-indigo-700">
+                        <i id="event-modal-icon" class="fa-solid fa-calendar"></i>
+                    </div>
+                    <div>
+                        <h3 id="event-modal-title" class="text-sm font-bold text-slate-900">Detalles del Servicio</h3>
+                        <p id="event-modal-subtitle" class="text-[11px] text-slate-500 font-mono">Folio: -</p>
+                    </div>
+                </div>
+                <button onclick="closeEventDetailModal()" class="text-slate-400 hover:text-slate-600 p-1"><i class="fa-solid fa-xmark text-base"></i></button>
+            </div>
+
+            <div class="space-y-3 text-xs">
+                <div class="grid grid-cols-2 gap-2 bg-slate-50 p-3 rounded-xl border border-slate-200">
+                    <div>
+                        <p class="text-slate-500 text-[10px] uppercase font-bold">Razón Social Matriz</p>
+                        <p id="event-detail-client" class="font-bold text-slate-800">-</p>
+                    </div>
+                    <div>
+                        <p class="text-slate-500 text-[10px] uppercase font-bold">Sucursal Operativa</p>
+                        <p id="event-detail-branch" class="font-bold text-slate-800">-</p>
+                    </div>
+                    <div class="col-span-2">
+                        <p class="text-slate-500 text-[10px] uppercase font-bold">Dirección</p>
+                        <p id="event-detail-address" class="text-slate-700">-</p>
+                    </div>
+                    <div>
+                        <p class="text-slate-500 text-[10px] uppercase font-bold">Fecha y Hora</p>
+                        <p id="event-detail-date" class="font-bold text-slate-800">-</p>
+                    </div>
+                    <div>
+                        <p class="text-slate-500 text-[10px] uppercase font-bold">Técnico STPS</p>
+                        <p id="event-detail-tech" class="text-slate-700">-</p>
+                    </div>
+                    <div>
+                        <p class="text-slate-500 text-[10px] uppercase font-bold">Estado</p>
+                        <div id="event-detail-status">-</div>
+                    </div>
+                    <div>
+                        <p class="text-slate-500 text-[10px] uppercase font-bold">Vigencia Certificado</p>
+                        <p id="event-detail-validity" class="text-slate-700">-</p>
+                    </div>
+                </div>
+
+                <div id="event-cancel-warning" class="hidden bg-rose-50 border border-rose-200 rounded-lg p-3 text-rose-800 text-[11px]">
+                    <p class="font-bold flex items-center gap-1.5"><i class="fa-solid fa-ban"></i> Servicio / Certificado Cancelado</p>
+                    <p id="event-cancel-reason" class="mt-0.5"></p>
+                </div>
+            </div>
+
+            <div class="flex flex-wrap justify-end gap-2 pt-3 border-t border-slate-100">
+                <button type="button" onclick="closeEventDetailModal()" class="px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-100 rounded-lg font-medium">Cerrar</button>
+                <a id="btn-event-download-order" href="#" target="_blank" class="px-3 py-1.5 text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg border border-slate-300 flex items-center gap-1.5">
+                    <i class="fa-solid fa-file-lines text-slate-600"></i> Orden de Servicio (PDF)
+                </a>
+                <a id="btn-event-download-cert" href="#" target="_blank" class="px-3 py-1.5 text-xs bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-lg shadow-sm flex items-center gap-1.5">
+                    <i class="fa-solid fa-file-pdf"></i> Certificado Sanitario (PDF)
+                </a>
+                <button id="btn-event-cancel" onclick="triggerCancelFromEventModal()" class="px-3 py-1.5 text-xs bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold rounded-lg border border-rose-200 flex items-center gap-1.5">
+                    <i class="fa-solid fa-ban"></i> Cancelar Certificado
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- MODAL / PANTALLA DE INICIO DE SESIÓN SUPER USUARIO MASTER -->
     <div id="modal-auth-login" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-200 animate-fadeIn">
@@ -519,6 +728,9 @@
                     <button onclick="switchTab('tab-vencimientos')" id="btn-tab-vencimientos" class="tab-btn py-3.5 px-3 border-b-2 border-brand-600 font-bold text-xs text-brand-700 flex items-center gap-1.5">
                         <i class="fa-solid fa-clock"></i> Calendario Vencimientos
                     </button>
+                    <button onclick="switchTab('tab-cronologico')" id="btn-tab-cronologico" class="tab-btn py-3.5 px-3 border-b-2 border-transparent font-medium text-xs text-slate-500 hover:text-slate-800 flex items-center gap-1.5">
+                        <i class="fa-solid fa-calendar-days text-indigo-600"></i> Calendario Cronológico & Citas
+                    </button>
                     <button onclick="switchTab('tab-analytics')" id="btn-tab-analytics" class="tab-btn py-3.5 px-3 border-b-2 border-transparent font-medium text-xs text-slate-500 hover:text-slate-800 flex items-center gap-1.5">
                         <i class="fa-solid fa-chart-pie text-indigo-600"></i> Métricas & Analytics
                     </button>
@@ -572,6 +784,75 @@
                 </div>
                 <div id="expirations-container" class="space-y-4">
                     <p class="text-xs text-slate-400 text-center py-8">Cargando vencimientos...</p>
+                </div>
+            </div>
+
+            <!-- ============================================================= -->
+            <!-- PESTAÑA: CALENDARIO CRONOLÓGICO DE SERVICIOS Y CITAS -->
+            <!-- ============================================================= -->
+            <div id="tab-cronologico" class="p-6 space-y-6 hidden">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                    <div>
+                        <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                            <i class="fa-solid fa-calendar-days text-indigo-600"></i> Calendario Cronológico de Servicios
+                        </h2>
+                        <p class="text-xs text-slate-500">Historial temporal de aplicaciones, estados operativos y agendamiento de próximos servicios ligados a órdenes.</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="openScheduleModal()" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-3.5 py-2 rounded-xl flex items-center gap-1.5 shadow-sm transition">
+                            <i class="fa-solid fa-plus"></i> Agendar Próximo Servicio
+                        </button>
+                        <button onclick="loadChronologicalCalendar()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs px-3 py-2 rounded-xl font-semibold flex items-center gap-1.5">
+                            <i class="fa-solid fa-rotate"></i> Actualizar
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Barra de Navegación del Calendario -->
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+                    <div class="flex items-center gap-2">
+                        <button onclick="navCalendarMonth(-1)" class="w-8 h-8 rounded-lg border border-slate-200 hover:bg-slate-100 flex items-center justify-center text-slate-600"><i class="fa-solid fa-chevron-left text-xs"></i></button>
+                        <button onclick="navCalendarToday()" class="px-2.5 py-1 text-xs font-bold border border-slate-200 rounded-lg hover:bg-slate-100 text-slate-700">Hoy</button>
+                        <button onclick="navCalendarMonth(1)" class="w-8 h-8 rounded-lg border border-slate-200 hover:bg-slate-100 flex items-center justify-center text-slate-600"><i class="fa-solid fa-chevron-right text-xs"></i></button>
+                        <span id="calendar-month-title" class="text-base font-bold text-slate-800 ml-2">Septiembre 2026</span>
+                    </div>
+
+                    <!-- Filtros de Estado -->
+                    <div class="flex flex-wrap items-center gap-1.5 text-xs">
+                        <button onclick="filterCalendarStatus('all')" id="cal-filter-all" class="cal-status-pill px-2.5 py-1 rounded-full font-bold bg-slate-800 text-white text-[11px]">Todos</button>
+                        <button onclick="filterCalendarStatus('scheduled')" id="cal-filter-scheduled" class="cal-status-pill px-2.5 py-1 rounded-full font-medium bg-blue-50 text-blue-700 hover:bg-blue-100 text-[11px]"><i class="fa-solid fa-circle text-[7px] text-blue-500"></i> Agendados</button>
+                        <button onclick="filterCalendarStatus('completed')" id="cal-filter-completed" class="cal-status-pill px-2.5 py-1 rounded-full font-medium bg-emerald-50 text-emerald-700 hover:bg-emerald-100 text-[11px]"><i class="fa-solid fa-circle text-[7px] text-emerald-500"></i> Completados</button>
+                        <button onclick="filterCalendarStatus('cancelled')" id="cal-filter-cancelled" class="cal-status-pill px-2.5 py-1 rounded-full font-medium bg-rose-50 text-rose-700 hover:bg-rose-100 text-[11px]"><i class="fa-solid fa-circle text-[7px] text-rose-500"></i> Cancelados</button>
+                    </div>
+
+                    <!-- Selector de Vista -->
+                    <div class="flex bg-slate-100 p-0.5 rounded-lg border border-slate-200 text-xs">
+                        <button onclick="setCalendarViewMode('grid')" id="btn-view-grid" class="px-2.5 py-1 rounded-md font-bold bg-white text-slate-800 shadow-xs flex items-center gap-1"><i class="fa-solid fa-calendar"></i> Mes</button>
+                        <button onclick="setCalendarViewMode('list')" id="btn-view-list" class="px-2.5 py-1 rounded-md font-medium text-slate-500 hover:text-slate-800 flex items-center gap-1"><i class="fa-solid fa-list-ul"></i> Lista</button>
+                    </div>
+                </div>
+
+                <!-- Contenedor del Calendario: Cuadrícula Mes -->
+                <div id="calendar-grid-view" class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div class="grid grid-cols-7 bg-slate-50 border-b border-slate-200 text-center text-xs font-bold text-slate-600 py-2.5">
+                        <div>Dom</div>
+                        <div>Lun</div>
+                        <div>Mar</div>
+                        <div>Mié</div>
+                        <div>Jue</div>
+                        <div>Vie</div>
+                        <div>Sáb</div>
+                    </div>
+                    <div id="calendar-cells" class="grid grid-cols-7 auto-rows-fr divide-x divide-y divide-slate-100 min-h-[460px]">
+                        <!-- Celdas de días generadas dinámicamente -->
+                    </div>
+                </div>
+
+                <!-- Contenedor del Calendario: Lista Cronológica -->
+                <div id="calendar-list-view" class="hidden bg-white rounded-xl border border-slate-200 shadow-sm p-4 space-y-3">
+                    <div id="calendar-timeline-container" class="space-y-3">
+                        <!-- Elementos de línea temporal -->
+                    </div>
                 </div>
             </div>
 
@@ -755,9 +1036,14 @@
                     <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
                         <div class="flex justify-between items-center">
                             <p class="font-bold text-slate-800">Químicos Dosificados por Certificado (NOM-256):</p>
-                            <button type="button" onclick="addChemicalRow()" class="text-xs bg-brand-600 hover:bg-brand-700 text-white font-semibold px-2.5 py-1 rounded-md flex items-center gap-1">
-                                <i class="fa-solid fa-plus"></i> Añadir Químico
-                            </button>
+                            <div class="flex gap-2">
+                                <button type="button" onclick="openRscoSearchModal()" class="text-xs bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-2.5 py-1 rounded-md flex items-center gap-1 shadow-xs">
+                                    <i class="fa-solid fa-magnifying-glass"></i> Buscar RSCO / Plaguicida
+                                </button>
+                                <button type="button" onclick="addChemicalRow()" class="text-xs bg-brand-600 hover:bg-brand-700 text-white font-semibold px-2.5 py-1 rounded-md flex items-center gap-1">
+                                    <i class="fa-solid fa-plus"></i> Añadir Químico
+                                </button>
+                            </div>
                         </div>
                         <div id="chemicals-rows-container" class="space-y-2"></div>
                     </div>
@@ -1094,7 +1380,12 @@
                     </div>
 
                     <div class="lg:col-span-2 border border-slate-200 rounded-xl overflow-hidden bg-white">
-                        <div class="bg-slate-50 p-3 border-b border-slate-200 font-bold text-xs text-slate-700">Catálogo Regulado por COFEPRIS</div>
+                        <div class="bg-slate-50 p-3 border-b border-slate-200 font-bold text-xs text-slate-700 flex justify-between items-center">
+                            <span class="flex items-center gap-1.5"><i class="fa-solid fa-clipboard-check text-teal-600"></i> Catálogo Regulado por COFEPRIS</span>
+                            <button type="button" onclick="openRscoSearchModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-2.5 py-1 rounded-md text-[11px] font-bold flex items-center gap-1.5 shadow-xs transition">
+                                <i class="fa-solid fa-magnifying-glass"></i> Buscador RSCO COFEPRIS
+                            </button>
+                        </div>
                         <table class="w-full text-left text-xs">
                             <thead class="bg-slate-100 text-slate-600 font-bold uppercase text-[10px]">
                                 <tr>
@@ -1428,6 +1719,7 @@
             activeBtn.classList.add('border-brand-600', 'text-brand-700', 'font-bold');
 
             if(tabId === 'tab-vencimientos') loadDashboardData();
+            if(tabId === 'tab-cronologico') loadChronologicalCalendar();
             if(tabId === 'tab-analytics') loadAnalyticsData();
             if(tabId === 'tab-ordenes') loadOrders();
             if(tabId === 'tab-clientes') loadClientsAndBranches();
@@ -1772,36 +2064,77 @@
 
         async function loadOrders() {
             try {
-                const res = await fetch('/api/v1/services?limit=100');
+                const res = await fetch('/api/v1/services?limit=150');
                 const orders = await res.json();
                 const tbody = document.getElementById('orders-tbody');
                 if(!orders.length) {
                     tbody.innerHTML = '<tr><td colspan="7" class="p-6 text-center text-slate-400">No hay órdenes registradas.</td></tr>';
                     return;
                 }
-                tbody.innerHTML = orders.map(o => `
-                    <tr class="hover:bg-slate-50">
-                        <td class="p-3 font-mono font-bold text-slate-900">${o.folio}</td>
-                        <td class="p-3 font-mono font-bold text-brand-700">${o.certificate ? o.certificate.certificate_folio : 'N/A'}</td>
+                tbody.innerHTML = orders.map(o => {
+                    const isCertCancelled = o.certificate && o.certificate.is_cancelled;
+                    const isOrderCancelled = (o.status === 'cancelled') || isCertCancelled;
+                    const isScheduled = (o.status === 'scheduled') && !o.certificate;
+
+                    let statusBadge = '';
+                    if (isOrderCancelled) {
+                        statusBadge = `<span class="bg-rose-100 text-rose-700 font-bold px-2 py-0.5 rounded text-[10px] inline-flex items-center gap-1"><i class="fa-solid fa-ban"></i> CANCELADO</span>`;
+                    } else if (isScheduled) {
+                        statusBadge = `<span class="bg-blue-100 text-blue-700 font-bold px-2 py-0.5 rounded text-[10px] inline-flex items-center gap-1"><i class="fa-solid fa-calendar-check"></i> AGENDADO</span>`;
+                    } else {
+                        statusBadge = `<span class="bg-emerald-100 text-emerald-700 font-bold px-2 py-0.5 rounded text-[10px] inline-flex items-center gap-1"><i class="fa-solid fa-check"></i> COMPLETADO</span>`;
+                    }
+
+                    let certCell = 'N/A';
+                    if (o.certificate) {
+                        if (isCertCancelled) {
+                            certCell = `<div><span class="line-through text-slate-400 font-mono text-[11px]">${o.certificate.certificate_folio}</span><br/><span class="text-[10px] text-rose-600 font-semibold italic">${o.certificate.cancellation_reason || 'Cancelado'}</span></div>`;
+                        } else {
+                            certCell = `<span class="font-mono font-bold text-brand-700">${o.certificate.certificate_folio}</span>`;
+                        }
+                    } else if (isScheduled) {
+                        certCell = `<span class="text-blue-600 font-medium text-[11px] italic">En Programación</span>`;
+                    }
+
+                    let validityCell = 'N/A';
+                    if (o.certificate) {
+                        validityCell = isCertCancelled ? '<span class="text-rose-600 font-bold text-[11px]">Cancelado</span>' : `<span class="text-slate-700 font-medium">${o.certificate.validity_end_date}</span>`;
+                    }
+
+                    return `
+                    <tr class="hover:bg-slate-50 ${isOrderCancelled ? 'bg-rose-50/20' : ''}">
+                        <td class="p-3 font-mono font-bold text-slate-900">
+                            ${o.folio}
+                            <div class="mt-0.5">${statusBadge}</div>
+                        </td>
+                        <td class="p-3">${certCell}</td>
                         <td class="p-3 font-medium text-slate-800">${o.branch && o.branch.client ? `${o.branch.client.legal_name} <span class="text-slate-500 font-normal text-[11px]">(${o.branch.name})</span>` : (o.branch ? o.branch.name : 'N/A')}</td>
                         <td class="p-3 text-slate-600">${o.technician ? o.technician.full_name : 'N/A'}</td>
                         <td class="p-3 text-slate-600">${new Date(o.service_start_date).toLocaleDateString()}</td>
-                        <td class="p-3 text-slate-600">${o.certificate ? o.certificate.validity_end_date : 'N/A'}</td>
+                        <td class="p-3">${validityCell}</td>
                         <td class="p-3 text-right">
-                            <div class="flex items-center justify-end gap-1.5">
-                                <a href="/api/v1/services/${o.id}/pdf" target="_blank" class="inline-flex items-center gap-1 bg-brand-50 hover:bg-brand-100 text-brand-700 font-bold px-2 py-1 rounded border border-brand-200 text-xs">
-                                    <i class="fa-solid fa-file-pdf"></i> PDF
+                            <div class="flex items-center justify-end gap-1.5 flex-wrap">
+                                ${o.certificate ? `
+                                <a href="/api/v1/certificates/${o.certificate.id}/pdf" target="_blank" title="Descargar Certificado Oficial Sanitario NOM-256" class="inline-flex items-center gap-1 bg-brand-50 hover:bg-brand-100 text-brand-700 font-bold px-2 py-1 rounded border border-brand-200 text-xs shadow-xs">
+                                    <i class="fa-solid fa-file-pdf"></i> Certificado
+                                </a>` : ''}
+                                <a href="/api/v1/services/${o.id}/order-pdf" target="_blank" title="Descargar Hoja Técnica de Orden de Servicio" class="inline-flex items-center gap-1 bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold px-2 py-1 rounded border border-slate-300 text-xs shadow-xs">
+                                    <i class="fa-solid fa-file-lines text-slate-500"></i> Orden
                                 </a>
-                                <button onclick="openEditServiceModal('${o.id}')" class="inline-flex items-center gap-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-2 py-1 rounded border border-slate-300 text-xs">
-                                    <i class="fa-solid fa-pen-to-square"></i> Editar
+                                ${o.certificate && !isCertCancelled ? `
+                                <button onclick="openCancelCertModal('${o.certificate.id}', '${o.certificate.certificate_folio}')" title="Cancelar este certificado si no se llevó a cabo" class="inline-flex items-center gap-1 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold px-2 py-1 rounded border border-rose-200 text-xs">
+                                    <i class="fa-solid fa-ban"></i> Cancelar
+                                </button>` : ''}
+                                <button onclick="openEditServiceModal('${o.id}')" title="Editar orden" class="inline-flex items-center gap-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-2 py-1 rounded border border-slate-300 text-xs">
+                                    <i class="fa-solid fa-pen-to-square"></i>
                                 </button>
-                                <button onclick="deleteService('${o.id}', '${o.folio}')" class="inline-flex items-center gap-1 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold px-2 py-1 rounded border border-rose-200 text-xs">
+                                <button onclick="deleteService('${o.id}', '${o.folio}')" title="Eliminar orden" class="inline-flex items-center gap-1 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold px-2 py-1 rounded border border-rose-200 text-xs">
                                     <i class="fa-solid fa-trash"></i>
                                 </button>
                             </div>
                         </td>
-                    </tr>
-                `).join('');
+                    </tr>`;
+                }).join('');
             } catch(e) { console.error(e); }
         }
 
@@ -3024,6 +3357,590 @@
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-down text-indigo-400"></i> Descargar y Restaurar desde URL';
+            }
+        }
+
+        // ============================================================================
+        // MÓDULO 10: CALENDARIO CRONOLÓGICO, AGENDAMIENTO Y CANCELACIÓN DE SERVICIOS
+        // ============================================================================
+        let calCurrentDate = new Date();
+        let calEvents = [];
+        let calViewMode = 'grid';
+        let calStatusFilter = 'all';
+        let activeEventSelected = null;
+
+        async function loadChronologicalCalendar() {
+            try {
+                const year = calCurrentDate.getFullYear();
+                const month = calCurrentDate.getMonth();
+                const firstDay = new Date(year, month - 1, 1).toISOString().split('T')[0];
+                const lastDay = new Date(year, month + 2, 0).toISOString().split('T')[0];
+
+                const res = await fetch(`/api/v1/services/calendar?start_date=${firstDay}&end_date=${lastDay}`);
+                if (!res.ok) throw new Error('Error al cargar calendario');
+                calEvents = await res.json();
+                renderCalendar();
+            } catch(err) {
+                console.error('Error al cargar calendario cronológico:', err);
+            }
+        }
+
+        function renderCalendar() {
+            const monthsNames = [
+                'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+                'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+            ];
+            const titleEl = document.getElementById('calendar-month-title');
+            if (titleEl) {
+                titleEl.innerText = `${monthsNames[calCurrentDate.getMonth()]} ${calCurrentDate.getFullYear()}`;
+            }
+
+            if (calViewMode === 'grid') {
+                renderCalendarGrid();
+            } else {
+                renderCalendarList();
+            }
+        }
+
+        function renderCalendarGrid() {
+            const container = document.getElementById('calendar-cells');
+            if (!container) return;
+
+            const year = calCurrentDate.getFullYear();
+            const month = calCurrentDate.getMonth();
+            const today = new Date();
+
+            const firstDayOfMonth = new Date(year, month, 1);
+            const startingDayOfWeek = firstDayOfMonth.getDay(); // 0 is Sunday
+            const totalDaysInMonth = new Date(year, month + 1, 0).getDate();
+            const totalDaysInPrevMonth = new Date(year, month, 0).getDate();
+
+            let cellsHtml = '';
+
+            // Días del mes previo (deshabilitados)
+            for (let i = startingDayOfWeek - 1; i >= 0; i--) {
+                const dayNum = totalDaysInPrevMonth - i;
+                cellsHtml += `
+                    <div class="bg-slate-50/50 p-2 min-h-[90px] opacity-40 text-slate-400">
+                        <span class="text-xs font-semibold">${dayNum}</span>
+                    </div>`;
+            }
+
+            // Días del mes actual
+            for (let day = 1; day <= totalDaysInMonth; day++) {
+                const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const isToday = today.getFullYear() === year && today.getMonth() === month && today.getDate() === day;
+
+                // Filtrar eventos de este día
+                const dayEvents = calEvents.filter(ev => {
+                    const evDate = ev.start.split('T')[0];
+                    if (evDate !== dateStr) return false;
+                    if (calStatusFilter !== 'all' && ev.status !== calStatusFilter) return false;
+                    return true;
+                });
+
+                let eventsPills = '';
+                dayEvents.forEach(ev => {
+                    let pillBg = 'bg-emerald-50 text-emerald-800 border-emerald-200';
+                    let icon = 'fa-check';
+                    if (ev.is_cancelled) {
+                        pillBg = 'bg-rose-50 text-rose-800 border-rose-200';
+                        icon = 'fa-ban';
+                    } else if (ev.status === 'scheduled') {
+                        pillBg = 'bg-blue-50 text-blue-800 border-blue-200';
+                        icon = 'fa-clock';
+                    } else if (ev.status_text && ev.status_text.includes('Vencido')) {
+                        pillBg = 'bg-amber-50 text-amber-800 border-amber-200';
+                        icon = 'fa-triangle-exclamation';
+                    }
+
+                    const timeStr = ev.start.includes('T') ? ev.start.split('T')[1].substring(0, 5) : '';
+                    eventsPills += `
+                        <div onclick="openEventDetailModal('${ev.id}')" title="${ev.title} (${ev.status_text})" class="cursor-pointer text-[10px] p-1 rounded border ${pillBg} truncate font-medium flex items-center gap-1 shadow-2xs hover:opacity-80 transition">
+                            <i class="fa-solid ${icon} text-[8px] flex-shrink-0"></i>
+                            <span class="font-bold flex-shrink-0">${timeStr}</span>
+                            <span class="truncate">${ev.client_name}</span>
+                        </div>`;
+                });
+
+                cellsHtml += `
+                    <div class="p-2 min-h-[90px] flex flex-col justify-start gap-1 bg-white hover:bg-slate-50/60 transition ${isToday ? 'ring-2 ring-indigo-500 ring-inset rounded-lg' : ''}">
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs font-bold ${isToday ? 'bg-indigo-600 text-white rounded-full w-5 h-5 flex items-center justify-center' : 'text-slate-700'}">${day}</span>
+                            ${dayEvents.length > 0 ? `<span class="text-[9px] font-bold text-slate-400 bg-slate-100 px-1.5 py-0.2 rounded-full">${dayEvents.length}</span>` : ''}
+                        </div>
+                        <div class="space-y-1 mt-1 overflow-y-auto max-h-[85px]">
+                            ${eventsPills}
+                        </div>
+                    </div>`;
+            }
+
+            // Días sobrantes del mes siguiente para completar la cuadrícula de 7 columnas
+            const totalCellsSoFar = startingDayOfWeek + totalDaysInMonth;
+            const remainder = (7 - (totalCellsSoFar % 7)) % 7;
+            for (let i = 1; i <= remainder; i++) {
+                cellsHtml += `
+                    <div class="bg-slate-50/50 p-2 min-h-[90px] opacity-40 text-slate-400">
+                        <span class="text-xs font-semibold">${i}</span>
+                    </div>`;
+            }
+
+            container.innerHTML = cellsHtml;
+        }
+
+        function renderCalendarList() {
+            const container = document.getElementById('calendar-timeline-container');
+            if (!container) return;
+
+            const filteredEvents = calEvents.filter(ev => {
+                if (calStatusFilter !== 'all' && ev.status !== calStatusFilter) return false;
+                return true;
+            });
+
+            if (!filteredEvents.length) {
+                container.innerHTML = '<div class="p-8 text-center text-slate-400 text-xs">No hay servicios registrados en este periodo con el filtro seleccionado.</div>';
+                return;
+            }
+
+            // Ordenar cronológicamente
+            filteredEvents.sort((a, b) => new Date(b.start) - new Date(a.start));
+
+            container.innerHTML = filteredEvents.map(ev => {
+                let badgeClass = 'bg-emerald-100 text-emerald-800 border-emerald-300';
+                let icon = 'fa-circle-check text-emerald-600';
+                if (ev.is_cancelled) {
+                    badgeClass = 'bg-rose-100 text-rose-800 border-rose-300';
+                    icon = 'fa-ban text-rose-600';
+                } else if (ev.status === 'scheduled') {
+                    badgeClass = 'bg-blue-100 text-blue-800 border-blue-300';
+                    icon = 'fa-calendar-clock text-blue-600';
+                } else if (ev.status_text && ev.status_text.includes('Vencido')) {
+                    badgeClass = 'bg-amber-100 text-amber-800 border-amber-300';
+                    icon = 'fa-triangle-exclamation text-amber-600';
+                }
+
+                const startDate = new Date(ev.start);
+                const dateFmt = startDate.toLocaleDateString('es-MX', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+                const timeFmt = startDate.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
+
+                return `
+                <div class="p-3.5 bg-slate-50 hover:bg-white rounded-xl border border-slate-200 transition shadow-2xs flex flex-col md:flex-row md:items-center justify-between gap-3">
+                    <div class="flex items-start gap-3">
+                        <div class="w-9 h-9 rounded-xl flex items-center justify-center bg-white border border-slate-200 shadow-2xs text-slate-600 shrink-0">
+                            <i class="fa-solid ${icon}"></i>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <span class="font-bold text-xs text-slate-900">${ev.client_name}</span>
+                                <span class="text-xs text-slate-500 font-normal">(${ev.branch_name})</span>
+                                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full border ${badgeClass}">${ev.status_text}</span>
+                            </div>
+                            <p class="text-[11px] text-slate-500 mt-0.5"><i class="fa-solid fa-location-dot text-slate-400"></i> ${ev.branch_address || 'Dirección registrada'}</p>
+                            <div class="flex items-center gap-3 text-[11px] text-slate-600 mt-1 font-mono">
+                                <span><b>Orden:</b> ${ev.folio}</span>
+                                ${ev.certificate_folio ? `<span><b>Certificado:</b> ${ev.is_cancelled ? `<s class="text-slate-400">${ev.certificate_folio}</s>` : ev.certificate_folio}</span>` : ''}
+                                <span><i class="fa-solid fa-user-shield text-slate-400"></i> ${ev.technician_name}</span>
+                            </div>
+                            ${ev.is_cancelled && ev.cancellation_reason ? `<p class="text-[11px] text-rose-600 mt-1 bg-rose-50 px-2 py-1 rounded border border-rose-200 italic">Motivo de cancelación: ${ev.cancellation_reason}</p>` : ''}
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-2 self-end md:self-center shrink-0">
+                        <div class="text-right text-[11px] mr-2">
+                            <p class="font-bold text-slate-800">${dateFmt}</p>
+                            <p class="text-slate-500">${timeFmt} hrs</p>
+                        </div>
+                        <button onclick="openEventDetailModal('${ev.id}')" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg text-xs border border-slate-300">
+                            Detalles
+                        </button>
+                        ${ev.certificate_id ? `
+                        <a href="/api/v1/certificates/${ev.certificate_id}/pdf" target="_blank" class="px-2.5 py-1.5 bg-brand-50 hover:bg-brand-100 text-brand-700 font-bold rounded-lg text-xs border border-brand-200 shadow-2xs flex items-center gap-1">
+                            <i class="fa-solid fa-file-pdf"></i> Certificado
+                        </a>` : ''}
+                        <a href="/api/v1/services/${ev.id}/order-pdf" target="_blank" class="px-2.5 py-1.5 bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold rounded-lg text-xs border border-slate-300 shadow-2xs flex items-center gap-1">
+                            <i class="fa-solid fa-file-lines text-slate-500"></i> Orden
+                        </a>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        function navCalendarMonth(delta) {
+            calCurrentDate.setMonth(calCurrentDate.getMonth() + delta);
+            loadChronologicalCalendar();
+        }
+
+        function navCalendarToday() {
+            calCurrentDate = new Date();
+            loadChronologicalCalendar();
+        }
+
+        function filterCalendarStatus(st) {
+            calStatusFilter = st;
+            document.querySelectorAll('.cal-status-pill').forEach(btn => {
+                btn.classList.remove('bg-slate-800', 'text-white', 'shadow-xs');
+                btn.classList.add('font-medium');
+            });
+            const activeBtn = document.getElementById(`cal-filter-${st}`);
+            if (activeBtn) {
+                activeBtn.classList.remove('font-medium');
+                activeBtn.classList.add('bg-slate-800', 'text-white', 'shadow-xs');
+            }
+            renderCalendar();
+        }
+
+        function setCalendarViewMode(mode) {
+            calViewMode = mode;
+            const gridEl = document.getElementById('calendar-grid-view');
+            const listEl = document.getElementById('calendar-list-view');
+            const btnGrid = document.getElementById('btn-view-grid');
+            const btnList = document.getElementById('btn-view-list');
+
+            if (mode === 'grid') {
+                gridEl.classList.remove('hidden');
+                listEl.classList.add('hidden');
+                btnGrid.classList.add('bg-white', 'text-slate-800', 'font-bold', 'shadow-xs');
+                btnGrid.classList.remove('text-slate-500', 'font-medium');
+                btnList.classList.remove('bg-white', 'text-slate-800', 'font-bold', 'shadow-xs');
+                btnList.classList.add('text-slate-500', 'font-medium');
+            } else {
+                gridEl.classList.add('hidden');
+                listEl.classList.remove('hidden');
+                btnList.classList.add('bg-white', 'text-slate-800', 'font-bold', 'shadow-xs');
+                btnList.classList.remove('text-slate-500', 'font-medium');
+                btnGrid.classList.remove('bg-white', 'text-slate-800', 'font-bold', 'shadow-xs');
+                btnGrid.classList.add('text-slate-500', 'font-medium');
+            }
+            renderCalendar();
+        }
+
+        // --- AGENDAMIENTO DE CITAS ---
+        function openScheduleModal(presetBranchId = null) {
+            // Asegurar ramas y técnicos cargados
+            const branchSelect = document.getElementById('schedule-branch-id');
+            const techSelect = document.getElementById('schedule-tech-id');
+
+            branchSelect.innerHTML = cachedBranches.map(b => `
+                <option value="${b.id}" ${presetBranchId === b.id ? 'selected' : ''}>${b.client_legal_name || 'Cliente'} (${b.name}) - ${b.address}</option>
+            `).join('');
+
+            techSelect.innerHTML = cachedTechnicians.map(t => `
+                <option value="${t.id}">${t.full_name} (${t.stps_registration_number || 'STPS'})</option>
+            `).join('');
+
+            // Prellenar fecha con mañana a las 10:00
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            tomorrow.setHours(10, 0, 0, 0);
+            const tzOffset = tomorrow.getTimezoneOffset() * 60000;
+            const localISOTime = (new Date(tomorrow.getTime() - tzOffset)).toISOString().slice(0, 16);
+            document.getElementById('schedule-datetime').value = localISOTime;
+
+            document.getElementById('schedule-pests').value = 'Control integral de plagas (Rastreros y Roedores)';
+            document.getElementById('schedule-notes').value = '';
+
+            document.getElementById('modal-agendar-servicio').classList.remove('hidden');
+        }
+
+        function closeScheduleModal() {
+            document.getElementById('modal-agendar-servicio').classList.add('hidden');
+        }
+
+        async function submitScheduleService(e) {
+            e.preventDefault();
+            const branchId = document.getElementById('schedule-branch-id').value;
+            const techId = document.getElementById('schedule-tech-id').value;
+            const dtVal = document.getElementById('schedule-datetime').value;
+            const duration = parseInt(document.getElementById('schedule-duration').value) || 60;
+            const pests = document.getElementById('schedule-pests').value;
+            const notes = document.getElementById('schedule-notes').value;
+
+            try {
+                const res = await fetch('/api/v1/services/schedule', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        branch_id: branchId,
+                        technician_id: techId || null,
+                        scheduled_for: new Date(dtVal).toISOString(),
+                        estimated_duration_minutes: duration,
+                        target_pests: pests,
+                        notes: notes
+                    })
+                });
+
+                if (!res.ok) {
+                    const err = await res.json();
+                    throw new Error(err.detail || 'Falla al agendar servicio');
+                }
+
+                const created = await res.json();
+                alert(`¡Servicio agendado exitosamente con Folio: ${created.folio}!`);
+                closeScheduleModal();
+                loadChronologicalCalendar();
+                loadOrders();
+            } catch(err) {
+                alert('Error al agendar: ' + err.message);
+            }
+        }
+
+        // --- CANCELACIÓN DE CERTIFICADOS ---
+        let currentCertToCancel = null;
+
+        function openCancelCertModal(certId, certFolio) {
+            currentCertToCancel = certId;
+            document.getElementById('cancel-cert-id').value = certId;
+            document.getElementById('cancel-cert-folio-display').innerText = `Certificado: ${certFolio}`;
+            document.getElementById('cancel-cert-reason').value = '';
+            document.getElementById('modal-cancel-certificate').classList.remove('hidden');
+        }
+
+        function closeCancelCertModal() {
+            document.getElementById('modal-cancel-certificate').classList.add('hidden');
+            currentCertToCancel = null;
+        }
+
+        async function submitCancelCertificate(e) {
+            e.preventDefault();
+            const certId = document.getElementById('cancel-cert-id').value;
+            const reason = document.getElementById('cancel-cert-reason').value.trim();
+
+            if (!reason) {
+                alert('Debes ingresar el motivo de cancelación.');
+                return;
+            }
+
+            try {
+                const res = await fetch(`/api/v1/certificates/${certId}/cancel`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ reason: reason })
+                });
+
+                if (!res.ok) {
+                    const err = await res.json();
+                    throw new Error(err.detail || 'Error al cancelar certificado');
+                }
+
+                const data = await res.json();
+                alert(`¡Certificado cancelado exitosamente! El documento PDF oficial ahora reflejará el sello y marca de agua CANCELADO.`);
+                closeCancelCertModal();
+                closeEventDetailModal();
+                loadOrders();
+                loadDashboardData();
+                loadChronologicalCalendar();
+            } catch(err) {
+                alert('Error al cancelar certificado: ' + err.message);
+            }
+        }
+
+        // --- DETALLE DE EVENTO EN CALENDARIO ---
+        function openEventDetailModal(eventId) {
+            const ev = calEvents.find(x => x.id === eventId);
+            if (!ev) return;
+            activeEventSelected = ev;
+
+            document.getElementById('event-modal-subtitle').innerText = `Folio: ${ev.folio} ${ev.certificate_folio ? `| Cert: ${ev.certificate_folio}` : ''}`;
+            document.getElementById('event-detail-client').innerText = ev.client_name;
+            document.getElementById('event-detail-branch').innerText = ev.branch_name;
+            document.getElementById('event-detail-address').innerText = ev.branch_address || 'No registrada';
+
+            const startDate = new Date(ev.start);
+            document.getElementById('event-detail-date').innerText = startDate.toLocaleString('es-MX', {
+                dateStyle: 'full', timeStyle: 'short'
+            });
+
+            document.getElementById('event-detail-tech').innerText = ev.technician_name;
+            document.getElementById('event-detail-validity').innerText = ev.validity_end_date ? new Date(ev.validity_end_date).toLocaleDateString() : 'N/A';
+
+            // Estado y badges
+            let badgeHtml = '';
+            if (ev.is_cancelled) {
+                badgeHtml = `<span class="bg-rose-100 text-rose-800 font-bold px-2 py-0.5 rounded text-xs"><i class="fa-solid fa-ban"></i> Cancelado</span>`;
+                document.getElementById('event-cancel-warning').classList.remove('hidden');
+                document.getElementById('event-cancel-reason').innerText = ev.cancellation_reason || 'Sin motivo especificado';
+                document.getElementById('btn-event-cancel').classList.add('hidden');
+            } else if (ev.status === 'scheduled') {
+                badgeHtml = `<span class="bg-blue-100 text-blue-800 font-bold px-2 py-0.5 rounded text-xs"><i class="fa-solid fa-clock"></i> Agendado</span>`;
+                document.getElementById('event-cancel-warning').classList.add('hidden');
+                document.getElementById('btn-event-cancel').classList.add('hidden');
+            } else {
+                badgeHtml = `<span class="bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded text-xs"><i class="fa-solid fa-check"></i> ${ev.status_text}</span>`;
+                document.getElementById('event-cancel-warning').classList.add('hidden');
+                document.getElementById('btn-event-cancel').classList.remove('hidden');
+            }
+            document.getElementById('event-detail-status').innerHTML = badgeHtml;
+
+            // Enlaces de descarga PDF independientes
+            document.getElementById('btn-event-download-order').href = `/api/v1/services/${ev.service_order_id}/order-pdf`;
+
+            const btnCert = document.getElementById('btn-event-download-cert');
+            if (ev.certificate_id) {
+                btnCert.href = `/api/v1/certificates/${ev.certificate_id}/pdf`;
+                btnCert.classList.remove('hidden');
+            } else {
+                btnCert.classList.add('hidden');
+            }
+
+            document.getElementById('modal-event-detail').classList.remove('hidden');
+        }
+
+        function closeEventDetailModal() {
+            document.getElementById('modal-event-detail').classList.add('hidden');
+            activeEventSelected = null;
+        }
+
+        function triggerCancelFromEventModal() {
+            if (activeEventSelected && activeEventSelected.certificate_id) {
+                openCancelCertModal(activeEventSelected.certificate_id, activeEventSelected.certificate_folio);
+            }
+        }
+
+        // --- BUSCADOR RSCO / PLAGUICIDAS COFEPRIS ---
+        let rscoDebounceTimeout = null;
+        let rscoSearchResults = [];
+
+        function openRscoSearchModal() {
+            document.getElementById('modal-rsco-search').classList.remove('hidden');
+            const input = document.getElementById('rsco-search-input');
+            input.focus();
+            if (!input.value.trim()) {
+                executeRscoSearch('');
+            }
+        }
+
+        function closeRscoSearchModal() {
+            document.getElementById('modal-rsco-search').classList.add('hidden');
+        }
+
+        function debounceRscoSearch() {
+            clearTimeout(rscoDebounceTimeout);
+            rscoDebounceTimeout = setTimeout(() => {
+                const term = document.getElementById('rsco-search-input').value.trim();
+                executeRscoSearch(term);
+            }, 300);
+        }
+
+        function quickFilterRsco(term) {
+            document.getElementById('rsco-search-input').value = term;
+            executeRscoSearch(term);
+        }
+
+        async function executeRscoSearch(query) {
+            const container = document.getElementById('rsco-results-container');
+            container.innerHTML = '<div class="text-center py-6 text-slate-400 text-xs"><i class="fa-solid fa-spinner fa-spin"></i> Consultando registros COFEPRIS / RSCO...</div>';
+
+            try {
+                const res = await fetch(`/api/v1/chemicals/rsco-search?q=${encodeURIComponent(query)}`);
+                rscoSearchResults = await res.json();
+                document.getElementById('rsco-count-display').innerText = `${rscoSearchResults.length} plaguicidas autorizados encontrados`;
+
+                if (!rscoSearchResults.length) {
+                    container.innerHTML = `<div class="text-center py-8 text-slate-400 text-xs">No se encontraron plaguicidas con "${query}". Verifica la ortografía o intenta buscar por ingrediente activo.</div>`;
+                    return;
+                }
+
+                container.innerHTML = rscoSearchResults.map((prod, idx) => `
+                    <div class="p-3 bg-white hover:bg-indigo-50/40 rounded-xl border border-slate-200 transition shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div>
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <span class="font-bold text-slate-900 text-xs">${prod.commercial_name}</span>
+                                <span class="bg-indigo-50 text-indigo-700 font-mono text-[10px] font-bold px-2 py-0.5 rounded border border-indigo-200">${prod.cicoplafest_number}</span>
+                                ${prod.in_local_catalog ? '<span class="bg-emerald-50 text-emerald-700 font-bold text-[10px] px-1.5 py-0.5 rounded border border-emerald-200"><i class="fa-solid fa-check"></i> En Catálogo Local</span>' : '<span class="bg-slate-100 text-slate-600 text-[10px] px-1.5 py-0.5 rounded font-medium">COFEPRIS Oficial</span>'}
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-x-4 gap-y-1 text-[11px] text-slate-600 mt-1.5">
+                                <div><b>Ingrediente Activo:</b> ${prod.active_ingredient}</div>
+                                <div><b>Dosis Autorizada:</b> ${prod.authorized_dose_per_liter}</div>
+                                <div><b>Categoría:</b> ${prod.toxicological_category}</div>
+                                <div class="sm:col-span-2"><b>Método:</b> ${prod.compatible_methods}</div>
+                                <div><b>Reentrada:</b> ${prod.safety_interval_hours} horas</div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-2 shrink-0">
+                            ${!prod.in_local_catalog ? `
+                            <button type="button" onclick="addRscoToLocalCatalog(${idx})" class="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-xs shadow-2xs flex items-center gap-1 transition">
+                                <i class="fa-solid fa-plus"></i> Dar de Alta
+                            </button>` : ''}
+                            <button type="button" onclick="useRscoProduct(${idx})" class="px-2.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg text-xs shadow-2xs flex items-center gap-1 transition">
+                                <i class="fa-solid fa-check"></i> Usar
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch(err) {
+                container.innerHTML = `<div class="text-center py-6 text-rose-500 text-xs">Error al consultar el catálogo: ${err.message}</div>`;
+            }
+        }
+
+        async function addRscoToLocalCatalog(index) {
+            const prod = rscoSearchResults[index];
+            if (!prod) return;
+
+            try {
+                const res = await fetch('/api/v1/chemicals', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        commercial_name: prod.commercial_name,
+                        active_ingredient: prod.active_ingredient,
+                        cicoplafest_number: prod.cicoplafest_number,
+                        authorized_dose_per_liter: prod.authorized_dose_per_liter,
+                        safety_interval_hours: prod.safety_interval_hours,
+                        compatible_methods: prod.compatible_methods,
+                        toxicological_category: prod.toxicological_category
+                    })
+                });
+
+                if (!res.ok) {
+                    const err = await res.json();
+                    throw new Error(err.detail || 'Error al guardar');
+                }
+
+                alert(`¡Químico "${prod.commercial_name}" agregado exitosamente al catálogo del SaaS!`);
+                await loadChemicals();
+                executeRscoSearch(document.getElementById('rsco-search-input').value);
+            } catch(err) {
+                alert('No se pudo dar de alta: ' + err.message);
+            }
+        }
+
+        function useRscoProduct(index) {
+            const prod = rscoSearchResults[index];
+            if (!prod) return;
+
+            // Si está en la pestaña de nuevo servicio, agregar fila o rellenar
+            closeRscoSearchModal();
+            switchTab('tab-nuevo-servicio');
+            
+            // Buscar si ya existe en cachedChemicals
+            const existing = cachedChemicals.find(c => c.cicoplafest_number.trim().toUpperCase() === prod.cicoplafest_number.trim().toUpperCase());
+            if (existing) {
+                // Añadir fila con este químico seleccionado
+                addChemicalRowWithSelection(existing.id, prod.authorized_dose_per_liter, prod.compatible_methods);
+            } else {
+                // Primero darlo de alta y luego añadir
+                addRscoToLocalCatalog(index).then(() => {
+                    const freshlyAdded = cachedChemicals.find(c => c.cicoplafest_number.trim().toUpperCase() === prod.cicoplafest_number.trim().toUpperCase());
+                    if (freshlyAdded) {
+                        addChemicalRowWithSelection(freshlyAdded.id, prod.authorized_dose_per_liter, prod.compatible_methods);
+                    }
+                });
+            }
+        }
+
+        function addChemicalRowWithSelection(chemId, dose, method) {
+            addChemicalRow();
+            const container = document.getElementById('chemicals-rows-container');
+            const rows = container.querySelectorAll('.chem-row-item');
+            if (rows.length) {
+                const lastRow = rows[rows.length - 1];
+                const sel = lastRow.querySelector('.chem-select');
+                const doseInput = lastRow.querySelector('.chem-dose');
+                const methodInput = lastRow.querySelector('.chem-method');
+                if (sel) sel.value = chemId;
+                if (doseInput && dose) doseInput.value = dose;
+                if (methodInput && method) methodInput.value = method.split(',')[0].trim();
             }
         }
 

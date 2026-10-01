@@ -247,6 +247,10 @@ class CertificateChemicalResponse(CertificateChemicalCreate):
 # ----------------------------------------------------------------------------
 # Certificates
 # ----------------------------------------------------------------------------
+class CertificateCancelRequest(BaseModel):
+    reason: str = Field(..., min_length=3, max_length=500, description="Motivo justificado de la cancelación")
+
+
 class CertificateResponse(BaseModel):
     id: uuid.UUID
     certificate_folio: str
@@ -256,13 +260,38 @@ class CertificateResponse(BaseModel):
     sanitary_license_number: str
     sanitary_responsible_name: str
     sanitary_responsible_id: Optional[str] = None
+    is_cancelled: bool = False
+    cancellation_reason: Optional[str] = None
+    cancelled_at: Optional[datetime] = None
     applied_chemicals: List[CertificateChemicalResponse] = []
     model_config = ConfigDict(from_attributes=True)
 
 
 # ----------------------------------------------------------------------------
-# Service Orders
+# Service Orders & Scheduling
 # ----------------------------------------------------------------------------
+class ScheduleServiceRequest(BaseModel):
+    branch_id: uuid.UUID
+    technician_id: Optional[uuid.UUID] = None
+    scheduled_for: datetime
+    estimated_duration_minutes: Optional[int] = 60
+    linked_order_id: Optional[uuid.UUID] = None
+    target_pests: Optional[str] = None
+    notes: Optional[str] = None
+
+
+class RSCOSearchResult(BaseModel):
+    commercial_name: str
+    active_ingredient: str
+    cicoplafest_number: str
+    authorized_dose_per_liter: str
+    safety_interval_hours: int = 2
+    compatible_methods: str
+    toxicological_category: str
+    in_local_catalog: bool = False
+    local_id: Optional[uuid.UUID] = None
+
+
 class ServiceOrderCreate(BaseModel):
     branch_id: uuid.UUID
     technician_id: uuid.UUID
@@ -297,6 +326,8 @@ class ServiceOrderCreate(BaseModel):
 
 class ServiceOrderUpdate(BaseModel):
     folio: Optional[str] = None
+    status: Optional[str] = None
+    scheduled_for: Optional[datetime] = None
     service_start_date: Optional[datetime] = None
     service_end_date: Optional[datetime] = None
     branch_id: Optional[uuid.UUID] = None
@@ -318,6 +349,8 @@ class ServiceOrderUpdate(BaseModel):
 class ServiceOrderResponse(BaseModel):
     id: uuid.UUID
     folio: str
+    status: str = "completed"
+    scheduled_for: Optional[datetime] = None
     branch_id: uuid.UUID
     technician_id: uuid.UUID
     service_start_date: datetime

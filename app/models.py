@@ -219,6 +219,10 @@ class ServiceOrder(Base, TimestampMixin, SoftDeleteMixin):
     results_summary: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     observations: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     client_signature_data: Mapped[Optional[str]] = mapped_column(Text, nullable=True)  # Base64 o S3 URL
+    
+    # Estado Operativo y Agendamiento de Servicios
+    status: Mapped[str] = mapped_column(String(50), default="completed", nullable=False) # completed, scheduled, cancelled
+    scheduled_for: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
 
     # Relaciones
     branch: Mapped["Branch"] = relationship("Branch", back_populates="service_orders")
@@ -247,6 +251,11 @@ class Certificate(Base, TimestampMixin, SoftDeleteMixin):
     sanitary_license_number: Mapped[str] = mapped_column(String(100), nullable=False)
     sanitary_responsible_name: Mapped[str] = mapped_column(String(255), nullable=False)
     sanitary_responsible_id: Mapped[Optional[str]] = mapped_column(String(100), nullable=True) # Cédula Profesional
+
+    # Cancelación de Certificados
+    is_cancelled: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    cancellation_reason: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    cancelled_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
 
     # Relaciones
     service_order: Mapped["ServiceOrder"] = relationship("ServiceOrder", back_populates="certificate")

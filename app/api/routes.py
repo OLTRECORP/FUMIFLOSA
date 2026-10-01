@@ -24,10 +24,11 @@ from app.schemas import (
     ChemicalCreate, ChemicalUpdate, ChemicalResponse,
     CompanyConfigResponse, CompanyConfigUpdate,
     AdvancedAnalyticsResponse, ClientPortalAuthRequest, ClientPortalDataResponse,
-    CloudRestoreRequest, RestoreSummaryResponse
+    CloudRestoreRequest, RestoreSummaryResponse,
+    CertificateCancelRequest, ScheduleServiceRequest, RSCOSearchResult
 )
 from app.services.data_import import HistoricalDataImporter
-from app.services.pdf_service import OfficialCertificatePDFGenerator
+from app.services.pdf_service import OfficialCertificatePDFGenerator, OfficialWorkOrderPDFGenerator
 from app.services.backup_service import SystemBackupRestoreService
 
 router = APIRouter(prefix="/api/v1", tags=["FUMIFLOSA Core"])
@@ -740,8 +741,209 @@ def delete_branch(branch_id: uuid.UUID, db: Session = Depends(get_db)):
 
 
 # ============================================================================
-# 7. CATÁLOGO DE QUÍMICOS (CRUD)
+# 7. CATÁLOGO DE QUÍMICOS Y BUSCADOR OFICIAL COFEPRIS / RSCO
 # ============================================================================
+OFFICIAL_COFEPRIS_PESTICIDE_CATALOG = [
+    {
+        "commercial_name": "Cipertrina 20 CE",
+        "active_ingredient": "Cipermetrina",
+        "cicoplafest_number": "RSCO-URB-MEZC-111-00-02-40",
+        "authorized_dose_per_liter": "3 a 5 ml / Litro",
+        "safety_interval_hours": 2,
+        "compatible_methods": "Aspersión Fina Manual / Motorizada",
+        "toxicological_category": "Precaución / Banda Verde"
+    },
+    {
+        "commercial_name": "Biothrine Flow",
+        "active_ingredient": "Deltametrina",
+        "cicoplafest_number": "RSCO-URB-INAC-111-316-009-02.5",
+        "authorized_dose_per_liter": "5 a 10 ml / Litro",
+        "safety_interval_hours": 2,
+        "compatible_methods": "Aspersión / Nebulización en Frío",
+        "toxicological_category": "Precaución / Banda Verde"
+    },
+    {
+        "commercial_name": "Termidor 25 CE",
+        "active_ingredient": "Fipronil",
+        "cicoplafest_number": "RSCO-URB-INAC-105-327-009-2.5",
+        "authorized_dose_per_liter": "2 a 4 ml / Litro",
+        "safety_interval_hours": 4,
+        "compatible_methods": "Aspersión Perimetral / Inyección Subterránea",
+        "toxicological_category": "Precaución / Banda Azul"
+    },
+    {
+        "commercial_name": "Maxforce Gel Cucarachas",
+        "active_ingredient": "Hidrametilnona",
+        "cicoplafest_number": "RSCO-URB-INAC-184-315-009-2.15",
+        "authorized_dose_per_liter": "0.5 a 1 g / m2 en puntos de aplicación",
+        "safety_interval_hours": 0,
+        "compatible_methods": "Pistola Dosificadora de Gel",
+        "toxicological_category": "Precaución / Banda Verde"
+    },
+    {
+        "commercial_name": "Advion Cucaracha Gel",
+        "active_ingredient": "Indoxacarb",
+        "cicoplafest_number": "RSCO-DOM-INAC-184-315-009-0.6",
+        "authorized_dose_per_liter": "2 a 3 gotas de 0.5g por m2",
+        "safety_interval_hours": 0,
+        "compatible_methods": "Aplicación de Gel en Grietas y Hendiduras",
+        "toxicological_category": "Banda Verde"
+    },
+    {
+        "commercial_name": "Demand 2.5 CS",
+        "active_ingredient": "Lambda Cyhalotrina",
+        "cicoplafest_number": "RSCO-URB-INAC-179-317-009-2.5",
+        "authorized_dose_per_liter": "5 a 10 ml / Litro",
+        "safety_interval_hours": 2,
+        "compatible_methods": "Aspersión Residual Microencapsulada",
+        "toxicological_category": "Precaución / Banda Verde"
+    },
+    {
+        "commercial_name": "Premise 200 SC",
+        "active_ingredient": "Imidacloprid",
+        "cicoplafest_number": "RSCO-URB-INAC-198-333-021-30.5",
+        "authorized_dose_per_liter": "4 a 8 ml / Litro",
+        "safety_interval_hours": 2,
+        "compatible_methods": "Aspersión Focalizada / Inyección",
+        "toxicological_category": "Precaución / Banda Verde"
+    },
+    {
+        "commercial_name": "Contrac Blox",
+        "active_ingredient": "Bromadiolona",
+        "cicoplafest_number": "RSCO-URB-ROED-601-301-033-0.005",
+        "authorized_dose_per_liter": "1 a 2 bloques por cebadero",
+        "safety_interval_hours": 0,
+        "compatible_methods": "Estaciones de Cebado Inviolables",
+        "toxicological_category": "Precaución / Banda Azul"
+    },
+    {
+        "commercial_name": "Klerat Bloque",
+        "active_ingredient": "Brodifacoum",
+        "cicoplafest_number": "RSCO-URB-ROED-602-302-033-0.005",
+        "authorized_dose_per_liter": "1 bloque (20g) por punto de monitoreo",
+        "safety_interval_hours": 0,
+        "compatible_methods": "Estaciones Cebaderas Perimetrales",
+        "toxicological_category": "Precaución / Banda Azul"
+    },
+    {
+        "commercial_name": "Fendona 6 SC",
+        "active_ingredient": "Alfacipermetrina",
+        "cicoplafest_number": "RSCO-URB-INAC-181-314-064-06.0",
+        "authorized_dose_per_liter": "5 ml / Litro",
+        "safety_interval_hours": 2,
+        "compatible_methods": "Aspersión Residual en Interiores y Exteriores",
+        "toxicological_category": "Precaución / Banda Verde"
+    },
+    {
+        "commercial_name": "Alpine WSG",
+        "active_ingredient": "Dinoteforan",
+        "cicoplafest_number": "RSCO-URB-INAC-195-318-009-40.0",
+        "authorized_dose_per_liter": "10 a 30 g / Litro",
+        "safety_interval_hours": 2,
+        "compatible_methods": "Aspersión de Gránulos Solubles",
+        "toxicological_category": "Precaución / Banda Verde"
+    },
+    {
+        "commercial_name": "Nuván 50 CE",
+        "active_ingredient": "Diclorvos (DDVP)",
+        "cicoplafest_number": "RSCO-URB-INAC-109-305-009-50",
+        "authorized_dose_per_liter": "5 a 10 ml / Litro",
+        "safety_interval_hours": 4,
+        "compatible_methods": "Nebulización ULV en Frío / Espacios Confinados",
+        "toxicological_category": "Moderadamente Tóxico / Banda Amarilla"
+    },
+    {
+        "commercial_name": "Dragnet 36.8 CE",
+        "active_ingredient": "Permetrina",
+        "cicoplafest_number": "RSCO-URB-INAC-110-315-009-38.4",
+        "authorized_dose_per_liter": "5 a 10 ml / Litro",
+        "safety_interval_hours": 2,
+        "compatible_methods": "Aspersión / Termonebulización",
+        "toxicological_category": "Precaución / Banda Verde"
+    },
+    {
+        "commercial_name": "Archer IGR",
+        "active_ingredient": "Piriproxifen",
+        "cicoplafest_number": "RSCO-URB-INAC-192-311-009-1.3",
+        "authorized_dose_per_liter": "2 a 4 ml / Litro",
+        "safety_interval_hours": 2,
+        "compatible_methods": "Regulador de Crecimiento de Insectos / Aspersión",
+        "toxicological_category": "Precaución / Banda Verde"
+    },
+    {
+        "commercial_name": "Talstar Xtra",
+        "active_ingredient": "Bifentrina",
+        "cicoplafest_number": "RSCO-URB-INAC-175-306-009-07.9",
+        "authorized_dose_per_liter": "5 a 10 ml / Litro",
+        "safety_interval_hours": 2,
+        "compatible_methods": "Aspersión Perimetral y Barreras de Exclusión",
+        "toxicological_category": "Precaución / Banda Verde"
+    }
+]
+
+
+@router.get("/chemicals/rsco-search", response_model=List[RSCOSearchResult])
+def search_rsco_chemicals(q: str = "", db: Session = Depends(get_db)):
+    """
+    Buscador especializado de plaguicidas e ingredientes activos por registro RSCO / CICOPLAFEST.
+    Permite filtrar por marca comercial, ingrediente activo o folio RSCO.
+    Combina el catálogo local del SaaS con la base de referencia oficial COFEPRIS.
+    """
+    search_term = q.strip().lower()
+    results: List[RSCOSearchResult] = []
+    seen_rsco = set()
+
+    # 1. Base de datos local
+    local_query = db.query(Chemical).filter(Chemical.is_deleted == False)
+    if search_term:
+        local_query = local_query.filter(
+            or_(
+                func.lower(Chemical.commercial_name).contains(search_term),
+                func.lower(Chemical.active_ingredient).contains(search_term),
+                func.lower(Chemical.cicoplafest_number).contains(search_term)
+            )
+        )
+    local_chems = local_query.all()
+    for lc in local_chems:
+        seen_rsco.add(lc.cicoplafest_number.strip().upper())
+        results.append(RSCOSearchResult(
+            commercial_name=lc.commercial_name,
+            active_ingredient=lc.active_ingredient,
+            cicoplafest_number=lc.cicoplafest_number,
+            authorized_dose_per_liter=lc.authorized_dose_per_liter,
+            safety_interval_hours=lc.safety_interval_hours,
+            compatible_methods=lc.compatible_methods,
+            toxicological_category=lc.toxicological_category,
+            in_local_catalog=True,
+            local_id=lc.id
+        ))
+
+    # 2. Catálogo de referencia COFEPRIS oficial
+    for ref in OFFICIAL_COFEPRIS_PESTICIDE_CATALOG:
+        rsco_norm = ref["cicoplafest_number"].strip().upper()
+        if rsco_norm in seen_rsco:
+            continue
+        if not search_term or (
+            search_term in ref["commercial_name"].lower() or
+            search_term in ref["active_ingredient"].lower() or
+            search_term in ref["cicoplafest_number"].lower()
+        ):
+            results.append(RSCOSearchResult(
+                commercial_name=ref["commercial_name"],
+                active_ingredient=ref["active_ingredient"],
+                cicoplafest_number=ref["cicoplafest_number"],
+                authorized_dose_per_liter=ref["authorized_dose_per_liter"],
+                safety_interval_hours=ref["safety_interval_hours"],
+                compatible_methods=ref["compatible_methods"],
+                toxicological_category=ref["toxicological_category"],
+                in_local_catalog=False,
+                local_id=None
+            ))
+            seen_rsco.add(rsco_norm)
+
+    return results
+
+
 @router.get("/chemicals", response_model=List[ChemicalResponse])
 def get_chemicals(db: Session = Depends(get_db)):
     return db.query(Chemical).filter(Chemical.is_deleted == False).order_by(Chemical.commercial_name).all()
@@ -1030,11 +1232,252 @@ def delete_certificate(certificate_id: uuid.UUID, db: Session = Depends(get_db))
 
 
 # ============================================================================
-# 9. GENERACIÓN Y DESCARGA DE PDF OFICIAL (NOM-256 / SINTOX)
+# 9. GENERACIÓN Y DESCARGA DE PDF OFICIAL (NOM-256 / SINTOX) Y ORDEN TÉCNICA
 # ============================================================================
+@router.get("/services/calendar")
+def get_services_calendar(
+    start_date: Optional[date] = None,
+    end_date: Optional[date] = None,
+    client_id: Optional[uuid.UUID] = None,
+    branch_id: Optional[uuid.UUID] = None,
+    technician_id: Optional[uuid.UUID] = None,
+    status_filter: Optional[str] = None,
+    db: Session = Depends(get_db)
+):
+    """
+    Registro cronológico de servicios para visualización en calendario interactivo.
+    Devuelve servicios completados, agendados y cancelados con codificación de colores y metadatos.
+    """
+    query = db.query(ServiceOrder).options(
+        joinedload(ServiceOrder.branch).joinedload(Branch.client),
+        joinedload(ServiceOrder.technician),
+        joinedload(ServiceOrder.certificate)
+    ).filter(ServiceOrder.is_deleted == False)
+
+    if branch_id:
+        query = query.filter(ServiceOrder.branch_id == branch_id)
+    if client_id:
+        query = query.join(Branch).filter(Branch.client_id == client_id)
+    if technician_id:
+        query = query.filter(ServiceOrder.technician_id == technician_id)
+    if start_date:
+        query = query.filter(ServiceOrder.service_start_date >= datetime.combine(start_date, datetime.min.time()))
+    if end_date:
+        query = query.filter(ServiceOrder.service_start_date <= datetime.combine(end_date, datetime.max.time()))
+
+    orders = query.order_by(ServiceOrder.service_start_date.desc()).all()
+    today = date.today()
+
+    events = []
+    for order in orders:
+        if not order.branch or not order.branch.client:
+            continue
+
+        client = order.branch.client
+        branch = order.branch
+        cert = order.certificate
+        
+        is_cancelled = False
+        cancel_reason = None
+        if cert and getattr(cert, 'is_cancelled', False):
+            is_cancelled = True
+            cancel_reason = cert.cancellation_reason
+        elif getattr(order, 'status', 'completed') == 'cancelled':
+            is_cancelled = True
+            cancel_reason = order.observations
+
+        order_status = "cancelled" if is_cancelled else getattr(order, 'status', 'completed')
+        
+        if status_filter and status_filter != 'all' and order_status != status_filter:
+            continue
+
+        if is_cancelled:
+            color = "#EF4444"
+            status_text = "Cancelado"
+        elif order_status == "scheduled":
+            color = "#3B82F6"
+            status_text = "Agendado"
+        else:
+            if cert:
+                valid_end = cert.issue_date + timedelta(days=30)
+                if (valid_end - today).days < 0:
+                    color = "#F59E0B"
+                    status_text = "Completado (Vencido)"
+                else:
+                    color = "#10B981"
+                    status_text = "Completado (Vigente)"
+            else:
+                color = "#10B981"
+                status_text = "Completado"
+
+        title = f"{client.legal_name} ({branch.name})"
+        events.append({
+            "id": str(order.id),
+            "service_order_id": str(order.id),
+            "certificate_id": str(cert.id) if cert else None,
+            "folio": order.folio,
+            "certificate_folio": cert.certificate_folio if cert else None,
+            "title": title,
+            "start": order.service_start_date.isoformat(),
+            "end": order.service_end_date.isoformat(),
+            "client_id": str(client.id),
+            "client_name": client.legal_name,
+            "branch_id": str(branch.id),
+            "branch_name": branch.name,
+            "branch_address": branch.address,
+            "technician_id": str(order.technician_id),
+            "technician_name": order.technician.full_name if order.technician else "No Asignado",
+            "status": order_status,
+            "status_text": status_text,
+            "is_cancelled": is_cancelled,
+            "cancellation_reason": cancel_reason,
+            "validity_end_date": (cert.issue_date + timedelta(days=30)).isoformat() if cert else None,
+            "color": color
+        })
+
+    return events
+
+
+@router.post("/services/schedule", response_model=ServiceOrderResponse, status_code=status.HTTP_201_CREATED)
+def schedule_upcoming_service(payload: ScheduleServiceRequest, db: Session = Depends(get_db)):
+    """
+    Agenda un próximo servicio ligado a una sucursal, cliente o servicio operativo previo.
+    Crea la Orden de Servicio en estado 'scheduled' para seguimiento en el calendario.
+    """
+    branch = db.query(Branch).filter(Branch.id == payload.branch_id, Branch.is_deleted == False).first()
+    if not branch:
+        raise HTTPException(status_code=404, detail="Sucursal no encontrada.")
+
+    tech_id = payload.technician_id
+    if not tech_id:
+        first_tech = db.query(User).filter(User.is_active == True).first()
+        tech_id = first_tech.id if first_tech else None
+
+    if not tech_id:
+        raise HTTPException(status_code=400, detail="Debe existir al menos un técnico registrado en el sistema.")
+
+    count = db.execute(select(func.count(ServiceOrder.id))).scalar() or 0
+    order_folio = f"PROG-ORD-{count + 1:06d}"
+
+    start_dt = payload.scheduled_for
+    duration = payload.estimated_duration_minutes or 60
+    end_dt = start_dt + timedelta(minutes=duration)
+
+    try:
+        new_order = ServiceOrder(
+            folio=order_folio,
+            branch_id=payload.branch_id,
+            technician_id=tech_id,
+            status="scheduled",
+            scheduled_for=start_dt,
+            service_start_date=start_dt,
+            service_end_date=end_dt,
+            pest_others=payload.target_pests,
+            observations=f"[AGENDADO]: {payload.notes or 'Próximo servicio programado'}"
+        )
+        db.add(new_order)
+        db.commit()
+        db.refresh(new_order)
+        return new_order
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Error al agendar el servicio: {str(e)}")
+
+
+@router.post("/certificates/{certificate_id}/cancel")
+def cancel_certificate_by_id(
+    certificate_id: uuid.UUID,
+    payload: CertificateCancelRequest,
+    db: Session = Depends(get_db)
+):
+    """
+    Cancela formalmente un certificado de servicio cuando no se llevó a cabo.
+    Registra el motivo, fecha/hora y excluye el certificado de reportes de cumplimiento activo.
+    En el PDF resultante estampa la marca de agua 'CANCELADO' y cintillo oficial.
+    """
+    cert = db.query(Certificate).options(
+        joinedload(Certificate.service_order)
+    ).filter(Certificate.id == certificate_id, Certificate.is_deleted == False).first()
+
+    if not cert:
+        raise HTTPException(status_code=404, detail="Certificado no encontrado.")
+
+    cert.is_cancelled = True
+    cert.cancellation_reason = payload.reason
+    cert.cancelled_at = datetime.now(timezone.utc)
+
+    if cert.service_order:
+        cert.service_order.status = "cancelled"
+
+    db.commit()
+    db.refresh(cert)
+    return {
+        "status": "success",
+        "message": f"Certificado {cert.certificate_folio} cancelado exitosamente.",
+        "certificate_id": str(cert.id),
+        "is_cancelled": cert.is_cancelled,
+        "cancellation_reason": cert.cancellation_reason,
+        "cancelled_at": cert.cancelled_at.isoformat()
+    }
+
+
+@router.post("/services/{service_id}/cancel-certificate")
+def cancel_service_certificate(
+    service_id: uuid.UUID,
+    payload: CertificateCancelRequest,
+    db: Session = Depends(get_db)
+):
+    """Cancela el certificado y la orden de servicio ligada."""
+    order = db.query(ServiceOrder).options(
+        joinedload(ServiceOrder.certificate)
+    ).filter(ServiceOrder.id == service_id, ServiceOrder.is_deleted == False).first()
+
+    if not order:
+        raise HTTPException(status_code=404, detail="Orden de servicio no encontrada.")
+
+    order.status = "cancelled"
+    if order.certificate:
+        order.certificate.is_cancelled = True
+        order.certificate.cancellation_reason = payload.reason
+        order.certificate.cancelled_at = datetime.now(timezone.utc)
+    else:
+        order.observations = (order.observations or "") + f" [CANCELADO]: {payload.reason}"
+
+    db.commit()
+    return {
+        "status": "success",
+        "message": f"Servicio {order.folio} cancelado exitosamente.",
+        "order_id": str(order.id),
+        "status_code": "cancelled",
+        "cancellation_reason": payload.reason
+    }
+
+
+@router.get("/certificates/{certificate_id}/pdf")
+def export_direct_certificate_pdf(certificate_id: uuid.UUID, db: Session = Depends(get_db)):
+    """Descarga el Certificado Oficial de Servicio NOM-256 por ID de certificado."""
+    cert = db.query(Certificate).options(
+        joinedload(Certificate.service_order).joinedload(ServiceOrder.branch).joinedload(Branch.client),
+        joinedload(Certificate.service_order).joinedload(ServiceOrder.technician),
+        joinedload(Certificate.applied_chemicals).joinedload(CertificateChemical.chemical)
+    ).filter(Certificate.id == certificate_id, Certificate.is_deleted == False).first()
+
+    if not cert or not cert.service_order:
+        raise HTTPException(status_code=404, detail="Certificado u Orden no encontrada.")
+
+    company = get_or_create_company_config(db)
+    pdf_bytes = OfficialCertificatePDFGenerator.generate(cert.service_order, cert, company=company)
+    filename = f"Certificado_{cert.certificate_folio}.pdf"
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'inline; filename="{filename}"'}
+    )
+
+
 @router.get("/services/{service_id}/pdf")
 def export_service_certificate_pdf(service_id: uuid.UUID, db: Session = Depends(get_db)):
-    """Genera y descarga el PDF oficial conforme a la NOM-256-SSA1-2012."""
+    """Genera y descarga el PDF oficial conforme a la NOM-256-SSA1-2012 (Certificado Sanitario)."""
     order = db.query(ServiceOrder).options(
         joinedload(ServiceOrder.branch).joinedload(Branch.client),
         joinedload(ServiceOrder.technician),
@@ -1048,6 +1491,31 @@ def export_service_certificate_pdf(service_id: uuid.UUID, db: Session = Depends(
     pdf_bytes = OfficialCertificatePDFGenerator.generate(order, order.certificate, company=company)
     
     filename = f"Certificado_{order.certificate.certificate_folio}.pdf"
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'inline; filename="{filename}"'}
+    )
+
+
+@router.get("/services/{service_id}/order-pdf")
+def export_service_work_order_pdf(service_id: uuid.UUID, db: Session = Depends(get_db)):
+    """
+    Descarga la ORDEN DE SERVICIO TÉCNICA (Hoja Técnica Operativa).
+    Documento independiente del Certificado Sanitario para control interno y firma en sitio.
+    """
+    order = db.query(ServiceOrder).options(
+        joinedload(ServiceOrder.branch).joinedload(Branch.client),
+        joinedload(ServiceOrder.technician),
+        joinedload(ServiceOrder.certificate).joinedload(Certificate.applied_chemicals).joinedload(CertificateChemical.chemical)
+    ).filter(ServiceOrder.id == service_id, ServiceOrder.is_deleted == False).first()
+
+    if not order:
+        raise HTTPException(status_code=404, detail="Orden de servicio no encontrada.")
+
+    company = get_or_create_company_config(db)
+    pdf_bytes = OfficialWorkOrderPDFGenerator.generate(order, company=company)
+    filename = f"Orden_Servicio_{order.folio}.pdf"
     return Response(
         content=pdf_bytes,
         media_type="application/pdf",
@@ -1076,6 +1544,8 @@ def get_dashboard_expirations(db: Session = Depends(get_db)):
     clients_map = {}
 
     for cert in certificates:
+        if getattr(cert, 'is_cancelled', False):
+            continue
         if not cert.service_order or not cert.service_order.branch or not cert.service_order.branch.client:
             continue
 
