@@ -254,25 +254,39 @@ def update_company_configuration(payload: CompanyConfigUpdate, db: Session = Dep
 # 1. ANALYTICS & MÉTRICAS DETALLADAS DEL PORTAL
 # ============================================================================
 @router.get("/analytics/detailed", response_model=AdvancedAnalyticsResponse)
-def get_detailed_analytics(db: Session = Depends(get_db)):
-    """Genera las métricas avanzadas y estadísticas de servicios de fumigación."""
-    total_services = db.query(func.count(ServiceOrder.id)).filter(ServiceOrder.is_deleted == False).scalar() or 0
+def get_detailed_analytics(
+    start_date: Optional[date] = None,
+    end_date: Optional[date] = None,
+    db: Session = Depends(get_db)
+):
+    """Genera las métricas avanzadas y estadísticas de servicios de fumigación con filtro de fechas opcional (2019 a hoy)."""
+    start_dt = datetime.combine(start_date, datetime.min.time()).replace(tzinfo=timezone.utc) if start_date else None
+    end_dt = datetime.combine(end_date, datetime.max.time()).replace(tzinfo=timezone.utc) if end_date else None
+
+    # Filtros base para ServiceOrder
+    order_filters = [ServiceOrder.is_deleted == False]
+    if start_dt:
+        order_filters.append(ServiceOrder.service_start_date >= start_dt)
+    if end_dt:
+        order_filters.append(ServiceOrder.service_start_date <= end_dt)
+
+    total_services = db.query(func.count(ServiceOrder.id)).filter(*order_filters).scalar() or 0
     total_clients = db.query(func.count(Client.id)).filter(Client.is_deleted == False).scalar() or 0
     total_branches = db.query(func.count(Branch.id)).filter(Branch.is_deleted == False).scalar() or 0
 
     # 1. Desglose de Plagas
-    pest_crawling = db.query(func.count(ServiceOrder.id)).filter(ServiceOrder.is_deleted == False, ServiceOrder.pest_crawling_insects == True).scalar() or 0
-    pest_rodents = db.query(func.count(ServiceOrder.id)).filter(ServiceOrder.is_deleted == False, ServiceOrder.pest_rodents == True).scalar() or 0
-    pest_flying = db.query(func.count(ServiceOrder.id)).filter(ServiceOrder.is_deleted == False, ServiceOrder.pest_flying_insects == True).scalar() or 0
-    pest_others = db.query(func.count(ServiceOrder.id)).filter(ServiceOrder.is_deleted == False, ServiceOrder.pest_others.isnot(None), ServiceOrder.pest_others != "").scalar() or 0
+    pest_crawling = db.query(func.count(ServiceOrder.id)).filter(*order_filters, ServiceOrder.pest_crawling_insects == True).scalar() or 0
+    pest_rodents = db.query(func.count(ServiceOrder.id)).filter(*order_filters, ServiceOrder.pest_rodents == True).scalar() or 0
+    pest_flying = db.query(func.count(ServiceOrder.id)).filter(*order_filters, ServiceOrder.pest_flying_insects == True).scalar() or 0
+    pest_others = db.query(func.count(ServiceOrder.id)).filter(*order_filters, ServiceOrder.pest_others.isnot(None), ServiceOrder.pest_others != "").scalar() or 0
 
     # 2. Desglose de Procedimientos
-    proc_asp = db.query(func.count(ServiceOrder.id)).filter(ServiceOrder.is_deleted == False, ServiceOrder.proc_aspersion == True).scalar() or 0
-    proc_baits = db.query(func.count(ServiceOrder.id)).filter(ServiceOrder.is_deleted == False, ServiceOrder.proc_baits == True).scalar() or 0
-    proc_traps = db.query(func.count(ServiceOrder.id)).filter(ServiceOrder.is_deleted == False, ServiceOrder.proc_traps == True).scalar() or 0
-    proc_gels = db.query(func.count(ServiceOrder.id)).filter(ServiceOrder.is_deleted == False, ServiceOrder.proc_gels == True).scalar() or 0
-    proc_ulv = db.query(func.count(ServiceOrder.id)).filter(ServiceOrder.is_deleted == False, ServiceOrder.proc_ulv_fogging == True).scalar() or 0
-    proc_thermo = db.query(func.count(ServiceOrder.id)).filter(ServiceOrder.is_deleted == False, ServiceOrder.proc_thermofogging == True).scalar() or 0
+    proc_asp = db.query(func.count(ServiceOrder.id)).filter(*order_filters, ServiceOrder.proc_aspersion == True).scalar() or 0
+    proc_baits = db.query(func.count(ServiceOrder.id)).filter(*order_filters, ServiceOrder.proc_baits == True).scalar() or 0
+    proc_traps = db.query(func.count(ServiceOrder.id)).filter(*order_filters, ServiceOrder.proc_traps == True).scalar() or 0
+    proc_gels = db.query(func.count(ServiceOrder.id)).filter(*order_filters, ServiceOrder.proc_gels == True).scalar() or 0
+    proc_ulv = db.query(func.count(ServiceOrder.id)).filter(*order_filters, ServiceOrder.proc_ulv_fogging == True).scalar() or 0
+    proc_thermo = db.query(func.count(ServiceOrder.id)).filter(*order_filters, ServiceOrder.proc_thermofogging == True).scalar() or 0
 
     # 3. Químicos más utilizados
     top_chems_query = db.query(
@@ -280,9 +294,11 @@ def get_detailed_analytics(db: Session = Depends(get_db)):
         Chemical.active_ingredient,
         func.count(CertificateChemical.id).label("total_uses")
     ).join(CertificateChemical, CertificateChemical.chemical_id == Chemical.id)\
-     .filter(Chemical.is_deleted == False)\
+     .join(Certificate, Certificate.id == CertificateChemical.certificate_id)\
+     .join(ServiceOrder, ServiceOrder.id == Certificate.service_order_id)\
+     .filter(Chemical.is_deleted == False, *order_filters)\
      .group_by(Chemical.commercial_name, Chemical.active_ingredient)\
-     .order_by(desc("total_uses")).limit(5).all()
+     .order_by(desc("total_uses")).limit(10).all()
 
     top_chemicals = [
         {"name": c[0], "ingredient": c[1], "count": c[2]} for c in top_chems_query
@@ -299,29 +315,35 @@ def get_detailed_analytics(db: Session = Depends(get_db)):
     limit_7 = today + timedelta(days=7)
     limit_15 = today + timedelta(days=15)
     
+    cert_filters = [Certificate.is_deleted == False]
+    if start_date:
+        cert_filters.append(Certificate.issue_date >= start_date)
+    if end_date:
+        cert_filters.append(Certificate.issue_date <= end_date)
+
     critico_7d = db.query(func.count(Certificate.id)).filter(
-        Certificate.is_deleted == False, Certificate.validity_end_date >= today, Certificate.validity_end_date <= limit_7
+        *cert_filters, Certificate.validity_end_date >= today, Certificate.validity_end_date <= limit_7
     ).scalar() or 0
 
     proximo_15d = db.query(func.count(Certificate.id)).filter(
-        Certificate.is_deleted == False, Certificate.validity_end_date > limit_7, Certificate.validity_end_date <= limit_15
+        *cert_filters, Certificate.validity_end_date > limit_7, Certificate.validity_end_date <= limit_15
     ).scalar() or 0
 
     vigente = db.query(func.count(Certificate.id)).filter(
-        Certificate.is_deleted == False, Certificate.validity_end_date > limit_15
+        *cert_filters, Certificate.validity_end_date > limit_15
     ).scalar() or 0
 
     vencido = db.query(func.count(Certificate.id)).filter(
-        Certificate.is_deleted == False, Certificate.validity_end_date < today
+        *cert_filters, Certificate.validity_end_date < today
     ).scalar() or 0
 
-    # 6. Tendencia Mensual (Últimos meses)
+    # 6. Tendencia Mensual (Histórico hasta 120 meses para abarcar desde 2019)
     monthly_orders = db.query(
         func.to_char(ServiceOrder.service_start_date, 'YYYY-MM').label('month_key'),
         func.count(ServiceOrder.id).label('count')
-    ).filter(ServiceOrder.is_deleted == False)\
+    ).filter(*order_filters)\
      .group_by('month_key')\
-     .order_by('month_key').limit(12).all()
+     .order_by('month_key').limit(120).all()
 
     monthly_trend = [{"month": m[0], "count": m[1]} for m in monthly_orders]
     if not monthly_trend:
@@ -334,9 +356,9 @@ def get_detailed_analytics(db: Session = Depends(get_db)):
         func.count(func.distinct(Branch.id)).label("branches_count")
     ).join(Branch, Branch.client_id == Client.id)\
      .join(ServiceOrder, ServiceOrder.branch_id == Branch.id)\
-     .filter(Client.is_deleted == False, ServiceOrder.is_deleted == False)\
+     .filter(Client.is_deleted == False, *order_filters)\
      .group_by(Client.legal_name)\
-     .order_by(desc("services_count")).limit(5).all()
+     .order_by(desc("services_count")).limit(10).all()
 
     top_clients = [
         {"name": tc[0], "count": tc[1], "branches_count": tc[2]} for tc in top_clients_query

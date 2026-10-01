@@ -1335,6 +1335,12 @@
                     </div>
                 </div>
 
+                <!-- Chips de Navegación Rápida por Año Histórico -->
+                <div class="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
+                    <span class="font-bold text-slate-500 text-[11px] whitespace-nowrap"><i class="fa-solid fa-clock-rotate-left text-indigo-500"></i> Años Registrados:</span>
+                    <div id="calendar-year-chips" class="flex items-center gap-1.5 flex-nowrap"></div>
+                </div>
+
                 <!-- Contenedor del Calendario: Cuadrícula Mes -->
                 <div id="calendar-grid-view" class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
                     <div class="grid grid-cols-7 bg-slate-50 border-b border-slate-200 text-center text-xs font-bold text-slate-600 py-2.5">
@@ -1363,14 +1369,52 @@
             <!-- 2. PESTAÑA: MÉTRICAS Y ANALYTICS AVANZADOS -->
             <!-- ============================================================= -->
             <div id="tab-analytics" class="p-6 space-y-6 hidden">
-                <div class="flex justify-between items-center">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
                     <div>
-                        <h2 class="text-base font-bold text-slate-900">Estadísticas y Análisis de Operaciones de Fumigación</h2>
+                        <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                            <i class="fa-solid fa-chart-pie text-indigo-600"></i> Estadísticas y Análisis de Operaciones de Fumigación
+                        </h2>
                         <p class="text-xs text-slate-500">Métricas de rendimiento, plagas controladas, procedimientos y cumplimiento normativo.</p>
                     </div>
-                    <button onclick="loadAnalyticsData()" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg font-semibold flex items-center gap-1.5">
+                    <button onclick="loadAnalyticsData()" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg font-semibold flex items-center gap-1.5 transition">
                         <i class="fa-solid fa-rotate"></i> Actualizar Gráficas
                     </button>
+                </div>
+
+                <!-- BARRA DE FILTRO POR FECHAS (2019 A HOY) -->
+                <div class="bg-indigo-50/70 p-4 rounded-xl border border-indigo-200 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 text-xs shadow-2xs">
+                    <div class="flex flex-wrap items-center gap-3">
+                        <span class="font-bold text-indigo-950 flex items-center gap-1.5">
+                            <i class="fa-solid fa-calendar-week text-indigo-600"></i> Periodo de Análisis:
+                        </span>
+                        <div class="flex items-center gap-1.5">
+                            <span class="text-slate-600 text-[11px] font-semibold">Desde:</span>
+                            <input type="date" id="analytics-start-date" value="2019-01-01" class="bg-white border border-indigo-300 rounded-lg p-1.5 text-xs font-semibold text-slate-800" />
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <span class="text-slate-600 text-[11px] font-semibold">Hasta:</span>
+                            <input type="date" id="analytics-end-date" class="bg-white border border-indigo-300 rounded-lg p-1.5 text-xs font-semibold text-slate-800" />
+                        </div>
+                        <button onclick="loadAnalyticsData()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 shadow-sm transition">
+                            <i class="fa-solid fa-filter"></i> Filtrar
+                        </button>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-1.5">
+                        <span class="text-[11px] text-indigo-900 font-semibold mr-1">Preajustes:</span>
+                        <button onclick="setAnalyticsPreset('2019')" id="btn-preset-2019" class="analytics-preset-btn px-2.5 py-1 rounded-full font-bold bg-indigo-600 text-white text-[11px] transition shadow-2xs">
+                            2019 a Hoy
+                        </button>
+                        <button onclick="setAnalyticsPreset('1y')" id="btn-preset-1y" class="analytics-preset-btn px-2.5 py-1 rounded-full font-medium bg-slate-100 text-slate-700 hover:bg-slate-200 text-[11px] transition">
+                            Último Año
+                        </button>
+                        <button onclick="setAnalyticsPreset('ytd')" id="btn-preset-ytd" class="analytics-preset-btn px-2.5 py-1 rounded-full font-medium bg-slate-100 text-slate-700 hover:bg-slate-200 text-[11px] transition">
+                            Este Año
+                        </button>
+                        <button onclick="setAnalyticsPreset('6m')" id="btn-preset-6m" class="analytics-preset-btn px-2.5 py-1 rounded-full font-medium bg-slate-100 text-slate-700 hover:bg-slate-200 text-[11px] transition">
+                            Últimos 6 Meses
+                        </button>
+                    </div>
                 </div>
 
                 <!-- KPI CARDS -->
@@ -2185,6 +2229,8 @@
                         > Sistema listo. Puedes generar respaldos completos, restaurar datos o descargar lotes de certificados en formato ZIP.
                     </div>
                 </div>
+            </div>
+
             <!-- ============================================================= -->
             <!-- PESTAÑA: BITÁCORAS OFICIALES (NOM-256 / STPS / MIP) -->
             <!-- ============================================================= -->
@@ -2721,9 +2767,57 @@
             }
         }
 
+        function setAnalyticsPreset(preset) {
+            const today = new Date();
+            const todayStr = today.toISOString().split('T')[0];
+            let startStr = '2019-01-01';
+
+            if (preset === '2019') {
+                startStr = '2019-01-01';
+            } else if (preset === '1y') {
+                const d = new Date(today);
+                d.setFullYear(d.getFullYear() - 1);
+                startStr = d.toISOString().split('T')[0];
+            } else if (preset === 'ytd') {
+                startStr = `${today.getFullYear()}-01-01`;
+            } else if (preset === '6m') {
+                const d = new Date(today);
+                d.setMonth(d.getMonth() - 6);
+                startStr = d.toISOString().split('T')[0];
+            }
+
+            const startEl = document.getElementById('analytics-start-date');
+            const endEl = document.getElementById('analytics-end-date');
+            if (startEl) startEl.value = startStr;
+            if (endEl) endEl.value = todayStr;
+
+            document.querySelectorAll('.analytics-preset-btn').forEach(btn => {
+                btn.classList.remove('bg-indigo-600', 'text-white', 'font-bold', 'shadow-2xs');
+                btn.classList.add('bg-slate-100', 'text-slate-700', 'font-medium');
+            });
+            const activeBtn = document.getElementById('btn-preset-' + preset);
+            if (activeBtn) {
+                activeBtn.classList.remove('bg-slate-100', 'text-slate-700', 'font-medium');
+                activeBtn.classList.add('bg-indigo-600', 'text-white', 'font-bold', 'shadow-2xs');
+            }
+
+            loadAnalyticsData();
+        }
+
         async function loadAnalyticsData() {
             try {
-                const res = await fetch('/api/v1/analytics/detailed');
+                const startEl = document.getElementById('analytics-start-date');
+                const endEl = document.getElementById('analytics-end-date');
+                const todayStr = new Date().toISOString().split('T')[0];
+                if (endEl && !endEl.value) endEl.value = todayStr;
+
+                let url = '/api/v1/analytics/detailed';
+                const params = [];
+                if (startEl && startEl.value) params.push(`start_date=${encodeURIComponent(startEl.value)}`);
+                if (endEl && endEl.value) params.push(`end_date=${encodeURIComponent(endEl.value)}`);
+                if (params.length) url += '?' + params.join('&');
+
+                const res = await fetch(url);
                 const data = await res.json();
 
                 document.getElementById('kpi-compliance').innerText = data.compliance_rate + '%';
@@ -4312,19 +4406,54 @@
             }
         }
 
+        function jumpToYear(y) {
+            calCurrentDate = new Date(y, calCurrentDate.getMonth(), 1);
+            updateCalendarSelectors();
+            renderCalendar();
+        }
+
         function updateCalendarSelectors() {
             const mSel = document.getElementById('cal-month-select');
             const ySel = document.getElementById('cal-year-select');
             if (mSel) mSel.value = calCurrentDate.getMonth();
-            if (ySel) {
-                if (!ySel.options.length) {
-                    let opts = '';
-                    for (let y = 2020; y <= 2030; y++) {
-                        opts += `<option value="${y}">${y}</option>`;
+
+            let startYear = 2018;
+            let endYear = 2030;
+            const yearsSet = new Set();
+            for (let y = 2019; y <= 2026; y++) yearsSet.add(y);
+
+            if (calEvents && calEvents.length) {
+                calEvents.forEach(ev => {
+                    if (ev.start) {
+                        const y = new Date(ev.start).getFullYear();
+                        if (!isNaN(y)) {
+                            yearsSet.add(y);
+                            if (y < startYear) startYear = y;
+                            if (y > endYear) endYear = y;
+                        }
                     }
-                    ySel.innerHTML = opts;
+                });
+            }
+
+            if (ySel) {
+                let opts = '';
+                for (let y = startYear; y <= endYear; y++) {
+                    opts += `<option value="${y}">${y}</option>`;
                 }
+                ySel.innerHTML = opts;
                 ySel.value = calCurrentDate.getFullYear();
+            }
+
+            // Actualizar chips de año
+            const chipsEl = document.getElementById('calendar-year-chips');
+            if (chipsEl) {
+                const sortedYears = Array.from(yearsSet).sort((a,b) => a - b);
+                const currentY = calCurrentDate.getFullYear();
+                chipsEl.innerHTML = sortedYears.map(y => {
+                    const isAct = (y === currentY);
+                    const cls = isAct ? 'bg-indigo-600 text-white font-bold shadow-2xs' : 'bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium';
+                    return `<button onclick="jumpToYear(${y})" class="px-2.5 py-1 rounded-full text-[11px] transition ${cls}">${y}</button>`;
+                }).join('');
             }
         }
 
@@ -4396,10 +4525,18 @@
                 const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
                 const isToday = today.getFullYear() === year && today.getMonth() === month && today.getDate() === day;
 
-                // Filtrar eventos de este día
+                // Filtrar eventos de este día (soporte robusto para fecha local y split)
                 const dayEvents = calEvents.filter(ev => {
-                    const evDate = ev.start.split('T')[0];
-                    if (evDate !== dateStr) return false;
+                    if (!ev.start) return false;
+                    const evD = new Date(ev.start);
+                    let matches = false;
+                    if (!isNaN(evD.getTime())) {
+                        if (evD.getFullYear() === year && evD.getMonth() === month && evD.getDate() === day) {
+                            matches = true;
+                        }
+                    }
+                    if (!matches && ev.start.includes(dateStr)) matches = true;
+                    if (!matches) return false;
                     if (calStatusFilter !== 'all' && ev.status !== calStatusFilter) return false;
                     return true;
                 });

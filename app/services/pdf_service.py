@@ -62,68 +62,55 @@ class OfficialCertificatePDFGenerator:
         c = canvas.Canvas(buffer, pagesize=landscape(letter))
         page_width, page_height = landscape(letter)  # 792.0 x 612.0
 
-        # 1. MARCO ORNAMENTAL
+        # 1. MARCO ORNAMENTAL HISTÓRICO
         if FRAME_PATH.exists():
             c.drawImage(str(FRAME_PATH), 8.25, 14.25, width=775.5, height=585.0, mask='auto')
         else:
-            # Fallback dibujo de marco elegante con línea doble verde
             c.setStrokeColor(colors.HexColor("#738C7B"))
             c.setLineWidth(3)
             c.rect(20, 20, page_width - 40, page_height - 40)
             c.setLineWidth(0.8)
             c.rect(25, 25, page_width - 50, page_height - 50)
 
-        # 2. MARCA DE AGUA CENTRAL
-        if WATERMARK_PATH.exists():
-            c.saveState()
-            c.drawImage(str(WATERMARK_PATH), 185.25, 210.01, width=521.7, height=197.99, mask='auto')
-            c.restoreState()
+        # 2. ENCABEZADO CENTRADO (FORMATO EXACTO WORD)
+        c.setFont("Times-Bold", 23)
+        c.setFillColor(colors.HexColor("#435D40"))
+        c.drawCentredString(396, 508, "CERTIFICADO DE SERVICIO")
 
-        # 3. ENCABEZADO CENTRADO
-        c.setFont("Helvetica-Bold", 24)
-        c.setFillColor(colors.HexColor("#1E3A2F"))
-        c.drawCentredString(396, 488, "CERTIFICADO DE SERVICIO")
-
-        c.setFont("Helvetica", 9)
-        c.setFillColor(colors.HexColor("#222222"))
+        c.setFont("Times-BoldItalic", 9)
+        c.setFillColor(colors.HexColor("#111111"))
         
-        responsible_title = company.company_name if company and company.company_name else "Marco Antonio Flores Sáenz (FLOSA Control de Plagas)"
-        c.drawCentredString(396, 463, responsible_title)
+        responsible_title = getattr(company, 'company_name', None) or "Marco Antonio Flores Sáenz (FLOSA Control de Plagas)"
+        c.drawCentredString(396, 484, responsible_title)
         
-        rfc_phone = f"{company.rfc if company else 'FOMS630329EA5'}    Tel: {company.phone if company else '6258373393'}"
-        c.drawCentredString(396, 452, rfc_phone)
+        comp_rfc = getattr(company, 'rfc', None) or "FOMS630329EA5"
+        comp_tel = getattr(company, 'phone', None) or "6258373393"
+        c.drawCentredString(396, 472, f"{comp_rfc}    Tel: {comp_tel}")
         
-        address_text = company.address if company and company.address else "C10a 685 Col. Centro, Cd. Cuauhtémoc, Chih C.P. 31500"
-        c.drawCentredString(396, 441, address_text)
+        comp_address = getattr(company, 'address', None) or "C10a 685 Col. Centro, Cd. Cuauhtémoc, Chih C.P. 31500"
+        c.drawCentredString(396, 460, comp_address)
 
-        # 4. FOLIO Y FECHA (ALINEADOS A LA DERECHA)
-        folio_str = cert.certificate_folio or (f"B/{order.folio}" if order and order.folio else "B/00001")
-        issue_str = cert.issue_date.strftime("%d/%m/%y") if (cert and cert.issue_date) else date.today().strftime("%d/%m/%y")
+        # 3. FOLIO Y FECHA (ALINEADOS A LA DERECHA)
+        folio_str = getattr(cert, 'certificate_folio', None) or (f"B/{order.folio}" if order and getattr(order, 'folio', None) else "B/00001")
+        issue_date_val = getattr(cert, 'issue_date', None) or (getattr(order, 'service_start_date', None).date() if order and getattr(order, 'service_start_date', None) else date.today())
+        issue_str = issue_date_val.strftime("%d/%m/%y") if issue_date_val else date.today().strftime("%d/%m/%y")
 
-        c.setFont("Helvetica-Bold", 9)
-        c.setFillColor(colors.HexColor("#1A202C"))
-        c.drawRightString(645, 432, "Folio:")
-        c.setFont("Helvetica-Bold", 10)
-        c.setFillColor(colors.HexColor("#9B2C2C"))
-        c.drawString(652, 432, folio_str)
+        c.setFont("Times-BoldItalic", 9.5)
+        c.setFillColor(colors.HexColor("#111111"))
+        c.drawRightString(706, 442, f"Folio:    {folio_str}")
+        c.drawRightString(706, 428, f"Fecha De Expedición:   {issue_str}")
 
-        c.setFont("Helvetica-Bold", 9)
-        c.setFillColor(colors.HexColor("#1A202C"))
-        c.drawRightString(645, 420, "Fecha De Expedición:")
-        c.setFont("Helvetica", 9)
-        c.drawString(652, 420, issue_str)
+        # 4. DATOS DEL CLIENTE Y LUGAR DE SERVICIO
+        branch = getattr(order, 'branch', None) if order else None
+        client = getattr(branch, 'client', None) if branch else None
 
-        # 5. DATOS DEL CLIENTE Y LUGAR DE SERVICIO
-        branch = order.branch if order else None
-        client = branch.client if branch else None
+        client_name = _safe_str(getattr(client, 'legal_name', None) or "CLIENTE GENERAL").upper()
+        branch_name = _safe_str(getattr(branch, 'name', None) or "").upper()
+        branch_addr = _safe_str(getattr(branch, 'address', None) or "DOMICILIO CONOCIDO").upper()
+        branch_class = _safe_str(getattr(branch, 'classification', None) or "COMERCIAL").upper()
 
-        client_name = _safe_str(client.legal_name if client else "CLIENTE GENERAL").upper()
-        branch_name = _safe_str(branch.name if branch else "").upper()
-        branch_addr = _safe_str(branch.address if branch else "DOMICILIO CONOCIDO").upper()
-        branch_class = _safe_str(branch.classification if branch else "COMERCIAL").upper()
-
-        client_display = f"{client_name} ({branch_name})" if (branch_name and branch_name != client_name) else client_name
-        lugar_display = f"{branch_name} - {branch_class}" if branch_name else branch_class
+        client_display = client_name
+        lugar_display = branch_name or branch_class
         
         # Plagas a controlar
         pests_list = []
@@ -142,18 +129,18 @@ class OfficialCertificatePDFGenerator:
         client_label_style = ParagraphStyle(
             'ClientLabel',
             parent=styles['Normal'],
-            fontName='Helvetica-Bold',
-            fontSize=8.5,
-            leading=10.5,
-            textColor=colors.HexColor("#1A202C")
+            fontName='Times-Bold',
+            fontSize=9,
+            leading=11,
+            textColor=colors.HexColor("#111111")
         )
         client_val_style = ParagraphStyle(
             'ClientVal',
             parent=styles['Normal'],
-            fontName='Helvetica',
-            fontSize=8.5,
-            leading=10.5,
-            textColor=colors.HexColor("#2D3748")
+            fontName='Times-Bold',
+            fontSize=9,
+            leading=11,
+            textColor=colors.HexColor("#111111")
         )
 
         client_rows = [
@@ -175,37 +162,37 @@ class OfficialCertificatePDFGenerator:
             ]
         ]
         
-        client_table = Table(client_rows, colWidths=[105, 515])
+        client_table = Table(client_rows, colWidths=[115, 507])
         client_table.setStyle(TableStyle([
             ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-            ('TOPPADDING', (0, 0), (-1, -1), 1),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 1),
+            ('TOPPADDING', (0, 0), (-1, -1), 1.5),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5),
             ('LEFTPADDING', (0, 0), (-1, -1), 0),
             ('RIGHTPADDING', (0, 0), (-1, -1), 0),
         ]))
         
         # Render tabla cliente
-        client_table.wrapOn(c, 620, 100)
-        client_table.drawOn(c, 85, 362)
+        client_table.wrapOn(c, 622, 100)
+        client_table.drawOn(c, 85, 360)
 
-        # 6. TABLA DE QUÍMICOS / INGREDIENTES ACTIVOS (HASTA 4 LÍNEAS)
+        # 5. TABLA DE QUÍMICOS / INGREDIENTES ACTIVOS (HASTA 4 LÍNEAS - FORMATO WORD)
         chem_hdr_style = ParagraphStyle(
             'ChemHdr',
             parent=styles['Normal'],
-            fontName='Helvetica-Bold',
+            fontName='Times-Bold',
             fontSize=8.5,
             leading=10,
             alignment=TA_CENTER,
-            textColor=colors.HexColor("#1E3A2F")
+            textColor=colors.HexColor("#111111")
         )
         chem_cell_style = ParagraphStyle(
             'ChemCell',
             parent=styles['Normal'],
-            fontName='Helvetica',
-            fontSize=8,
-            leading=9.5,
+            fontName='Times-Roman',
+            fontSize=8.5,
+            leading=10,
             alignment=TA_CENTER,
-            textColor=colors.HexColor("#1A202C")
+            textColor=colors.HexColor("#111111")
         )
 
         chem_data = [
@@ -222,14 +209,14 @@ class OfficialCertificatePDFGenerator:
         # Rellenar filas reales
         for item in applied[:4]:
             chem = getattr(item, 'chemical', None)
-            act_ing = _safe_str(getattr(chem, 'active_ingredient', None) if chem else '').upper() or "INGREDIENTE ACTIVO"
-            cico = _safe_str(getattr(chem, 'cicoplafest_number', None) if chem else '').upper() or "RSCO-URB-INAC"
-            dose = _safe_str(getattr(item, 'dose_applied', None)).upper() or "10 ML / LITRO"
+            act_ing = _safe_str(getattr(chem, 'active_ingredient', None) if chem else '').upper() or "CIPERMETRINA"
+            cico = _safe_str(getattr(chem, 'cicoplafest_number', None) if chem else '').upper() or "RSCO-URB-MEZC-111-00-02-40"
+            dose = _safe_str(getattr(item, 'dose_applied', None)).upper() or "3 GR/L"
             
             area_str = _safe_str(getattr(item, 'area_type', None)).upper()
             zone_str = _safe_str(getattr(item, 'treated_zones_description', None)).upper()
-            treated_loc = f"{area_str}: {zone_str}".strip(" :") if (area_str or zone_str) else "ÁREAS COMUNES"
-            method_str = _safe_str(getattr(item, 'application_method', None)).upper() or "ASPERSIÓN MANUAL"
+            treated_loc = f"{area_str}: {zone_str}".strip(" :") if (area_str or zone_str) else "INTERIORES"
+            method_str = _safe_str(getattr(item, 'application_method', None)).upper() or "ASPERSION"
 
             chem_data.append([
                 Paragraph(act_ing, chem_cell_style),
@@ -239,7 +226,7 @@ class OfficialCertificatePDFGenerator:
                 Paragraph(method_str, chem_cell_style)
             ])
 
-        # Rellenar con filas vacías si hay menos de 4 para mantener el formato idéntico
+        # Rellenar con filas vacías si hay menos de 4 para mantener el formato idéntico de 4 filas
         while len(chem_data) < 5:
             chem_data.append([
                 Paragraph("&nbsp;", chem_cell_style),
@@ -249,116 +236,102 @@ class OfficialCertificatePDFGenerator:
                 Paragraph("&nbsp;", chem_cell_style)
             ])
 
-        # Dimensiones de columnas idénticas a la imagen original (suma = 618.8 pt)
-        chem_table = Table(chem_data, colWidths=[148.0, 224.0, 82.0, 82.0, 82.0], rowHeights=[19] * 5)
+        chem_table = Table(chem_data, colWidths=[140, 192, 78, 106, 106], rowHeights=[19] * 5)
         chem_table.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#DDE5DF")),
-            ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor("#718096")),
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#E8EFE7")),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor("#777777")),
             ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
             ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
             ('TOPPADDING', (0, 0), (-1, -1), 2),
             ('BOTTOMPADDING', (0, 0), (-1, -1), 2),
         ]))
 
-        chem_table.wrapOn(c, 620, 100)
-        chem_table.drawOn(c, 85, 260)
+        chem_table.wrapOn(c, 622, 100)
+        chem_table.drawOn(c, 85, 250)
 
-        # 7. RECOMENDACIONES AL CLIENTE
-        c.setFont("Helvetica-Bold", 8.5)
-        c.setFillColor(colors.HexColor("#1A202C"))
-        c.drawString(85, 246, "Recomendaciones al cliente:")
+        # 6. RECOMENDACIONES AL CLIENTE
+        c.setFont("Times-Bold", 9)
+        c.setFillColor(colors.HexColor("#111111"))
+        c.drawString(85, 234, "Recomendaciones al cliente:")
 
         rec_style = ParagraphStyle(
             'RecStyle',
             parent=styles['Normal'],
-            fontName='Helvetica',
-            fontSize=7.5,
-            leading=9.5,
+            fontName='Times-Roman',
+            fontSize=8,
+            leading=10.5,
             alignment=TA_JUSTIFY,
-            textColor=colors.HexColor("#2D3748")
+            textColor=colors.HexColor("#111111")
         )
         recommendations_text = (
             "Si al momento de aplicar los productos se encuentran personas o niños retirarlos del lugar como mínimo una hora, "
             "se recomienda colocar este certificado en un lugar visible, la vigencia es de 30 días a partir de la fecha del presente documento. "
-            "Para antídotos en caso de contacto o ingestión acudir al medico o llame a SINTOX. "
-            "Es de gran importancia conservar el lugar limpio y ordenado para que sea efectivo el control de plagas."
+            "Para antídotos en caso de contacto o ingestión acudir al medico o llame a SINTOX."
         )
 
-        rec_table = Table([[Paragraph(recommendations_text, rec_style)]], colWidths=[520])
+        rec_table = Table([[Paragraph(recommendations_text, rec_style)]], colWidths=[622])
         rec_table.setStyle(TableStyle([
-            ('BOX', (0, 0), (-1, -1), 0.5, colors.HexColor("#A0AEC0")),
-            ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor("#FAFDF9")),
+            ('BOX', (0, 0), (-1, -1), 0.5, colors.HexColor("#999999")),
             ('TOPPADDING', (0, 0), (-1, -1), 4),
             ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
             ('LEFTPADDING', (0, 0), (-1, -1), 6),
             ('RIGHTPADDING', (0, 0), (-1, -1), 6),
         ]))
-        rec_table.wrapOn(c, 520, 50)
-        rec_table.drawOn(c, 85, 192)
+        rec_table.wrapOn(c, 622, 50)
+        rec_table.drawOn(c, 85, 185)
 
-        # 8. PIE DE PÁGINA (3 COLUMNAS: LOGO, FIRMA TÉCNICA, SINTOX)
+        # 7. PIE DE PÁGINA (3 COLUMNAS: LOGO, FIRMA TÉCNICA, SINTOX)
         # Logo izquierdo
         if LOGO_PATH.exists():
-            c.drawImage(str(LOGO_PATH), 95, 100, width=175.0, height=75.0, mask='auto')
+            c.drawImage(str(LOGO_PATH), 85, 75, width=175.0, height=75.0, mask='auto')
 
         # Firma Centro
         if SIGNATURE_PATH.exists():
-            c.drawImage(str(SIGNATURE_PATH), 335, 118, width=125.0, height=50.0, mask='auto')
+            c.drawImage(str(SIGNATURE_PATH), 335, 108, width=125.0, height=50.0, mask='auto')
 
-        c.setStrokeColor(colors.HexColor("#4A5568"))
+        c.setStrokeColor(colors.HexColor("#222222"))
         c.setLineWidth(0.8)
-        c.line(300, 120, 490, 120)
+        c.line(300, 110, 492, 110)
 
-        c.setFont("Helvetica-Bold", 8.5)
-        c.setFillColor(colors.HexColor("#1A202C"))
-        c.drawCentredString(395, 108, cert.sanitary_responsible_name or "Marco Antonio Flores Sáenz")
+        c.setFont("Times-Bold", 9)
+        c.setFillColor(colors.HexColor("#111111"))
+        resp_name = getattr(cert, 'sanitary_responsible_name', None) or (getattr(company, 'sanitary_responsible_name', None) if company else "Marco Antonio Flores Sáenz")
+        c.drawCentredString(396, 96, resp_name)
         
-        c.setFont("Helvetica", 8)
-        c.drawCentredString(395, 97, "Responsable Técnico")
+        c.drawCentredString(396, 84, "Responsable Técnico")
 
-        license_no = cert.sanitary_license_number or (company.sanitary_license_number if company else "08 17 19 SA 0001")
-        c.drawCentredString(395, 86, f"No. De Licencia Sanitaria: {license_no}")
+        license_no = getattr(cert, 'sanitary_license_number', None) or (getattr(company, 'sanitary_license_number', None) if company else "08 17 19 SA 0001")
+        c.drawCentredString(396, 72, f"No. De Licencia Sanitaria: {license_no}")
 
         # Recuadro SINTOX (Derecha)
-        sintox_hdr_style = ParagraphStyle(
-            'SintoxHdr',
-            parent=styles['Normal'],
-            fontName='Helvetica-Bold',
-            fontSize=6,
-            leading=7.5,
-            alignment=TA_CENTER,
-            textColor=colors.HexColor("#C53030")
-        )
         sintox_body_style = ParagraphStyle(
             'SintoxBody',
             parent=styles['Normal'],
-            fontName='Helvetica-Bold',
-            fontSize=5.5,
-            leading=7,
-            alignment=TA_CENTER,
-            textColor=colors.HexColor("#2D3748")
+            fontName='Times-Bold',
+            fontSize=6.2,
+            leading=8,
+            alignment=TA_CENTER
         )
 
         sintox_content = (
             "<font color='#C53030'><b>EN CASO DE INTOXICACION DE PLAGUICIDAS SINTOX</b></font><br/>"
-            "DEL INTERIOR SIN COSTO  <b>01-800-0092800</b><br/>"
-            "AREA METROPOLITANA <b>01(55)5598-6659 Y (55)5611-2634</b><br/>"
-            "<font color='#2B6CB0'><b>SERVICIO LAS 24 HORAS</b></font>"
+            "<font color='#111111'>DEL INTERIOR SIN COSTO  01-800-0092800</font><br/>"
+            "<font color='#111111'>AREA METROPOLITANA 01(55)5598-6659 Y (55)5611-2634</font><br/>"
+            "<font color='#1A56DB'><b>SERVICIO LAS 24 HORAS</b></font>"
         )
-        sintox_table = Table([[Paragraph(sintox_content, sintox_body_style)]], colWidths=[205])
+        sintox_table = Table([[Paragraph(sintox_content, sintox_body_style)]], colWidths=[204])
         sintox_table.setStyle(TableStyle([
-            ('BOX', (0, 0), (-1, -1), 0.8, colors.HexColor("#E53E3E")),
-            ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor("#FFF5F5")),
+            ('BOX', (0, 0), (-1, -1), 0.8, colors.HexColor("#C53030")),
+            ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor("#FFFAFA")),
             ('TOPPADDING', (0, 0), (-1, -1), 4),
             ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
             ('LEFTPADDING', (0, 0), (-1, -1), 4),
             ('RIGHTPADDING', (0, 0), (-1, -1), 4),
-            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
         ]))
-        sintox_table.wrapOn(c, 205, 55)
-        sintox_table.drawOn(c, 500, 105)
+        sintox_table.wrapOn(c, 204, 55)
+        sintox_table.drawOn(c, 503, 85)
 
-        # 9. MARCA DE AGUA EN CASO DE CANCELACIÓN
+        # 8. MARCA DE AGUA EN CASO DE CANCELACIÓN
         if getattr(cert, 'is_cancelled', False):
             c.saveState()
             c.setFont("Helvetica-Bold", 65)
@@ -513,16 +486,20 @@ class OfficialWorkOrderPDFGenerator:
         elements = []
 
         # 1. ENCABEZADO DE ORDEN DE SERVICIO
-        company_name = company.trade_name if company and company.trade_name else "FLOSA CONTROL DE PLAGAS"
-        company_legal = company.company_name if company and company.company_name else "Marco Antonio Flores Sáenz"
-        company_rfc = company.rfc if company else "FOMS630329EA5"
-        company_tel = company.phone if company else "6258373393"
+        company_name = getattr(company, 'trade_name', None) or "FLOSA CONTROL DE PLAGAS"
+        company_legal = getattr(company, 'company_name', None) or "Marco Antonio Flores Sáenz"
+        company_rfc = getattr(company, 'rfc', None) or "FOMS630329EA5"
+        company_tel = getattr(company, 'phone', None) or "6258373393"
 
         status_label = (getattr(order, 'status', None) or 'COMPLETADO').upper()
+        cert_obj = getattr(order, 'certificate', None)
+        cert_folio_str = getattr(cert_obj, 'certificate_folio', None) if cert_obj else 'En Trámite / Programado'
+        order_folio_str = getattr(order, 'folio', 'ORD-00001')
+
         hdr_table_data = [
             [
                 Paragraph(f"<b>{(company_name or '').upper()}</b><br/><font size=7 color='#4A5568'>{company_legal} • RFC: {company_rfc} • Tel: {company_tel}</font><br/><b>HOJA TÉCNICA DE ORDEN DE SERVICIO OPERATIVO</b>", title_style),
-                Paragraph(f"<b>FOLIO DE ORDEN:</b><br/>{order.folio}<br/><font color='#4A5568' size=7>Certificado: {order.certificate.certificate_folio if order.certificate else 'En Trámite / Programado'}</font><br/><font color='#2B6CB0' size=7.5>Estado: {status_label}</font>", folio_style)
+                Paragraph(f"<b>FOLIO DE ORDEN:</b><br/>{order_folio_str}<br/><font color='#4A5568' size=7>Certificado: {cert_folio_str}</font><br/><font color='#2B6CB0' size=7.5>Estado: {status_label}</font>", folio_style)
             ]
         ]
         hdr_table = Table(hdr_table_data, colWidths=[380, 160])
@@ -534,19 +511,22 @@ class OfficialWorkOrderPDFGenerator:
         elements.append(Spacer(1, 8))
 
         # 2. DATOS DEL CLIENTE, SUCURSAL Y TÉCNICO
-        branch = order.branch
-        client = branch.client
-        tech = order.technician
+        branch = getattr(order, 'branch', None)
+        client = getattr(branch, 'client', None) if branch else None
+        tech = getattr(order, 'technician', None)
 
-        start_time_str = order.service_start_date.strftime("%d/%m/%Y %H:%M") if order.service_start_date else "N/A"
-        end_time_str = order.service_end_date.strftime("%d/%m/%Y %H:%M") if order.service_end_date else "N/A"
+        start_time_str = order.service_start_date.strftime("%d/%m/%Y %H:%M") if getattr(order, 'service_start_date', None) else "N/A"
+        end_time_str = order.service_end_date.strftime("%d/%m/%Y %H:%M") if getattr(order, 'service_end_date', None) else "N/A"
+
+        client_legal = _safe_str(getattr(client, 'legal_name', None) or 'CLIENTE GENERAL')
+        client_rfc_str = _safe_str(getattr(client, 'rfc', None) or 'XAXX010101000')
 
         info_rows = [
             [
                 Paragraph("RAZÓN SOCIAL:", label_style),
-                Paragraph(client.legal_name, val_style),
+                Paragraph(client_legal, val_style),
                 Paragraph("RFC CLIENTE:", label_style),
-                Paragraph(client.rfc, val_style)
+                Paragraph(client_rfc_str, val_style)
             ],
             [
                 Paragraph("SUCURSAL:", label_style),
