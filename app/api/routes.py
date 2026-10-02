@@ -1213,19 +1213,21 @@ def online_chemical_lookup(
             results.append({
                 "commercial_name": entry.get("commercial_name"),
                 "active_ingredient": entry.get("active_ingredient"),
-                "cicoplafest_number": entry.get("rsco_prefix"),
-                "authorized_dose_per_liter": entry.get("authorized_dose", "10 a 20 ml / L de agua"),
+                "cicoplafest_number": entry.get("cicoplafest_number") or entry.get("rsco_prefix"),
+                "authorized_dose_per_liter": entry.get("authorized_dose_per_liter") or entry.get("authorized_dose", "10 a 20 ml / L de agua"),
                 "safety_interval_hours": entry.get("safety_interval_hours", 2),
-                "compatible_methods": entry.get("application_methods", "Aspersión Manual"),
+                "compatible_methods": entry.get("compatible_methods") or entry.get("application_methods", "Aspersión Manual"),
                 "toxicological_category": entry.get("toxicological_category", "Precaución"),
                 "manufacturer": entry.get("manufacturer", "Laboratorio Titular"),
                 "chemical_group": entry.get("chemical_group", ""),
                 "target_pests": entry.get("target_pests", ""),
+                "validity_date": entry.get("validity_date", ""),
+                "source": entry.get("source", "siipris_cofepris_oficial"),
                 "technical_sheet_url": entry.get("technical_sheet_url"),
                 "safety_sheet_url": entry.get("safety_sheet_url"),
                 "in_local_catalog": False,
                 "has_verified_online": True,
-                "match_type": entry.get("match_type", "cofepris_online")
+                "match_type": entry.get("match_type", "siipris_cofepris_live")
             })
 
     if not results:
@@ -1244,6 +1246,7 @@ def online_chemical_lookup(
             "safety_interval_hours": 2,
             "compatible_methods": "",
             "toxicological_category": "",
+            "validity_date": "",
             "has_verified_online": False
         }
 
@@ -1264,6 +1267,9 @@ def online_chemical_lookup(
         "compatible_methods": best.get("compatible_methods"),
         "toxicological_category": best.get("toxicological_category"),
         "manufacturer": best.get("manufacturer"),
+        "target_pests": best.get("target_pests"),
+        "validity_date": best.get("validity_date"),
+        "source": best.get("source"),
         "technical_sheet_url": best.get("technical_sheet_url"),
         "safety_sheet_url": best.get("safety_sheet_url"),
         "in_local_catalog": best.get("in_local_catalog", False),

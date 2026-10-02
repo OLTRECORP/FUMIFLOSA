@@ -558,11 +558,16 @@
                         <i class="fa-solid fa-flask-vial"></i>
                     </div>
                     <div>
-                        <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
-                            Plaguicida Oficial Verificado COFEPRIS / CICOPLAFEST
-                            <span class="bg-emerald-100 text-emerald-800 text-[10px] font-extrabold px-2 py-0.5 rounded-full border border-emerald-300">Oficial</span>
+                        <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2 flex-wrap">
+                            Plaguicida Oficial COFEPRIS / CICOPLAFEST
+                            <span id="confirm-chem-badge" class="bg-emerald-100 text-emerald-800 text-[10px] font-extrabold px-2 py-0.5 rounded-full border border-emerald-300">🏛️ SIIPRIS COFEPRIS Oficial</span>
                         </h3>
-                        <p class="text-[11px] text-slate-500">Revisa las especificaciones oficiales antes de incorporar el plaguicida al sistema</p>
+                        <p class="text-[11px] text-slate-500">
+                            Validado con el portal oficial mexicano: 
+                            <a href="https://siipris03.cofepris.gob.mx/Resoluciones/Consultas/ConWebRegPlaguicida.asp" target="_blank" class="text-indigo-600 hover:underline font-bold inline-flex items-center gap-1">
+                                Consulta SIIPRIS COFEPRIS <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
+                            </a>
+                        </p>
                     </div>
                 </div>
                 <button onclick="closeConfirmChemicalModal()" class="text-slate-400 hover:text-slate-600 p-1"><i class="fa-solid fa-xmark text-base"></i></button>
@@ -585,7 +590,7 @@
                             <h4 id="confirm-chem-name" class="text-base font-extrabold text-slate-900">-</h4>
                         </div>
                         <div class="text-left sm:text-right">
-                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Registro CICOPLAFEST</span>
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Registro CICOPLAFEST / RSCO</span>
                             <div id="confirm-chem-rsco" class="font-mono font-bold text-xs bg-indigo-100 text-indigo-900 px-2.5 py-1 rounded-lg border border-indigo-200 inline-block">-</div>
                         </div>
                     </div>
@@ -596,8 +601,16 @@
                             <span id="confirm-chem-active" class="font-bold text-slate-800 text-xs">-</span>
                         </div>
                         <div class="bg-white p-2.5 rounded-lg border border-slate-200/80">
-                            <span class="text-[10px] text-slate-400 block font-semibold">Fabricante / Titular</span>
+                            <span class="text-[10px] text-slate-400 block font-semibold">Fabricante / Empresa Titular</span>
                             <span id="confirm-chem-mfg" class="font-bold text-slate-800 text-xs">-</span>
+                        </div>
+                        <div class="bg-white p-2.5 rounded-lg border border-slate-200/80">
+                            <span class="text-[10px] text-slate-400 block font-semibold">Vigencia del Registro</span>
+                            <span id="confirm-chem-vigencia" class="font-bold text-indigo-700 text-xs">-</span>
+                        </div>
+                        <div class="bg-white p-2.5 rounded-lg border border-slate-200/80">
+                            <span class="text-[10px] text-slate-400 block font-semibold">Categoría Toxicológica</span>
+                            <span id="confirm-chem-tox" class="font-bold text-emerald-800 text-xs">-</span>
                         </div>
                         <div class="bg-white p-2.5 rounded-lg border border-slate-200/80">
                             <span class="text-[10px] text-slate-400 block font-semibold">Dosis Autorizada en Etiqueta</span>
@@ -607,19 +620,19 @@
                             <span class="text-[10px] text-slate-400 block font-semibold">Intervalo de Reentrada</span>
                             <span id="confirm-chem-hours" class="font-bold text-slate-800 text-xs">-</span>
                         </div>
-                        <div class="bg-white p-2.5 rounded-lg border border-slate-200/80">
+                        <div class="bg-white p-2.5 rounded-lg border border-slate-200/80 sm:col-span-2">
                             <span class="text-[10px] text-slate-400 block font-semibold">Métodos de Aplicación Compatibles</span>
                             <span id="confirm-chem-methods" class="font-medium text-slate-800 text-xs">-</span>
                         </div>
-                        <div class="bg-white p-2.5 rounded-lg border border-slate-200/80">
-                            <span class="text-[10px] text-slate-400 block font-semibold">Categoría Toxicológica</span>
-                            <span id="confirm-chem-tox" class="font-bold text-emerald-800 text-xs">-</span>
+                        <div class="bg-white p-2.5 rounded-lg border border-slate-200/80 sm:col-span-2">
+                            <span class="text-[10px] text-slate-400 block font-semibold">Plagas y Usos Autorizados Oficiales</span>
+                            <span id="confirm-chem-usos" class="font-medium text-slate-800 text-xs block max-h-24 overflow-y-auto pr-1">-</span>
                         </div>
                     </div>
 
                     <!-- Enlaces oficiales de documentación -->
                     <div class="pt-2 border-t border-slate-200 flex flex-wrap items-center justify-between gap-2">
-                        <span class="text-[11px] font-bold text-slate-600">Documentación Oficial Fabricante / COFEPRIS:</span>
+                        <span class="text-[11px] font-bold text-slate-600">Documentación y Fichas Oficiales:</span>
                         <div class="flex items-center gap-2">
                             <a id="confirm-chem-tech-link" href="#" target="_blank" class="px-2.5 py-1 bg-teal-50 hover:bg-teal-100 text-teal-800 font-bold rounded-lg text-[11px] border border-teal-200 flex items-center gap-1 shadow-2xs">
                                 <i class="fa-solid fa-file-lines text-teal-600"></i> Ficha Técnica
@@ -635,7 +648,7 @@
                     <i class="fa-solid fa-circle-info text-amber-600 mt-0.5"></i>
                     <div>
                         <span class="font-bold">¿Deseas agregar este plaguicida al catálogo del sistema?</span>
-                        <p class="text-[11px] text-amber-800 mt-0.5">Puedes agregarlo directamente con sus datos oficiales validados o rellenar el formulario para ajustar dosis o especificaciones antes de guardar.</p>
+                        <p class="text-[11px] text-amber-800 mt-0.5">Revisa que los datos correspondan al producto que vas a utilizar. Puedes agregarlo directamente al catálogo o rellenar el formulario para personalizar dosis o especificaciones.</p>
                     </div>
                 </div>
             </div>
@@ -5136,11 +5149,32 @@
             document.getElementById('confirm-chem-name').innerText = match.commercial_name || '-';
             document.getElementById('confirm-chem-rsco').innerText = match.cicoplafest_number || '-';
             document.getElementById('confirm-chem-active').innerText = match.active_ingredient || '-';
-            document.getElementById('confirm-chem-mfg').innerText = match.manufacturer || 'Titular Regulado';
-            document.getElementById('confirm-chem-dose').innerText = match.authorized_dose_per_liter || match.authorized_dose || '10 ml / Litro';
+            document.getElementById('confirm-chem-mfg').innerText = match.manufacturer || 'Titular Registrado';
+            
+            const vigenciaEl = document.getElementById('confirm-chem-vigencia');
+            if (vigenciaEl) vigenciaEl.innerText = match.validity_date ? `Vigencia: ${match.validity_date}` : 'Vigente / Indeterminada';
+            
+            document.getElementById('confirm-chem-dose').innerText = match.authorized_dose_per_liter || match.authorized_dose || '10 a 20 ml / Litro (según marbete)';
             document.getElementById('confirm-chem-hours').innerText = `${match.safety_interval_hours || 2} horas obligatorias`;
-            document.getElementById('confirm-chem-methods').innerText = match.compatible_methods || match.application_methods || 'Aspersión Manual';
+            document.getElementById('confirm-chem-methods').innerText = match.compatible_methods || match.application_methods || 'Aspersión Manual / Residual';
             document.getElementById('confirm-chem-tox').innerText = match.toxicological_category || 'Precaución (Banda Verde)';
+            
+            const usosEl = document.getElementById('confirm-chem-usos');
+            if (usosEl) usosEl.innerText = match.target_pests || 'Plagas Urbanas y Domésticas según marbete oficial COFEPRIS';
+
+            const badgeEl = document.getElementById('confirm-chem-badge');
+            if (badgeEl) {
+                if (match.source === 'siipris_cofepris_oficial' || match.match_type === 'siipris_cofepris_live') {
+                    badgeEl.className = "bg-emerald-100 text-emerald-800 text-[10px] font-extrabold px-2 py-0.5 rounded-full border border-emerald-300";
+                    badgeEl.innerHTML = '<i class="fa-solid fa-landmark"></i> 🏛️ SIIPRIS COFEPRIS (En Línea)';
+                } else if (match.in_local_catalog) {
+                    badgeEl.className = "bg-sky-100 text-sky-800 text-[10px] font-extrabold px-2 py-0.5 rounded-full border border-sky-300";
+                    badgeEl.innerHTML = '<i class="fa-solid fa-database"></i> Catálogo Local';
+                } else {
+                    badgeEl.className = "bg-teal-100 text-teal-800 text-[10px] font-extrabold px-2 py-0.5 rounded-full border border-teal-300";
+                    badgeEl.innerHTML = '<i class="fa-solid fa-certificate"></i> Catálogo Oficial';
+                }
+            }
 
             const techLink = document.getElementById('confirm-chem-tech-link');
             const safeLink = document.getElementById('confirm-chem-safe-link');
