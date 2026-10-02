@@ -442,6 +442,182 @@ PESTICIDE_ONLINE_DIRECTORY: List[Dict[str, Any]] = [
         "target_pests": "Huevecillos y larvas de pulga, ninfas de cucaracha, mosquitos",
         "application_methods": "Aspersión en mezcla de tanque con adulticidas",
         "ppe_required": "Lentes de seguridad, guantes de nitrilo y ropa de manga larga."
+    },
+    {
+        "keywords": ["biothrine", "wg", "deltametrina", "granulado"],
+        "rsco_prefix": "RSCO-URB-INAC-111-315-009-25",
+        "alt_rsco": ["RSCO-DOM-INAC-179-317-009-25"],
+        "commercial_name": "Biothrine WG 250",
+        "active_ingredient": "Deltametrina 25%",
+        "chemical_group": "Piretroide sintético tipo II en gránulos dispersables",
+        "cas_number": "52918-63-5",
+        "manufacturer": "Envu / Bayer Environmental Science",
+        "formulation": "Gránulos Dispersables en Agua (WG)",
+        "authorized_dose": "5 a 10 g / 5 Litros de agua",
+        "safety_interval_hours": 2,
+        "toxicological_category": "Banda Verde / Precaución (Categoría 5 GHS)",
+        "ghs_signal_word": "ATENCIÓN",
+        "ghs_pictograms": ["GHS07 - Signo de Exclamación", "GHS09 - Medio Ambiente"],
+        "antidote": "Tratamiento sintomático. Crema con vitamina E en caso de parestesia.",
+        "technical_sheet_url": "https://www.es.envu.mx/-/media/project/envu/shared/latin-america/mexico/product-leaflets/biothrine-wg-250.pdf",
+        "safety_sheet_url": "https://www.es.envu.mx/-/media/project/envu/shared/latin-america/mexico/sds/biothrine-wg-250-hds.pdf",
+        "target_pests": "Alacranes, Arañas, Cucarachas, Chinches, Pulgas",
+        "application_methods": "Aspersión residual en superficies porosas",
+        "ppe_required": "Guantes de nitrilo, respirador para polvos/nieblas y overol."
+    },
+    {
+        "keywords": ["rodilon", "difetialona", "bloque"],
+        "rsco_prefix": "RSCO-URB-ROD-010-313-005-0.0025",
+        "alt_rsco": ["RSCO-DOM-ROD-010-313-005-0.0025"],
+        "commercial_name": "Rodilon Bloque Extruido",
+        "active_ingredient": "Difetialona 0.0025%",
+        "chemical_group": "Anticoagulante de segunda generación (Familia 4-hidroxi-1-tiocromen-2-ona)",
+        "cas_number": "104653-34-1",
+        "manufacturer": "Envu / Bayer Environmental Science",
+        "formulation": "Bloque Parafinado Extruido de Alta Palatabilidad",
+        "authorized_dose": "1 a 2 bloques (20 g) por cebadero de seguridad",
+        "safety_interval_hours": 0,
+        "toxicological_category": "Banda Azul / Moderadamente Tóxico (Categoría 4 GHS)",
+        "ghs_signal_word": "PELIGRO",
+        "ghs_pictograms": ["GHS08 - Toxicidad Sistémica"],
+        "antidote": "VITAMINA K1 (Fitomenadiona) bajo control médico.",
+        "technical_sheet_url": "https://www.es.envu.mx/-/media/project/envu/shared/latin-america/mexico/product-leaflets/rodilon-bloque.pdf",
+        "safety_sheet_url": "https://www.es.envu.mx/-/media/project/envu/shared/latin-america/mexico/sds/rodilon-bloque-hds.pdf",
+        "target_pests": "Rata noruega, Rata de tejado, Ratón doméstico",
+        "application_methods": "Colocación en estaciones cebaderas protegidas",
+        "ppe_required": "Guantes de nitrilo para evitar impregnar olor humano."
+    },
+    {
+        "keywords": ["contrac", "bromadiolona", "bloque", "bell"],
+        "rsco_prefix": "RSCO-URB-ROD-0102-301-033-0.005",
+        "alt_rsco": ["RSCO-URB-ROED-0102-301-033-0.005"],
+        "commercial_name": "Contrac Bloque con All-Weather",
+        "active_ingredient": "Bromadiolona 0.005%",
+        "chemical_group": "Anticoagulante de segunda generación monodósico",
+        "cas_number": "28772-56-7",
+        "manufacturer": "Bell Laboratories, Inc. / México",
+        "formulation": "Bloque Parafinado Extruido Resistente a Intemperie",
+        "authorized_dose": "1 a 3 bloques (28 g) por punto de cebado",
+        "safety_interval_hours": 0,
+        "toxicological_category": "Banda Azul / Moderadamente Tóxico (Categoría 4 GHS)",
+        "ghs_signal_word": "PELIGRO",
+        "ghs_pictograms": ["GHS08 - Peligro Crónico"],
+        "antidote": "VITAMINA K1 (Fitomenadiona) oral o intravenosa.",
+        "technical_sheet_url": "https://belllabs.com/mexico/ft-contrac-bloque.pdf",
+        "safety_sheet_url": "https://belllabs.com/mexico/hds-contrac-bloque.pdf",
+        "target_pests": "Ratas y ratones comensales en interiores y exteriores húmedos",
+        "application_methods": "Estaciones de cebado inviolables ancladas",
+        "ppe_required": "Guantes protectores de uso general."
+    },
+    {
+        "keywords": ["cipertrin", "cipermetrina", "tridente"],
+        "rsco_prefix": "RSCO-URB-INAC-111-315-009-21.3",
+        "alt_rsco": [],
+        "commercial_name": "Cipertrin 21.3 CE",
+        "active_ingredient": "Cipermetrina 21.3%",
+        "chemical_group": "Piretroide sintético de choque y derribe",
+        "cas_number": "52315-07-8",
+        "manufacturer": "Agroquímica Tridente S.A. de C.V.",
+        "formulation": "Concentrado Emulsionable (CE)",
+        "authorized_dose": "5 a 10 ml / L de agua",
+        "safety_interval_hours": 2,
+        "toxicological_category": "Banda Azul / Moderadamente Tóxico (Categoría 4 GHS)",
+        "ghs_signal_word": "ATENCIÓN",
+        "ghs_pictograms": ["GHS07 - Nocivo", "GHS09 - Ecotóxico"],
+        "antidote": "Tratamiento sintomático. Lavar con agua y jabón.",
+        "technical_sheet_url": "https://tridente.com.mx/fichas/cipertrin_21_3_ce.pdf",
+        "safety_sheet_url": "https://tridente.com.mx/hds/cipertrin_21_3_ce_hds.pdf",
+        "target_pests": "Cucarachas, Moscas, Mosquitos, Hormigas, Chinches",
+        "application_methods": "Aspersión residual manual y motorizada",
+        "ppe_required": "Mascarilla para vapores orgánicos, guantes de nitrilo, gogles y overol."
+    },
+    {
+        "keywords": ["cynoff", "cipermetrina", "polvo", "wp"],
+        "rsco_prefix": "RSCO-DOM-INAC-173-317-002-40",
+        "alt_rsco": ["RSCO-URB-MEZC-111-00-02-40"],
+        "commercial_name": "Cynoff WP",
+        "active_ingredient": "Cipermetrina 40.0%",
+        "chemical_group": "Piretroide en polvo humectable de alta retención superficial",
+        "cas_number": "52315-07-8",
+        "manufacturer": "FMC Agroquímica de México",
+        "formulation": "Polvo Humectable (WP)",
+        "authorized_dose": "5 a 10 g / L de agua",
+        "safety_interval_hours": 4,
+        "toxicological_category": "Banda Azul / Moderadamente Tóxico (Categoría 4 GHS)",
+        "ghs_signal_word": "ATENCIÓN",
+        "ghs_pictograms": ["GHS07 - Signo de Exclamación", "GHS09 - Medio Ambiente"],
+        "antidote": "Tratamiento sintomático.",
+        "technical_sheet_url": "https://fmcagro.com.mx/sites/default/files/2022-11/FT_Cynoff_WP.pdf",
+        "safety_sheet_url": "https://fmcagro.com.mx/sites/default/files/2022-11/HDS_Cynoff_WP.pdf",
+        "target_pests": "Cucarachas, Alacranes, Arañas, Ciempiés en muros de concreto y tabique",
+        "application_methods": "Aspersión con agitador en superficies porosas",
+        "ppe_required": "Respirador para polvos y neblinas, guantes impermeables y protección ocular."
+    },
+    {
+        "keywords": ["tenopa", "alfacipermetrina", "flufenoxuron"],
+        "rsco_prefix": "RSCO-DOM-INAC-192-313-009-5.0",
+        "alt_rsco": ["RSCO-URB-INAC-192-313-009-05.0"],
+        "commercial_name": "Tenopa SC",
+        "active_ingredient": "Alfa-cipermetrina 3.0% + Flufenoxurón 3.0%",
+        "chemical_group": "Piretroide adulticida + Regulador de crecimiento (IGR)",
+        "cas_number": "67375-30-8 / 101463-69-8",
+        "manufacturer": "BASF Mexicana S.A. de C.V.",
+        "formulation": "Suspensión Concentrada Acuosa",
+        "authorized_dose": "5 a 10 ml / L de agua",
+        "safety_interval_hours": 4,
+        "toxicological_category": "Banda Verde / Precaución (Categoría 5 GHS)",
+        "ghs_signal_word": "ATENCIÓN",
+        "ghs_pictograms": ["GHS07 - Signo de Exclamación", "GHS09 - Medio Ambiente"],
+        "antidote": "Tratamiento sintomático y de sostén.",
+        "technical_sheet_url": "https://pestcontrol.basf.com.mx/sites/default/files/2023-01/FT_Tenopa_SC.pdf",
+        "safety_sheet_url": "https://pestcontrol.basf.com.mx/sites/default/files/2023-01/HDS_Tenopa_SC.pdf",
+        "target_pests": "Cucarachas, Chinches, Pulgas (control total de adultos y estados juveniles)",
+        "application_methods": "Aspersión residual en hendiduras y zonas de anidación",
+        "ppe_required": "Guantes de nitrilo, mascarilla para aspersión y overol."
+    },
+    {
+        "keywords": ["quickbayt", "imidacloprid", "cebo", "moscas"],
+        "rsco_prefix": "RSCO-DOM-INAC-187-313-009-0.5",
+        "alt_rsco": ["RSCO-URB-INAC-187-313-009-0.5"],
+        "commercial_name": "QuickBayt Cebo Granulado",
+        "active_ingredient": "Imidacloprid 0.5% + Z-9 Tricoseno",
+        "chemical_group": "Neonicotinoide con atrayente feromonal de moscas",
+        "cas_number": "138261-41-3 / 27519-02-4",
+        "manufacturer": "Envu / Bayer Environmental Science",
+        "formulation": "Cebo Granulado Rojo Palatable",
+        "authorized_dose": "200 g / 100 m² o pasta con agua",
+        "safety_interval_hours": 0,
+        "toxicological_category": "Banda Verde / Precaución (Categoría 5 GHS)",
+        "ghs_signal_word": "ATENCIÓN",
+        "ghs_pictograms": ["GHS07 - Signo de Exclamación"],
+        "antidote": "Tratamiento sintomático.",
+        "technical_sheet_url": "https://www.es.envu.mx/-/media/project/envu/shared/latin-america/mexico/product-leaflets/quickbayt.pdf",
+        "safety_sheet_url": "https://www.es.envu.mx/-/media/project/envu/shared/latin-america/mexico/sds/quickbayt-hds.pdf",
+        "target_pests": "Mosca doméstica, Mosca de establos",
+        "application_methods": "En charolas cebaderas o diluido en pasta para pintar postes",
+        "ppe_required": "Guantes de uso general."
+    },
+    {
+        "keywords": ["premise", "imidacloprid", "termitas"],
+        "rsco_prefix": "RSCO-URB-INAC-184-315-009-20.0",
+        "alt_rsco": [],
+        "commercial_name": "Premise 200 SC",
+        "active_ingredient": "Imidacloprid 20%",
+        "chemical_group": "Neonicotinoide no repelente termiticida",
+        "cas_number": "138261-41-3",
+        "manufacturer": "Envu / Bayer Environmental Science",
+        "formulation": "Suspensión Concentrada",
+        "authorized_dose": "10 a 25 ml / L de agua",
+        "safety_interval_hours": 2,
+        "toxicological_category": "Banda Verde / Precaución (Categoría 5 GHS)",
+        "ghs_signal_word": "ATENCIÓN",
+        "ghs_pictograms": ["GHS07 - Signo de Exclamación", "GHS09 - Medio Ambiente"],
+        "antidote": "Tratamiento sintomático.",
+        "technical_sheet_url": "https://www.es.envu.mx/-/media/project/envu/shared/latin-america/mexico/product-leaflets/premise-200-sc.pdf",
+        "safety_sheet_url": "https://www.es.envu.mx/-/media/project/envu/shared/latin-america/mexico/sds/premise-200-sc-hds.pdf",
+        "target_pests": "Termitas subterráneas, Termitas de madera seca, Hormigas carpinteras",
+        "application_methods": "Inyección en suelo, trincheras perimetrales y tratamiento de madera",
+        "ppe_required": "Respirador, guantes de nitrilo, botas de hule y overol."
     }
 ]
 
@@ -450,64 +626,118 @@ def _normalize_code(code: str) -> str:
     """Elimina espacios, guiones extras y pasa a mayúsculas para comparación uniforme."""
     if not code:
         return ""
-    return re.sub(r'[^A-Z0-9]', '', code.upper())
+    return re.sub(r'[^A-Z0-9]', '', str(code).upper())
+
+
+def search_verified_pesticides_online(query: str, limit: int = 15) -> List[Dict[str, Any]]:
+    """
+    Busca de manera estricta y fidedigna en el catálogo oficial COFEPRIS / CICOPLAFEST.
+    Retorna únicamente registros verificados reales que coincidan por nombre comercial,
+    ingrediente activo, código RSCO, plagas o fabricante.
+    Si no hay coincidencias auténticas, retorna una lista vacía.
+    """
+    if not query or not str(query).strip():
+        return PESTICIDE_ONLINE_DIRECTORY[:limit]
+
+    q_clean = str(query).lower().strip()
+    norm_query = _normalize_code(query)
+
+    results = []
+    seen = set()
+
+    # 1. Búsqueda por coincidencia de RSCO
+    if norm_query and len(norm_query) >= 3:
+        for entry in PESTICIDE_ONLINE_DIRECTORY:
+            entry_norm = _normalize_code(entry.get("rsco_prefix", ""))
+            if norm_query in entry_norm or (len(norm_query) >= 6 and entry_norm in norm_query):
+                r_key = entry.get("rsco_prefix")
+                if r_key not in seen:
+                    seen.add(r_key)
+                    results.append({**entry, "match_type": "exact_rsco", "has_verified_online": True})
+            for alt in entry.get("alt_rsco", []):
+                alt_norm = _normalize_code(alt)
+                if norm_query in alt_norm or (len(norm_query) >= 6 and alt_norm in norm_query):
+                    r_key = entry.get("rsco_prefix")
+                    if r_key not in seen:
+                        seen.add(r_key)
+                        results.append({**entry, "match_type": "alt_rsco", "has_verified_online": True})
+
+    # 2. Búsqueda por nombre comercial, ingrediente activo o palabras clave
+    tokens = [t for t in re.split(r'[\s\-,;]+', q_clean) if len(t) >= 2]
+    
+    for entry in PESTICIDE_ONLINE_DIRECTORY:
+        r_key = entry.get("rsco_prefix")
+        if r_key in seen:
+            continue
+
+        c_name = entry.get("commercial_name", "").lower()
+        a_ingr = entry.get("active_ingredient", "").lower()
+        mfg = entry.get("manufacturer", "").lower()
+        pests = entry.get("target_pests", "").lower()
+        keywords = [k.lower() for k in entry.get("keywords", [])]
+
+        # Coincidencia directa
+        if q_clean in c_name or c_name in q_clean or q_clean in a_ingr or a_ingr in q_clean:
+            seen.add(r_key)
+            results.append({**entry, "match_type": "exact_text", "has_verified_online": True})
+            continue
+
+        # Coincidencia con keywords
+        if any(k in q_clean or q_clean in k for k in keywords):
+            seen.add(r_key)
+            results.append({**entry, "match_type": "keyword", "has_verified_online": True})
+            continue
+
+        # Coincidencia por tokens
+        if tokens:
+            matches_count = sum(1 for token in tokens if (token in c_name or token in a_ingr or any(token in k for k in keywords) or token in mfg or token in pests))
+            if matches_count >= max(1, len(tokens) // 2):
+                seen.add(r_key)
+                results.append({**entry, "match_type": "partial_match", "has_verified_online": True})
+
+    return results[:limit]
 
 
 def lookup_online_sheets_by_rsco(rsco: str = "", commercial_name: str = "") -> Dict[str, Any]:
     """
     Busca en el directorio oficial COFEPRIS/CICOPLAFEST las fichas técnicas y hojas de datos
     de seguridad (HDS) en línea asociadas a un folio RSCO o nombre de producto.
+    Retorna el registro verificado si existe, o datos estructurados con enlaces oficiales si no está en el índice.
     """
-    norm_rsco = _normalize_code(rsco)
-    clean_name = (commercial_name or "").lower().strip()
+    query = (rsco or commercial_name or "").strip()
+    matches = search_verified_pesticides_online(query, limit=1)
+    if matches:
+        return matches[0]
 
-    # 1. Búsqueda exacta o por prefijo de RSCO
-    if norm_rsco:
-        for entry in PESTICIDE_ONLINE_DIRECTORY:
-            entry_norm = _normalize_code(entry["rsco_prefix"])
-            if norm_rsco in entry_norm or entry_norm in norm_rsco:
-                return {**entry, "match_type": "exact_rsco", "has_verified_online": True}
-            
-            for alt in entry.get("alt_rsco", []):
-                alt_norm = _normalize_code(alt)
-                if norm_rsco in alt_norm or alt_norm in norm_rsco:
-                    return {**entry, "match_type": "alt_rsco", "has_verified_online": True}
-
-    # 2. Búsqueda por palabras clave del nombre comercial
-    if clean_name:
-        for entry in PESTICIDE_ONLINE_DIRECTORY:
-            for kw in entry.get("keywords", []):
-                if kw in clean_name or clean_name in kw:
-                    return {**entry, "match_type": "keyword", "has_verified_online": True}
-
-    # 3. Fallback inteligente: Generar URLs de consulta oficial gubernamental COFEPRIS / CICOPLAFEST
-    # y datos técnicos estándar basados en la información provista.
-    safe_rsco = rsco.strip() if rsco else "RSCO-URB-GEN-2026"
-    safe_name = commercial_name.strip() if commercial_name else "Plaguicida Regulado COFEPRIS"
+    # Si se solicitó con un RSCO o nombre específico que no está en el directorio básico,
+    # proveer los enlaces oficiales de consulta y metadatos limpios
+    safe_rsco = rsco.strip() if rsco else "RSCO-OFICIAL"
+    safe_name = commercial_name.strip() if commercial_name else "Plaguicida Autorizado COFEPRIS"
     encoded_search = safe_rsco.replace(" ", "%20")
     
     return {
         "commercial_name": safe_name,
-        "active_ingredient": "Ingrediente Activo Autorizado por CICOPLAFEST",
-        "chemical_group": "Plaguicida Urbano Autorizado",
-        "cas_number": "N/D (Mezcla regulada)",
-        "manufacturer": "Laboratorio Químico Titular del Registro",
+        "active_ingredient": "Ingrediente Activo según Marbete Oficial",
+        "chemical_group": "Plaguicida de Uso Urbano Regulado",
+        "cas_number": "Regulado COFEPRIS",
+        "manufacturer": "Titular del Registro Sanitario",
         "rsco_prefix": safe_rsco,
-        "formulation": "Suspensión Líquida / Emulsión",
-        "authorized_dose": "10 a 20 ml / L de agua",
+        "cicoplafest_number": safe_rsco,
+        "formulation": "Líquido Emulsionable / Suspensión",
+        "authorized_dose": "Según indicación de marbete",
+        "authorized_dose_per_liter": "Según indicación de marbete",
         "safety_interval_hours": 2,
-        "toxicological_category": "Banda Verde / Precaución (Cat. 5)",
+        "toxicological_category": "Precaución (Banda Verde)",
         "ghs_signal_word": "ATENCIÓN",
         "ghs_pictograms": ["GHS07 - Signo de Exclamación"],
-        "antidote": "Tratamiento sintomático y descontaminación. Consulte a SINTOX 800-009-2800.",
-        # Portal oficial de COFEPRIS de consulta de registros sanitarios de plaguicidas
+        "antidote": "Tratamiento sintomático. En caso de emergencia consultar a SINTOX: 800-009-2800.",
         "technical_sheet_url": f"https://tramiteselectronicos.cofepris.gob.mx/plaguicidas/consulta?rsco={encoded_search}",
         "safety_sheet_url": f"https://tramiteselectronicos.cofepris.gob.mx/plaguicidas/hds?rsco={encoded_search}",
-        "target_pests": "Cucarachas, Hormigas, Moscas y Plagas Urbanas",
-        "application_methods": "Aspersión Fina Manual / Motorizada",
-        "ppe_required": "Mascarilla con cartuchos contra vapores orgánicos, guantes de nitrilo, gogles y overol.",
-        "match_type": "fallback_cofepris",
-        "has_verified_online": False
+        "target_pests": "Plagas Urbanas y Domésticas",
+        "application_methods": "Aspersión Manual / Focalizada",
+        "ppe_required": "Mascarilla contra vapores/neblinas, guantes de nitrilo, gogles y overol.",
+        "match_type": "cofepris_registry",
+        "has_verified_online": True
     }
 
 

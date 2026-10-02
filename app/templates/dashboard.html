@@ -549,6 +549,114 @@
         </div>
     </div>
 
+    <!-- MODAL DE CONFIRMACIÓN Y REVISIÓN DE QUÍMICO OFICIAL ENCONTRADO -->
+    <div id="modal-confirm-chemical-add" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-6 space-y-4 border border-slate-200 max-h-[90vh] flex flex-col animate-fadeIn">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3 flex-shrink-0">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-9 h-9 bg-emerald-100 text-emerald-800 rounded-xl flex items-center justify-center text-base font-bold">
+                        <i class="fa-solid fa-flask-vial"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                            Plaguicida Oficial Verificado COFEPRIS / CICOPLAFEST
+                            <span class="bg-emerald-100 text-emerald-800 text-[10px] font-extrabold px-2 py-0.5 rounded-full border border-emerald-300">Oficial</span>
+                        </h3>
+                        <p class="text-[11px] text-slate-500">Revisa las especificaciones oficiales antes de incorporar el plaguicida al sistema</p>
+                    </div>
+                </div>
+                <button onclick="closeConfirmChemicalModal()" class="text-slate-400 hover:text-slate-600 p-1"><i class="fa-solid fa-xmark text-base"></i></button>
+            </div>
+
+            <!-- Selector si hay múltiples coincidencias -->
+            <div id="confirm-chem-multi-selector-box" class="hidden flex-shrink-0 bg-indigo-50/70 p-3 rounded-xl border border-indigo-200 space-y-1.5">
+                <label class="block text-xs font-bold text-indigo-950 flex items-center gap-1.5">
+                    <i class="fa-solid fa-list-check text-indigo-600"></i> Se encontraron varios plaguicidas oficiales. Selecciona el que deseas revisar:
+                </label>
+                <select id="confirm-chem-multi-select" onchange="onSelectMatchInConfirmModal(this.value)" class="w-full bg-white border border-indigo-300 rounded-lg p-2 text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-indigo-500"></select>
+            </div>
+
+            <!-- Tarjeta con Especificaciones Técnicas Fidedignas -->
+            <div class="flex-1 overflow-y-auto space-y-3 pr-1 text-xs">
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 pb-2.5">
+                        <div>
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Nombre Comercial</span>
+                            <h4 id="confirm-chem-name" class="text-base font-extrabold text-slate-900">-</h4>
+                        </div>
+                        <div class="text-left sm:text-right">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Registro CICOPLAFEST</span>
+                            <div id="confirm-chem-rsco" class="font-mono font-bold text-xs bg-indigo-100 text-indigo-900 px-2.5 py-1 rounded-lg border border-indigo-200 inline-block">-</div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div class="bg-white p-2.5 rounded-lg border border-slate-200/80">
+                            <span class="text-[10px] text-slate-400 block font-semibold">Ingrediente Activo</span>
+                            <span id="confirm-chem-active" class="font-bold text-slate-800 text-xs">-</span>
+                        </div>
+                        <div class="bg-white p-2.5 rounded-lg border border-slate-200/80">
+                            <span class="text-[10px] text-slate-400 block font-semibold">Fabricante / Titular</span>
+                            <span id="confirm-chem-mfg" class="font-bold text-slate-800 text-xs">-</span>
+                        </div>
+                        <div class="bg-white p-2.5 rounded-lg border border-slate-200/80">
+                            <span class="text-[10px] text-slate-400 block font-semibold">Dosis Autorizada en Etiqueta</span>
+                            <span id="confirm-chem-dose" class="font-bold text-teal-800 text-xs">-</span>
+                        </div>
+                        <div class="bg-white p-2.5 rounded-lg border border-slate-200/80">
+                            <span class="text-[10px] text-slate-400 block font-semibold">Intervalo de Reentrada</span>
+                            <span id="confirm-chem-hours" class="font-bold text-slate-800 text-xs">-</span>
+                        </div>
+                        <div class="bg-white p-2.5 rounded-lg border border-slate-200/80">
+                            <span class="text-[10px] text-slate-400 block font-semibold">Métodos de Aplicación Compatibles</span>
+                            <span id="confirm-chem-methods" class="font-medium text-slate-800 text-xs">-</span>
+                        </div>
+                        <div class="bg-white p-2.5 rounded-lg border border-slate-200/80">
+                            <span class="text-[10px] text-slate-400 block font-semibold">Categoría Toxicológica</span>
+                            <span id="confirm-chem-tox" class="font-bold text-emerald-800 text-xs">-</span>
+                        </div>
+                    </div>
+
+                    <!-- Enlaces oficiales de documentación -->
+                    <div class="pt-2 border-t border-slate-200 flex flex-wrap items-center justify-between gap-2">
+                        <span class="text-[11px] font-bold text-slate-600">Documentación Oficial Fabricante / COFEPRIS:</span>
+                        <div class="flex items-center gap-2">
+                            <a id="confirm-chem-tech-link" href="#" target="_blank" class="px-2.5 py-1 bg-teal-50 hover:bg-teal-100 text-teal-800 font-bold rounded-lg text-[11px] border border-teal-200 flex items-center gap-1 shadow-2xs">
+                                <i class="fa-solid fa-file-lines text-teal-600"></i> Ficha Técnica
+                            </a>
+                            <a id="confirm-chem-safe-link" href="#" target="_blank" class="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold rounded-lg text-[11px] border border-amber-200 flex items-center gap-1 shadow-2xs">
+                                <i class="fa-solid fa-shield-halved text-amber-600"></i> Hoja HDS NOM-018
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-amber-50 border border-amber-200 p-3 rounded-xl text-amber-900 text-xs flex items-start gap-2">
+                    <i class="fa-solid fa-circle-info text-amber-600 mt-0.5"></i>
+                    <div>
+                        <span class="font-bold">¿Deseas agregar este plaguicida al catálogo del sistema?</span>
+                        <p class="text-[11px] text-amber-800 mt-0.5">Puedes agregarlo directamente con sus datos oficiales validados o rellenar el formulario para ajustar dosis o especificaciones antes de guardar.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botones de Acción y Confirmación -->
+            <div class="flex flex-col sm:flex-row justify-between items-center gap-2 pt-3 border-t border-slate-100 flex-shrink-0 text-xs">
+                <button type="button" onclick="closeConfirmChemicalModal()" class="w-full sm:w-auto px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl transition">
+                    Cancelar
+                </button>
+                <div class="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
+                    <button type="button" onclick="confirmAndPopulateForm()" class="w-full sm:w-auto px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-xl flex items-center justify-center gap-1.5 shadow-sm transition">
+                        <i class="fa-solid fa-pen-to-square"></i> Rellenar Formulario para Editar
+                    </button>
+                    <button type="button" id="btn-confirm-save-direct" onclick="confirmAndSaveChemicalDirectly()" class="w-full sm:w-auto px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl flex items-center justify-center gap-1.5 shadow-sm transition">
+                        <i class="fa-solid fa-circle-check"></i> Confirmar y Agregar al Catálogo
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- MODAL DETALLE DE EVENTO EN CALENDARIO -->
     <div id="modal-event-detail" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
         <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 space-y-4 border border-slate-200 animate-fadeIn">
@@ -4924,8 +5032,11 @@
         }
 
         // ====================================================================
-        // CONSULTA Y AUTO-COMPLETADO DE QUÍMICOS EN LÍNEA (POR NOMBRE O RSCO)
+        // CONSULTA Y CONFIRMACIÓN DE QUÍMICOS EN LÍNEA (POR NOMBRE O RSCO)
         // ====================================================================
+        let currentLookupMatches = [];
+        let currentSelectedLookupMatch = null;
+
         async function searchAndAutofillChemical() {
             const queryInput = document.getElementById('quick-chem-online-query');
             const query = queryInput ? queryInput.value.trim() : '';
@@ -4933,7 +5044,7 @@
             const btn = document.getElementById('btn-quick-chem-lookup');
             
             if (!query) {
-                alert('Por favor escribe un Nombre Comercial (ej. Biothrine, Cipermetrina) o un Código RSCO para consultar en línea.');
+                alert('Por favor escribe un Nombre Comercial (ej. Biothrine, Cipermetrina, Advion) o un Código RSCO para consultar en línea.');
                 if (queryInput) queryInput.focus();
                 return;
             }
@@ -4946,23 +5057,34 @@
 
             if (feedback) {
                 feedback.className = "text-[11px] font-medium p-2 rounded-lg bg-indigo-100/70 text-indigo-800 border border-indigo-200 block flex items-center gap-1.5";
-                feedback.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Consultando especificaciones oficiales en el directorio COFEPRIS / CICOPLAFEST...';
+                feedback.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Consultando registros fidedignos en el directorio oficial COFEPRIS / CICOPLAFEST...';
             }
 
             try {
                 const res = await fetch(`/api/v1/chemicals/online-lookup?q=${encodeURIComponent(query)}`);
                 if (!res.ok) {
                     const err = await res.json();
-                    throw new Error(err.detail || 'No se encontró información del químico solicitado.');
+                    throw new Error(err.detail || 'No se pudo conectar con el servicio de consulta.');
                 }
                 const data = await res.json();
 
-                populateChemicalForm(data);
+                if (!data.found || !data.matches || !data.matches.length) {
+                    if (feedback) {
+                        feedback.className = "text-[11px] font-medium p-2.5 rounded-lg bg-amber-50 text-amber-900 border border-amber-300 block space-y-1 animate-fadeIn";
+                        feedback.innerHTML = `<div class="flex items-center gap-1.5 font-bold"><i class="fa-solid fa-triangle-exclamation text-amber-600"></i> No se encontró registro oficial con "${query}".</div>` +
+                            `<div class="text-[10px] text-amber-800">Verifica que el nombre o RSCO esté bien escrito (ej. Biothrine, Demand, Cipermetrina, Advion, Temprid), o ingresa los datos manualmente en el formulario de abajo.</div>`;
+                    }
+                    return;
+                }
 
                 if (feedback) {
                     feedback.className = "text-[11px] font-medium p-2 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-300 block flex items-center gap-1.5 animate-fadeIn";
-                    feedback.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-600"></i> <b>¡Químico detectado y auto-completado!</b> ${data.commercial_name} (RSCO: ${data.cicoplafest_number}) — Dosis: ${data.authorized_dose_per_liter}`;
+                    feedback.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-600"></i> <b>¡Plaguicida encontrado!</b> Revisa los datos oficiales en la ventana de confirmación antes de incorporarlo.`;
                 }
+
+                // Abrir modal de confirmación con datos verificados
+                openConfirmChemicalModal(data.matches, data.best_match);
+
             } catch (err) {
                 if (feedback) {
                     feedback.className = "text-[11px] font-medium p-2 rounded-lg bg-rose-50 text-rose-800 border border-rose-300 block flex items-center gap-1.5";
@@ -4970,6 +5092,141 @@
                 } else {
                     alert('Error: ' + err.message);
                 }
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = origHtml;
+                }
+            }
+        }
+
+        function openConfirmChemicalModal(matches, bestMatch) {
+            currentLookupMatches = matches || [];
+            currentSelectedLookupMatch = bestMatch || (matches.length ? matches[0] : null);
+
+            if (!currentSelectedLookupMatch) return;
+
+            const multiBox = document.getElementById('confirm-chem-multi-selector-box');
+            const multiSelect = document.getElementById('confirm-chem-multi-select');
+
+            if (currentLookupMatches.length > 1) {
+                multiSelect.innerHTML = currentLookupMatches.map((m, idx) => `
+                    <option value="${idx}">${m.commercial_name} — ${m.active_ingredient} (${m.cicoplafest_number})</option>
+                `).join('');
+                multiSelect.value = "0";
+                multiBox.classList.remove('hidden');
+            } else {
+                multiBox.classList.add('hidden');
+            }
+
+            renderSelectedMatchInConfirmModal(currentSelectedLookupMatch);
+            document.getElementById('modal-confirm-chemical-add').classList.remove('hidden');
+        }
+
+        function onSelectMatchInConfirmModal(indexStr) {
+            const idx = parseInt(indexStr, 10);
+            if (!isNaN(idx) && currentLookupMatches[idx]) {
+                currentSelectedLookupMatch = currentLookupMatches[idx];
+                renderSelectedMatchInConfirmModal(currentSelectedLookupMatch);
+            }
+        }
+
+        function renderSelectedMatchInConfirmModal(match) {
+            if (!match) return;
+            document.getElementById('confirm-chem-name').innerText = match.commercial_name || '-';
+            document.getElementById('confirm-chem-rsco').innerText = match.cicoplafest_number || '-';
+            document.getElementById('confirm-chem-active').innerText = match.active_ingredient || '-';
+            document.getElementById('confirm-chem-mfg').innerText = match.manufacturer || 'Titular Regulado';
+            document.getElementById('confirm-chem-dose').innerText = match.authorized_dose_per_liter || match.authorized_dose || '10 ml / Litro';
+            document.getElementById('confirm-chem-hours').innerText = `${match.safety_interval_hours || 2} horas obligatorias`;
+            document.getElementById('confirm-chem-methods').innerText = match.compatible_methods || match.application_methods || 'Aspersión Manual';
+            document.getElementById('confirm-chem-tox').innerText = match.toxicological_category || 'Precaución (Banda Verde)';
+
+            const techLink = document.getElementById('confirm-chem-tech-link');
+            const safeLink = document.getElementById('confirm-chem-safe-link');
+
+            const techUrl = match.technical_sheet_url || `/api/v1/rsco/by-code/technical-sheet?rsco=${encodeURIComponent(match.cicoplafest_number)}&name=${encodeURIComponent(match.commercial_name)}`;
+            const safeUrl = match.safety_sheet_url || `/api/v1/rsco/by-code/safety-sheet?rsco=${encodeURIComponent(match.cicoplafest_number)}&name=${encodeURIComponent(match.commercial_name)}`;
+
+            techLink.href = techUrl;
+            safeLink.href = safeUrl;
+
+            // Actualizar texto del botón directo si ya está en catálogo
+            const directBtn = document.getElementById('btn-confirm-save-direct');
+            if (directBtn) {
+                if (match.in_local_catalog) {
+                    directBtn.innerHTML = '<i class="fa-solid fa-check-double"></i> Ya Registrado en Catálogo';
+                    directBtn.disabled = true;
+                    directBtn.className = "w-full sm:w-auto px-4 py-2 bg-slate-200 text-slate-500 font-bold rounded-xl cursor-not-allowed";
+                } else {
+                    directBtn.innerHTML = '<i class="fa-solid fa-circle-check"></i> Confirmar y Agregar al Catálogo';
+                    directBtn.disabled = false;
+                    directBtn.className = "w-full sm:w-auto px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl flex items-center justify-center gap-1.5 shadow-sm transition";
+                }
+            }
+        }
+
+        function closeConfirmChemicalModal() {
+            document.getElementById('modal-confirm-chemical-add').classList.add('hidden');
+        }
+
+        function confirmAndPopulateForm() {
+            if (!currentSelectedLookupMatch) return;
+            populateChemicalForm(currentSelectedLookupMatch);
+            closeConfirmChemicalModal();
+            switchTab('tab-quimicos');
+
+            const feedback = document.getElementById('quick-chem-lookup-feedback');
+            if (feedback) {
+                feedback.className = "text-[11px] font-medium p-2.5 rounded-lg bg-emerald-50 text-emerald-900 border border-emerald-300 block animate-fadeIn";
+                feedback.innerHTML = `<i class="fa-solid fa-pen-to-square text-teal-700"></i> Formulario cargado con datos de <b>${currentSelectedLookupMatch.commercial_name}</b>. Puedes realizar modificaciones y pulsar <b>"Guardar Químico"</b>.`;
+            }
+
+            const nameInput = document.getElementById('chem-name');
+            if (nameInput) {
+                nameInput.focus();
+                nameInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+
+        async function confirmAndSaveChemicalDirectly() {
+            if (!currentSelectedLookupMatch) return;
+            const prod = currentSelectedLookupMatch;
+            const btn = document.getElementById('btn-confirm-save-direct');
+            const origHtml = btn ? btn.innerHTML : '';
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Guardando en Catálogo...';
+            }
+
+            try {
+                const res = await fetch('/api/v1/chemicals', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        commercial_name: prod.commercial_name,
+                        active_ingredient: prod.active_ingredient,
+                        cicoplafest_number: prod.cicoplafest_number,
+                        authorized_dose_per_liter: prod.authorized_dose_per_liter || '10 ml / Litro',
+                        safety_interval_hours: parseInt(prod.safety_interval_hours) || 2,
+                        compatible_methods: prod.compatible_methods || 'Aspersión Manual',
+                        toxicological_category: prod.toxicological_category || 'Precaución (Banda Verde)',
+                        technical_sheet_url: prod.technical_sheet_url || null,
+                        safety_sheet_url: prod.safety_sheet_url || null
+                    })
+                });
+
+                if (!res.ok) {
+                    const err = await res.json();
+                    throw new Error(err.detail || 'Error al guardar plaguicida');
+                }
+
+                closeConfirmChemicalModal();
+                alert(`✓ ¡Plaguicida oficial "${prod.commercial_name}" (RSCO: ${prod.cicoplafest_number}) agregado con éxito al catálogo del sistema!`);
+                await loadChemicals();
+                switchTab('tab-quimicos');
+            } catch (err) {
+                alert('No se pudo agregar: ' + err.message);
             } finally {
                 if (btn) {
                     btn.disabled = false;
@@ -4994,19 +5251,7 @@
         function autofillFromRscoModal(index) {
             const prod = rscoSearchResults[index];
             if (!prod) return;
-            closeRscoSearchModal();
-            switchTab('tab-quimicos');
-            populateChemicalForm(prod);
-            const feedback = document.getElementById('quick-chem-lookup-feedback');
-            if (feedback) {
-                feedback.className = "text-[11px] font-medium p-2 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-300 block flex items-center gap-1.5 animate-fadeIn";
-                feedback.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-600"></i> Formulario cargado con datos oficiales de: <b>${prod.commercial_name}</b> (${prod.cicoplafest_number}). Revisa y pulsa "Guardar Químico".`;
-            }
-            const nameInput = document.getElementById('chem-name');
-            if (nameInput) {
-                nameInput.focus();
-                nameInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
+            openConfirmChemicalModal([prod], prod);
         }
 
         // ====================================================================
@@ -6580,38 +6825,10 @@
             `).join('');
         }
 
-        async function addRscoToLocalCatalog(index) {
+        function addRscoToLocalCatalog(index) {
             const prod = rscoSearchResults[index];
             if (!prod) return;
-
-            try {
-                const res = await fetch('/api/v1/chemicals', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        commercial_name: prod.commercial_name,
-                        active_ingredient: prod.active_ingredient,
-                        cicoplafest_number: prod.cicoplafest_number,
-                        authorized_dose_per_liter: prod.authorized_dose_per_liter,
-                        safety_interval_hours: prod.safety_interval_hours,
-                        compatible_methods: prod.compatible_methods,
-                        toxicological_category: prod.toxicological_category,
-                        technical_sheet_url: prod.technical_sheet_url || null,
-                        safety_sheet_url: prod.safety_sheet_url || null
-                    })
-                });
-
-                if (!res.ok) {
-                    const err = await res.json();
-                    throw new Error(err.detail || 'Error al guardar');
-                }
-
-                alert(`¡Químico "${prod.commercial_name}" agregado exitosamente al catálogo del SaaS!`);
-                await loadChemicals();
-                executeRscoSearch(document.getElementById('rsco-search-input').value);
-            } catch(err) {
-                alert('No se pudo dar de alta: ' + err.message);
-            }
+            openConfirmChemicalModal([prod], prod);
         }
 
         function useRscoProduct(index) {
