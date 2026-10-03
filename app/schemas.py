@@ -871,10 +871,14 @@ class AuditLogResponse(BaseModel):
 
 
 class AuditLogPaginationResponse(BaseModel):
-    total: int
+    total_records: int
     page: int
     page_size: int
     total_pages: int
-    logs: List[AuditLogResponse]
+    items: List[AuditLogResponse]
+    total: Optional[int] = None
+    logs: Optional[List[AuditLogResponse]] = None
+
+    model_config = ConfigDict(from_attributes=True)
 
 

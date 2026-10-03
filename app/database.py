@@ -210,7 +210,44 @@ def auto_migrate_schema(db_engine=None):
                 "ALTER TABLE IF EXISTS certificate_chemicals ADD COLUMN IF NOT EXISTS dose_applied VARCHAR(100);",
                 "ALTER TABLE IF EXISTS certificate_chemicals ADD COLUMN IF NOT EXISTS area_type VARCHAR(50);",
                 "ALTER TABLE IF EXISTS certificate_chemicals ADD COLUMN IF NOT EXISTS treated_zones_description VARCHAR(255);",
-                "ALTER TABLE IF EXISTS certificate_chemicals ADD COLUMN IF NOT EXISTS application_method VARCHAR(100);"
+                "ALTER TABLE IF EXISTS certificate_chemicals ADD COLUMN IF NOT EXISTS application_method VARCHAR(100);",
+
+                # audit_logs
+                """
+                CREATE TABLE IF NOT EXISTS audit_logs (
+                    id UUID PRIMARY KEY,
+                    action_type VARCHAR(50) NOT NULL,
+                    module VARCHAR(100) NOT NULL,
+                    description TEXT NOT NULL,
+                    user_id UUID,
+                    username VARCHAR(100),
+                    user_role VARCHAR(50),
+                    entity_id VARCHAR(100),
+                    entity_name VARCHAR(255),
+                    changes_payload TEXT,
+                    ip_address VARCHAR(100),
+                    user_agent VARCHAR(500),
+                    created_at TIMESTAMPTZ DEFAULT NOW(),
+                    updated_at TIMESTAMPTZ DEFAULT NOW()
+                );
+                """,
+                "CREATE INDEX IF NOT EXISTS ix_audit_logs_action_type ON audit_logs (action_type);",
+                "CREATE INDEX IF NOT EXISTS ix_audit_logs_module ON audit_logs (module);",
+                "CREATE INDEX IF NOT EXISTS ix_audit_logs_created_at ON audit_logs (created_at DESC);",
+                "CREATE INDEX IF NOT EXISTS ix_audit_logs_username ON audit_logs (username);",
+                "ALTER TABLE IF EXISTS audit_logs ADD COLUMN IF NOT EXISTS action_type VARCHAR(50);",
+                "ALTER TABLE IF EXISTS audit_logs ADD COLUMN IF NOT EXISTS module VARCHAR(100);",
+                "ALTER TABLE IF EXISTS audit_logs ADD COLUMN IF NOT EXISTS description TEXT;",
+                "ALTER TABLE IF EXISTS audit_logs ADD COLUMN IF NOT EXISTS user_id UUID;",
+                "ALTER TABLE IF EXISTS audit_logs ADD COLUMN IF NOT EXISTS username VARCHAR(100);",
+                "ALTER TABLE IF EXISTS audit_logs ADD COLUMN IF NOT EXISTS user_role VARCHAR(50);",
+                "ALTER TABLE IF EXISTS audit_logs ADD COLUMN IF NOT EXISTS entity_id VARCHAR(100);",
+                "ALTER TABLE IF EXISTS audit_logs ADD COLUMN IF NOT EXISTS entity_name VARCHAR(255);",
+                "ALTER TABLE IF EXISTS audit_logs ADD COLUMN IF NOT EXISTS changes_payload TEXT;",
+                "ALTER TABLE IF EXISTS audit_logs ADD COLUMN IF NOT EXISTS ip_address VARCHAR(100);",
+                "ALTER TABLE IF EXISTS audit_logs ADD COLUMN IF NOT EXISTS user_agent VARCHAR(500);",
+                "ALTER TABLE IF EXISTS audit_logs ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();",
+                "ALTER TABLE IF EXISTS audit_logs ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();"
             ]
 
             with db_engine.begin() as conn:
