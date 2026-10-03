@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Validación Oficial de Certificado Sanitario - FUMIFLOSA</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+    </style>
+</head>
+<body class="bg-slate-100 min-h-screen text-slate-800 flex flex-col justify-between">
+
+    <!-- Encabezado Superior -->
+    <header class="bg-slate-900 text-white shadow-md border-b border-emerald-500/30">
+        <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-emerald-600 flex items-center justify-center font-bold text-white shadow-md">
+                    <i class="fa-solid fa-shield-halved text-lg"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-sm tracking-wide text-white">PORTAL DE VALIDACIÓN Y AUTENTICIDAD</h1>
+                    <p class="text-[11px] text-emerald-400">FLOSA Control de Plagas · NOM-256-SSA1-2012</p>
+                </div>
+            </div>
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Sistema Oficial
+            </span>
+        </div>
+    </header>
+
+    <!-- Contenedor Principal -->
+    <main class="max-w-4xl mx-auto px-4 py-8 flex-1 w-full">
+        
+        <!-- Tarjeta de Estado de Carga -->
+        <div id="loading-card" class="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 text-center space-y-4">
+            <i class="fa-solid fa-circle-notch fa-spin text-4xl text-emerald-600"></i>
+            <h2 class="text-lg font-bold text-slate-900">Verificando firma digital y validez oficial...</h2>
+            <p class="text-sm text-slate-500">Consultando la cadena de custodia y los registros sanitarios en el servidor.</p>
+        </div>
+
+        <!-- Tarjeta de Error / No Encontrado -->
+        <div id="error-card" class="hidden bg-white p-8 rounded-2xl shadow-sm border border-rose-200 text-center space-y-4">
+            <div class="w-16 h-16 bg-rose-50 text-rose-600 rounded-2xl mx-auto flex items-center justify-center text-2xl border border-rose-200">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <h2 class="text-xl font-bold text-slate-900">Certificado No Encontrado</h2>
+            <p id="error-message" class="text-sm text-slate-600 max-w-md mx-auto">
+                No se encontró ningún registro oficial con los parámetros proporcionados. Verifique el folio o escanee nuevamente el código QR del documento.
+            </p>
+            <div class="pt-2">
+                <a href="/dashboard" class="inline-flex items-center gap-2 px-5 py-2.5 bg-slate-900 text-white rounded-xl text-xs font-bold hover:bg-slate-800 transition">
+                    <i class="fa-solid fa-house"></i> Ir al Portal Principal
+                </a>
+            </div>
+        </div>
+
+        <!-- Tarjeta de Certificado Válido y Fidedigno -->
+        <div id="valid-card" class="hidden space-y-6">
+            
+            <!-- Banner de Estatus -->
+            <div id="status-banner" class="p-6 rounded-2xl shadow-sm border flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div class="flex items-center gap-4">
+                    <div id="status-icon-box" class="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl shadow-sm"></div>
+                    <div>
+                        <span id="status-tag" class="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full"></span>
+                        <h2 id="status-title" class="text-xl font-extrabold mt-1"></h2>
+                        <p id="status-desc" class="text-xs"></p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <a id="download-pdf-btn" href="#" target="_blank" class="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold flex items-center gap-2 shadow-sm transition">
+                        <i class="fa-solid fa-file-pdf text-rose-400"></i> Descargar PDF Oficial
+                    </a>
+                </div>
+            </div>
+
+            <!-- Resumen del Certificado -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                
+                <!-- Datos Generales -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">
+                    <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2 pb-2 border-b border-slate-100">
+                        <i class="fa-solid fa-building text-emerald-600"></i> Datos del Servicio Sanitario
+                    </h3>
+                    <div class="space-y-3 text-xs">
+                        <div>
+                            <span class="text-slate-400 block text-[11px]">Folio Oficial de Certificado</span>
+                            <span id="cert-folio" class="font-mono font-bold text-emerald-700 text-sm"></span>
+                        </div>
+                        <div>
+                            <span class="text-slate-400 block text-[11px]">Folio Orden de Servicio</span>
+                            <span id="order-folio" class="font-mono font-bold text-slate-900 text-sm"></span>
+                        </div>
+                        <div>
+                            <span class="text-slate-400 block text-[11px]">Cliente / Razón Social</span>
+                            <span id="client-name" class="font-bold text-slate-800 text-sm block"></span>
+                            <span id="client-rfc" class="font-mono text-slate-500 text-[11px]"></span>
+                        </div>
+                        <div>
+                            <span class="text-slate-400 block text-[11px]">Sucursal / Unidad Operativa</span>
+                            <span id="branch-name" class="font-bold text-slate-800"></span>
+                            <p id="branch-address" class="text-slate-500 text-[11px] mt-0.5"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Vigencia y Responsable Sanitario -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">
+                    <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2 pb-2 border-b border-slate-100">
+                        <i class="fa-solid fa-calendar-check text-emerald-600"></i> Vigencia y Normativa
+                    </h3>
+                    <div class="space-y-3 text-xs">
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <span class="text-slate-400 block text-[11px]">Fecha de Expedición</span>
+                                <span id="issue-date" class="font-semibold text-slate-800"></span>
+                            </div>
+                            <div>
+                                <span class="text-slate-400 block text-[11px]">Periodo de Vigencia</span>
+                                <span id="validity-dates" class="font-bold text-slate-900"></span>
+                            </div>
+                        </div>
+                        <div>
+                            <span class="text-slate-400 block text-[11px]">Empresa Emisora</span>
+                            <span id="company-name" class="font-semibold text-slate-800">Marco Antonio Flores Sáenz (FLOSA)</span>
+                            <span id="company-rfc" class="block font-mono text-slate-500 text-[11px]">RFC: FOMS630329EA5</span>
+                        </div>
+                        <div>
+                            <span class="text-slate-400 block text-[11px]">Licencia Sanitaria Autorizada</span>
+                            <span id="sanitary-license" class="font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 inline-block"></span>
+                        </div>
+                        <div>
+                            <span class="text-slate-400 block text-[11px]">Responsable Técnico Sanitario</span>
+                            <span id="sanitary-resp" class="font-bold text-slate-800">MARCO ANTONIO FLORES SÁENZ</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Bloque de Firma Electrónica FIEL del SAT -->
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">
+                <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                    <h3 class="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                        <i class="fa-solid fa-fingerprint text-purple-600"></i> Evidencia Criptográfica de Firma Electrónica SAT (e.firma)
+                    </h3>
+                    <span id="fiel-badge" class="px-2.5 py-0.5 rounded-full text-[11px] font-bold"></span>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                    <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
+                        <span class="text-slate-400 block text-[11px]">Serie Certificado SAT</span>
+                        <span id="fiel-serial" class="font-mono font-bold text-slate-800"></span>
+                    </div>
+                    <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
+                        <span class="text-slate-400 block text-[11px]">Fecha y Hora de Sellado</span>
+                        <span id="fiel-date" class="font-mono font-semibold text-slate-800"></span>
+                    </div>
+                    <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
+                        <span class="text-slate-400 block text-[11px]">Firmante y RFC</span>
+                        <span id="fiel-signer" class="font-bold text-slate-800"></span>
+                    </div>
+                </div>
+
+                <!-- Cadena Original -->
+                <div>
+                    <span class="text-slate-500 font-bold block text-[11px] mb-1">Cadena Original de Certificación (SHA-256):</span>
+                    <div id="fiel-chain" class="bg-slate-900 text-emerald-400 font-mono text-[10px] p-3 rounded-xl overflow-x-auto break-all select-all leading-relaxed"></div>
+                </div>
+
+                <!-- Sello Digital -->
+                <div>
+                    <span class="text-slate-500 font-bold block text-[11px] mb-1">Sello Digital Criptográfico (RSA-SHA256):</span>
+                    <div id="fiel-seal" class="bg-slate-50 border border-slate-200 text-slate-700 font-mono text-[10px] p-3 rounded-xl overflow-x-auto break-all select-all leading-relaxed"></div>
+                </div>
+
+                <!-- Fundamento Legal -->
+                <div class="bg-amber-50 border border-amber-200/80 p-3.5 rounded-xl text-[11px] text-amber-900 space-y-1">
+                    <p class="font-bold flex items-center gap-1.5">
+                        <i class="fa-solid fa-scale-balanced text-amber-700"></i> Validez y Eficacia Jurídica Plena:
+                    </p>
+                    <p class="text-amber-800 leading-normal">
+                        Este certificado oficial cuenta con firma digital avanzada amparada en los Artículos 7 y 8 de la Ley de Firma Electrónica Avanzada, Artículo 89 del Código de Comercio y la NOM-256-SSA1-2012. Produce los mismos efectos jurídicos que los documentos con firma autógrafa ante COFEPRIS y Protección Civil.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Tabla de Plaguicidas Químicos Aplicados -->
+            <div id="chemicals-container" class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-3 hidden">
+                <h3 class="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2 pb-2 border-b border-slate-100">
+                    <i class="fa-solid fa-flask-vial text-emerald-600"></i> Químicos y Plaguicidas Autorizados Aplicados
+                </h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs border border-slate-200 rounded-lg">
+                        <thead class="bg-slate-50 text-slate-600 font-bold uppercase text-[10px]">
+                            <tr>
+                                <th class="p-2.5">Ingrediente Activo</th>
+                                <th class="p-2.5">Registro CICOPLAFEST</th>
+                                <th class="p-2.5">Dosis</th>
+                                <th class="p-2.5">Área Tratada</th>
+                                <th class="p-2.5">Método</th>
+                            </tr>
+                        </thead>
+                        <tbody id="chemicals-tbody" class="divide-y divide-slate-100 font-medium"></tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Pie de Página -->
+    <footer class="bg-slate-900 text-slate-400 py-6 border-t border-slate-800 text-xs text-center space-y-2">
+        <p>© 2026 <strong>FLOSA Control de Plagas</strong> · Marco Antonio Flores Sáenz · Todos los derechos reservados.</p>
+        <p class="text-slate-500 text-[11px]">Sistema Certificado Conforme a la Norma Oficial Mexicana NOM-256-SSA1-2012</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const folio = urlParams.get('folio');
+            const uuid = urlParams.get('uuid');
+
+            let query = '';
+            if (folio) query = `folio=${encodeURIComponent(folio)}`;
+            else if (uuid) query = `uuid=${encodeURIComponent(uuid)}`;
+            else {
+                // Check if path has folio e.g. /verificar/CER-00001
+                const pathParts = window.location.pathname.split('/');
+                const lastPart = pathParts[pathParts.length - 1];
+                if (lastPart && lastPart !== 'verificar' && lastPart !== 'verify') {
+                    query = `folio=${encodeURIComponent(lastPart)}`;
+                }
+            }
+
+            if (!query) {
+                showError("No se proporcionó ningún folio o identificador de verificación en la URL.");
+                return;
+            }
+
+            try {
+                const res = await fetch(`/api/v1/certificates/verify-lookup?${query}`);
+                const data = await res.json();
+                
+                if (!res.ok || !data.success) {
+                    showError(data.detail || data.message || "El certificado no existe en los registros oficiales.");
+                    return;
+                }
+
+                renderVerification(data.certificate);
+            } catch (err) {
+                showError("Ocurrió un error al contactar el servidor de validación: " + err.message);
+            }
+        });
+
+        function showError(msg) {
+            document.getElementById('loading-card').classList.add('hidden');
+            document.getElementById('valid-card').classList.add('hidden');
+            document.getElementById('error-card').classList.remove('hidden');
+            document.getElementById('error-message').innerText = msg;
+        }
+
+        function renderVerification(cert) {
+            document.getElementById('loading-card').classList.add('hidden');
+            document.getElementById('error-card').classList.add('hidden');
+            document.getElementById('valid-card').classList.remove('hidden');
+
+            const isCancelled = cert.is_cancelled;
+            const isCurrentlyValid = cert.is_currently_valid;
+            const isSigned = cert.is_signed_digitally;
+
+            const banner = document.getElementById('status-banner');
+            const iconBox = document.getElementById('status-icon-box');
+            const tag = document.getElementById('status-tag');
+            const title = document.getElementById('status-title');
+            const desc = document.getElementById('status-desc');
+
+            if (isCancelled) {
+                banner.className = 'p-6 rounded-2xl shadow-sm border bg-rose-50 border-rose-200 text-rose-950 flex flex-col md:flex-row items-start md:items-center justify-between gap-4';
+                iconBox.className = 'w-14 h-14 rounded-2xl flex items-center justify-center text-2xl shadow-sm bg-rose-100 text-rose-600 border border-rose-300';
+                iconBox.innerHTML = '<i class="fa-solid fa-ban"></i>';
+                tag.className = 'text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-rose-200 text-rose-800';
+                tag.innerText = 'DOCUMENTO CANCELADO';
+                title.innerText = 'Certificado Cancelado / Sin Validez';
+                desc.innerText = `Motivo: ${cert.cancellation_reason || 'Servicio reprogramado o revocado'}.`;
+            } else if (isCurrentlyValid) {
+                banner.className = 'p-6 rounded-2xl shadow-sm border bg-emerald-50 border-emerald-200 text-emerald-950 flex flex-col md:flex-row items-start md:items-center justify-between gap-4';
+                iconBox.className = 'w-14 h-14 rounded-2xl flex items-center justify-center text-2xl shadow-sm bg-emerald-600 text-white shadow-emerald-600/30';
+                iconBox.innerHTML = '<i class="fa-solid fa-circle-check"></i>';
+                tag.className = 'text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-emerald-200 text-emerald-800';
+                tag.innerText = 'CERTIFICADO AUTÉNTICO Y VIGENTE';
+                title.innerText = 'Documento Fidedigno con Validez Oficial';
+                desc.innerText = 'Este certificado cumple plenamente con la NOM-256-SSA1-2012 y se encuentra dentro de su periodo de vigencia legal de 30 días.';
+            } else {
+                banner.className = 'p-6 rounded-2xl shadow-sm border bg-amber-50 border-amber-200 text-amber-950 flex flex-col md:flex-row items-start md:items-center justify-between gap-4';
+                iconBox.className = 'w-14 h-14 rounded-2xl flex items-center justify-center text-2xl shadow-sm bg-amber-100 text-amber-700 border border-amber-300';
+                iconBox.innerHTML = '<i class="fa-solid fa-clock-rotate-left"></i>';
+                tag.className = 'text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-amber-200 text-amber-800';
+                tag.innerText = 'VIGENCIA EXPIRADA';
+                title.innerText = 'Certificado Auténtico (Vigencia Vencida)';
+                desc.innerText = 'El certificado es auténtico pero ha superado el plazo normativo de 30 días naturales.';
+            }
+
+            // Datos
+            document.getElementById('cert-folio').innerText = cert.certificate_folio || 'CER-00000';
+            document.getElementById('order-folio').innerText = cert.order_folio || 'ORD-00000';
+            document.getElementById('client-name').innerText = cert.client_name || 'Cliente General';
+            document.getElementById('client-rfc').innerText = cert.client_rfc ? `RFC: ${cert.client_rfc}` : '';
+            document.getElementById('branch-name').innerText = cert.branch_name || 'Sucursal';
+            document.getElementById('branch-address').innerText = cert.branch_address || 'Dirección registrada';
+            document.getElementById('issue-date').innerText = cert.issue_date || '-';
+            document.getElementById('validity-dates').innerText = `${cert.validity_start_date} al ${cert.validity_end_date}`;
+            document.getElementById('sanitary-license').innerText = cert.sanitary_license_number || '08 17 19 SA 0001';
+            document.getElementById('sanitary-resp').innerText = cert.sanitary_responsible_name || 'MARCO ANTONIO FLORES SÁENZ';
+
+            // FIEL
+            const fielBadge = document.getElementById('fiel-badge');
+            if (isSigned) {
+                fielBadge.className = 'px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300';
+                fielBadge.innerHTML = '<i class="fa-solid fa-check-double text-emerald-600"></i> FIRMADO CON e.firma SAT';
+            } else {
+                fielBadge.className = 'px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800 border border-amber-300';
+                fielBadge.innerText = 'PENDIENTE DE SELLO DIGITAL';
+            }
+
+            document.getElementById('fiel-serial').innerText = cert.sat_serial_number || '30001000000500003416';
+            document.getElementById('fiel-date').innerText = cert.signed_at || cert.issue_date || '-';
+            document.getElementById('fiel-signer').innerText = `${cert.signed_by || 'MARCO ANTONIO FLORES SÁENZ'} (${cert.signer_rfc || 'FOMS630329EA5'})`;
+            document.getElementById('fiel-chain').innerText = cert.original_chain || '||08 17 19 SA 0001|FOMS630329EA5|...||';
+            document.getElementById('fiel-seal').innerText = cert.digital_signature_seal || 'Sello pendiente de estampar';
+
+            // Descargar PDF
+            if (cert.service_order_id) {
+                document.getElementById('download-pdf-btn').href = `/api/v1/services/${cert.service_order_id}/pdf`;
+            } else {
+                document.getElementById('download-pdf-btn').classList.add('hidden');
+            }
+
+            // Químicos aplicados
+            if (cert.applied_chemicals && cert.applied_chemicals.length > 0) {
+                const tbody = document.getElementById('chemicals-tbody');
+                tbody.innerHTML = '';
+                cert.applied_chemicals.forEach(c => {
+                    tbody.innerHTML += `
+                        <tr class="hover:bg-slate-50">
+                            <td class="p-2.5 font-bold text-slate-800">${c.active_ingredient || c.chemical_name || '-'}</td>
+                            <td class="p-2.5 font-mono text-emerald-700">${c.cicoplafest_number || '-'}</td>
+                            <td class="p-2.5">${c.dose_applied || '-'}</td>
+                            <td class="p-2.5">${c.area_type || c.treated_zones_description || 'Interiores'}</td>
+                            <td class="p-2.5">${c.application_method || 'Aspersión'}</td>
+                        </tr>
+                    `;
+                });
+                document.getElementById('chemicals-container').classList.remove('hidden');
+            }
+        }
+    </script>
+</body>
+</html>

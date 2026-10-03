@@ -15,6 +15,7 @@ import uuid
 from datetime import date, datetime, timedelta, timezone
 from sqlalchemy.orm import Session
 from sqlalchemy import or_
+from sqlalchemy.exc import IntegrityError
 
 from app.models import (
     CompanyConfig, User, UserRole, Chemical, RSCOItem,
@@ -305,6 +306,11 @@ def seed_clients_and_services(db: Session) -> int:
     Inserta clientes institucionales, sucursales y certificados de ejemplo con
     distintas vigencias de forma idempotente y segura.
     """
+    if db.query(User).count() == 0:
+        seed_users(db)
+    if db.query(Chemical).count() == 0:
+        seed_chemicals(db)
+
     # Obtener un técnico y químicos para asociar
     tech = db.query(User).filter(User.role == UserRole.TECNICO_CAMPO, User.is_active == True).first()
     if not tech:
@@ -314,6 +320,7 @@ def seed_clients_and_services(db: Session) -> int:
     chem_maxforce = db.query(Chemical).filter(Chemical.commercial_name.contains("Maxforce")).first()
     chem_demand = db.query(Chemical).filter(Chemical.commercial_name.contains("Demand")).first()
     chem_temprid = db.query(Chemical).filter(Chemical.commercial_name.contains("Temprid")).first()
+    chem_storm = db.query(Chemical).filter(Chemical.commercial_name.contains("Storm")).first()
 
     today = date.today()
 
@@ -332,11 +339,13 @@ def seed_clients_and_services(db: Session) -> int:
                     "contact": "Dra. Marcela Rivas",
                     "classification": BranchClassification.HOSPITALARIA,
                     "service_days_ago": 5, # Vigente (25 días restantes)
-                    "folio": "IMSS-2026-001",
+                    "folio": "ORD-00001",
+                    "cert_folio": "CER-00001",
                     "quimicos": [chem_biothrine, chem_maxforce],
                     "pests": "Cucarachas, Moscas, Áreas Clínicas",
                     "method": "Aspersión Manual y Gel Focalizado",
-                    "areas": "Cocina General, Almacén de Víveres y Archivo Clínico"
+                    "areas": "Cocina General, Almacén de Víveres y Archivo Clínico",
+                    "status": "completed"
                 },
                 {
                     "name": "UMF No. 28 - Gabriel Mancera",
@@ -346,11 +355,13 @@ def seed_clients_and_services(db: Session) -> int:
                     "contact": "Dra. María Garza",
                     "classification": BranchClassification.HOSPITALARIA,
                     "service_days_ago": 24, # Próximo a vencer en 6 días (Crítico)
-                    "folio": "IMSS-2026-002",
+                    "folio": "ORD-00002",
+                    "cert_folio": "CER-00002",
                     "quimicos": [chem_maxforce],
                     "pests": "Cucaracha Alemana",
                     "method": "Gel Cucarachicida",
-                    "areas": "Consultorios 1 al 12 y Farmacia"
+                    "areas": "Consultorios 1 al 12 y Farmacia",
+                    "status": "completed"
                 },
                 {
                     "name": "Hospital General de Zona No. 24",
@@ -360,11 +371,29 @@ def seed_clients_and_services(db: Session) -> int:
                     "contact": "Dr. Armando Fuentes",
                     "classification": BranchClassification.HOSPITALARIA,
                     "service_days_ago": 16, # Advertencia (14 días restantes)
-                    "folio": "IMSS-2026-003",
+                    "folio": "ORD-00003",
+                    "cert_folio": "CER-00003",
                     "quimicos": [chem_demand, chem_biothrine],
                     "pests": "Insectos Rastreros y Voladores",
                     "method": "Aspersión Residual Microencapsulada",
-                    "areas": "Comedores, Sótanos y Perímetros"
+                    "areas": "Comedores, Sótanos y Perímetros",
+                    "status": "completed"
+                },
+                {
+                    "name": "UMF No. 4 - Santa María",
+                    "unit_code": "UMF-04",
+                    "address": "Calle Fresno 120, Cuauhtémoc, CDMX",
+                    "phone": "5555478901",
+                    "contact": "Dr. Sergio Lara",
+                    "classification": BranchClassification.HOSPITALARIA,
+                    "service_days_ago": -2, # Agendado en 2 días
+                    "folio": "ORD-00004",
+                    "cert_folio": "CER-00004",
+                    "quimicos": [chem_biothrine],
+                    "pests": "Cucarachas y Fauna Nociva",
+                    "method": "Aspersión Manual y Trampeo",
+                    "areas": "Archivo Clínico y Pasillos Generales",
+                    "status": "scheduled"
                 }
             ]
         },
@@ -382,11 +411,13 @@ def seed_clients_and_services(db: Session) -> int:
                     "contact": "Lic. Roberto Gómez",
                     "classification": BranchClassification.COMERCIAL,
                     "service_days_ago": 2, # Reciente (28 días restantes)
-                    "folio": "WAL-2026-088",
+                    "folio": "ORD-00005",
+                    "cert_folio": "CER-00005",
                     "quimicos": [chem_temprid, chem_maxforce],
                     "pests": "Cucarachas, Hormigas, Roedores",
                     "method": "Microinyección y Cebado",
-                    "areas": "Piso de Venta, Bodega de Secos y Panadería"
+                    "areas": "Piso de Venta, Bodega de Secos y Panadería",
+                    "status": "completed"
                 },
                 {
                     "name": "Bodega Aurrera San Antonio",
@@ -396,11 +427,29 @@ def seed_clients_and_services(db: Session) -> int:
                     "contact": "Ing. Patricia Vega",
                     "classification": BranchClassification.COMERCIAL,
                     "service_days_ago": 45, # Vencido (hace 15 días)
-                    "folio": "WAL-2026-072",
-                    "quimicos": [chem_biothrine],
-                    "pests": "Insectos Rastreros",
-                    "method": "Aspersión Manual",
-                    "areas": "Andenes de Carga y Pasillos de Trastienda"
+                    "folio": "ORD-00006",
+                    "cert_folio": "CER-00006",
+                    "quimicos": [chem_biothrine, chem_storm],
+                    "pests": "Insectos Rastreros y Roedores",
+                    "method": "Aspersión Manual y Estaciones Cebaderas",
+                    "areas": "Andenes de Carga y Pasillos de Trastienda",
+                    "status": "completed"
+                },
+                {
+                    "name": "Walmart Supercenter Universidad",
+                    "unit_code": "WAL-501",
+                    "address": "Av. Universidad 1000, Benito Juárez, CDMX",
+                    "phone": "5556041122",
+                    "contact": "Lic. Fernando Ortega",
+                    "classification": BranchClassification.COMERCIAL,
+                    "service_days_ago": -5, # Agendado en 5 días
+                    "folio": "ORD-00007",
+                    "cert_folio": "CER-00007",
+                    "quimicos": [chem_temprid],
+                    "pests": "Insectos Rastreros y Voladores",
+                    "method": "Aspersión Perimetral",
+                    "areas": "Andenes de Carga y Bodegas",
+                    "status": "scheduled"
                 }
             ]
         },
@@ -418,11 +467,53 @@ def seed_clients_and_services(db: Session) -> int:
                     "contact": "Lic. Carlos Mendoza",
                     "classification": BranchClassification.COMERCIAL,
                     "service_days_ago": 10, # Vigente (20 días restantes)
-                    "folio": "OXXO-2026-042",
+                    "folio": "ORD-00008",
+                    "cert_folio": "CER-00008",
                     "quimicos": [chem_biothrine, chem_demand],
                     "pests": "Cucarachas y Moscas",
                     "method": "Aspersión y Termonebulización",
-                    "areas": "Bodega y Área de Mostrador"
+                    "areas": "Bodega y Área de Mostrador",
+                    "status": "completed"
+                },
+                {
+                    "name": "OXXO Félix Cuevas",
+                    "unit_code": "OXXO-1502",
+                    "address": "Félix Cuevas 402, Benito Juárez, CDMX",
+                    "phone": "5552345699",
+                    "contact": "Lic. Sofía Robles",
+                    "classification": BranchClassification.COMERCIAL,
+                    "service_days_ago": -3, # Agendado en 3 días
+                    "folio": "ORD-00009",
+                    "cert_folio": "CER-00009",
+                    "quimicos": [chem_biothrine],
+                    "pests": "Cucarachas y Hormigas",
+                    "method": "Aspersión y Gel Focalizado",
+                    "areas": "Bodega y Cuarto Frío",
+                    "status": "scheduled"
+                }
+            ]
+        },
+        {
+            "legal_name": "COMERCIALIZADORA FARMACÉUTICA DE CHIAPAS S.A.P.I. DE C.V.",
+            "rfc": "CFC110123AB1",
+            "portal_slug": "fahorro",
+            "contract": "FA-NACIONAL-2026",
+            "branches": [
+                {
+                    "name": "Farmacias del Ahorro Eje Central",
+                    "unit_code": "FA-012",
+                    "address": "Eje Central Lázaro Cárdenas 501, Benito Juárez, CDMX",
+                    "phone": "5555320011",
+                    "contact": "Q.F.B. Daniela Roldán",
+                    "classification": BranchClassification.COMERCIAL,
+                    "service_days_ago": 12, # Vigente (18 días restantes)
+                    "folio": "ORD-00010",
+                    "cert_folio": "CER-00010",
+                    "quimicos": [chem_maxforce, chem_biothrine],
+                    "pests": "Cucarachas y Fauna Nociva",
+                    "method": "Gel Cucarachicida y Aspersión Focalizada",
+                    "areas": "Farmacia, Almacén de Medicamentos y Consultorio",
+                    "status": "completed"
                 }
             ]
         }
@@ -455,9 +546,10 @@ def seed_clients_and_services(db: Session) -> int:
                         client_id=client.id,
                         name=b_data["name"],
                         unit_code=b_data.get("unit_code"),
-                        full_address=b_data["address"],
+                        address=b_data["address"],
                         phone=b_data["phone"],
-                        branch_contact_name=b_data["contact"],
+                        responsible_contact_name=b_data["contact"],
+                        responsible_contact_email=f"contacto.{b_data.get('unit_code', 'suc')[:8].lower()}@cliente.mx",
                         classification=b_data["classification"]
                     )
                     db.add(branch)
@@ -467,63 +559,79 @@ def seed_clients_and_services(db: Session) -> int:
                 # Verificar si la orden ya existe
                 existing_order = db.query(ServiceOrder).filter(ServiceOrder.folio == b_data["folio"]).first()
                 if not existing_order:
-                    svc_date = today - timedelta(days=b_data["service_days_ago"])
-                    start_dt = datetime.combine(svc_date, datetime.min.time().replace(hour=8, minute=0)).replace(tzinfo=timezone.utc)
-                    end_dt = datetime.combine(svc_date, datetime.min.time().replace(hour=11, minute=0)).replace(tzinfo=timezone.utc)
+                    svc_status = b_data.get("status", "completed")
+                    days_ago = b_data["service_days_ago"]
+                    svc_date = today - timedelta(days=days_ago)
+                    start_dt = datetime.combine(svc_date, datetime.min.time().replace(hour=9, minute=0)).replace(tzinfo=timezone.utc)
+                    end_dt = datetime.combine(svc_date, datetime.min.time().replace(hour=11, minute=30)).replace(tzinfo=timezone.utc)
                     validity_end = svc_date + timedelta(days=30)
 
                     service_order = ServiceOrder(
                         branch_id=branch.id,
                         technician_id=tech.id if tech else None,
                         folio=b_data["folio"],
-                        status="completed",
+                        status=svc_status,
                         service_start_date=start_dt,
                         service_end_date=end_dt,
                         scheduled_for=start_dt,
-                        pest_detected=b_data["pests"],
-                        areas_treated=b_data["areas"],
-                        application_method=b_data["method"],
-                        general_observations="Servicio mensual preventivo y correctivo conforme a la NOM-256-SSA1-2012."
+                        pest_crawling_insects=True,
+                        pest_rodents=True if ("Roedor" in b_data.get("pests", "") or "roedor" in b_data.get("pests", "").lower()) else False,
+                        pest_flying_insects=True if ("Moscas" in b_data.get("pests", "") or "Voladores" in b_data.get("pests", "")) else False,
+                        pest_others=b_data.get("pests"),
+                        proc_aspersion=True if "Aspersión" in b_data.get("method", "") else False,
+                        proc_gels=True if "Gel" in b_data.get("method", "") else False,
+                        proc_baits=True if ("Cebad" in b_data.get("method", "") or "Cebad" in b_data.get("pests", "")) else False,
+                        proc_traps=True if "Trampeo" in b_data.get("method", "") else False,
+                        proc_thermofogging=True if "Termonebulización" in b_data.get("method", "") else False,
+                        results_summary=f"Servicio ejecutado en {b_data['areas']}. Eficacia comprobada.",
+                        observations="Servicio mensual preventivo y correctivo conforme a la NOM-256-SSA1-2012."
                     )
                     db.add(service_order)
                     db.commit()
                     db.refresh(service_order)
 
-                    certificate = Certificate(
-                        service_order_id=service_order.id,
-                        issue_date=svc_date,
-                        validity_end_date=validity_end,
-                        reentry_safety_hours=2,
-                        sanitary_license_number_snapshot="08 17 19 SA 0001",
-                        sanitary_responsible_name_snapshot="MARCO ANTONIO FLORES SÁENZ",
-                        is_cancelled=False
-                    )
-                    db.add(certificate)
-                    db.commit()
-                    db.refresh(certificate)
-
-                    # Químicos aplicados
-                    for chem in b_data.get("quimicos", []):
-                        if chem:
-                            app_chem = CertificateChemical(
-                                certificate_id=certificate.id,
-                                chemical_id=chem.id,
-                                chemical_name_snapshot=chem.commercial_name,
-                                active_ingredient_snapshot=chem.active_ingredient,
-                                cicoplafest_snapshot=chem.cicoplafest_number,
-                                dose_applied_snapshot=chem.authorized_dose_per_liter,
-                                applied_area_snapshot=b_data["areas"],
-                                application_method_snapshot=b_data["method"],
-                                area_type=AreaType.INTERIOR
+                    # Crear Certificado Oficial únicamente para servicios completados
+                    if svc_status == "completed":
+                        cert_folio = b_data.get("cert_folio") or b_data["folio"].replace("ORD-", "CER-")
+                        existing_cert = db.query(Certificate).filter(Certificate.certificate_folio == cert_folio).first()
+                        if not existing_cert:
+                            certificate = Certificate(
+                                service_order_id=service_order.id,
+                                certificate_folio=cert_folio,
+                                issue_date=svc_date,
+                                validity_start_date=svc_date,
+                                validity_end_date=validity_end,
+                                sanitary_license_number="08 17 19 SA 0001",
+                                sanitary_responsible_name="MARCO ANTONIO FLORES SÁENZ",
+                                sanitary_responsible_id="CED-8849201",
+                                is_signed=False,
+                                is_cancelled=False
                             )
-                            db.add(app_chem)
+                            db.add(certificate)
+                            db.commit()
+                            db.refresh(certificate)
 
-                    db.commit()
+                            # Químicos aplicados
+                            for chem in b_data.get("quimicos", []):
+                                if chem:
+                                    app_chem = CertificateChemical(
+                                        certificate_id=certificate.id,
+                                        chemical_id=chem.id,
+                                        dose_applied=chem.authorized_dose_per_liter or "10 ml / L de agua",
+                                        area_type=AreaType.INTERIOR,
+                                        treated_zones_description=b_data["areas"],
+                                        application_method=b_data["method"]
+                                    )
+                                    db.add(app_chem)
+
+                            db.commit()
                     total_services_created += 1
-        except IntegrityError:
+        except IntegrityError as ie:
             db.rollback()
-        except Exception:
+            print(f"[SEED SERVICES INTEGRITY WARNING]: {ie}")
+        except Exception as ex:
             db.rollback()
+            print(f"[SEED SERVICES EXCEPTION]: {ex}")
 
     return total_services_created
 
@@ -634,6 +742,12 @@ def seed_bitacoras_and_equipment(db: Session) -> int:
 
 def seed_all_database_defaults(db: Session) -> dict:
     """Ejecuta todos los sembradores garantizando integridad y disponibilidad instantánea de datos."""
+    try:
+        from app.database import auto_migrate_schema
+        auto_migrate_schema(db.get_bind())
+    except Exception as e:
+        print(f"[SEED SCHEMA AUTO-MIGRATE NOTICE]: {e}")
+
     cfg = seed_company_config(db)
     u_count = seed_users(db)
     c_count = seed_chemicals(db)

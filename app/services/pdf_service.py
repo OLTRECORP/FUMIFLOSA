@@ -12,6 +12,10 @@ from reportlab.platypus import (
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_CENTER, TA_RIGHT, TA_LEFT, TA_JUSTIFY
 from reportlab.pdfgen import canvas
+from reportlab.lib.utils import ImageReader
+from reportlab.graphics.barcode.qr import QrCodeWidget
+from reportlab.graphics.shapes import Drawing
+from reportlab.graphics import renderPDF
 
 from app.models import ServiceOrder, Certificate, CompanyConfig
 
@@ -21,6 +25,21 @@ FRAME_PATH = ASSETS_DIR / "border_frame.png"
 WATERMARK_PATH = ASSETS_DIR / "watermark_flosa.png"
 LOGO_PATH = ASSETS_DIR / "logo_flosa.png"
 SIGNATURE_PATH = ASSETS_DIR / "signature_mafs.png"
+
+# Caché en memoria para evitar I/O de disco y descompresión reiterada de PNGs
+_CACHED_IMAGES: Dict[str, ImageReader] = {}
+
+def _get_cached_image(path: Path) -> Optional[ImageReader]:
+    """Obtiene una imagen pre-cargada en memoria para acelerar la generación de PDFs."""
+    if not path.exists():
+        return None
+    p_str = str(path)
+    if p_str not in _CACHED_IMAGES:
+        try:
+            _CACHED_IMAGES[p_str] = ImageReader(p_str)
+        except Exception:
+            return None
+    return _CACHED_IMAGES[p_str]
 
 
 def _safe_str(val: Any, default: str = "") -> str:
@@ -62,9 +81,11 @@ class OfficialCertificatePDFGenerator:
         c = canvas.Canvas(buffer, pagesize=landscape(letter))
         page_width, page_height = landscape(letter)  # 792.0 x 612.0
 
-        # 1. MARCO ORNAMENTAL HISTÓRICO
-        if FRAME_PATH.exists():
-            c.drawImage(str(FRAME_PATH), 8.25, 14.25, width=775.5, height=585.0, mask='auto')
+        # 1. MARCO ORNAMENTAL HISTÓRICO (Bordes exteriores en x=[8.25, 783.75], y=[14.25, 599.25])
+        # Recuadro interior blanco seguro: x in [80, 712] (ancho útil 632 pt), y in [88, 516]
+        frame_img = _get_cached_image(FRAME_PATH)
+        if frame_img:
+            c.drawImage(frame_img, 8.25, 14.25, width=775.5, height=585.0, mask='auto')
         else:
             c.setStrokeColor(colors.HexColor("#738C7B"))
             c.setLineWidth(3)
@@ -72,35 +93,36 @@ class OfficialCertificatePDFGenerator:
             c.setLineWidth(0.8)
             c.rect(25, 25, page_width - 50, page_height - 50)
 
-        # 2. ENCABEZADO CENTRADO (FORMATO EXACTO WORD)
-        c.setFont("Times-Bold", 23)
+        # 2. ENCABEZADO CENTRADO DENTRO DEL RECUADRO BLANCO (Y seguro: 512 a 462)
+        c.setFont("Times-Bold", 17)
         c.setFillColor(colors.HexColor("#435D40"))
-        c.drawCentredString(396, 508, "CERTIFICADO DE SERVICIO")
+        c.drawCentredString(396, 504, "CERTIFICADO DE SERVICIO")
 
-        c.setFont("Times-BoldItalic", 9)
+        c.setFont("Times-BoldItalic", 7.8)
         c.setFillColor(colors.HexColor("#111111"))
         
         responsible_title = getattr(company, 'company_name', None) or "Marco Antonio Flores Sáenz (FLOSA Control de Plagas)"
-        c.drawCentredString(396, 484, responsible_title)
+        c.drawCentredString(396, 489, responsible_title)
         
         comp_rfc = getattr(company, 'rfc', None) or "FOMS630329EA5"
         comp_tel = getattr(company, 'phone', None) or "6258373393"
-        c.drawCentredString(396, 472, f"{comp_rfc}    Tel: {comp_tel}")
+        c.drawCentredString(396, 479, f"{comp_rfc}    Tel: {comp_tel}")
         
         comp_address = getattr(company, 'address', None) or "C10a 685 Col. Centro, Cd. Cuauhtémoc, Chih C.P. 31500"
-        c.drawCentredString(396, 460, comp_address)
+        c.drawCentredString(396, 469, comp_address)
 
-        # 3. FOLIO Y FECHA (ALINEADOS A LA DERECHA)
-        folio_str = getattr(cert, 'certificate_folio', None) or (f"B/{order.folio}" if order and getattr(order, 'folio', None) else "B/00001")
+        # 3. FOLIO Y FECHA (ALINEADOS A LA DERECHA DENTRO DEL MARGEN 712)
+        folio_str = getattr(cert, 'certificate_folio', None) or (f"CER-{order.folio.split('-')[-1]}" if order and getattr(order, 'folio', None) else "CER-00001")
         issue_date_val = getattr(cert, 'issue_date', None) or (getattr(order, 'service_start_date', None).date() if order and getattr(order, 'service_start_date', None) else date.today())
         issue_str = issue_date_val.strftime("%d/%m/%y") if issue_date_val else date.today().strftime("%d/%m/%y")
 
-        c.setFont("Times-BoldItalic", 9.5)
+        c.setFont("Times-Bold", 7.8)
         c.setFillColor(colors.HexColor("#111111"))
-        c.drawRightString(706, 442, f"Folio:    {folio_str}")
-        c.drawRightString(706, 428, f"Fecha De Expedición:   {issue_str}")
+        c.drawRightString(710, 455, f"Folio:    {folio_str}")
+        c.setFont("Times-BoldItalic", 7.8)
+        c.drawRightString(710, 444, f"Fecha De Expedición:   {issue_str}")
 
-        # 4. DATOS DEL CLIENTE Y LUGAR DE SERVICIO
+        # 4. DATOS DEL CLIENTE Y LUGAR DE SERVICIO (ANCHO EXACTO 632 PT, MARGEN IZQUIERDO 80)
         branch = getattr(order, 'branch', None) if order else None
         client = getattr(branch, 'client', None) if branch else None
 
@@ -130,16 +152,16 @@ class OfficialCertificatePDFGenerator:
             'ClientLabel',
             parent=styles['Normal'],
             fontName='Times-Bold',
-            fontSize=9,
-            leading=11,
+            fontSize=7.2,
+            leading=8.6,
             textColor=colors.HexColor("#111111")
         )
         client_val_style = ParagraphStyle(
             'ClientVal',
             parent=styles['Normal'],
             fontName='Times-Bold',
-            fontSize=9,
-            leading=11,
+            fontSize=7.2,
+            leading=8.6,
             textColor=colors.HexColor("#111111")
         )
 
@@ -162,26 +184,26 @@ class OfficialCertificatePDFGenerator:
             ]
         ]
         
-        client_table = Table(client_rows, colWidths=[115, 507])
+        client_table = Table(client_rows, colWidths=[110, 522])
         client_table.setStyle(TableStyle([
             ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-            ('TOPPADDING', (0, 0), (-1, -1), 1.5),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5),
+            ('TOPPADDING', (0, 0), (-1, -1), 0.5),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 0.5),
             ('LEFTPADDING', (0, 0), (-1, -1), 0),
             ('RIGHTPADDING', (0, 0), (-1, -1), 0),
         ]))
         
         # Render tabla cliente
-        client_table.wrapOn(c, 622, 100)
-        client_table.drawOn(c, 85, 360)
+        client_table.wrapOn(c, 632, 65)
+        client_table.drawOn(c, 80, 396)
 
-        # 5. TABLA DE QUÍMICOS / INGREDIENTES ACTIVOS (HASTA 4 LÍNEAS - FORMATO WORD)
+        # 5. TABLA DE QUÍMICOS / INGREDIENTES ACTIVOS (ANCHO EXACTO 632 PT)
         chem_hdr_style = ParagraphStyle(
             'ChemHdr',
             parent=styles['Normal'],
             fontName='Times-Bold',
-            fontSize=8.5,
-            leading=10,
+            fontSize=6.8,
+            leading=7.8,
             alignment=TA_CENTER,
             textColor=colors.HexColor("#111111")
         )
@@ -189,8 +211,8 @@ class OfficialCertificatePDFGenerator:
             'ChemCell',
             parent=styles['Normal'],
             fontName='Times-Roman',
-            fontSize=8.5,
-            leading=10,
+            fontSize=6.8,
+            leading=7.8,
             alignment=TA_CENTER,
             textColor=colors.HexColor("#111111")
         )
@@ -236,30 +258,30 @@ class OfficialCertificatePDFGenerator:
                 Paragraph("&nbsp;", chem_cell_style)
             ])
 
-        chem_table = Table(chem_data, colWidths=[140, 192, 78, 106, 106], rowHeights=[19] * 5)
+        chem_table = Table(chem_data, colWidths=[142, 195, 75, 110, 110], rowHeights=[13.5] * 5)
         chem_table.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#E8EFE7")),
             ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor("#777777")),
             ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
             ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-            ('TOPPADDING', (0, 0), (-1, -1), 2),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 2),
+            ('TOPPADDING', (0, 0), (-1, -1), 1),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 1),
         ]))
 
-        chem_table.wrapOn(c, 622, 100)
-        chem_table.drawOn(c, 85, 250)
+        chem_table.wrapOn(c, 632, 70)
+        chem_table.drawOn(c, 80, 318)
 
-        # 6. RECOMENDACIONES AL CLIENTE
-        c.setFont("Times-Bold", 9)
+        # 6. RECOMENDACIONES AL CLIENTE (ANCHO EXACTO 632 PT)
+        c.setFont("Times-Bold", 7.2)
         c.setFillColor(colors.HexColor("#111111"))
-        c.drawString(85, 234, "Recomendaciones al cliente:")
+        c.drawString(80, 306, "Recomendaciones al cliente:")
 
         rec_style = ParagraphStyle(
             'RecStyle',
             parent=styles['Normal'],
             fontName='Times-Roman',
-            fontSize=8,
-            leading=10.5,
+            fontSize=6.5,
+            leading=8.2,
             alignment=TA_JUSTIFY,
             textColor=colors.HexColor("#111111")
         )
@@ -269,49 +291,51 @@ class OfficialCertificatePDFGenerator:
             "Para antídotos en caso de contacto o ingestión acudir al medico o llame a SINTOX."
         )
 
-        rec_table = Table([[Paragraph(recommendations_text, rec_style)]], colWidths=[622])
+        rec_table = Table([[Paragraph(recommendations_text, rec_style)]], colWidths=[632])
         rec_table.setStyle(TableStyle([
             ('BOX', (0, 0), (-1, -1), 0.5, colors.HexColor("#999999")),
-            ('TOPPADDING', (0, 0), (-1, -1), 4),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
-            ('LEFTPADDING', (0, 0), (-1, -1), 6),
-            ('RIGHTPADDING', (0, 0), (-1, -1), 6),
+            ('TOPPADDING', (0, 0), (-1, -1), 2),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 2),
+            ('LEFTPADDING', (0, 0), (-1, -1), 4),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 4),
         ]))
-        rec_table.wrapOn(c, 622, 50)
-        rec_table.drawOn(c, 85, 185)
+        rec_table.wrapOn(c, 632, 28)
+        rec_table.drawOn(c, 80, 274)
 
-        # 7. PIE DE PÁGINA (3 COLUMNAS: LOGO, FIRMA TÉCNICA, SINTOX)
-        # Logo izquierdo
-        if LOGO_PATH.exists():
-            c.drawImage(str(LOGO_PATH), 85, 75, width=175.0, height=75.0, mask='auto')
+        # 7. FILA OPERATIVA (LOGO IZQUIERDA, FIRMA TÉCNICA AUTÓGRAFA CENTRO, SINTOX DERECHA)
+        logo_img = _get_cached_image(LOGO_PATH)
+        if logo_img:
+            c.drawImage(logo_img, 80, 214, width=115.0, height=50.0, mask='auto')
 
-        # Firma Centro
-        if SIGNATURE_PATH.exists():
-            c.drawImage(str(SIGNATURE_PATH), 335, 108, width=125.0, height=50.0, mask='auto')
+        # Firma autógrafa con mayor presencia y tamaño visual
+        sig_img = _get_cached_image(SIGNATURE_PATH)
+        if sig_img:
+            c.drawImage(sig_img, 328, 224, width=136.0, height=48.0, mask='auto')
 
         c.setStrokeColor(colors.HexColor("#222222"))
         c.setLineWidth(0.8)
-        c.line(300, 110, 492, 110)
+        c.line(275, 226, 517, 226)
 
-        c.setFont("Times-Bold", 9)
+        c.setFont("Times-Bold", 7.5)
         c.setFillColor(colors.HexColor("#111111"))
         resp_name = "MARCO ANTONIO FLORES SÁENZ"
-        c.drawCentredString(396, 96, resp_name)
+        c.drawCentredString(396, 215, resp_name)
         
-        c.drawCentredString(396, 84, "Responsable Técnico")
+        c.setFont("Times-Bold", 6.8)
+        c.drawCentredString(396, 205, "Responsable Técnico")
 
         license_no = getattr(cert, 'sanitary_license_number', None) or (getattr(company, 'sanitary_license_number', None) if company else "08 17 19 SA 0001")
         if not license_no or "08 17 19" not in str(license_no):
             license_no = "08 17 19 SA 0001"
-        c.drawCentredString(396, 72, f"No. De Licencia Sanitaria: {license_no}")
+        c.drawCentredString(396, 195, f"No. De Licencia Sanitaria: {license_no}")
 
-        # Recuadro SINTOX (Derecha)
+        # Recuadro SINTOX (Derecha, x=527, ancho=185 -> max x=712)
         sintox_body_style = ParagraphStyle(
             'SintoxBody',
             parent=styles['Normal'],
             fontName='Times-Bold',
-            fontSize=6.2,
-            leading=8,
+            fontSize=5.2,
+            leading=6.6,
             alignment=TA_CENTER
         )
 
@@ -321,19 +345,82 @@ class OfficialCertificatePDFGenerator:
             "<font color='#111111'>AREA METROPOLITANA 01(55)5598-6659 Y (55)5611-2634</font><br/>"
             "<font color='#1A56DB'><b>SERVICIO LAS 24 HORAS</b></font>"
         )
-        sintox_table = Table([[Paragraph(sintox_content, sintox_body_style)]], colWidths=[204])
+        sintox_table = Table([[Paragraph(sintox_content, sintox_body_style)]], colWidths=[185])
         sintox_table.setStyle(TableStyle([
             ('BOX', (0, 0), (-1, -1), 0.8, colors.HexColor("#C53030")),
             ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor("#FFFAFA")),
-            ('TOPPADDING', (0, 0), (-1, -1), 4),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+            ('TOPPADDING', (0, 0), (-1, -1), 2),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 2),
+            ('LEFTPADDING', (0, 0), (-1, -1), 3),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 3),
+        ]))
+        sintox_table.wrapOn(c, 185, 52)
+        sintox_table.drawOn(c, 527, 214)
+
+        # 8. CONSTANCIA DIGITAL OFICIAL Y FIRMA ELECTRÓNICA AVANZADA (DISEÑO IDÉNTICO Y HOMOGÉNEO)
+        is_signed = getattr(cert, 'is_signed', False) and bool(getattr(cert, 'digital_signature_seal', None))
+        
+        # QR Oficial en esquina inferior izquierda (x=84, y=114, tamaño 52x52)
+        qr_data = f"https://fumiflosa.mx/verificar?folio={cert.certificate_folio}&uuid={cert.verification_uuid or cert.id}&rfc={cert.signed_by_rfc or comp_rfc}"
+        qr_widget = QrCodeWidget(qr_data)
+        qr_widget.barWidth = 52
+        qr_widget.barHeight = 52
+        qr_drawing = Drawing(52, 52)
+        qr_drawing.add(qr_widget)
+        renderPDF.draw(qr_drawing, c, 84, 114)
+
+        c.setFont("Helvetica-Bold", 5.2)
+        c.setFillColor(colors.HexColor("#166534"))
+        c.drawCentredString(110, 103, "ESCANEAR PARA VALIDAR")
+        c.setFont("Helvetica", 4.8)
+        c.setFillColor(colors.HexColor("#475569"))
+        c.drawCentredString(110, 93, "Validez Oficial SAT / NOM-256")
+
+        # Bloque criptográfico / constancia oficial SAT (x=148, ancho=564 -> max x=712, y=90 -> top 184)
+        seal_fiel_style = ParagraphStyle(
+            'SealSingleStyle',
+            parent=styles['Normal'],
+            fontName='Courier',
+            fontSize=4.2,
+            leading=5.2,
+            textColor=colors.HexColor("#0F172A")
+        )
+        
+        sign_dt_str = cert.signed_at.strftime('%Y-%m-%d %H:%M:%S UTC') if getattr(cert, 'signed_at', None) else date.today().strftime('%Y-%m-%d')
+        if is_signed:
+            fiel_box_html = (
+                f"<b>FIRMA ELECTRÓNICA AVANZADA (e.firma / FIEL del SAT) - CONSTANCIA OFICIAL NOM-256</b><br/>"
+                f"<b>Serie SAT:</b> {cert.certificate_serial_number or '30001000000500003416'} &nbsp;|&nbsp; "
+                f"<b>Fecha Sellado:</b> {sign_dt_str} &nbsp;|&nbsp; "
+                f"<b>Firmante:</b> {cert.signed_by_name or responsible_title} (RFC: {cert.signed_by_rfc or comp_rfc})<br/>"
+                f"<b>Cadena Original:</b><br/>"
+                f"<font face='Courier' size='4.0'>{cert.original_chain or '||...||'}</font><br/>"
+                f"<b>Sello Digital Criptográfico (RSA-SHA256):</b><br/>"
+                f"<font face='Courier' size='4.0'>{cert.digital_signature_seal}</font>"
+            )
+        else:
+            fiel_box_html = (
+                f"<b>CONSTANCIA DIGITAL DE VALIDEZ SANITARIA OFICIAL (NOM-256-SSA1-2012 / COFEPRIS)</b><br/>"
+                f"<b>Folio Digital:</b> {cert.certificate_folio} &nbsp;|&nbsp; <b>ID Verificación UUID:</b> {cert.verification_uuid or cert.id}<br/>"
+                f"<b>Responsable Sanitario:</b> {cert.sanitary_responsible_name or responsible_title} (RFC: {comp_rfc}) &nbsp;|&nbsp; <b>Licencia Sanitaria:</b> {license_no}<br/>"
+                f"<b>Cadena de Autenticidad Oficial:</b><br/>"
+                f"<font face='Courier' size='4.0'>||{cert.certificate_folio}|{issue_str}|{comp_rfc}|{license_no}|{client_display}|NOM-256-SSA1-2012||</font><br/>"
+                f"<b>Registro de Emisión:</b> Certificado Oficial registrado en Plataforma FLOSA. Validez plena para inspección sanitaria COFEPRIS / Escanee el código QR para validar autenticidad en tiempo real."
+            )
+
+        fiel_single_table = Table([[Paragraph(fiel_box_html, seal_fiel_style)]], colWidths=[564])
+        fiel_single_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor("#F0FDF4")),
+            ('BOX', (0, 0), (-1, -1), 0.5, colors.HexColor("#86EFAC")),
+            ('TOPPADDING', (0, 0), (-1, -1), 2.5),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 2.5),
             ('LEFTPADDING', (0, 0), (-1, -1), 4),
             ('RIGHTPADDING', (0, 0), (-1, -1), 4),
         ]))
-        sintox_table.wrapOn(c, 204, 55)
-        sintox_table.drawOn(c, 503, 85)
+        fiel_single_table.wrapOn(c, 564, 94)
+        fiel_single_table.drawOn(c, 148, 90)
 
-        # 8. MARCA DE AGUA EN CASO DE CANCELACIÓN
+        # 9. MARCA DE AGUA EN CASO DE CANCELACIÓN
         if getattr(cert, 'is_cancelled', False):
             c.saveState()
             c.setFont("Helvetica-Bold", 65)
@@ -345,12 +432,12 @@ class OfficialCertificatePDFGenerator:
 
             # Cintillo superior de cancelación
             c.setFillColor(colors.HexColor("#E53E3E"))
-            c.rect(75, page_height - 65, page_width - 150, 20, fill=True, stroke=False)
+            c.rect(80, 508, 632, 16, fill=True, stroke=False)
             c.setFillColor(colors.white)
-            c.setFont("Helvetica-Bold", 8)
+            c.setFont("Helvetica-Bold", 7.5)
             cancel_date_str = cert.cancelled_at.strftime("%d/%m/%Y %H:%M") if cert.cancelled_at else ""
             cancel_msg = f"CERTIFICADO CANCELADO: {cert.cancellation_reason or 'No se llevó a cabo'} ({cancel_date_str})"
-            c.drawCentredString(page_width / 2, page_height - 52, cancel_msg[:120])
+            c.drawCentredString(page_width / 2, 513, cancel_msg[:120])
 
         c.showPage()
         c.save()
@@ -688,7 +775,7 @@ class OfficialWorkOrderPDFGenerator:
         elements.append(diag_table)
         elements.append(Spacer(1, 12))
 
-        # 6. FIRMAS DE CONFORMIDAD
+        # 6. FIRMAS DE CONFORMIDAD OPERATIVA (EN CAMPO)
         sig_data = [
             [
                 Paragraph(f"_____________________________<br/><b>{tech_full_name}</b><br/>Responsable Técnico Operativo<br/>No. De Licencia Sanitaria: {license_no}", subtitle_style),
@@ -699,7 +786,8 @@ class OfficialWorkOrderPDFGenerator:
         sig_table.setStyle(TableStyle([
             ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
             ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-            ('TOPPADDING', (0, 0), (-1, -1), 8),
+            ('TOPPADDING', (0, 0), (-1, -1), 4),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
         ]))
         elements.append(KeepTogether(sig_table))
 

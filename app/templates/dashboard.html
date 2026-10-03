@@ -29,6 +29,27 @@
             }
         }
     </script>
+    <style>
+        /* Modos de Tamaño de Texto para Accesibilidad y Fácil Lectura */
+        body.text-zoom-sm { font-size: 13px; }
+        body.text-zoom-base { font-size: 14.5px; }
+        body.text-zoom-lg { font-size: 16.5px; }
+        body.text-zoom-xl { font-size: 18.5px; }
+
+        /* Escalamiento proporcional de elementos y tablas */
+        body.text-zoom-lg .text-xs, body.text-zoom-lg .text-\[11px\], body.text-zoom-lg .text-\[10px\] { font-size: 13.5px !important; line-height: 1.4 !important; }
+        body.text-zoom-lg .text-sm { font-size: 15.5px !important; }
+        body.text-zoom-lg .text-base { font-size: 18px !important; }
+        body.text-zoom-lg input, body.text-zoom-lg select, body.text-zoom-lg textarea, body.text-zoom-lg button { font-size: 13.5px !important; }
+
+        body.text-zoom-xl .text-xs, body.text-zoom-xl .text-\[11px\], body.text-zoom-xl .text-\[10px\] { font-size: 15.5px !important; line-height: 1.5 !important; }
+        body.text-zoom-xl .text-sm { font-size: 17.5px !important; }
+        body.text-zoom-xl .text-base { font-size: 20px !important; }
+        body.text-zoom-xl input, body.text-zoom-xl select, body.text-zoom-xl textarea, body.text-zoom-xl button { font-size: 15.5px !important; }
+
+        /* Contraste y nitidez global */
+        .tab-btn { transition: all 0.15s ease-in-out; }
+    </style>
 </head>
 <body class="bg-slate-100 text-slate-800 font-sans min-h-screen flex flex-col antialiased">
 
@@ -524,6 +545,127 @@
             <div class="flex justify-between items-center pt-2 border-t border-slate-100 flex-shrink-0 text-xs">
                 <span id="rsco-count-display" class="text-slate-500 text-[11px]">0 productos encontrados</span>
                 <button type="button" onclick="closeRscoSearchModal()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-lg text-xs">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE CONFIRMACIÓN Y REVISIÓN DE QUÍMICO OFICIAL ENCONTRADO -->
+    <div id="modal-confirm-chemical-add" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-6 space-y-4 border border-slate-200 max-h-[90vh] flex flex-col animate-fadeIn">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3 flex-shrink-0">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-9 h-9 bg-emerald-100 text-emerald-800 rounded-xl flex items-center justify-center text-base font-bold">
+                        <i class="fa-solid fa-flask-vial"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2 flex-wrap">
+                            Plaguicida Oficial COFEPRIS / CICOPLAFEST
+                            <span id="confirm-chem-badge" class="bg-emerald-100 text-emerald-800 text-[10px] font-extrabold px-2 py-0.5 rounded-full border border-emerald-300">🏛️ SIIPRIS COFEPRIS Oficial</span>
+                        </h3>
+                        <p class="text-[11px] text-slate-500">
+                            Validado con el portal oficial mexicano: 
+                            <a href="https://siipris03.cofepris.gob.mx/Resoluciones/Consultas/ConWebRegPlaguicida.asp" target="_blank" class="text-indigo-600 hover:underline font-bold inline-flex items-center gap-1">
+                                Consulta SIIPRIS COFEPRIS <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
+                            </a>
+                        </p>
+                    </div>
+                </div>
+                <button onclick="closeConfirmChemicalModal()" class="text-slate-400 hover:text-slate-600 p-1"><i class="fa-solid fa-xmark text-base"></i></button>
+            </div>
+
+            <!-- Selector si hay múltiples coincidencias -->
+            <div id="confirm-chem-multi-selector-box" class="hidden flex-shrink-0 bg-indigo-50/70 p-3 rounded-xl border border-indigo-200 space-y-1.5">
+                <label class="block text-xs font-bold text-indigo-950 flex items-center gap-1.5">
+                    <i class="fa-solid fa-list-check text-indigo-600"></i> Se encontraron varios plaguicidas oficiales. Selecciona el que deseas revisar:
+                </label>
+                <select id="confirm-chem-multi-select" onchange="onSelectMatchInConfirmModal(this.value)" class="w-full bg-white border border-indigo-300 rounded-lg p-2 text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-indigo-500"></select>
+            </div>
+
+            <!-- Tarjeta con Especificaciones Técnicas Fidedignas -->
+            <div class="flex-1 overflow-y-auto space-y-3 pr-1 text-xs">
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 pb-2.5">
+                        <div>
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Nombre Comercial</span>
+                            <h4 id="confirm-chem-name" class="text-base font-extrabold text-slate-900">-</h4>
+                        </div>
+                        <div class="text-left sm:text-right">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Registro CICOPLAFEST / RSCO</span>
+                            <div id="confirm-chem-rsco" class="font-mono font-bold text-xs bg-indigo-100 text-indigo-900 px-2.5 py-1 rounded-lg border border-indigo-200 inline-block">-</div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div class="bg-white p-2.5 rounded-lg border border-slate-200/80">
+                            <span class="text-[10px] text-slate-400 block font-semibold">Ingrediente Activo</span>
+                            <span id="confirm-chem-active" class="font-bold text-slate-800 text-xs">-</span>
+                        </div>
+                        <div class="bg-white p-2.5 rounded-lg border border-slate-200/80">
+                            <span class="text-[10px] text-slate-400 block font-semibold">Fabricante / Empresa Titular</span>
+                            <span id="confirm-chem-mfg" class="font-bold text-slate-800 text-xs">-</span>
+                        </div>
+                        <div class="bg-white p-2.5 rounded-lg border border-slate-200/80">
+                            <span class="text-[10px] text-slate-400 block font-semibold">Vigencia del Registro</span>
+                            <span id="confirm-chem-vigencia" class="font-bold text-indigo-700 text-xs">-</span>
+                        </div>
+                        <div class="bg-white p-2.5 rounded-lg border border-slate-200/80">
+                            <span class="text-[10px] text-slate-400 block font-semibold">Categoría Toxicológica</span>
+                            <span id="confirm-chem-tox" class="font-bold text-emerald-800 text-xs">-</span>
+                        </div>
+                        <div class="bg-white p-2.5 rounded-lg border border-slate-200/80">
+                            <span class="text-[10px] text-slate-400 block font-semibold">Dosis Autorizada en Etiqueta</span>
+                            <span id="confirm-chem-dose" class="font-bold text-teal-800 text-xs">-</span>
+                        </div>
+                        <div class="bg-white p-2.5 rounded-lg border border-slate-200/80">
+                            <span class="text-[10px] text-slate-400 block font-semibold">Intervalo de Reentrada</span>
+                            <span id="confirm-chem-hours" class="font-bold text-slate-800 text-xs">-</span>
+                        </div>
+                        <div class="bg-white p-2.5 rounded-lg border border-slate-200/80 sm:col-span-2">
+                            <span class="text-[10px] text-slate-400 block font-semibold">Métodos de Aplicación Compatibles</span>
+                            <span id="confirm-chem-methods" class="font-medium text-slate-800 text-xs">-</span>
+                        </div>
+                        <div class="bg-white p-2.5 rounded-lg border border-slate-200/80 sm:col-span-2">
+                            <span class="text-[10px] text-slate-400 block font-semibold">Plagas y Usos Autorizados Oficiales</span>
+                            <span id="confirm-chem-usos" class="font-medium text-slate-800 text-xs block max-h-24 overflow-y-auto pr-1">-</span>
+                        </div>
+                    </div>
+
+                    <!-- Enlaces oficiales de documentación -->
+                    <div class="pt-2 border-t border-slate-200 flex flex-wrap items-center justify-between gap-2">
+                        <span class="text-[11px] font-bold text-slate-600">Documentación y Fichas Oficiales:</span>
+                        <div class="flex items-center gap-2">
+                            <a id="confirm-chem-tech-link" href="#" target="_blank" class="px-2.5 py-1 bg-teal-50 hover:bg-teal-100 text-teal-800 font-bold rounded-lg text-[11px] border border-teal-200 flex items-center gap-1 shadow-2xs">
+                                <i class="fa-solid fa-file-lines text-teal-600"></i> Ficha Técnica
+                            </a>
+                            <a id="confirm-chem-safe-link" href="#" target="_blank" class="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold rounded-lg text-[11px] border border-amber-200 flex items-center gap-1 shadow-2xs">
+                                <i class="fa-solid fa-shield-halved text-amber-600"></i> Hoja HDS NOM-018
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-amber-50 border border-amber-200 p-3 rounded-xl text-amber-900 text-xs flex items-start gap-2">
+                    <i class="fa-solid fa-circle-info text-amber-600 mt-0.5"></i>
+                    <div>
+                        <span class="font-bold">¿Deseas agregar este plaguicida al catálogo del sistema?</span>
+                        <p class="text-[11px] text-amber-800 mt-0.5">Revisa que los datos correspondan al producto que vas a utilizar. Puedes agregarlo directamente al catálogo o rellenar el formulario para personalizar dosis o especificaciones.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botones de Acción y Confirmación -->
+            <div class="flex flex-col sm:flex-row justify-between items-center gap-2 pt-3 border-t border-slate-100 flex-shrink-0 text-xs">
+                <button type="button" onclick="closeConfirmChemicalModal()" class="w-full sm:w-auto px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl transition">
+                    Cancelar
+                </button>
+                <div class="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
+                    <button type="button" onclick="confirmAndPopulateForm()" class="w-full sm:w-auto px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-xl flex items-center justify-center gap-1.5 shadow-sm transition">
+                        <i class="fa-solid fa-pen-to-square"></i> Rellenar Formulario para Editar
+                    </button>
+                    <button type="button" id="btn-confirm-save-direct" onclick="confirmAndSaveChemicalDirectly()" class="w-full sm:w-auto px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl flex items-center justify-center gap-1.5 shadow-sm transition">
+                        <i class="fa-solid fa-circle-check"></i> Confirmar y Agregar al Catálogo
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -1116,7 +1258,7 @@
                     <span id="login-error-text" class="leading-tight">Credenciales inválidas. Por favor verifica.</span>
                 </div>
 
-                <form onsubmit="handleMasterLogin(event)" class="space-y-4">
+                <form id="form-auth-login" onsubmit="event.preventDefault(); handleMasterLogin(event); return false;" class="space-y-4">
                     <div>
                         <label class="block text-xs font-bold text-slate-700 mb-1">Usuario o Correo:</label>
                         <div class="relative">
@@ -1124,6 +1266,7 @@
                                 <i class="fa-solid fa-user-shield text-xs"></i>
                             </div>
                             <input type="text" id="login-input-username" required placeholder="Usuario o correo electrónico" autocomplete="username"
+                                onkeydown="if(event.key === 'Enter'){ event.preventDefault(); handleMasterLogin(event); }"
                                 class="w-full pl-9 pr-3 py-2.5 text-xs font-mono font-bold bg-slate-50 border border-slate-300 rounded-xl focus:bg-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500 focus:outline-none transition" />
                         </div>
                     </div>
@@ -1138,6 +1281,7 @@
                                 <i class="fa-solid fa-lock text-xs"></i>
                             </div>
                             <input type="password" id="login-input-password" required placeholder="••••••••" autocomplete="current-password"
+                                onkeydown="if(event.key === 'Enter'){ event.preventDefault(); handleMasterLogin(event); }"
                                 class="w-full pl-9 pr-10 py-2.5 text-xs font-mono font-bold bg-slate-50 border border-slate-300 rounded-xl focus:bg-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500 focus:outline-none transition" />
                             <button type="button" onclick="toggleLoginPassword()" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600">
                                 <i id="toggle-pwd-icon" class="fa-solid fa-eye text-xs"></i>
@@ -1145,7 +1289,7 @@
                         </div>
                     </div>
 
-                    <button type="submit" id="btn-login-submit"
+                    <button type="button" id="btn-login-submit" onclick="handleMasterLogin(event)"
                         class="w-full bg-brand-600 hover:bg-brand-700 text-white font-extrabold py-3 px-4 rounded-xl text-xs shadow-lg shadow-brand-600/25 flex items-center justify-center gap-2 transition hover:-translate-y-0.5 active:translate-y-0">
                         <i class="fa-solid fa-arrow-right-to-bracket"></i> Iniciar Sesión Super Usuario
                     </button>
@@ -1173,10 +1317,24 @@
                 </div>
             </div>
             
-            <div class="flex items-center space-x-3">
+            <div class="flex items-center space-x-2.5">
+                <!-- Control de Tamaño de Letra / Accesibilidad Visual -->
+                <div class="flex items-center bg-slate-800/90 border border-slate-700 rounded-lg p-1 gap-1 text-xs">
+                    <span class="text-slate-400 text-[11px] px-1 font-bold flex items-center gap-1" title="Ajuste de Tamaño de Texto para Lectura Cómoda">
+                        <i class="fa-solid fa-text-height text-emerald-400"></i> <span class="hidden xl:inline">Texto:</span>
+                    </span>
+                    <button type="button" onclick="setTextZoom('sm')" id="btn-zoom-sm" title="Texto Compacto" class="btn-zoom-option px-2 py-0.5 rounded text-[11px] font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700 transition">A-</button>
+                    <button type="button" onclick="setTextZoom('base')" id="btn-zoom-base" title="Texto Normal" class="btn-zoom-option px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-600 text-white border border-emerald-500 hover:bg-emerald-700 transition">A</button>
+                    <button type="button" onclick="setTextZoom('lg')" id="btn-zoom-lg" title="Texto Grande" class="btn-zoom-option px-2 py-0.5 rounded text-[11px] font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700 transition">A+</button>
+                    <button type="button" onclick="setTextZoom('xl')" id="btn-zoom-xl" title="Texto Extra Grande (Fácil Lectura)" class="btn-zoom-option px-2 py-0.5 rounded text-[11px] font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700 transition">A++</button>
+                </div>
+
                 <a href="/docs" target="_blank" class="hidden sm:flex text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-md border border-slate-700 items-center gap-1.5 transition">
                     <i class="fa-solid fa-code"></i> API Swagger
                 </a>
+                <span id="top-fiel-status-badge" class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-800 text-slate-300 border border-slate-700">
+                    <span class="w-2 h-2 mr-1.5 bg-amber-400 rounded-full"></span> FIEL SAT
+                </span>
 
                 <!-- Super Usuario Logged In Badge -->
                 <div id="topbar-user-badge" class="flex items-center gap-2 bg-slate-800/90 text-slate-200 border border-slate-700 px-3 py-1.5 rounded-lg text-xs">
@@ -1235,6 +1393,9 @@
                     <button onclick="switchTab('tab-vencimientos')" id="btn-tab-vencimientos" class="tab-btn py-3.5 px-3 border-b-2 border-transparent font-medium text-xs text-slate-500 hover:text-slate-800 flex items-center gap-1.5">
                         <i class="fa-solid fa-clock"></i> Calendario Vencimientos
                     </button>
+                    <button onclick="switchTab('tab-masivo')" id="btn-tab-masivo" class="tab-btn py-3.5 px-3 border-b-2 border-transparent font-medium text-xs text-slate-500 hover:text-slate-800 flex items-center gap-1.5">
+                        <i class="fa-solid fa-layer-group text-purple-600"></i> Generación Mensual B2B
+                    </button>
                     <button onclick="switchTab('tab-analytics')" id="btn-tab-analytics" class="tab-btn py-3.5 px-3 border-b-2 border-transparent font-medium text-xs text-slate-500 hover:text-slate-800 flex items-center gap-1.5">
                         <i class="fa-solid fa-chart-pie text-indigo-600"></i> Métricas & Analytics
                     </button>
@@ -1254,7 +1415,7 @@
                         <i class="fa-solid fa-users-gear"></i> Usuarios & STPS
                     </button>
                     <button onclick="switchTab('tab-empresa')" id="btn-tab-empresa" class="tab-btn py-3.5 px-3 border-b-2 border-transparent font-medium text-xs text-slate-500 hover:text-slate-800 flex items-center gap-1.5">
-                        <i class="fa-solid fa-sliders text-amber-600"></i> Datos Empresa Fumigadora
+                        <i class="fa-solid fa-stamp text-amber-600"></i> Configuración Empresa & FIEL SAT
                     </button>
                     <button onclick="switchTab('tab-bitacoras')" id="btn-tab-bitacoras" class="tab-btn py-3.5 px-3 border-b-2 border-transparent font-medium text-xs text-slate-500 hover:text-slate-800 flex items-center gap-1.5">
                         <i class="fa-solid fa-clipboard-list text-purple-600"></i> Bitácoras Oficiales (MIP)
@@ -1415,7 +1576,124 @@
             </div>
 
             <!-- ============================================================= -->
-            <!-- 2. PESTAÑA: MÉTRICAS Y ANALYTICS AVANZADOS -->
+            <!-- 2. PESTAÑA: GENERACIÓN MASIVA MENSUAL B2B -->
+            <!-- ============================================================= -->
+            <div id="tab-masivo" class="p-6 space-y-6 hidden">
+                <div class="bg-gradient-to-r from-purple-900 to-indigo-900 rounded-xl p-6 text-white space-y-2">
+                    <div class="flex items-center gap-2">
+                        <span class="bg-purple-500/30 text-purple-200 text-xs font-bold px-2.5 py-0.5 rounded-full border border-purple-400/30">
+                            <i class="fa-solid fa-bolt"></i> Contratos Mensuales Multi-Sucursal
+                        </span>
+                    </div>
+                    <h2 class="text-lg font-bold">Generador Automático de Órdenes y Certificados Mensuales</h2>
+                    <p class="text-xs text-purple-200 max-w-3xl leading-relaxed">
+                        Diseñado para contratos recurrentes con decenas o cientos de unidades (ej. IMSS con 100+ unidades, OXXO, hospitales). Clona automáticamente la última configuración registrada de cada sucursal (químicos, dosis, plagas, procedimientos) actualizando las fechas de aplicación, vigencia a 30 días, y generando folios únicos consecutivos.
+                    </p>
+                </div>
+
+                <form id="form-monthly-batch" onsubmit="handleMonthlyBatch(event)" class="space-y-6 text-xs">
+                    <!-- Configuración Principal -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 bg-slate-50 p-5 rounded-xl border border-slate-200">
+                        <div>
+                            <label class="block font-semibold text-slate-700 mb-1">Cliente Matriz *</label>
+                            <select id="batch-client-id" required onchange="onBatchClientChanged()" class="w-full bg-white border border-slate-300 rounded-lg p-2.5 font-medium"></select>
+                            <p id="batch-branch-count-badge" class="text-[11px] text-indigo-600 mt-1 font-semibold"></p>
+                        </div>
+                        <div>
+                            <label class="block font-semibold text-slate-700 mb-1">Fecha de Aplicación para este Mes *</label>
+                            <input type="date" id="batch-target-date" required class="w-full bg-white border border-slate-300 rounded-lg p-2.5" />
+                        </div>
+                        <div>
+                            <label class="block font-semibold text-slate-700 mb-1">Hora y Duración Estimada</label>
+                            <div class="grid grid-cols-2 gap-2">
+                                <input type="time" id="batch-start-time" value="09:00" class="w-full bg-white border border-slate-300 rounded-lg p-2.5" />
+                                <select id="batch-duration" class="w-full bg-white border border-slate-300 rounded-lg p-2.5">
+                                    <option value="1">1 hora</option>
+                                    <option value="2" selected>2 horas</option>
+                                    <option value="4">4 horas</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Modo de Generación y Técnico -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 bg-slate-50 p-5 rounded-xl border border-slate-200">
+                        <div>
+                            <label class="block font-semibold text-slate-700 mb-1">Modo de Generación</label>
+                            <select id="batch-mode" class="w-full bg-white border border-slate-300 rounded-lg p-2.5">
+                                <option value="clone_last_service" selected>🔁 Clonar último servicio de cada sucursal (Recomendado)</option>
+                                <option value="use_template">📄 Aplicar plantilla uniforme a todas</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block font-semibold text-slate-700 mb-1">Técnico Asignado</label>
+                            <select id="batch-tech-id" class="w-full bg-white border border-slate-300 rounded-lg p-2.5">
+                                <option value="">(Conservar técnico previo por sucursal)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block font-semibold text-slate-700 mb-1">Prefijo de Folio</label>
+                            <input type="text" id="batch-prefix" value="ORD" placeholder="ORD" class="w-full bg-white border border-slate-300 rounded-lg p-2.5 uppercase font-mono" />
+                        </div>
+                    </div>
+
+                    <!-- Opciones de Envío y Notificación -->
+                    <div class="bg-indigo-50 border border-indigo-200 rounded-xl p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                        <div class="space-y-1">
+                            <label class="flex items-center gap-2 font-bold text-indigo-950 cursor-pointer">
+                                <input type="checkbox" id="batch-send-emails" class="w-4 h-4 text-purple-600 rounded">
+                                Enviar automáticamente los certificados oficiales en PDF por correo a los contactos de cada sucursal
+                            </label>
+                            <p class="text-[11px] text-indigo-700">Se enviará el documento con formato NOM-256 adjunto a los correos registrados de cada encargado.</p>
+                        </div>
+                    </div>
+
+                    <!-- Botón de Ejecución -->
+                    <div class="flex justify-end gap-3 pt-2">
+                        <button type="submit" id="btn-submit-batch" class="bg-purple-700 hover:bg-purple-800 text-white font-bold py-3 px-8 rounded-xl text-xs flex items-center gap-2 shadow-lg shadow-purple-900/20 transition">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i> Ejecutar Generación Masiva Mensual
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Panel de Resultados de Lote -->
+                <div id="batch-results-panel" class="hidden space-y-4 bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 pb-3 border-b border-slate-200">
+                        <div>
+                            <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                                <i class="fa-solid fa-circle-check text-emerald-600"></i> Lote Mensual Generado con Éxito
+                            </h3>
+                            <p id="batch-results-summary-text" class="text-xs text-slate-500 mt-0.5"></p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <a id="btn-batch-download-zip" href="#" class="bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold px-3 py-2 rounded-lg flex items-center gap-1.5 transition">
+                                <i class="fa-solid fa-file-zipper"></i> Descargar Todo en ZIP
+                            </a>
+                            <button onclick="switchTab('tab-ordenes')" class="bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold px-3 py-2 rounded-lg flex items-center gap-1.5 transition">
+                                <i class="fa-solid fa-list-check"></i> Ver en Órdenes
+                            </button>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto max-h-72 overflow-y-auto border border-slate-200 rounded-lg">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-slate-50 text-slate-600 font-bold uppercase text-[10px] sticky top-0 border-b border-slate-200">
+                                <tr>
+                                    <th class="p-2.5">Folio Orden</th>
+                                    <th class="p-2.5">Folio Certificado</th>
+                                    <th class="p-2.5">Sucursal</th>
+                                    <th class="p-2.5">Técnico</th>
+                                    <th class="p-2.5">Vigencia (30 Días)</th>
+                                    <th class="p-2.5 text-right">PDF</th>
+                                </tr>
+                            </thead>
+                            <tbody id="batch-orders-tbody" class="divide-y divide-slate-100"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================================= -->
+            <!-- 2.1 PESTAÑA: MÉTRICAS Y ANALYTICS AVANZADOS -->
             <!-- ============================================================= -->
             <div id="tab-analytics" class="p-6 space-y-6 hidden">
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
@@ -1586,8 +1864,8 @@
                             <select id="srv-tech-id" required class="w-full bg-white border border-slate-300 rounded-lg p-2 focus:ring-1 focus:ring-brand-500"></select>
                         </div>
                         <div>
-                            <label class="block font-semibold text-slate-700 mb-1">Prefijo de Folio Institucional</label>
-                            <input type="text" id="srv-prefix" value="IMSS" placeholder="ej. IMSS, OXXO, SRV" class="w-full bg-white border border-slate-300 rounded-lg p-2 uppercase font-bold" />
+                            <label class="block font-semibold text-slate-700 mb-1">Prefijo de Folio (ORD-#####)</label>
+                            <input type="text" id="srv-prefix" value="ORD" placeholder="ej. ORD" class="w-full bg-white border border-slate-300 rounded-lg p-2 uppercase font-bold font-mono" />
                         </div>
                     </div>
 
@@ -1687,7 +1965,7 @@
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                     <div>
                         <h2 class="text-base font-bold text-slate-900">Historial de Órdenes y Certificados NOM-256</h2>
-                        <p class="text-xs text-slate-500">Consulta los folios generados (20 por página por defecto), busca por cliente o folio, descarga PDFs y administra registros.</p>
+                        <p class="text-xs text-slate-500">Consulta los folios generados, firma con e.firma (FIEL) del SAT, duplica para renovación mensual, descarga PDFs o envía por correo.</p>
                     </div>
                     <div class="flex items-center gap-2">
                         <button onclick="loadOrders()" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg font-semibold flex items-center gap-1.5 transition">
@@ -1736,7 +2014,8 @@
                                 <th class="p-3">Técnico</th>
                                 <th class="p-3">Fecha Servicio</th>
                                 <th class="p-3">Vigencia NOM-256</th>
-                                <th class="p-3 text-right">Acciones</th>
+                                <th class="p-3">Firma SAT</th>
+                                <th class="p-3 text-right">Acciones Rápidas</th>
                             </tr>
                         </thead>
                         <tbody id="orders-tbody" class="divide-y divide-slate-100"></tbody>
@@ -1754,6 +2033,7 @@
                 </div>
             </div>
 
+            <!-- ============================================================= -->
             <!-- ============================================================= -->
             <!-- 5. PESTAÑA: CLIENTES MATRIZ, SUCURSALES Y ENLACES B2B -->
             <!-- ============================================================= -->
@@ -1829,9 +2109,15 @@
                                 <label class="block text-slate-700 font-semibold mb-1">Dirección Completa *</label>
                                 <input type="text" id="br-addr" required placeholder="Av. Gabriel Mancera 222, Benito Juárez, CDMX" class="w-full bg-white border border-slate-300 rounded-lg p-2" />
                             </div>
-                            <div>
-                                <label class="block text-slate-700 font-semibold mb-1">Responsable en Sitio *</label>
-                                <input type="text" id="br-resp" required placeholder="Dr. Juan Pérez" class="w-full bg-white border border-slate-300 rounded-lg p-2" />
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-slate-700 font-semibold mb-1">Responsable en Sitio *</label>
+                                    <input type="text" id="br-resp" required placeholder="Dr. Juan Pérez" class="w-full bg-white border border-slate-300 rounded-lg p-2" />
+                                </div>
+                                <div>
+                                    <label class="block text-slate-700 font-semibold mb-1">Correo Responsable</label>
+                                    <input type="email" id="br-email" placeholder="responsable@unidad.gob.mx" class="w-full bg-white border border-slate-300 rounded-lg p-2" />
+                                </div>
                             </div>
                             <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 rounded-lg text-xs">Guardar Sucursal</button>
                         </form>
@@ -1885,193 +2171,131 @@
             </div>
 
             <!-- ============================================================= -->
-            <!-- 6. PESTAÑA: CONFIGURACIÓN DE LA EMPRESA BASE Y DATOS FISCALES -->
-            <!-- ============================================================= -->
-            <div id="tab-empresa" class="p-6 space-y-6 hidden">
-                <div>
-                    <h2 class="text-base font-bold text-slate-900">Configuración de la Empresa Prestadora de Servicios</h2>
-                    <p class="text-xs text-slate-500">Datos fiscales, Licencia Sanitaria COFEPRIS, Responsable Sanitario y Avisos SINTOX que se reflejan en todos los Certificados Oficiales en PDF.</p>
-                </div>
-
-                <form onsubmit="handleSaveCompanyConfig(event)" class="space-y-5 text-xs w-full max-w-5xl">
-                    <div class="bg-slate-50 p-5 rounded-xl border border-slate-200 space-y-4">
-                        <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2">
-                            <i class="fa-solid fa-file-invoice text-brand-600"></i> Datos Fiscales y Comerciales
-                        </h3>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-slate-700 font-semibold mb-1">Razón Social *</label>
-                                <input type="text" id="cfg-company-name" required class="w-full bg-white border border-slate-300 rounded-lg p-2" />
-                            </div>
-                            <div>
-                                <label class="block text-slate-700 font-semibold mb-1">Nombre Comercial *</label>
-                                <input type="text" id="cfg-trade-name" required class="w-full bg-white border border-slate-300 rounded-lg p-2" />
-                            </div>
-                            <div>
-                                <label class="block text-slate-700 font-semibold mb-1">RFC *</label>
-                                <input type="text" id="cfg-rfc" required maxlength="13" class="w-full bg-white border border-slate-300 rounded-lg p-2 uppercase font-mono" />
-                            </div>
-                            <div>
-                                <label class="block text-slate-700 font-semibold mb-1">Régimen Fiscal</label>
-                                <input type="text" id="cfg-tax-regime" class="w-full bg-white border border-slate-300 rounded-lg p-2" />
-                            </div>
-                            <div class="md:col-span-2">
-                                <label class="block text-slate-700 font-semibold mb-1">Domicilio Fiscal Completo *</label>
-                                <input type="text" id="cfg-fiscal-address" required class="w-full bg-white border border-slate-300 rounded-lg p-2" />
-                            </div>
-                            <div>
-                                <label class="block text-slate-700 font-semibold mb-1">Teléfono Principal *</label>
-                                <input type="text" id="cfg-phone" required class="w-full bg-white border border-slate-300 rounded-lg p-2" />
-                            </div>
-                            <div>
-                                <label class="block text-slate-700 font-semibold mb-1">Correo Electrónico de Contacto *</label>
-                                <input type="email" id="cfg-email" required class="w-full bg-white border border-slate-300 rounded-lg p-2" />
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="bg-slate-50 p-5 rounded-xl border border-slate-200 space-y-4">
-                        <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2">
-                            <i class="fa-solid fa-stamp text-teal-600"></i> Acreditaciones Sanitarias (NOM-256-SSA1-2012 / COFEPRIS / STPS)
-                        </h3>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div>
-                                <label class="block text-slate-700 font-semibold mb-1">Licencia Sanitaria (COFEPRIS) *</label>
-                                <input type="text" id="cfg-license" required class="w-full bg-white border border-slate-300 rounded-lg p-2 font-mono" />
-                            </div>
-                            <div>
-                                <label class="block text-slate-700 font-semibold mb-1">Responsable Sanitario *</label>
-                                <input type="text" id="cfg-resp-name" required class="w-full bg-white border border-slate-300 rounded-lg p-2" />
-                            </div>
-                            <div>
-                                <label class="block text-slate-700 font-semibold mb-1">Cédula Profesional</label>
-                                <input type="text" id="cfg-resp-id" class="w-full bg-white border border-slate-300 rounded-lg p-2" />
-                            </div>
-                            <div>
-                                <label class="block text-slate-700 font-semibold mb-1">Registro Empresa STPS</label>
-                                <input type="text" id="cfg-stps-num" class="w-full bg-white border border-slate-300 rounded-lg p-2 font-mono" />
-                            </div>
-                            <div>
-                                <label class="block text-slate-700 font-semibold mb-1">Horas Reentrada Estándar</label>
-                                <input type="number" id="cfg-reentry-hours" value="2" min="0" class="w-full bg-white border border-slate-300 rounded-lg p-2" />
-                            </div>
-                            <div>
-                                <label class="block text-slate-700 font-semibold mb-1">Días de Vigencia Estándar</label>
-                                <input type="number" id="cfg-validity-days" value="30" min="1" class="w-full bg-white border border-slate-300 rounded-lg p-2" />
-                            </div>
-                            <div class="md:col-span-3">
-                                <label class="block text-slate-700 font-semibold mb-1">Teléfonos de Emergencia Médica SINTOX 24/7 *</label>
-                                <input type="text" id="cfg-sintox" required class="w-full bg-white border border-slate-300 rounded-lg p-2 font-mono" />
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="flex justify-end gap-3">
-                        <button type="submit" id="btn-save-company-cfg" class="bg-brand-600 hover:bg-brand-700 text-white font-bold py-2.5 px-6 rounded-lg text-xs shadow-sm flex items-center gap-2">
-                            <i class="fa-solid fa-floppy-disk"></i> Guardar Configuración de Empresa
-                        </button>
-                    </div>
-                </form>
-            </div>
-
-            <!-- ============================================================= -->
-            <!-- 7. PESTAÑA: CATÁLOGO DE QUÍMICOS -->
+            <!-- 6. PESTAÑA: CATÁLOGO DE QUÍMICOS -->
             <!-- ============================================================= -->
             <div id="tab-quimicos" class="p-6 space-y-6 hidden">
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div class="bg-slate-50 p-5 rounded-xl border border-slate-200 space-y-3">
+                <div class="bg-slate-50 p-5 rounded-xl border border-slate-200 space-y-4">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 pb-3">
                         <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2">
-                            <i class="fa-solid fa-flask-vial text-teal-600"></i> Registrar Químico
+                            <i class="fa-solid fa-flask-vial text-teal-600"></i> Registrar Químico / Plaguicida (COFEPRIS)
                         </h3>
-                        <form onsubmit="handleCreateChemical(event)" class="space-y-3 text-xs">
+                        <button type="button" onclick="openRscoSearchModal()" class="text-xs bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold px-3 py-1.5 rounded-lg border border-indigo-200 flex items-center gap-1.5 shadow-2xs transition">
+                            <i class="fa-solid fa-magnifying-glass"></i> Catálogo Completo RSCO COFEPRIS
+                        </button>
+                    </div>
+
+                    <!-- BUSCADOR EN LÍNEA POR NOMBRE O POR RSCO -->
+                    <div class="bg-gradient-to-r from-indigo-50/90 to-teal-50/90 p-4 rounded-xl border border-indigo-200 space-y-2.5">
+                        <div class="flex items-center justify-between">
+                            <label class="font-bold text-indigo-950 text-xs flex items-center gap-2">
+                                <span class="w-6 h-6 rounded-lg bg-indigo-600 text-white flex items-center justify-center text-xs shadow-xs"><i class="fa-solid fa-bolt"></i></span>
+                                Buscar y Auto-Completar Químico en Línea (por Nombre Comercial o Código RSCO):
+                            </label>
+                        </div>
+                        <div class="flex flex-col sm:flex-row gap-2">
+                            <div class="relative flex-1">
+                                <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-indigo-400 text-xs"></i>
+                                <input type="text" id="quick-chem-online-query" onkeydown="if(event.key==='Enter'){event.preventDefault();searchAndAutofillChemical();}" placeholder="Escribe Nombre (ej. Biothrine, Cipermetrina, Advion, Temprid, Maxforce) o Código RSCO (ej. RSCO-URB-INAC...)" class="w-full pl-9 pr-3 py-2 bg-white border border-indigo-300 rounded-lg text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none shadow-2xs" />
+                            </div>
+                            <button type="button" id="btn-quick-chem-lookup" onclick="searchAndAutofillChemical()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2 rounded-lg text-xs flex items-center justify-center gap-1.5 shadow-xs transition shrink-0">
+                                <i class="fa-solid fa-wand-magic-sparkles"></i> Consultar y Rellenar
+                            </button>
+                        </div>
+                        <div id="quick-chem-lookup-feedback" class="hidden text-[11px] font-medium p-2 rounded-lg"></div>
+                    </div>
+
+                    <form onsubmit="handleCreateChemical(event)" class="space-y-3 text-xs">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                             <div>
                                 <label class="block text-slate-700 font-semibold mb-1">Nombre Comercial *</label>
-                                <input type="text" id="chem-name" required placeholder="Biothrine Flow" class="w-full bg-white border border-slate-300 rounded-lg p-2" />
+                                <input type="text" id="chem-name" required placeholder="ej. Biothrine Flow" class="w-full bg-white border border-slate-300 rounded-lg p-2" />
                             </div>
                             <div>
                                 <label class="block text-slate-700 font-semibold mb-1">Ingrediente Activo *</label>
-                                <input type="text" id="chem-active" required placeholder="Deltametrina 2.5%" class="w-full bg-white border border-slate-300 rounded-lg p-2" />
+                                <input type="text" id="chem-active" required placeholder="ej. Deltametrina 2.5%" class="w-full bg-white border border-slate-300 rounded-lg p-2" />
                             </div>
                             <div>
                                 <label class="block text-slate-700 font-semibold mb-1">Registro CICOPLAFEST *</label>
                                 <input type="text" id="chem-cico" required placeholder="RSCO-URB-INAC-111-2020" class="w-full bg-white border border-slate-300 rounded-lg p-2 uppercase font-mono" />
                             </div>
-                            <div class="grid grid-cols-2 gap-2">
-                                <div>
-                                    <label class="block text-slate-700 font-semibold mb-1">Dosis / Litro *</label>
-                                    <input type="text" id="chem-dose" required placeholder="10 ml / 1 L" class="w-full bg-white border border-slate-300 rounded-lg p-2" />
-                                </div>
-                                <div>
-                                    <label class="block text-slate-700 font-semibold mb-1">Reentrada (Hrs) *</label>
-                                    <input type="number" id="chem-hours" value="2" min="0" required class="w-full bg-white border border-slate-300 rounded-lg p-2" />
-                                </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+                            <div>
+                                <label class="block text-slate-700 font-semibold mb-1">Dosis Autorizada *</label>
+                                <input type="text" id="chem-dose" required placeholder="10 ml / 1 Litro" value="10 ml / Litro" class="w-full bg-white border border-slate-300 rounded-lg p-2" />
+                            </div>
+                            <div>
+                                <label class="block text-slate-700 font-semibold mb-1">Reentrada (Horas) *</label>
+                                <input type="number" id="chem-hours" required value="2" min="0" class="w-full bg-white border border-slate-300 rounded-lg p-2" />
                             </div>
                             <div>
                                 <label class="block text-slate-700 font-semibold mb-1">Métodos Compatibles *</label>
-                                <input type="text" id="chem-methods" required placeholder="Aspersión Manual, UBV" class="w-full bg-white border border-slate-300 rounded-lg p-2" />
+                                <input type="text" id="chem-methods" required placeholder="Aspersión, Nebulización" value="Aspersión Manual" class="w-full bg-white border border-slate-300 rounded-lg p-2" />
                             </div>
                             <div>
                                 <label class="block text-slate-700 font-semibold mb-1">Categoría Toxicológica *</label>
-                                <input type="text" id="chem-tox" required placeholder="Banda Verde / Precaución" class="w-full bg-white border border-slate-300 rounded-lg p-2" />
+                                <input type="text" id="chem-tox" required placeholder="Precaución (Banda Verde)" value="Precaución" class="w-full bg-white border border-slate-300 rounded-lg p-2" />
                             </div>
-                            <div class="space-y-2 bg-white p-2.5 rounded-lg border border-slate-200">
+                            <div class="space-y-2 bg-white p-2.5 rounded-lg border border-slate-200 md:col-span-4">
                                 <div class="flex items-center justify-between">
                                     <label class="block font-semibold text-slate-700 text-[11px]">Fichas Técnicas y HDS en Línea</label>
                                     <button type="button" onclick="autoFetchCreateChemicalSheets()" class="text-[10px] bg-teal-100 hover:bg-teal-200 text-teal-800 font-bold px-2 py-0.5 rounded transition flex items-center gap-1">
                                         <i class="fa-solid fa-cloud-arrow-down"></i> Auto-Detectar por RSCO
                                     </button>
                                 </div>
-                                <div>
-                                    <label class="block text-[10px] text-slate-500">URL Ficha Técnica (TDS)</label>
-                                    <input type="url" id="chem-tech-url" placeholder="https://... (o dejar vacío para autogenerar)" class="w-full bg-slate-50 border border-slate-300 rounded p-1.5 text-xs font-mono" />
-                                </div>
-                                <div>
-                                    <label class="block text-[10px] text-slate-500">URL Hoja de Seguridad (HDS / MSDS)</label>
-                                    <input type="url" id="chem-safe-url" placeholder="https://... (o dejar vacío para autogenerar)" class="w-full bg-slate-50 border border-slate-300 rounded p-1.5 text-xs font-mono" />
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    <div>
+                                        <label class="block text-[10px] text-slate-500">URL Ficha Técnica (TDS)</label>
+                                        <input type="url" id="chem-tech-url" placeholder="https://... (o dejar vacío para autogenerar)" class="w-full bg-slate-50 border border-slate-300 rounded p-1.5 text-xs font-mono" />
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] text-slate-500">URL Hoja de Seguridad (HDS / MSDS)</label>
+                                        <input type="url" id="chem-safe-url" placeholder="https://... (o dejar vacío para autogenerar)" class="w-full bg-slate-50 border border-slate-300 rounded p-1.5 text-xs font-mono" />
+                                    </div>
                                 </div>
                             </div>
-                            <button type="submit" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-2 rounded-lg text-xs shadow-sm">Guardar Químico</button>
-                        </form>
-                    </div>
-
-                    <div class="lg:col-span-2 border border-slate-200 rounded-xl overflow-hidden bg-white">
-                        <div class="bg-slate-50 p-3 border-b border-slate-200 font-bold text-xs text-slate-700 flex justify-between items-center">
-                            <span class="flex items-center gap-1.5"><i class="fa-solid fa-clipboard-check text-teal-600"></i> Catálogo Regulado por COFEPRIS</span>
-                            <button type="button" onclick="openRscoSearchModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-2.5 py-1 rounded-md text-[11px] font-bold flex items-center gap-1.5 shadow-xs transition">
-                                <i class="fa-solid fa-magnifying-glass"></i> Buscador RSCO COFEPRIS
-                            </button>
                         </div>
-                        <table class="w-full text-left text-xs">
-                            <thead class="bg-slate-100 text-slate-600 font-bold uppercase text-[10px]">
-                                <tr>
-                                    <th class="p-3">Producto</th>
-                                    <th class="p-3">Ingrediente Activo</th>
-                                    <th class="p-3">CICOPLAFEST</th>
-                                    <th class="p-3">Dosis</th>
-                                    <th class="p-3">Reentrada</th>
-                                    <th class="p-3">Fichas & HDS</th>
-                                    <th class="p-3 text-right">Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody id="chemicals-tbody" class="divide-y divide-slate-100"></tbody>
-                        </table>
+                        <button type="submit" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-2 rounded-lg text-xs shadow-sm">Guardar Químico</button>
+                    </form>
+                </div>
+
+                <div class="border border-slate-200 rounded-xl overflow-hidden bg-white">
+                    <div class="bg-slate-50 p-3 border-b border-slate-200 font-bold text-xs text-slate-700 flex justify-between items-center">
+                        <span class="flex items-center gap-1.5"><i class="fa-solid fa-clipboard-check text-teal-600"></i> Catálogo Regulado por COFEPRIS</span>
+                        <button type="button" onclick="openRscoSearchModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-2.5 py-1 rounded-md text-[11px] font-bold flex items-center gap-1.5 shadow-xs transition">
+                            <i class="fa-solid fa-magnifying-glass"></i> Buscador RSCO COFEPRIS
+                        </button>
                     </div>
+                    <table class="w-full text-left text-xs">
+                        <thead class="bg-slate-100 text-slate-600 font-bold uppercase text-[10px]">
+                            <tr>
+                                <th class="p-3">Producto</th>
+                                <th class="p-3">Ingrediente Activo</th>
+                                <th class="p-3">CICOPLAFEST</th>
+                                <th class="p-3">Dosis</th>
+                                <th class="p-3">Reentrada</th>
+                                <th class="p-3">Fichas & HDS</th>
+                                <th class="p-3 text-right">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="chemicals-tbody" class="divide-y divide-slate-100"></tbody>
+                    </table>
                 </div>
             </div>
 
             <!-- ============================================================= -->
-            <!-- 8. PESTAÑA: USUARIOS Y ROLES (STPS DC-3) -->
+            <!-- 7. PESTAÑA: USUARIOS Y ROLES (STPS DC-3) -->
             <!-- ============================================================= -->
             <div id="tab-usuarios" class="p-6 space-y-6 hidden">
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div class="bg-slate-50 p-5 rounded-xl border border-slate-200 space-y-3">
-                        <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2">
-                            <i class="fa-solid fa-user-plus text-blue-600"></i> Registrar Usuario / Técnico
-                        </h3>
-                        <form onsubmit="handleCreateUser(event)" class="space-y-3 text-xs">
+                <div class="bg-slate-50 p-5 rounded-xl border border-slate-200 space-y-3">
+                    <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2">
+                        <i class="fa-solid fa-user-plus text-blue-600"></i> Registrar Personal Técnico o Administrativo
+                    </h3>
+                    <form onsubmit="handleCreateUser(event)" class="space-y-3 text-xs">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                             <div>
                                 <label class="block text-slate-700 font-semibold mb-1">Nombre Completo *</label>
-                                <input type="text" id="usr-name" required placeholder="Ing. Alejandro Morales" class="w-full bg-white border border-slate-300 rounded-lg p-2" />
+                                <input type="text" id="usr-name" required placeholder="Ing. Carlos Mendoza Silva" class="w-full bg-white border border-slate-300 rounded-lg p-2" />
                             </div>
                             <div class="grid grid-cols-2 gap-2">
                                 <div>
@@ -2085,44 +2309,145 @@
                             </div>
                             <div>
                                 <label class="block text-slate-700 font-semibold mb-1">Correo Electrónico *</label>
-                                <input type="email" id="usr-email" required placeholder="tecnico@fumiflosa.mx" class="w-full bg-white border border-slate-300 rounded-lg p-2" />
+                                <input type="email" id="usr-email" required placeholder="carlos.mendoza@fumiflosa.mx" class="w-full bg-white border border-slate-300 rounded-lg p-2" />
                             </div>
                             <div>
                                 <label class="block text-slate-700 font-semibold mb-1">Rol en el Sistema *</label>
                                 <select id="usr-role" class="w-full bg-white border border-slate-300 rounded-lg p-2">
-                                    <option value="TecnicoCampo">TecnicoCampo (Aplicador)</option>
-                                    <option value="SuperAdmin">SuperAdmin</option>
-                                    <option value="ClienteMatriz">ClienteMatriz (B2B)</option>
-                                    <option value="ClienteSucursal">ClienteSucursal (B2B)</option>
+                                    <option value="TecnicoCampo">Técnico de Campo</option>
+                                    <option value="SuperAdmin">Super Administrador</option>
+                                    <option value="ClienteMatriz">Cliente Matriz (B2B)</option>
+                                    <option value="ClienteSucursal">Cliente Sucursal</option>
                                 </select>
                             </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                             <div>
-                                <label class="block text-slate-700 font-semibold mb-1">Registro STPS (Para Técnicos)</label>
-                                <input type="text" id="usr-stps-num" placeholder="STPS-DC3-88291" class="w-full bg-white border border-slate-300 rounded-lg p-2 font-mono" />
+                                <label class="block text-slate-700 font-semibold mb-1">No. Registro STPS (Técnicos)</label>
+                                <input type="text" id="usr-stps-num" placeholder="ej. STPS-AGP-99120" class="w-full bg-white border border-slate-300 rounded-lg p-2 uppercase font-mono" />
                             </div>
                             <div>
-                                <label class="block text-slate-700 font-semibold mb-1">URL Constancia DC-3 (Archivo)</label>
-                                <input type="url" id="usr-stps-url" placeholder="https://almacen.com/dc3-morales.pdf" class="w-full bg-white border border-slate-300 rounded-lg p-2" />
+                                <label class="block text-slate-700 font-semibold mb-1">URL / Enlace Archivo DC-3</label>
+                                <input type="text" id="usr-stps-url" placeholder="https://cloud.fumiflosa.mx/dc3/carlos.pdf" class="w-full bg-white border border-slate-300 rounded-lg p-2" />
                             </div>
-                            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-lg text-xs">Guardar Usuario</button>
+                        </div>
+                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg text-xs">Guardar Usuario</button>
+                    </form>
+                </div>
+
+                <div class="border border-slate-200 rounded-xl overflow-hidden bg-white">
+                    <div class="bg-slate-50 p-3 border-b border-slate-200 font-bold text-xs text-slate-700">Usuarios y Técnicos de Campo Certificados</div>
+                    <table class="w-full text-left text-xs">
+                        <thead class="bg-slate-100 text-slate-600 font-bold uppercase text-[10px]">
+                            <tr>
+                                <th class="p-3">Nombre</th>
+                                <th class="p-3">Email</th>
+                                <th class="p-3">Rol</th>
+                                <th class="p-3">Registro STPS</th>
+                                <th class="p-3">Constancia DC-3</th>
+                                <th class="p-3 text-right">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="users-tbody" class="divide-y divide-slate-100"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ============================================================= -->
+            <!-- 8. PESTAÑA: CONFIGURACIÓN DE EMPRESA Y FIEL SAT -->
+            <!-- ============================================================= -->
+            <div id="tab-empresa" class="p-6 space-y-6 hidden">
+                <div>
+                    <h2 class="text-base font-bold text-slate-900">Configuración de Empresa Emisora y Firma Electrónica (FIEL / e.firma del SAT)</h2>
+                    <p class="text-xs text-slate-500">Datos fiscales, Licencia Sanitaria COFEPRIS, Responsable Sanitario y carga de certificados criptográficos del SAT para la firma de certificados.</p>
+                </div>
+
+                <!-- Estado de la FIEL -->
+                <div id="fiel-status-card" class="bg-slate-50 p-5 rounded-2xl border border-slate-200 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                    <div class="flex items-center gap-3">
+                        <div id="fiel-status-icon" class="w-12 h-12 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center text-xl font-bold">
+                            <i class="fa-solid fa-key"></i>
+                        </div>
+                        <div>
+                            <h3 id="fiel-status-title" class="font-bold text-slate-900 text-sm">FIEL SAT no configurada</h3>
+                            <p id="fiel-status-desc" class="text-xs text-slate-500">Carga los archivos .cer y .key proporcionados por el SAT para habilitar la firma digital.</p>
+                        </div>
+                    </div>
+                    <div id="fiel-active-actions" class="hidden">
+                        <button onclick="handleRemoveFiel()" class="text-xs bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold px-3 py-2 rounded-lg border border-rose-200 transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-trash"></i> Eliminar FIEL
+                        </button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Formulario Cargar FIEL SAT -->
+                    <div class="bg-slate-50 p-5 rounded-xl border border-slate-200 space-y-4">
+                        <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2">
+                            <i class="fa-solid fa-file-shield text-amber-600"></i> Cargar / Actualizar e.firma (FIEL del SAT)
+                        </h3>
+                        <p class="text-xs text-slate-500">
+                            Sube el Certificado Público (<code>.cer</code>) y la Llave Privada (<code>.key</code>) junto con la contraseña. El sistema validará criptográficamente la correspondencia de llaves.
+                        </p>
+                        
+                        <form id="form-upload-fiel" onsubmit="handleUploadFiel(event)" class="space-y-3 text-xs">
+                            <div>
+                                <label class="block text-slate-700 font-semibold mb-1">Certificado Público (.cer) *</label>
+                                <input type="file" id="fiel-cer-file" accept=".cer,.crt,.der" required class="block w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-amber-100 file:text-amber-800 hover:file:bg-amber-200 cursor-pointer bg-white border border-slate-300 rounded-lg" />
+                            </div>
+                            <div>
+                                <label class="block text-slate-700 font-semibold mb-1">Llave Privada (.key) *</label>
+                                <input type="file" id="fiel-key-file" accept=".key,.pk8,.der" required class="block w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-amber-100 file:text-amber-800 hover:file:bg-amber-200 cursor-pointer bg-white border border-slate-300 rounded-lg" />
+                            </div>
+                            <div>
+                                <label class="block text-slate-700 font-semibold mb-1">Contraseña de la Llave Privada *</label>
+                                <input type="password" id="fiel-password" required placeholder="••••••••••••" class="w-full bg-white border border-slate-300 rounded-lg p-2" />
+                            </div>
+                            
+                            <button type="submit" id="btn-upload-fiel" class="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold py-2.5 rounded-lg text-xs flex items-center justify-center gap-2 shadow-sm transition">
+                                <i class="fa-solid fa-upload"></i> Guardar y Validar e.firma SAT
+                            </button>
                         </form>
                     </div>
 
-                    <div class="lg:col-span-2 border border-slate-200 rounded-xl overflow-hidden bg-white">
-                        <div class="bg-slate-50 p-3 border-b border-slate-200 font-bold text-xs text-slate-700">Usuarios y Técnicos de Campo Certificados</div>
-                        <table class="w-full text-left text-xs">
-                            <thead class="bg-slate-100 text-slate-600 font-bold uppercase text-[10px]">
-                                <tr>
-                                    <th class="p-3">Nombre</th>
-                                    <th class="p-3">Email</th>
-                                    <th class="p-3">Rol</th>
-                                    <th class="p-3">Registro STPS</th>
-                                    <th class="p-3">Constancia DC-3</th>
-                                    <th class="p-3 text-right">Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody id="users-tbody" class="divide-y divide-slate-100"></tbody>
-                        </table>
+                    <!-- Formulario Datos Generales Empresa -->
+                    <div class="bg-slate-50 p-5 rounded-xl border border-slate-200 space-y-4">
+                        <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2">
+                            <i class="fa-solid fa-building-circle-check text-brand-600"></i> Datos Sanitarios y Fiscales de la Empresa
+                        </h3>
+                        <p class="text-xs text-slate-500">
+                            Información corporativa impresa en los certificados conforme a la NOM-256-SSA1-2012.
+                        </p>
+
+                        <form id="form-company-settings" onsubmit="handleSaveCompanySettings(event)" class="space-y-3 text-xs">
+                            <div>
+                                <label class="block text-slate-700 font-semibold mb-1">Razón Social Emisora *</label>
+                                <input type="text" id="comp-name" required class="w-full bg-white border border-slate-300 rounded-lg p-2" />
+                            </div>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-slate-700 font-semibold mb-1">RFC Emisor *</label>
+                                    <input type="text" id="comp-rfc" required maxlength="13" class="w-full bg-white border border-slate-300 rounded-lg p-2 uppercase font-mono" />
+                                </div>
+                                <div>
+                                    <label class="block text-slate-700 font-semibold mb-1">Licencia Sanitaria (COFEPRIS) *</label>
+                                    <input type="text" id="comp-license" required class="w-full bg-white border border-slate-300 rounded-lg p-2 font-mono" />
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-slate-700 font-semibold mb-1">Responsable Sanitario *</label>
+                                    <input type="text" id="comp-resp-name" required class="w-full bg-white border border-slate-300 rounded-lg p-2" />
+                                </div>
+                                <div>
+                                    <label class="block text-slate-700 font-semibold mb-1">Cédula Profesional</label>
+                                    <input type="text" id="comp-resp-id" class="w-full bg-white border border-slate-300 rounded-lg p-2 font-mono" />
+                                </div>
+                            </div>
+                            <button type="submit" id="btn-save-company" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-2.5 rounded-lg text-xs transition">
+                                Guardar Datos de Empresa
+                            </button>
+                        </form>
                     </div>
                 </div>
             </div>
@@ -2154,8 +2479,8 @@
                     </p>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-                    <div class="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center hover:border-brand-500 transition bg-slate-50/50">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="border-2 border-dashed border-slate-300 rounded-2xl p-6 text-center hover:border-brand-500 transition bg-slate-50">
                         <div class="w-14 h-14 bg-brand-100 text-brand-700 rounded-full flex items-center justify-center mx-auto text-2xl mb-3">
                             <i class="fa-solid fa-cloud-arrow-up"></i>
                         </div>
@@ -2907,10 +3232,180 @@
         <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-4 flex items-start gap-3">
             <i class="fa-solid fa-circle-check text-emerald-600 text-lg mt-0.5"></i>
             <div class="text-xs text-emerald-900 leading-relaxed">
-                <span class="font-bold">Acreditación Sanitaria y Legal:</span> Este sistema genera constancias bajo la <b>NOM-256-SSA1-2012</b>, calcula automáticamente la vigencia obligatoria a 30 días, registra ingredientes activos autorizados por <b>COFEPRIS/CICOPLAFEST</b> e incorpora el protocolo oficial de emergencias toxicológicas <b>SINTOX (01-800-0092800 / 800-009-2800)</b>.
+                <span class="font-bold">Acreditación Sanitaria y Legal:</span> Este sistema genera constancias bajo la <b>NOM-256-SSA1-2012</b>, calcula automáticamente la vigencia obligatoria a 30 días, registra ingredientes activos autorizados por <b>COFEPRIS/CICOPLAFEST</b>, permite firma digital avanzada con <b>e.firma / FIEL del SAT</b> e incorpora el protocolo oficial de emergencias toxicológicas <b>SINTOX (01-800-0092800 / 800-009-2800)</b>.
             </div>
         </div>
     </main>
+
+    <!-- ============================================================= -->
+    <!-- MODAL 1: DUPLICAR ORDEN PARA NUEVO MES -->
+    <!-- ============================================================= -->
+    <div id="modal-duplicate" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden border border-slate-200">
+            <div class="bg-gradient-to-r from-purple-900 to-indigo-900 p-4 text-white flex justify-between items-center">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 bg-purple-500/30 rounded-lg flex items-center justify-center font-bold">
+                        <i class="fa-solid fa-clone"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-sm">Duplicar Servicio para Renovación Mensual</h3>
+                        <p id="dup-source-title" class="text-[11px] text-purple-200">Orden Origen</p>
+                    </div>
+                </div>
+                <button onclick="closeDuplicateModal()" class="text-white/80 hover:text-white text-base">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <form id="form-duplicate" onsubmit="handleDuplicateSubmit(event)" class="p-5 space-y-4 text-xs">
+                <input type="hidden" id="dup-source-id" />
+                
+                <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 space-y-1">
+                    <p class="font-bold text-slate-700">Detalles de la Unidad:</p>
+                    <p id="dup-source-info" class="text-slate-600"></p>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Nueva Fecha y Hora *</label>
+                        <input type="datetime-local" id="dup-start-date" required class="w-full bg-white border border-slate-300 rounded-lg p-2" />
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Técnico Asignado</label>
+                        <select id="dup-tech-id" class="w-full bg-white border border-slate-300 rounded-lg p-2"></select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Prefijo de Folio</label>
+                    <input type="text" id="dup-prefix" value="ORD" class="w-full bg-white border border-slate-300 rounded-lg p-2 uppercase font-mono" />
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Observaciones para el nuevo mes</label>
+                    <textarea id="dup-obs" rows="2" class="w-full bg-white border border-slate-300 rounded-lg p-2" placeholder="Observaciones o recomendaciones específicas..."></textarea>
+                </div>
+
+                <div class="bg-indigo-50 border border-indigo-200 p-3 rounded-lg space-y-2">
+                    <label class="flex items-center gap-2 font-bold text-indigo-900 cursor-pointer">
+                        <input type="checkbox" id="dup-send-email" onchange="toggleDupEmailInput()" class="rounded text-purple-600">
+                        Enviar Certificado PDF automáticamente por correo
+                    </label>
+                    <div id="dup-email-box" class="hidden">
+                        <input type="email" id="dup-email-input" placeholder="correo@destinatario.com" class="w-full bg-white border border-indigo-300 rounded p-1.5 text-xs" />
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-2 pt-2 border-t border-slate-100">
+                    <button type="button" onclick="closeDuplicateModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-lg">Cancelar</button>
+                    <button type="submit" id="btn-submit-dup" class="px-5 py-2 bg-purple-700 hover:bg-purple-800 text-white font-bold rounded-lg flex items-center gap-1.5 shadow">
+                        <i class="fa-solid fa-check"></i> Duplicar y Generar Certificado
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ============================================================= -->
+    <!-- MODAL 2: ENVIAR CERTIFICADO POR CORREO -->
+    <!-- ============================================================= -->
+    <div id="modal-email" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-200">
+            <div class="bg-slate-900 p-4 text-white flex justify-between items-center">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 bg-brand-600 rounded-lg flex items-center justify-center font-bold">
+                        <i class="fa-solid fa-envelope"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-sm">Enviar Certificado NOM-256 por Email</h3>
+                        <p id="email-modal-folio" class="text-[11px] text-slate-400">Folio</p>
+                    </div>
+                </div>
+                <button onclick="closeEmailModal()" class="text-white/80 hover:text-white text-base">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <form id="form-send-email" onsubmit="handleSendEmailSubmit(event)" class="p-5 space-y-4 text-xs">
+                <input type="hidden" id="email-service-id" />
+
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Correo Electrónico Destinatario *</label>
+                    <input type="email" id="email-recipient" required placeholder="contacto@cliente.com" class="w-full bg-white border border-slate-300 rounded-lg p-2.5" />
+                    <p class="text-[10px] text-slate-400 mt-1">El archivo PDF oficial del certificado irá adjunto en el correo.</p>
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Nota adicional en el mensaje (Opcional)</label>
+                    <textarea id="email-notes" rows="3" class="w-full bg-white border border-slate-300 rounded-lg p-2" placeholder="ej. Adjuntamos el certificado correspondiente al servicio mensual de fumigación."></textarea>
+                </div>
+
+                <div id="email-status-msg" class="hidden p-3 rounded-lg text-xs"></div>
+
+                <div class="flex justify-end gap-2 pt-2 border-t border-slate-100">
+                    <button type="button" onclick="closeEmailModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-lg">Cancelar</button>
+                    <button type="submit" id="btn-submit-send-email" class="px-5 py-2 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-lg flex items-center gap-1.5 shadow">
+                        <i class="fa-solid fa-paper-plane"></i> Enviar Correo
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ============================================================= -->
+    <!-- MODAL 3: FIRMA DIGITAL MANUAL CON FIEL DEL SAT -->
+    <!-- ============================================================= -->
+    <div id="modal-sign" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-200">
+            <div class="bg-gradient-to-r from-amber-900 to-amber-700 p-4 text-white flex justify-between items-center">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 bg-amber-500/30 rounded-lg flex items-center justify-center font-bold text-amber-200">
+                        <i class="fa-solid fa-stamp"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-sm">Firma Electrónica Manual (e.firma SAT)</h3>
+                        <p id="sign-modal-folio" class="text-[11px] text-amber-200">Certificado</p>
+                    </div>
+                </div>
+                <button onclick="closeSignModal()" class="text-white/80 hover:text-white text-base">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <form id="form-sign-certificate" onsubmit="handleSignSubmit(event)" class="p-5 space-y-4 text-xs">
+                <input type="hidden" id="sign-cert-id" />
+
+                <div class="bg-amber-50 border border-amber-200 p-3.5 rounded-xl space-y-1 text-amber-900">
+                    <p class="font-bold flex items-center gap-1.5">
+                        <i class="fa-solid fa-triangle-exclamation text-amber-600"></i> Firma Oficial Criptográfica
+                    </p>
+                    <p class="text-[11px] leading-relaxed text-amber-800">
+                        Al firmar manualmente este certificado, se estampará el <b>Sello Digital RSA-SHA256</b>, la <b>Cadena Original</b> y el <b>Código QR</b> con validez legal ante COFEPRIS y Protección Civil.
+                    </p>
+                </div>
+
+                <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 space-y-1">
+                    <p class="font-bold text-slate-700">Sucursal / Unidad:</p>
+                    <p id="sign-branch-info" class="text-slate-600 font-medium"></p>
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Contraseña de la Llave Privada (.key) *</label>
+                    <input type="password" id="sign-password" required placeholder="Ingresa tu contraseña de FIEL para autorizar" class="w-full bg-white border border-slate-300 rounded-lg p-2.5" />
+                    <p class="text-[10px] text-slate-400 mt-1">La contraseña es requerida para desencriptar la llave privada y estampar la firma.</p>
+                </div>
+
+                <div id="sign-status-msg" class="hidden p-3 rounded-lg text-xs"></div>
+
+                <div class="flex justify-end gap-2 pt-2 border-t border-slate-100">
+                    <button type="button" onclick="closeSignModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-lg">Cancelar</button>
+                    <button type="submit" id="btn-submit-sign" class="px-5 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-lg flex items-center gap-1.5 shadow">
+                        <i class="fa-solid fa-stamp"></i> Estampar Firma Digital SAT
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <!-- SCRIPT JS DE CONTROL COMPLETO -->
     <script>
@@ -2918,6 +3413,9 @@
         let cachedTechnicians = [];
         let cachedChemicals = [];
         let cachedClients = [];
+        let cachedOrders = [];
+        let cachedCompany = null;
+        let cachedFielStatus = null;
         let chartTrendInstance = null;
         let chartPestInstance = null;
         let chartProcsInstance = null;
@@ -2932,15 +3430,18 @@
 
             document.getElementById(tabId).classList.remove('hidden');
             const activeBtn = document.getElementById('btn-' + tabId);
-            activeBtn.classList.remove('border-transparent', 'text-slate-500', 'font-medium');
-            activeBtn.classList.add('border-brand-600', 'text-brand-700', 'font-bold');
+            if(activeBtn) {
+                activeBtn.classList.remove('border-transparent', 'text-slate-500', 'font-medium');
+                activeBtn.classList.add('border-brand-600', 'text-brand-700', 'font-bold');
+            }
 
-            if(tabId === 'tab-vencimientos') loadDashboardData();
             if(tabId === 'tab-cronologico') loadChronologicalCalendar();
+            if(tabId === 'tab-vencimientos') loadDashboardData();
+            if(tabId === 'tab-masivo') prepareMonthlyBatchForm();
             if(tabId === 'tab-analytics') loadAnalyticsData();
             if(tabId === 'tab-ordenes') loadOrders();
+            if(tabId === 'tab-empresa') loadCompanySettingsAndFiel();
             if(tabId === 'tab-clientes') loadClientsAndBranches();
-            if(tabId === 'tab-empresa') loadCompanyConfig();
             if(tabId === 'tab-quimicos') loadChemicals();
             if(tabId === 'tab-usuarios') loadUsers();
             if(tabId === 'tab-nuevo-servicio') prepareNewServiceForm();
@@ -2963,35 +3464,60 @@
             } catch(e) { console.error(e); }
         }
 
+        async function loadFielTopBadge() {
+            try {
+                const res = await fetch('/api/v1/company/fiel');
+                if(!res.ok) return;
+                const fiel = await res.json();
+                cachedFielStatus = fiel;
+                const badge = document.getElementById('top-fiel-status-badge');
+                if (badge) {
+                    if (fiel.is_configured && fiel.is_active && !fiel.is_expired) {
+                        badge.className = "inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-950 text-emerald-300 border border-emerald-800";
+                        badge.innerHTML = `<span class="w-2 h-2 mr-1.5 bg-emerald-400 rounded-full"></span> e.firma SAT Activa (${fiel.rfc || 'FIEL'})`;
+                    } else {
+                        badge.className = "inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-950 text-amber-300 border border-amber-800";
+                        badge.innerHTML = `<span class="w-2 h-2 mr-1.5 bg-amber-400 rounded-full"></span> e.firma SAT Pendiente`;
+                    }
+                }
+            } catch(e) { console.error(e); }
+        }
+
         async function loadCompanyConfig() {
             try {
                 const res = await fetch('/api/v1/company-config');
+                if(!res.ok) return;
                 const cfg = await res.json();
                 
-                document.getElementById('topbar-trade-name').innerHTML = `${cfg.trade_name} <span class="text-[10px] bg-brand-700 text-brand-100 font-semibold px-2 py-0.5 rounded-full border border-brand-500">NOM-256-SSA1-2012</span>`;
+                const topbarTitle = document.getElementById('topbar-trade-name');
+                if (topbarTitle) topbarTitle.innerHTML = `${cfg.trade_name} <span class="text-[10px] bg-brand-700 text-brand-100 font-semibold px-2 py-0.5 rounded-full border border-brand-500">NOM-256-SSA1-2012</span>`;
                 
-                document.getElementById('cfg-company-name').value = cfg.company_name;
-                document.getElementById('cfg-trade-name').value = cfg.trade_name;
-                document.getElementById('cfg-rfc').value = cfg.rfc;
-                document.getElementById('cfg-tax-regime').value = cfg.tax_regime || '';
-                document.getElementById('cfg-fiscal-address').value = cfg.fiscal_address;
-                document.getElementById('cfg-phone').value = cfg.phone;
-                document.getElementById('cfg-email').value = cfg.email;
-                document.getElementById('cfg-license').value = cfg.sanitary_license_number;
-                document.getElementById('cfg-resp-name').value = cfg.sanitary_responsible_name;
-                document.getElementById('cfg-resp-id').value = cfg.sanitary_responsible_id || '';
-                document.getElementById('cfg-stps-num').value = cfg.stps_registration_number || '';
-                document.getElementById('cfg-reentry-hours').value = cfg.default_reentry_hours;
-                document.getElementById('cfg-validity-days').value = cfg.default_validity_days;
-                document.getElementById('cfg-sintox').value = cfg.sintox_emergency_phones;
+                if (document.getElementById('cfg-company-name')) {
+                    document.getElementById('cfg-company-name').value = cfg.company_name;
+                    document.getElementById('cfg-trade-name').value = cfg.trade_name;
+                    document.getElementById('cfg-rfc').value = cfg.rfc;
+                    document.getElementById('cfg-tax-regime').value = cfg.tax_regime || '';
+                    document.getElementById('cfg-fiscal-address').value = cfg.fiscal_address;
+                    document.getElementById('cfg-phone').value = cfg.phone;
+                    document.getElementById('cfg-email').value = cfg.email;
+                    document.getElementById('cfg-license').value = cfg.sanitary_license_number;
+                    document.getElementById('cfg-resp-name').value = cfg.sanitary_responsible_name;
+                    document.getElementById('cfg-resp-id').value = cfg.sanitary_responsible_id || '';
+                    document.getElementById('cfg-stps-num').value = cfg.stps_registration_number || '';
+                    document.getElementById('cfg-reentry-hours').value = cfg.default_reentry_hours;
+                    document.getElementById('cfg-validity-days').value = cfg.default_validity_days;
+                    document.getElementById('cfg-sintox').value = cfg.sintox_emergency_phones;
+                }
             } catch(e) { console.error(e); }
         }
 
         async function handleSaveCompanyConfig(e) {
             e.preventDefault();
             const btn = document.getElementById('btn-save-company-cfg');
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Guardando...';
+            if(btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Guardando...';
+            }
 
             const payload = {
                 company_name: document.getElementById('cfg-company-name').value,
@@ -3259,12 +3785,455 @@
 
         async function loadDashboardData() {
             loadSummaryStats();
+            loadFielTopBadge();
             try {
                 const res = await fetch('/api/v1/dashboard/expirations');
                 cachedDashboardData = await res.json();
                 populateExpClientSelect();
                 renderExpirations();
             } catch(e) { console.error(e); }
+        }
+
+        // =============================================================
+        // CONFIGURACIÓN DE EMPRESA Y FIEL SAT
+        // =============================================================
+        async function loadCompanySettingsAndFiel() {
+            try {
+                const [resComp, resFiel] = await Promise.all([
+                    fetch('/api/v1/company/settings'),
+                    fetch('/api/v1/company/fiel')
+                ]);
+                cachedCompany = await resComp.json();
+                cachedFielStatus = await resFiel.json();
+
+                // Llenar formulario de datos de empresa
+                document.getElementById('comp-name').value = cachedCompany.company_name || '';
+                document.getElementById('comp-rfc').value = cachedCompany.company_rfc || '';
+                document.getElementById('comp-license').value = cachedCompany.sanitary_license_number || '';
+                document.getElementById('comp-resp-name').value = cachedCompany.sanitary_responsible_name || '';
+                document.getElementById('comp-resp-id').value = cachedCompany.sanitary_responsible_id || '';
+
+                // Actualizar tarjeta de estado de la FIEL
+                const card = document.getElementById('fiel-status-card');
+                const icon = document.getElementById('fiel-status-icon');
+                const title = document.getElementById('fiel-status-title');
+                const desc = document.getElementById('fiel-status-desc');
+                const actions = document.getElementById('fiel-active-actions');
+
+                if (cachedFielStatus.is_configured && cachedFielStatus.is_active && !cachedFielStatus.is_expired) {
+                    card.className = "bg-emerald-50 p-5 rounded-2xl border border-emerald-200 flex flex-col md:flex-row items-start md:items-center justify-between gap-4";
+                    icon.className = "w-12 h-12 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-xl font-bold";
+                    icon.innerHTML = '<i class="fa-solid fa-shield-check"></i>';
+                    title.className = "font-bold text-emerald-950 text-sm";
+                    title.innerText = `e.firma del SAT Activa y Verificada - ${cachedFielStatus.rfc || ''}`;
+                    desc.className = "text-xs text-emerald-800 mt-0.5 leading-relaxed";
+                    desc.innerHTML = `<b>Titular:</b> ${cachedFielStatus.holder_name || 'Empresa'} &nbsp;|&nbsp; ` +
+                        `<b>Serie SAT:</b> ${cachedFielStatus.serial_number || 'N/A'} &nbsp;|&nbsp; ` +
+                        `<b>Vigencia:</b> Hasta ${cachedFielStatus.valid_to ? new Date(cachedFielStatus.valid_to).toLocaleDateString() : 'N/A'}`;
+                    actions.classList.remove('hidden');
+                } else if (cachedFielStatus.is_expired) {
+                    card.className = "bg-rose-50 p-5 rounded-2xl border border-rose-200 flex flex-col md:flex-row items-start md:items-center justify-between gap-4";
+                    icon.className = "w-12 h-12 rounded-xl bg-rose-100 text-rose-700 flex items-center justify-center text-xl font-bold";
+                    icon.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i>';
+                    title.className = "font-bold text-rose-950 text-sm";
+                    title.innerText = "e.firma del SAT Expirada";
+                    desc.className = "text-xs text-rose-800 mt-0.5";
+                    desc.innerText = "El certificado cargado ha expirado. Por favor sube tus archivos .cer y .key actualizados.";
+                    actions.classList.remove('hidden');
+                } else {
+                    card.className = "bg-amber-50 p-5 rounded-2xl border border-amber-200 flex flex-col md:flex-row items-start md:items-center justify-between gap-4";
+                    icon.className = "w-12 h-12 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center text-xl font-bold";
+                    icon.innerHTML = '<i class="fa-solid fa-key"></i>';
+                    title.className = "font-bold text-amber-950 text-sm";
+                    title.innerText = "FIEL / e.firma del SAT no configurada";
+                    desc.className = "text-xs text-amber-800 mt-0.5";
+                    desc.innerText = "Carga tu archivo de Certificado (.cer), Llave Privada (.key) y contraseña para estampar firmas electrónicas en certificados.";
+                    actions.classList.add('hidden');
+                }
+                loadFielTopBadge();
+            } catch(e) { console.error(e); }
+        }
+
+        async function handleSaveCompanySettings(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btn-save-company');
+            btn.disabled = true;
+            btn.innerText = 'Guardando...';
+
+            const payload = {
+                company_name: document.getElementById('comp-name').value,
+                company_rfc: document.getElementById('comp-rfc').value.toUpperCase(),
+                sanitary_license_number: document.getElementById('comp-license').value,
+                sanitary_responsible_name: document.getElementById('comp-resp-name').value,
+                sanitary_responsible_id: document.getElementById('comp-resp-id').value || null
+            };
+
+            try {
+                const res = await fetch('/api/v1/company/settings', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if(!res.ok) throw new Error(data.detail || 'Error al guardar');
+                alert('Datos de la empresa actualizados exitosamente.');
+                loadCompanySettingsAndFiel();
+            } catch(err) {
+                alert('Error: ' + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerText = 'Guardar Datos de Empresa';
+            }
+        }
+
+        async function handleUploadFiel(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btn-upload-fiel');
+            const cerFile = document.getElementById('fiel-cer-file').files[0];
+            const keyFile = document.getElementById('fiel-key-file').files[0];
+            const pwd = document.getElementById('fiel-password').value;
+
+            if(!cerFile || !keyFile || !pwd) {
+                alert('Por favor selecciona ambos archivos (.cer y .key) e ingresa la contraseña.');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Validando Criptográficamente...';
+
+            const formData = new FormData();
+            formData.append('certificate_file', cerFile);
+            formData.append('private_key_file', keyFile);
+            formData.append('password', pwd);
+
+            try {
+                const res = await fetch('/api/v1/company/fiel/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+                if(!res.ok) throw new Error(data.detail || 'Error al validar FIEL');
+                alert(`¡e.firma del SAT cargada y validada con éxito!\nRFC: ${data.rfc}\nTitular: ${data.holder_name}\nNo. Serie: ${data.serial_number}`);
+                document.getElementById('form-upload-fiel').reset();
+                loadCompanySettingsAndFiel();
+            } catch(err) {
+                alert('Error en FIEL: ' + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-upload"></i> Guardar y Validar e.firma SAT';
+            }
+        }
+
+        async function handleRemoveFiel() {
+            if(!confirm('¿Estás seguro de que deseas eliminar la FIEL del SAT guardada?')) return;
+            try {
+                const res = await fetch('/api/v1/company/fiel', { method: 'DELETE' });
+                if(res.ok) {
+                    alert('FIEL eliminada.');
+                    loadCompanySettingsAndFiel();
+                }
+            } catch(e) { alert('Error: ' + e.message); }
+        }
+
+        // =============================================================
+        // MODAL DE FIRMA DIGITAL MANUAL
+        // =============================================================
+        function openSignModal(certId, folio, branchName) {
+            document.getElementById('sign-cert-id').value = certId;
+            document.getElementById('sign-modal-folio').innerText = `Certificado: ${folio}`;
+            document.getElementById('sign-branch-info').innerText = branchName;
+            document.getElementById('sign-password').value = '';
+            const msg = document.getElementById('sign-status-msg');
+            msg.classList.add('hidden');
+            msg.innerText = '';
+            document.getElementById('modal-sign').classList.remove('hidden');
+        }
+
+        function closeSignModal() {
+            document.getElementById('modal-sign').classList.add('hidden');
+        }
+
+        async function handleSignSubmit(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btn-submit-sign');
+            const certId = document.getElementById('sign-cert-id').value;
+            const pwd = document.getElementById('sign-password').value;
+            const msg = document.getElementById('sign-status-msg');
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Estampando Firma Criptográfica...';
+            msg.classList.add('hidden');
+
+            try {
+                const res = await fetch(`/api/v1/certificates/${certId}/sign`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password: pwd })
+                });
+                const data = await res.json();
+                if(!res.ok) throw new Error(data.detail || 'Error al firmar certificado');
+
+                msg.className = "p-3 rounded-lg text-xs bg-emerald-50 text-emerald-800 border border-emerald-200";
+                msg.innerHTML = `<b>¡Certificado Firmado Exitosamente!</b><br/>Serie SAT: ${data.certificate_serial_number}<br/>Sello generado con validez NOM-256.`;
+                msg.classList.remove('hidden');
+
+                setTimeout(() => {
+                    closeSignModal();
+                    loadOrders();
+                }, 1800);
+            } catch(err) {
+                msg.className = "p-3 rounded-lg text-xs bg-rose-50 text-rose-800 border border-rose-200";
+                msg.innerText = 'Error al firmar: ' + err.message;
+                msg.classList.remove('hidden');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-stamp"></i> Estampar Firma Digital SAT';
+            }
+        }
+
+        async function prepareMonthlyBatchForm() {
+            await Promise.all([loadClientsAndBranches(), loadUsers()]);
+            const clientSelect = document.getElementById('batch-client-id');
+            clientSelect.innerHTML = cachedClients.map(c => `<option value="${c.id}">${c.legal_name} (${c.rfc})</option>`).join('');
+
+            const techSelect = document.getElementById('batch-tech-id');
+            techSelect.innerHTML = '<option value="">(Conservar técnico previo por sucursal)</option>' + 
+                cachedTechnicians.map(t => `<option value="${t.id}">${t.full_name} (${t.role})</option>`).join('');
+
+            // Poner fecha de hoy por defecto
+            const todayStr = new Date().toISOString().slice(0, 10);
+            document.getElementById('batch-target-date').value = todayStr;
+
+            onBatchClientChanged();
+        }
+
+        function onBatchClientChanged() {
+            const clientId = document.getElementById('batch-client-id').value;
+            const branchCount = cachedBranches.filter(b => b.client_id === clientId).length;
+            const badge = document.getElementById('batch-branch-count-badge');
+            badge.innerText = `🏢 ${branchCount} sucursal(es) / unidad(es) asociadas para procesar`;
+        }
+
+        function goToBatchForClient(clientId) {
+            switchTab('tab-masivo');
+            setTimeout(() => {
+                const sel = document.getElementById('batch-client-id');
+                if(sel) {
+                    sel.value = clientId;
+                    onBatchClientChanged();
+                }
+            }, 100);
+        }
+
+        async function handleMonthlyBatch(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btn-submit-batch');
+            const resultsPanel = document.getElementById('batch-results-panel');
+            const summaryText = document.getElementById('batch-results-summary-text');
+            const tbody = document.getElementById('batch-orders-tbody');
+            const downloadZipBtn = document.getElementById('btn-batch-download-zip');
+
+            const clientId = document.getElementById('batch-client-id').value;
+            const targetDate = document.getElementById('batch-target-date').value;
+            const startTime = document.getElementById('batch-start-time').value + ":00";
+            const durationHours = parseInt(document.getElementById('batch-duration').value) || 2;
+            const techId = document.getElementById('batch-tech-id').value || null;
+            const mode = document.getElementById('batch-mode').value;
+            const prefix = document.getElementById('batch-prefix').value || "MENS";
+            const sendEmails = document.getElementById('batch-send-emails').checked;
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generando Lote Masivo...';
+
+            const payload = {
+                client_id: clientId,
+                target_date: targetDate,
+                service_start_time: startTime,
+                service_duration_hours: durationHours,
+                technician_id: techId,
+                mode: mode,
+                folio_prefix: prefix,
+                send_emails: sendEmails
+            };
+
+            try {
+                const res = await fetch('/api/v1/batch/generate-monthly', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if(!res.ok) throw new Error(data.detail || 'Error en lote');
+
+                summaryText.innerText = `Se procesaron ${data.total_branches_processed} sucursales de "${data.client_name}". Creadas ${data.orders_created_count} órdenes y ${data.certificates_created_count} certificados NOM-256.` + 
+                    (sendEmails ? ` Correos enviados: ${data.emails_sent_count}.` : '');
+
+                downloadZipBtn.href = `/api/v1/portal/matrix/${data.client_id}/certificates/zip`;
+
+                tbody.innerHTML = data.created_orders.map(o => `
+                    <tr class="hover:bg-slate-50">
+                        <td class="p-2.5 font-mono font-bold text-slate-900">${o.order_folio}</td>
+                        <td class="p-2.5 font-mono text-purple-700 font-semibold">${o.certificate_folio}</td>
+                        <td class="p-2.5 font-medium text-slate-800">${o.branch_name}</td>
+                        <td class="p-2.5 text-slate-600">${o.technician_name}</td>
+                        <td class="p-2.5 text-slate-600">${o.validity_start_date} al ${o.validity_end_date}</td>
+                        <td class="p-2.5 text-right">
+                            <a href="/api/v1/services/${o.service_order_id}/pdf" target="_blank" class="text-brand-600 hover:text-brand-800 font-bold">
+                                <i class="fa-solid fa-file-pdf"></i> Ver PDF
+                            </a>
+                        </td>
+                    </tr>
+                `).join('');
+
+                resultsPanel.classList.remove('hidden');
+                loadSummaryStats();
+            } catch(err) {
+                alert('Error al generar lote mensual: ' + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> Ejecutar Generación Masiva Mensual';
+            }
+        }
+
+        // =============================================================
+        // CONTROL DEL MODAL DE DUPLICACIÓN
+        // =============================================================
+        function openDuplicateModal(serviceId, folio, branchName, defaultEmail = '') {
+            document.getElementById('dup-source-id').value = serviceId;
+            document.getElementById('dup-source-title').innerText = `Duplicando desde Orden: ${folio}`;
+            document.getElementById('dup-source-info').innerText = `Sucursal: ${branchName}`;
+
+            // Poner técnico opciones
+            const techSelect = document.getElementById('dup-tech-id');
+            techSelect.innerHTML = '<option value="">(Conservar técnico de la orden original)</option>' +
+                cachedTechnicians.map(t => `<option value="${t.id}">${t.full_name} (${t.role})</option>`).join('');
+
+            // Nueva fecha: hoy con misma hora actual
+            const now = new Date();
+            const nowIso = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+            document.getElementById('dup-start-date').value = nowIso;
+            document.getElementById('dup-email-input').value = defaultEmail || '';
+            document.getElementById('dup-send-email').checked = false;
+            document.getElementById('dup-email-box').classList.add('hidden');
+
+            document.getElementById('modal-duplicate').classList.remove('hidden');
+        }
+
+        function closeDuplicateModal() {
+            document.getElementById('modal-duplicate').classList.add('hidden');
+        }
+
+        function toggleDupEmailInput() {
+            const chk = document.getElementById('dup-send-email').checked;
+            const box = document.getElementById('dup-email-box');
+            if(chk) box.classList.remove('hidden');
+            else box.classList.add('hidden');
+        }
+
+        async function handleDuplicateSubmit(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btn-submit-dup');
+            const serviceId = document.getElementById('dup-source-id').value;
+            const startDate = document.getElementById('dup-start-date').value;
+            const techId = document.getElementById('dup-tech-id').value || null;
+            const prefix = document.getElementById('dup-prefix').value || "SRV";
+            const obs = document.getElementById('dup-obs').value || null;
+            const sendEmail = document.getElementById('dup-send-email').checked;
+            const recEmail = document.getElementById('dup-email-input').value || null;
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Duplicando...';
+
+            const payload = {
+                new_service_start_date: new Date(startDate).toISOString(),
+                technician_id: techId,
+                folio_prefix: prefix,
+                observations: obs,
+                send_email: sendEmail,
+                recipient_email: recEmail
+            };
+
+            try {
+                const res = await fetch(`/api/v1/services/${serviceId}/duplicate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if(!res.ok) throw new Error(data.detail || 'Error al duplicar');
+
+                closeDuplicateModal();
+                alert(`¡Servicio duplicado exitosamente!\nNueva Orden: ${data.folio}\nNuevo Certificado NOM-256: ${data.certificate.certificate_folio}`);
+                window.open(`/api/v1/services/${data.id}/pdf`, '_blank');
+                loadOrders();
+                loadSummaryStats();
+            } catch(err) {
+                alert('Error al duplicar orden: ' + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-check"></i> Duplicar y Generar Certificado';
+            }
+        }
+
+        // =============================================================
+        // CONTROL DEL MODAL DE ENVÍO DE EMAIL
+        // =============================================================
+        function openEmailModal(serviceId, folio, defaultEmail = '') {
+            document.getElementById('email-service-id').value = serviceId;
+            document.getElementById('email-modal-folio').innerText = `Folio Certificado: ${folio}`;
+            document.getElementById('email-recipient').value = defaultEmail;
+            document.getElementById('email-notes').value = '';
+            const statusMsg = document.getElementById('email-status-msg');
+            statusMsg.classList.add('hidden');
+            statusMsg.innerText = '';
+            document.getElementById('modal-email').classList.remove('hidden');
+        }
+
+        function closeEmailModal() {
+            document.getElementById('modal-email').classList.add('hidden');
+        }
+
+        async function handleSendEmailSubmit(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btn-submit-send-email');
+            const serviceId = document.getElementById('email-service-id').value;
+            const recipient = document.getElementById('email-recipient').value;
+            const notes = document.getElementById('email-notes').value || null;
+            const statusMsg = document.getElementById('email-status-msg');
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Enviando...';
+            statusMsg.classList.add('hidden');
+
+            const payload = {
+                recipient_email: recipient,
+                additional_notes: notes
+            };
+
+            try {
+                const res = await fetch(`/api/v1/services/${serviceId}/send-email`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if(!res.ok) throw new Error(data.detail || 'Error al enviar correo');
+
+                statusMsg.className = "p-3 rounded-lg text-xs bg-emerald-50 text-emerald-800 border border-emerald-200";
+                statusMsg.innerText = data.message || 'Correo enviado exitosamente.';
+                statusMsg.classList.remove('hidden');
+
+                setTimeout(() => {
+                    closeEmailModal();
+                }, 2000);
+            } catch(err) {
+                statusMsg.className = "p-3 rounded-lg text-xs bg-rose-50 text-rose-800 border border-rose-200";
+                statusMsg.innerText = 'Error: ' + err.message;
+                statusMsg.classList.remove('hidden');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Enviar Correo';
+            }
         }
 
         function renderExpirations() {
@@ -3325,8 +4294,8 @@
                     } else if (currentExpFilter === 'vencidos') {
                         items = expiredItems;
                     } else { // 'all'
-                        // Default to active items to prevent overflowing the DOM
-                        items = activeItems;
+                        // Muestra todos los certificados históricos y vigentes
+                        items = [...activeItems, ...expiredItems];
                     }
                 }
 
@@ -3550,6 +4519,23 @@
                     validityCell = isCertCancelled ? '<span class="text-rose-600 font-bold text-[11px]">Cancelado</span>' : `<span class="text-slate-700 font-medium">${o.certificate.validity_end_date}</span>`;
                 }
 
+                let signCell = 'N/A';
+                const certId = o.certificate ? o.certificate.id : null;
+                const certFolio = o.certificate ? o.certificate.certificate_folio : '';
+                const branchName = o.branch ? o.branch.name : '';
+                const branchEmail = o.branch && o.branch.responsible_contact_email ? o.branch.responsible_contact_email : '';
+                const isSigned = o.certificate && o.certificate.is_signed;
+
+                if (o.certificate) {
+                    if (isCertCancelled) {
+                        signCell = `<span class="text-slate-400 text-[10px] italic">N/A</span>`;
+                    } else if (isSigned) {
+                        signCell = `<span class="inline-flex items-center gap-1 bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded text-[10px]"><i class="fa-solid fa-certificate text-emerald-600"></i> Firmado SAT</span>`;
+                    } else {
+                        signCell = `<span class="inline-flex items-center gap-1 bg-amber-100 text-amber-800 font-semibold px-2 py-0.5 rounded text-[10px]"><i class="fa-solid fa-clock text-amber-600"></i> Borrador</span>`;
+                    }
+                }
+
                 return `
                 <tr class="hover:bg-slate-50 ${isOrderCancelled ? 'bg-rose-50/20' : ''}">
                     <td class="p-3 font-mono font-bold text-slate-900">
@@ -3561,6 +4547,7 @@
                     <td class="p-3 text-slate-600">${o.technician ? o.technician.full_name : 'N/A'}</td>
                     <td class="p-3 text-slate-600">${new Date(o.service_start_date).toLocaleDateString()}</td>
                     <td class="p-3">${validityCell}</td>
+                    <td class="p-3">${signCell}</td>
                     <td class="p-3 text-right">
                         <div class="flex items-center justify-end gap-1.5 flex-wrap">
                             ${o.certificate ? `
@@ -3573,9 +4560,19 @@
                             <a href="/api/v1/services/${o.id}/pesticide-sheets/zip" target="_blank" title="Descargar Fichas Técnicas y Hojas de Seguridad HDS (ZIP)" class="inline-flex items-center gap-1 bg-teal-50 hover:bg-teal-100 text-teal-800 font-bold px-2 py-1 rounded border border-teal-200 text-xs shadow-xs">
                                 <i class="fa-solid fa-file-zipper text-teal-600"></i> Fichas/HDS
                             </a>
+                            ${certId && !isCertCancelled ? `
+                            <button onclick="openSignModal('${certId}', '${certFolio}', '${branchName.replace(/'/g, "\\'")}')" title="Firmar con FIEL SAT" class="inline-flex items-center gap-1 bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold px-2 py-1 rounded border border-amber-200 text-xs">
+                                <i class="fa-solid fa-stamp"></i> ${isSigned ? 'Re-Firmar' : 'Firmar'}
+                            </button>` : ''}
+                            <button onclick="openDuplicateModal('${o.id}', '${o.folio}', '${branchName.replace(/'/g, "\\'")}', '${branchEmail}')" title="Duplicar para nuevo mes" class="inline-flex items-center gap-1 bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold px-2 py-1 rounded border border-purple-200 text-xs">
+                                <i class="fa-solid fa-clone"></i> Duplicar
+                            </button>
+                            <button onclick="openEmailModal('${o.id}', '${certFolio}', '${branchEmail}')" title="Enviar Certificado por Correo" class="inline-flex items-center gap-1 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold px-2 py-1 rounded border border-blue-200 text-xs">
+                                <i class="fa-solid fa-envelope"></i> Email
+                            </button>
                             ${o.certificate && !isCertCancelled ? `
-                            <button onclick="openCancelCertModal('${o.certificate.id}', '${o.certificate.certificate_folio}')" title="Cancelar este certificado si no se llevó a cabo" class="inline-flex items-center gap-1 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold px-2 py-1 rounded border border-rose-200 text-xs">
-                                <i class="fa-solid fa-ban"></i> Cancelar
+                            <button onclick="openCancelCertModal('${o.certificate.id}', '${o.certificate.certificate_folio}')" title="Cancelar este certificado" class="inline-flex items-center gap-1 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold px-2 py-1 rounded border border-rose-200 text-xs">
+                                <i class="fa-solid fa-ban"></i>
                             </button>` : ''}
                             <button onclick="openEditServiceModal('${o.id}')" title="Editar orden" class="inline-flex items-center gap-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-2 py-1 rounded border border-slate-300 text-xs">
                                 <i class="fa-solid fa-pen-to-square"></i>
@@ -3754,6 +4751,9 @@
                                 <td class="p-3 font-mono text-[11px] text-brand-700">${c.portal_slug}</td>
                                 <td class="p-3 text-right">
                                     <div class="flex items-center justify-end gap-1.5">
+                                        <button onclick="goToBatchForClient('${c.id}')" class="text-xs bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold px-2 py-1 rounded border border-purple-200 flex items-center gap-1" title="Emisión Masiva Mensual B2B">
+                                            <i class="fa-solid fa-wand-magic-sparkles"></i> Lote Mes
+                                        </button>
                                         <button onclick="openAssociateBranchesModal('${c.id}')" class="text-xs bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold px-2 py-1 rounded border border-indigo-200 flex items-center gap-1" title="Asociar Sucursales a este Cliente">
                                             <i class="fa-solid fa-network-wired"></i> Sucursales
                                         </button>
@@ -4188,6 +5188,250 @@
         }
 
         // ====================================================================
+        // CONSULTA Y CONFIRMACIÓN DE QUÍMICOS EN LÍNEA (POR NOMBRE O RSCO)
+        // ====================================================================
+        let currentLookupMatches = [];
+        let currentSelectedLookupMatch = null;
+
+        async function searchAndAutofillChemical() {
+            const queryInput = document.getElementById('quick-chem-online-query');
+            const query = queryInput ? queryInput.value.trim() : '';
+            const feedback = document.getElementById('quick-chem-lookup-feedback');
+            const btn = document.getElementById('btn-quick-chem-lookup');
+            
+            if (!query) {
+                alert('Por favor escribe un Nombre Comercial (ej. Biothrine, Cipermetrina, Advion) o un Código RSCO para consultar en línea.');
+                if (queryInput) queryInput.focus();
+                return;
+            }
+
+            const origHtml = btn ? btn.innerHTML : '';
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Consultando...';
+            }
+
+            if (feedback) {
+                feedback.className = "text-[11px] font-medium p-2 rounded-lg bg-indigo-100/70 text-indigo-800 border border-indigo-200 block flex items-center gap-1.5";
+                feedback.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Consultando registros fidedignos en el directorio oficial COFEPRIS / CICOPLAFEST...';
+            }
+
+            try {
+                const res = await fetch(`/api/v1/chemicals/online-lookup?q=${encodeURIComponent(query)}`);
+                if (!res.ok) {
+                    const err = await res.json();
+                    throw new Error(err.detail || 'No se pudo conectar con el servicio de consulta.');
+                }
+                const data = await res.json();
+
+                if (!data.found || !data.matches || !data.matches.length) {
+                    if (feedback) {
+                        feedback.className = "text-[11px] font-medium p-2.5 rounded-lg bg-amber-50 text-amber-900 border border-amber-300 block space-y-1 animate-fadeIn";
+                        feedback.innerHTML = `<div class="flex items-center gap-1.5 font-bold"><i class="fa-solid fa-triangle-exclamation text-amber-600"></i> No se encontró registro oficial con "${query}".</div>` +
+                            `<div class="text-[10px] text-amber-800">Verifica que el nombre o RSCO esté bien escrito (ej. Biothrine, Demand, Cipermetrina, Advion, Temprid), o ingresa los datos manualmente en el formulario de abajo.</div>`;
+                    }
+                    return;
+                }
+
+                if (feedback) {
+                    feedback.className = "text-[11px] font-medium p-2 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-300 block flex items-center gap-1.5 animate-fadeIn";
+                    feedback.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-600"></i> <b>¡Plaguicida encontrado!</b> Revisa los datos oficiales en la ventana de confirmación antes de incorporarlo.`;
+                }
+
+                // Abrir modal de confirmación con datos verificados
+                openConfirmChemicalModal(data.matches, data.best_match);
+
+            } catch (err) {
+                if (feedback) {
+                    feedback.className = "text-[11px] font-medium p-2 rounded-lg bg-rose-50 text-rose-800 border border-rose-300 block flex items-center gap-1.5";
+                    feedback.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-rose-600"></i> ${err.message}`;
+                } else {
+                    alert('Error: ' + err.message);
+                }
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = origHtml;
+                }
+            }
+        }
+
+        function openConfirmChemicalModal(matches, bestMatch) {
+            currentLookupMatches = matches || [];
+            currentSelectedLookupMatch = bestMatch || (matches.length ? matches[0] : null);
+
+            if (!currentSelectedLookupMatch) return;
+
+            const multiBox = document.getElementById('confirm-chem-multi-selector-box');
+            const multiSelect = document.getElementById('confirm-chem-multi-select');
+
+            if (currentLookupMatches.length > 1) {
+                multiSelect.innerHTML = currentLookupMatches.map((m, idx) => `
+                    <option value="${idx}">${m.commercial_name} — ${m.active_ingredient} (${m.cicoplafest_number})</option>
+                `).join('');
+                multiSelect.value = "0";
+                multiBox.classList.remove('hidden');
+            } else {
+                multiBox.classList.add('hidden');
+            }
+
+            renderSelectedMatchInConfirmModal(currentSelectedLookupMatch);
+            document.getElementById('modal-confirm-chemical-add').classList.remove('hidden');
+        }
+
+        function onSelectMatchInConfirmModal(indexStr) {
+            const idx = parseInt(indexStr, 10);
+            if (!isNaN(idx) && currentLookupMatches[idx]) {
+                currentSelectedLookupMatch = currentLookupMatches[idx];
+                renderSelectedMatchInConfirmModal(currentSelectedLookupMatch);
+            }
+        }
+
+        function renderSelectedMatchInConfirmModal(match) {
+            if (!match) return;
+            document.getElementById('confirm-chem-name').innerText = match.commercial_name || '-';
+            document.getElementById('confirm-chem-rsco').innerText = match.cicoplafest_number || '-';
+            document.getElementById('confirm-chem-active').innerText = match.active_ingredient || '-';
+            document.getElementById('confirm-chem-mfg').innerText = match.manufacturer || 'Titular Registrado';
+            
+            const vigenciaEl = document.getElementById('confirm-chem-vigencia');
+            if (vigenciaEl) vigenciaEl.innerText = match.validity_date ? `Vigencia: ${match.validity_date}` : 'Vigente / Indeterminada';
+            
+            document.getElementById('confirm-chem-dose').innerText = match.authorized_dose_per_liter || match.authorized_dose || '10 a 20 ml / Litro (según marbete)';
+            document.getElementById('confirm-chem-hours').innerText = `${match.safety_interval_hours || 2} horas obligatorias`;
+            document.getElementById('confirm-chem-methods').innerText = match.compatible_methods || match.application_methods || 'Aspersión Manual / Residual';
+            document.getElementById('confirm-chem-tox').innerText = match.toxicological_category || 'Precaución (Banda Verde)';
+            
+            const usosEl = document.getElementById('confirm-chem-usos');
+            if (usosEl) usosEl.innerText = match.target_pests || 'Plagas Urbanas y Domésticas según marbete oficial COFEPRIS';
+
+            const badgeEl = document.getElementById('confirm-chem-badge');
+            if (badgeEl) {
+                if (match.source === 'siipris_cofepris_oficial' || match.match_type === 'siipris_cofepris_live') {
+                    badgeEl.className = "bg-emerald-100 text-emerald-800 text-[10px] font-extrabold px-2 py-0.5 rounded-full border border-emerald-300";
+                    badgeEl.innerHTML = '<i class="fa-solid fa-landmark"></i> 🏛️ SIIPRIS COFEPRIS (En Línea)';
+                } else if (match.in_local_catalog) {
+                    badgeEl.className = "bg-sky-100 text-sky-800 text-[10px] font-extrabold px-2 py-0.5 rounded-full border border-sky-300";
+                    badgeEl.innerHTML = '<i class="fa-solid fa-database"></i> Catálogo Local';
+                } else {
+                    badgeEl.className = "bg-teal-100 text-teal-800 text-[10px] font-extrabold px-2 py-0.5 rounded-full border border-teal-300";
+                    badgeEl.innerHTML = '<i class="fa-solid fa-certificate"></i> Catálogo Oficial';
+                }
+            }
+
+            const techLink = document.getElementById('confirm-chem-tech-link');
+            const safeLink = document.getElementById('confirm-chem-safe-link');
+
+            const techUrl = match.technical_sheet_url || `/api/v1/rsco/by-code/technical-sheet?rsco=${encodeURIComponent(match.cicoplafest_number)}&name=${encodeURIComponent(match.commercial_name)}`;
+            const safeUrl = match.safety_sheet_url || `/api/v1/rsco/by-code/safety-sheet?rsco=${encodeURIComponent(match.cicoplafest_number)}&name=${encodeURIComponent(match.commercial_name)}`;
+
+            techLink.href = techUrl;
+            safeLink.href = safeUrl;
+
+            // Actualizar texto del botón directo si ya está en catálogo
+            const directBtn = document.getElementById('btn-confirm-save-direct');
+            if (directBtn) {
+                if (match.in_local_catalog) {
+                    directBtn.innerHTML = '<i class="fa-solid fa-check-double"></i> Ya Registrado en Catálogo';
+                    directBtn.disabled = true;
+                    directBtn.className = "w-full sm:w-auto px-4 py-2 bg-slate-200 text-slate-500 font-bold rounded-xl cursor-not-allowed";
+                } else {
+                    directBtn.innerHTML = '<i class="fa-solid fa-circle-check"></i> Confirmar y Agregar al Catálogo';
+                    directBtn.disabled = false;
+                    directBtn.className = "w-full sm:w-auto px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl flex items-center justify-center gap-1.5 shadow-sm transition";
+                }
+            }
+        }
+
+        function closeConfirmChemicalModal() {
+            document.getElementById('modal-confirm-chemical-add').classList.add('hidden');
+        }
+
+        function confirmAndPopulateForm() {
+            if (!currentSelectedLookupMatch) return;
+            populateChemicalForm(currentSelectedLookupMatch);
+            closeConfirmChemicalModal();
+            switchTab('tab-quimicos');
+
+            const feedback = document.getElementById('quick-chem-lookup-feedback');
+            if (feedback) {
+                feedback.className = "text-[11px] font-medium p-2.5 rounded-lg bg-emerald-50 text-emerald-900 border border-emerald-300 block animate-fadeIn";
+                feedback.innerHTML = `<i class="fa-solid fa-pen-to-square text-teal-700"></i> Formulario cargado con datos de <b>${currentSelectedLookupMatch.commercial_name}</b>. Puedes realizar modificaciones y pulsar <b>"Guardar Químico"</b>.`;
+            }
+
+            const nameInput = document.getElementById('chem-name');
+            if (nameInput) {
+                nameInput.focus();
+                nameInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+
+        async function confirmAndSaveChemicalDirectly() {
+            if (!currentSelectedLookupMatch) return;
+            const prod = currentSelectedLookupMatch;
+            const btn = document.getElementById('btn-confirm-save-direct');
+            const origHtml = btn ? btn.innerHTML : '';
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Guardando en Catálogo...';
+            }
+
+            try {
+                const res = await fetch('/api/v1/chemicals', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        commercial_name: prod.commercial_name,
+                        active_ingredient: prod.active_ingredient,
+                        cicoplafest_number: prod.cicoplafest_number,
+                        authorized_dose_per_liter: prod.authorized_dose_per_liter || '10 ml / Litro',
+                        safety_interval_hours: parseInt(prod.safety_interval_hours) || 2,
+                        compatible_methods: prod.compatible_methods || 'Aspersión Manual',
+                        toxicological_category: prod.toxicological_category || 'Precaución (Banda Verde)',
+                        technical_sheet_url: prod.technical_sheet_url || null,
+                        safety_sheet_url: prod.safety_sheet_url || null
+                    })
+                });
+
+                if (!res.ok) {
+                    const err = await res.json();
+                    throw new Error(err.detail || 'Error al guardar plaguicida');
+                }
+
+                closeConfirmChemicalModal();
+                alert(`✓ ¡Plaguicida oficial "${prod.commercial_name}" (RSCO: ${prod.cicoplafest_number}) agregado con éxito al catálogo del sistema!`);
+                await loadChemicals();
+                switchTab('tab-quimicos');
+            } catch (err) {
+                alert('No se pudo agregar: ' + err.message);
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = origHtml;
+                }
+            }
+        }
+
+        function populateChemicalForm(data) {
+            if (!data) return;
+            if (document.getElementById('chem-name')) document.getElementById('chem-name').value = data.commercial_name || '';
+            if (document.getElementById('chem-active')) document.getElementById('chem-active').value = data.active_ingredient || '';
+            if (document.getElementById('chem-cico')) document.getElementById('chem-cico').value = data.cicoplafest_number || '';
+            if (document.getElementById('chem-dose')) document.getElementById('chem-dose').value = data.authorized_dose_per_liter || data.authorized_dose || '10 ml / Litro';
+            if (document.getElementById('chem-hours')) document.getElementById('chem-hours').value = (data.safety_interval_hours !== undefined && data.safety_interval_hours !== null) ? data.safety_interval_hours : 2;
+            if (document.getElementById('chem-methods')) document.getElementById('chem-methods').value = data.compatible_methods || data.application_methods || 'Aspersión Manual';
+            if (document.getElementById('chem-tox')) document.getElementById('chem-tox').value = data.toxicological_category || 'Precaución (Banda Verde)';
+            if (document.getElementById('chem-tech-url')) document.getElementById('chem-tech-url').value = data.technical_sheet_url || '';
+            if (document.getElementById('chem-safe-url')) document.getElementById('chem-safe-url').value = data.safety_sheet_url || '';
+        }
+
+        function autofillFromRscoModal(index) {
+            const prod = rscoSearchResults[index];
+            if (!prod) return;
+            openConfirmChemicalModal([prod], prod);
+        }
+
+        // ====================================================================
         // EDICIÓN Y ELIMINACIÓN DE QUÍMICOS / INGREDIENTES ACTIVOS
         // ====================================================================
         async function autoFetchCreateChemicalSheets() {
@@ -4367,7 +5611,7 @@
             const payload = {
                 branch_id: document.getElementById('srv-branch-id').value,
                 technician_id: document.getElementById('srv-tech-id').value,
-                folio_prefix: document.getElementById('srv-prefix').value || "IMSS",
+                folio_prefix: document.getElementById('srv-prefix').value || "ORD",
                 service_start_date: new Date(document.getElementById('srv-start-date').value).toISOString(),
                 service_end_date: new Date(document.getElementById('srv-end-date').value).toISOString(),
                 pest_crawling_insects: document.getElementById('srv-pest-crawling').checked,
@@ -4426,6 +5670,7 @@
                 alert('Cliente Matriz registrado con su enlace permanente.');
                 e.target.reset();
                 loadClientsAndBranches();
+                loadSummaryStats();
             } catch(err) { alert('Error: ' + err.message); }
         }
 
@@ -4437,7 +5682,8 @@
                 address: document.getElementById('br-addr').value,
                 phone: document.getElementById('br-phone').value,
                 classification: document.getElementById('br-class').value,
-                responsible_contact_name: document.getElementById('br-resp').value
+                responsible_contact_name: document.getElementById('br-resp').value,
+                responsible_contact_email: document.getElementById('br-email').value || null
             };
             try {
                 const res = await fetch('/api/v1/branches', {
@@ -4449,6 +5695,7 @@
                 alert('Sucursal registrada.');
                 e.target.reset();
                 loadClientsAndBranches();
+                loadSummaryStats();
             } catch(err) { alert('Error: ' + err.message); }
         }
 
@@ -4475,6 +5722,7 @@
                 alert('Químico registrado en catálogo.');
                 e.target.reset();
                 loadChemicals();
+                loadSummaryStats();
             } catch(err) { alert('Error: ' + err.message); }
         }
 
@@ -4499,6 +5747,7 @@
                 alert('Usuario registrado exitosamente.');
                 e.target.reset();
                 loadUsers();
+                loadSummaryStats();
             } catch(err) { alert('Error: ' + err.message); }
         }
 
@@ -4538,15 +5787,18 @@
         }
 
         async function handleMasterLogin(e) {
-            e.preventDefault();
+            if (e) {
+                if (typeof e.preventDefault === 'function') e.preventDefault();
+                if (typeof e.stopPropagation === 'function') e.stopPropagation();
+            }
             hideLoginError();
-            const username = document.getElementById('login-input-username').value.trim();
-            const password = document.getElementById('login-input-password').value.trim();
+            const username = (document.getElementById('login-input-username')?.value || '').trim();
+            const password = (document.getElementById('login-input-password')?.value || '').trim();
             const btn = document.getElementById('btn-login-submit');
 
             if (!username || !password) {
                 showLoginError('Por favor ingresa tu usuario y contraseña.');
-                return;
+                return false;
             }
 
             btn.disabled = true;
@@ -4576,23 +5828,69 @@
                     throw new Error('Respuesta del servidor no válida.');
                 }
 
-                // Guardar Sesión Activa
+                // 1. Guardar Sesión Activa en Storage Local
                 localStorage.setItem('fumiflosa_auth_token', data.access_token);
                 localStorage.setItem('fumiflosa_auth_user', JSON.stringify(data.user));
 
-                // Actualizar UI
-                renderAuthenticatedUser(data.user);
-                document.getElementById('modal-auth-login').classList.add('hidden');
+                // 2. Ocultar físicamente el modal de login de inmediato
+                const loginModal = document.getElementById('modal-auth-login');
+                if (loginModal) {
+                    loginModal.classList.add('hidden');
+                    loginModal.classList.remove('flex');
+                    loginModal.style.cssText = 'display: none !important;';
+                }
 
-                // Cargar datos ligeros iniciales
-                loadCompanyConfig();
-                loadSummaryStats();
-                loadChronologicalCalendar();
+                // 3. Renderizar usuario en cabecera
+                renderAuthenticatedUser(data.user);
+
+                // 4. Disparar carga integral de todos los módulos y calendarios
+                setTimeout(() => {
+                    refreshAllDashboardData();
+                }, 10);
+
+                return false;
             } catch (err) {
                 showLoginError(err.message || 'Error de autenticación. Verifica tus credenciales.');
+                return false;
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = '<i class="fa-solid fa-arrow-right-to-bracket"></i> Iniciar Sesión Super Usuario';
+            }
+        }
+
+        async function refreshAllDashboardData() {
+            // Carga paralela ultra rápida de cabecera y estadísticas críticas
+            await Promise.allSettled([
+                typeof loadSummaryStats === 'function' ? loadSummaryStats() : Promise.resolve(),
+                typeof loadCompanyConfig === 'function' ? loadCompanyConfig() : Promise.resolve(),
+                typeof loadFielTopBadge === 'function' ? loadFielTopBadge() : Promise.resolve()
+            ]);
+
+            // Cargar de inmediato únicamente la pestaña activa para renderizado instantáneo
+            const activeTab = Array.from(document.querySelectorAll('[id^="tab-"]')).find(el => !el.classList.contains('hidden'));
+            if (activeTab) {
+                if (activeTab.id === 'tab-cronologico' && typeof loadChronologicalCalendar === 'function') {
+                    loadChronologicalCalendar();
+                } else if (activeTab.id === 'tab-vencimientos' && typeof loadDashboardData === 'function') {
+                    loadDashboardData();
+                } else if (activeTab.id === 'tab-ordenes' && typeof loadOrders === 'function') {
+                    loadOrders();
+                }
+            } else if (typeof loadChronologicalCalendar === 'function') {
+                loadChronologicalCalendar();
+            }
+
+            // Precarga diferida en segundo plano de catálogos secundarios sin congelar el navegador
+            if ('requestIdleCallback' in window) {
+                requestIdleCallback(() => {
+                    if (typeof loadClientsAndBranches === 'function') loadClientsAndBranches();
+                    if (typeof loadChemicals === 'function') loadChemicals();
+                });
+            } else {
+                setTimeout(() => {
+                    if (typeof loadClientsAndBranches === 'function') loadClientsAndBranches();
+                    if (typeof loadChemicals === 'function') loadChemicals();
+                }, 300);
             }
         }
 
@@ -4608,7 +5906,12 @@
             if (confirm('¿Deseas cerrar tu sesión del Panel de Super Usuario?')) {
                 localStorage.removeItem('fumiflosa_auth_token');
                 localStorage.removeItem('fumiflosa_auth_user');
-                document.getElementById('modal-auth-login').classList.remove('hidden');
+                const loginModal = document.getElementById('modal-auth-login');
+                if (loginModal) {
+                    loginModal.classList.remove('hidden');
+                    loginModal.classList.add('flex');
+                    loginModal.style.cssText = 'display: flex !important;';
+                }
                 document.getElementById('login-input-password').value = '';
                 document.getElementById('login-input-username').value = '';
                 hideLoginError();
@@ -4624,24 +5927,33 @@
                 try {
                     const user = JSON.parse(userStr);
                     renderAuthenticatedUser(user);
-                    if (loginModal) loginModal.classList.add('hidden');
-                    loadCompanyConfig();
-                    loadSummaryStats();
-                    loadChronologicalCalendar();
-                    return;
+                    if (loginModal) {
+                        loginModal.classList.add('hidden');
+                        loginModal.classList.remove('flex');
+                        loginModal.style.cssText = 'display: none !important;';
+                    }
+                    setTimeout(() => {
+                        refreshAllDashboardData();
+                    }, 10);
+                    return true;
                 } catch(e) {
                     console.error('Error parsing stored user', e);
                 }
             }
 
             // Si no hay sesión, mostrar modal de login
-            if (loginModal) loginModal.classList.remove('hidden');
+            if (loginModal) {
+                loginModal.classList.remove('hidden');
+                loginModal.classList.add('flex');
+                loginModal.style.cssText = 'display: flex !important;';
+            }
+            return false;
         }
 
         function downloadCSVTemplate() {
             const headers = "folio,rfc,razon_social,sucursal_nombre,sucursal_direccion,sucursal_telefono,contacto_sucursal,fecha_de_exp,quimico_nombre_1,ingrediente_activo_1,quimico_cicoplafest_1,dosis_1,lugar_tratado_1,metodo_1,quimico_nombre_2,ingrediente_activo_2,quimico_cicoplafest_2,dosis_2,lugar_tratado_2,metodo_2,quimico_nombre_3,ingrediente_activo_3,quimico_cicoplafest_3,dosis_3,lugar_tratado_3,metodo_3,quimico_nombre_4,ingrediente_activo_4,quimico_cicoplafest_4,dosis_4,lugar_tratado_4,metodo_4,observaciones\n";
-            const sample1 = "IMSS-2026-001,IMS421231I45,INSTITUTO MEXICANO DEL SEGURO SOCIAL,HGZ No. 1 Gabriel Mancera,Gabriel Mancera 222 Benito Juarez CDMX,5556391122,Dra. Marcela Rivas,2026-05-10,Biothrine Flow,Deltametrina 2.5%,RSCO-URB-INAC-111-2020,10 ml / 1 L,Cocina y Almacen,Aspersion Manual,Maxforce Forte,Fipronil 0.05%,RSCO-DOM-INAC-182-2021,Gel focalizado,Comedores y Oficinas,Geles,Demand Duo,Tiametoxam 11.6% + Lambda Cyhalotrina 8.8%,RSCO-URB-INAC-158-2015,5 ml / 1 L,Perimetros exteriores,Termonebulizacion,,,,,,,Servicio mensual integral NOM-256\n";
-            const sample2 = "WAL-2026-088,WAL860507P92,NUEVA WAL-MART DE MEXICO S.DE R.L. DE C.V.,Walmart Express Felix Cuevas,Felix Cuevas 374 Tlacoquemecatl del Valle CDMX,5555754400,Gerente de Turno,2026-05-15,Temprid SC,Imidacloprid 21% + Betaciflutrin 10.5%,RSCO-URB-INAC-177-2017,4 ml / 1 L,Bodega y Pasillos,Microinyeccion,,,,,,,,,,,,,,,,,,Aplicacion preventiva y correctiva";
+            const sample1 = "ORD-00001,IMS421231I45,INSTITUTO MEXICANO DEL SEGURO SOCIAL,HGZ No. 1 Gabriel Mancera,Gabriel Mancera 222 Benito Juarez CDMX,5556391122,Dra. Marcela Rivas,2026-05-10,Biothrine Flow,Deltametrina 2.5%,RSCO-URB-INAC-111-2020,10 ml / 1 L,Cocina y Almacen,Aspersion Manual,Maxforce Forte,Fipronil 0.05%,RSCO-DOM-INAC-182-2021,Gel focalizado,Comedores y Oficinas,Geles,Demand Duo,Tiametoxam 11.6% + Lambda Cyhalotrina 8.8%,RSCO-URB-INAC-158-2015,5 ml / 1 L,Perimetros exteriores,Termonebulizacion,,,,,,,Servicio mensual integral NOM-256\n";
+            const sample2 = "ORD-00002,WAL860507P92,NUEVA WAL-MART DE MEXICO S.DE R.L. DE C.V.,Walmart Express Felix Cuevas,Felix Cuevas 374 Tlacoquemecatl del Valle CDMX,5555754400,Gerente de Turno,2026-05-15,Temprid SC,Imidacloprid 21% + Betaciflutrin 10.5%,RSCO-URB-INAC-177-2017,4 ml / 1 L,Bodega y Pasillos,Microinyeccion,,,,,,,,,,,,,,,,,,Aplicacion preventiva y correctiva";
             
             const blob = new Blob([headers + sample1 + sample2], { type: 'text/csv;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
@@ -5674,12 +6986,15 @@
                         </div>
                     </div>
 
-                    <div class="flex items-center gap-2 shrink-0">
+                    <div class="flex items-center gap-2 shrink-0 flex-wrap sm:flex-nowrap">
+                        <button type="button" onclick="autofillFromRscoModal(${idx})" class="px-2.5 py-1.5 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-lg text-xs shadow-2xs flex items-center gap-1 transition" title="Copiar especificaciones oficiales al formulario de registro">
+                            <i class="fa-solid fa-pen-to-square"></i> Rellenar Formulario
+                        </button>
                         ${!prod.in_local_catalog ? `
-                        <button type="button" onclick="addRscoToLocalCatalog(${idx})" class="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-xs shadow-2xs flex items-center gap-1 transition">
+                        <button type="button" onclick="addRscoToLocalCatalog(${idx})" class="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-xs shadow-2xs flex items-center gap-1 transition" title="Guardar directamente en el catálogo local del SaaS">
                             <i class="fa-solid fa-plus"></i> Dar de Alta
                         </button>` : ''}
-                        <button type="button" onclick="useRscoProduct(${idx})" class="px-2.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg text-xs shadow-2xs flex items-center gap-1 transition">
+                        <button type="button" onclick="useRscoProduct(${idx})" class="px-2.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg text-xs shadow-2xs flex items-center gap-1 transition" title="Usar en orden de servicio">
                             <i class="fa-solid fa-check"></i> Usar
                         </button>
                     </div>
@@ -5687,38 +7002,10 @@
             `).join('');
         }
 
-        async function addRscoToLocalCatalog(index) {
+        function addRscoToLocalCatalog(index) {
             const prod = rscoSearchResults[index];
             if (!prod) return;
-
-            try {
-                const res = await fetch('/api/v1/chemicals', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        commercial_name: prod.commercial_name,
-                        active_ingredient: prod.active_ingredient,
-                        cicoplafest_number: prod.cicoplafest_number,
-                        authorized_dose_per_liter: prod.authorized_dose_per_liter,
-                        safety_interval_hours: prod.safety_interval_hours,
-                        compatible_methods: prod.compatible_methods,
-                        toxicological_category: prod.toxicological_category,
-                        technical_sheet_url: prod.technical_sheet_url || null,
-                        safety_sheet_url: prod.safety_sheet_url || null
-                    })
-                });
-
-                if (!res.ok) {
-                    const err = await res.json();
-                    throw new Error(err.detail || 'Error al guardar');
-                }
-
-                alert(`¡Químico "${prod.commercial_name}" agregado exitosamente al catálogo del SaaS!`);
-                await loadChemicals();
-                executeRscoSearch(document.getElementById('rsco-search-input').value);
-            } catch(err) {
-                alert('No se pudo dar de alta: ' + err.message);
-            }
+            openConfirmChemicalModal([prod], prod);
         }
 
         function useRscoProduct(index) {
@@ -7422,8 +8709,39 @@
             window.open(url, '_blank');
         }
 
-        // Verificación inicial de sesión
+        // =========================================================================
+        // ACCESIBILIDAD Y TAMAÑO DE FUENTE
+        // =========================================================================
+        function setTextZoom(mode) {
+            document.body.classList.remove('text-zoom-sm', 'text-zoom-base', 'text-zoom-lg', 'text-zoom-xl');
+            document.body.classList.add(`text-zoom-${mode}`);
+            localStorage.setItem('fumiflosa_text_zoom', mode);
+            
+            // Actualizar botones de zoom en el topbar
+            document.querySelectorAll('.btn-zoom-option').forEach(b => {
+                b.classList.remove('bg-emerald-600', 'text-white', 'border-emerald-500');
+                b.classList.add('bg-slate-800', 'text-slate-300', 'border-slate-700');
+            });
+            const activeBtn = document.getElementById(`btn-zoom-${mode}`);
+            if (activeBtn) {
+                activeBtn.classList.remove('bg-slate-800', 'text-slate-300', 'border-slate-700');
+                activeBtn.classList.add('bg-emerald-600', 'text-white', 'border-emerald-500');
+            }
+        }
+
+        function initTextZoom() {
+            const savedZoom = localStorage.getItem('fumiflosa_text_zoom') || 'base';
+            setTextZoom(savedZoom);
+        }
+
+        // Verificación inicial de sesión y accesibilidad
+        initTextZoom();
         checkAuthSession();
+        document.addEventListener('DOMContentLoaded', () => {
+            initTextZoom();
+            checkAuthSession();
+        });
+        window.addEventListener('load', checkAuthSession);
     </script>
 </body>
 </html>

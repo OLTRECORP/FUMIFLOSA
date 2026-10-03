@@ -268,6 +268,16 @@ class CertificateResponse(BaseModel):
     cancellation_reason: Optional[str] = None
     cancelled_at: Optional[datetime] = None
     applied_chemicals: List[CertificateChemicalResponse] = []
+    
+    # Firma Electrónica Avanzada (FIEL / e.firma del SAT)
+    is_signed: bool = False
+    signed_at: Optional[datetime] = None
+    digital_signature_seal: Optional[str] = None
+    certificate_serial_number: Optional[str] = None
+    original_chain: Optional[str] = None
+    signed_by_name: Optional[str] = None
+    signed_by_rfc: Optional[str] = None
+    verification_uuid: Optional[str] = None
     model_config = ConfigDict(from_attributes=True)
 
 
@@ -423,7 +433,163 @@ class DashboardSummaryStats(BaseModel):
 
 
 # ----------------------------------------------------------------------------
-# Métricas y Analytics Avanzados de Fumigación
+# ----------------------------------------------------------------------------
+# 7. Duplicación y Generación Masiva Mensual B2B
+# ----------------------------------------------------------------------------
+class DuplicateServiceOrderRequest(BaseModel):
+    new_service_start_date: Optional[datetime] = None
+    new_service_end_date: Optional[datetime] = None
+    technician_id: Optional[uuid.UUID] = None
+    folio_prefix: Optional[str] = "SRV"
+    observations: Optional[str] = None
+    send_email: bool = False
+    recipient_email: Optional[EmailStr] = None
+    additional_notes: Optional[str] = None
+
+
+class MonthlyBatchGenerationRequest(BaseModel):
+    client_id: uuid.UUID
+    target_date: Optional[date] = None
+    service_start_time: Optional[str] = "09:00:00"
+    service_duration_hours: int = 2
+    technician_id: Optional[uuid.UUID] = None
+    branch_ids: Optional[List[uuid.UUID]] = None
+    mode: str = "clone_last_service"  # "clone_last_service" | "use_template"
+    folio_prefix: Optional[str] = "MENS"
+    observations: Optional[str] = None
+    send_emails: bool = False
+    
+    # Parámetros opcionales para modo plantilla (si una sucursal no tiene orden previa)
+    template_pest_crawling: bool = True
+    template_pest_rodents: bool = True
+    template_pest_flying: bool = False
+    template_proc_aspersion: bool = True
+    template_proc_baits: bool = False
+    template_proc_gels: bool = False
+    template_chemical_id: Optional[uuid.UUID] = None
+    template_dose: str = "10 ml / Litro"
+    template_zones: str = "Áreas interiores, sanitarios y perímetros"
+    template_method: str = "Aspersión Manual"
+
+
+class BatchOrderSummary(BaseModel):
+    service_order_id: str
+    order_folio: str
+    certificate_id: str
+    certificate_folio: str
+    branch_id: str
+    branch_name: str
+    unit_code: Optional[str] = None
+    technician_name: str
+    validity_start_date: str
+    validity_end_date: str
+
+
+class MonthlyBatchGenerationResponse(BaseModel):
+    client_id: uuid.UUID
+    client_name: str
+    total_branches_processed: int
+    orders_created_count: int
+    certificates_created_count: int
+    emails_sent_count: int
+    created_orders: List[BatchOrderSummary]
+
+
+class SendEmailRequest(BaseModel):
+    recipient_email: Optional[EmailStr] = None
+    additional_notes: Optional[str] = None
+
+
+class SendEmailResponse(BaseModel):
+    success: bool
+    recipient: Optional[str] = None
+    folio: Optional[str] = None
+    mode: Optional[str] = None
+    message: Optional[str] = None
+    error: Optional[str] = None
+
+
+# ----------------------------------------------------------------------------
+# 8. Configuración de Empresa y FIEL / e.firma SAT
+# ----------------------------------------------------------------------------
+class CompanySettingsResponse(BaseModel):
+    id: uuid.UUID
+    company_name: str
+    company_rfc: str
+    sanitary_license_number: str
+    sanitary_responsible_name: str
+    sanitary_responsible_id: Optional[str] = None
+    is_fiel_active: bool
+    fiel_serial_number: Optional[str] = None
+    fiel_holder_name: Optional[str] = None
+    fiel_rfc: Optional[str] = None
+    fiel_valid_from: Optional[datetime] = None
+    fiel_valid_to: Optional[datetime] = None
+    model_config = ConfigDict(from_attributes=True)
+
+
+class CompanySettingsUpdate(BaseModel):
+    company_name: Optional[str] = None
+    company_rfc: Optional[str] = None
+    sanitary_license_number: Optional[str] = None
+    sanitary_responsible_name: Optional[str] = None
+    sanitary_responsible_id: Optional[str] = None
+
+
+class FielStatusResponse(BaseModel):
+    is_configured: bool
+    is_active: bool
+    serial_number: Optional[str] = None
+    holder_name: Optional[str] = None
+    rfc: Optional[str] = None
+    valid_from: Optional[datetime] = None
+    valid_to: Optional[datetime] = None
+    is_expired: bool = False
+    message: Optional[str] = None
+
+
+class SignCertificateRequest(BaseModel):
+    password: str = Field(..., description="Contraseña de la llave privada (.key) de la FIEL del SAT")
+
+
+class SignCertificateResponse(BaseModel):
+    success: bool
+    certificate_id: uuid.UUID
+    certificate_folio: str
+    is_signed: bool
+    signed_at: datetime
+    certificate_serial_number: str
+    digital_signature_seal: str
+    original_chain: str
+    signed_by_name: str
+    signed_by_rfc: str
+    verification_uuid: str
+    message: str
+
+
+class CertificateVerificationResponse(BaseModel):
+    is_valid: bool
+    certificate_folio: str
+    order_folio: str
+    issue_date: date
+    validity_start_date: date
+    validity_end_date: date
+    is_currently_valid: bool
+    is_signed_digitally: bool
+    signed_at: Optional[datetime] = None
+    signed_by: Optional[str] = None
+    signer_rfc: Optional[str] = None
+    sat_serial_number: Optional[str] = None
+    company_name: str
+    branch_name: str
+    client_name: str
+    sanitary_license: str
+    responsible_name: str
+    verification_uuid: Optional[str] = None
+
+
+# ----------------------------------------------------------------------------
+# 9. Métricas y Analytics Avanzados de Fumigación
 # ----------------------------------------------------------------------------
 class AdvancedAnalyticsResponse(BaseModel):
     total_services: int

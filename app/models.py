@@ -5,7 +5,7 @@ from typing import List, Optional
 
 from sqlalchemy import (
     String, Boolean, Text, Integer, Date, DateTime, 
-    ForeignKey, Enum
+    ForeignKey, Enum, LargeBinary
 )
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
@@ -254,6 +254,16 @@ class Certificate(Base, TimestampMixin, SoftDeleteMixin):
     sanitary_responsible_name: Mapped[str] = mapped_column(String(255), nullable=False)
     sanitary_responsible_id: Mapped[Optional[str]] = mapped_column(String(100), nullable=True) # Cédula Profesional
 
+    # Firma Electrónica Avanzada (FIEL / e.firma del SAT)
+    is_signed: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False, index=True)
+    signed_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    digital_signature_seal: Mapped[Optional[str]] = mapped_column(Text, nullable=True)  # Sello Digital Base64
+    certificate_serial_number: Mapped[Optional[str]] = mapped_column(String(100), nullable=True) # No. Serie Certificado SAT
+    original_chain: Mapped[Optional[str]] = mapped_column(Text, nullable=True) # Cadena Original
+    signed_by_name: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    signed_by_rfc: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
+    verification_uuid: Mapped[Optional[str]] = mapped_column(String(100), nullable=True, index=True)
+
     # Cancelación de Certificados
     is_cancelled: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     cancellation_reason: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
@@ -292,7 +302,31 @@ class CertificateChemical(Base, TimestampMixin):
 
 
 # ============================================================================
-# 6. CATÁLOGO DINÁMICO EN LÍNEA RSCO / CICOPLAFEST
+# 6. CONFIGURACIÓN DE EMPRESA Y FIEL / E.FIRMA SAT
+# ============================================================================
+class CompanySettings(Base, TimestampMixin):
+    __tablename__ = "company_settings"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    company_name: Mapped[str] = mapped_column(String(255), nullable=False, default="FUMIFLOSA - CONTROL INTEGRAL DE PLAGAS")
+    company_rfc: Mapped[str] = mapped_column(String(13), nullable=False, default="FUM200101XYZ")
+    sanitary_license_number: Mapped[str] = mapped_column(String(100), nullable=False, default="2023-15A-099")
+    sanitary_responsible_name: Mapped[str] = mapped_column(String(255), nullable=False, default="Biól. Roberto Sánchez Martínez")
+    sanitary_responsible_id: Mapped[Optional[str]] = mapped_column(String(100), nullable=True, default="CED-8849201")
+    
+    # Almacenamiento Seguro de FIEL / e.firma
+    fiel_certificate_der: Mapped[Optional[bytes]] = mapped_column(LargeBinary, nullable=True)
+    fiel_private_key_der: Mapped[Optional[bytes]] = mapped_column(LargeBinary, nullable=True)
+    fiel_serial_number: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    fiel_valid_from: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    fiel_valid_to: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    fiel_rfc: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
+    fiel_holder_name: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    is_fiel_active: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+
+
+# ============================================================================
+# 6.1 CATÁLOGO DINÁMICO EN LÍNEA RSCO / CICOPLAFEST
 # ============================================================================
 class RSCOItem(Base, TimestampMixin, SoftDeleteMixin):
     """Catálogo Oficial RSCO / CICOPLAFEST actualizable en línea."""
@@ -420,8 +454,6 @@ class HazardousWasteLog(Base, TimestampMixin, SoftDeleteMixin):
     temporary_storage_location: Mapped[str] = mapped_column(String(255), nullable=False, default="Área de Residuos FUMIFLOSA")
     disposal_manifest_number: Mapped[Optional[str]] = mapped_column(String(150), nullable=True)
     responsible_name: Mapped[str] = mapped_column(String(255), nullable=False)
-
-
 # ============================================================================
 # 12. LOG DE AUDITORÍA, MODIFICACIONES E INICIOS DE SESIÓN (SUPER USUARIO MASTER)
 # ============================================================================
@@ -459,5 +491,3 @@ class AuditLog(Base, TimestampMixin):
     user_agent: Mapped[Optional[str]] = mapped_column(String(500), nullable=True) # Navegador / Entorno de origen
 
     user: Mapped[Optional["User"]] = relationship("User", lazy="joined")
-
-

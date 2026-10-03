@@ -1,12 +1,14 @@
 import os
 from pathlib import Path
+from typing import Optional
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 
 from sqlalchemy import text
 from app.config import settings
-from app.database import engine
+from app.database import engine, auto_migrate_schema
 from app.models import Base
 from app.api.routes import router as api_router
 
@@ -18,45 +20,14 @@ app = FastAPI(
     redoc_url="/redoc"
 )
 
+
 @app.on_event("startup")
 def startup_db_sync():
-    """Garantiza la creación y migración automática de columnas y tablas en PostgreSQL."""
+    """Garantiza la creación y migración automática de columnas y tablas en PostgreSQL / SQLite."""
     try:
-        Base.metadata.create_all(bind=engine)
-        with engine.begin() as conn:
-            # Soporte para revisiones alembic largas
-            conn.execute(text("ALTER TABLE IF EXISTS alembic_version ALTER COLUMN version_num TYPE VARCHAR(128);"))
-
-            # Columnas para users
-            conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS username VARCHAR(100);"))
-            conn.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS ix_users_username ON users (username);"))
-            
-            # Columnas para clients (Portal Permanente)
-            conn.execute(text("ALTER TABLE clients ADD COLUMN IF NOT EXISTS portal_slug VARCHAR(100);"))
-            conn.execute(text("ALTER TABLE clients ADD COLUMN IF NOT EXISTS portal_password VARCHAR(255);"))
-            conn.execute(text("ALTER TABLE clients ADD COLUMN IF NOT EXISTS portal_is_enabled BOOLEAN DEFAULT TRUE;"))
-            conn.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS ix_clients_portal_slug ON clients (portal_slug);"))
-            
-            # Columnas para chemicals
-            conn.execute(text("ALTER TABLE chemicals ADD COLUMN IF NOT EXISTS toxicological_category VARCHAR(50);"))
-            conn.execute(text("ALTER TABLE chemicals ADD COLUMN IF NOT EXISTS compatible_methods VARCHAR(255);"))
-            conn.execute(text("ALTER TABLE chemicals ADD COLUMN IF NOT EXISTS technical_sheet_url VARCHAR(500);"))
-            conn.execute(text("ALTER TABLE chemicals ADD COLUMN IF NOT EXISTS safety_sheet_url VARCHAR(500);"))
-
-            # Columnas para rsco_items
-            conn.execute(text("ALTER TABLE rsco_items ADD COLUMN IF NOT EXISTS technical_sheet_url VARCHAR(500);"))
-            conn.execute(text("ALTER TABLE rsco_items ADD COLUMN IF NOT EXISTS safety_sheet_url VARCHAR(500);"))
-            
-            # Columnas para certificates (Cancelación)
-            conn.execute(text("ALTER TABLE certificates ADD COLUMN IF NOT EXISTS is_cancelled BOOLEAN DEFAULT FALSE;"))
-            conn.execute(text("ALTER TABLE certificates ADD COLUMN IF NOT EXISTS cancellation_reason VARCHAR(500);"))
-            conn.execute(text("ALTER TABLE certificates ADD COLUMN IF NOT EXISTS cancelled_at TIMESTAMPTZ;"))
-
-            # Columnas para service_orders (Estado y Agendamiento)
-            conn.execute(text("ALTER TABLE service_orders ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'completed';"))
-            conn.execute(text("ALTER TABLE service_orders ADD COLUMN IF NOT EXISTS scheduled_for TIMESTAMPTZ;"))
+        auto_migrate_schema(engine)
         
-        # Sincronizar catálogo inicial RSCO, Químicos, Usuarios, Clientes y Bitácoras
+        # Sincronizar catálogo inicial RSCO, Químicos, Usuarios, Clientes, Certificados y Bitácoras
         from app.database import SessionLocal
         from app.services.seed_service import seed_all_database_defaults
         with SessionLocal() as db_session:
@@ -64,6 +35,9 @@ def startup_db_sync():
             print(f"[STARTUP DB SEED COMPLETE]: {seed_results}")
     except Exception as e:
         print(f"[STARTUP DB SYNC WARNING]: {e}")
+
+# Compresión GZIP de alto rendimiento (reduce transferencias de 530KB a ~75KB)
+app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 # Configuración de CORS
 app.add_middleware(
@@ -82,6 +56,7 @@ TEMPLATES_DIR = Path(__file__).parent / "templates"
 ASSETS_DIR = Path(__file__).parent / "assets"
 DASHBOARD_HTML_PATH = TEMPLATES_DIR / "dashboard.html"
 CLIENT_PORTAL_HTML_PATH = TEMPLATES_DIR / "client_portal.html"
+VERIFY_HTML_PATH = TEMPLATES_DIR / "verify_certificate.html"
 
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -93,12 +68,16 @@ if ASSETS_DIR.exists():
 @app.get("/assets/logo.png", tags=["Assets"])
 @app.get("/assets/logo_flosa.png", tags=["Assets"])
 def get_logo_image():
-    """Devuelve el logo oficial de FLOSA Control de Plagas."""
+    """Devuelve el logo oficial de FLOSA Control de Plagas con caché en navegador."""
     logo_path = ASSETS_DIR / "certificates" / "logo_flosa.png"
     if not logo_path.exists():
         logo_path = ASSETS_DIR / "logo_flosa.png"
     if logo_path.exists():
-        return FileResponse(str(logo_path), media_type="image/png")
+        return FileResponse(
+            str(logo_path),
+            media_type="image/png",
+            headers={"Cache-Control": "public, max-age=86400"}
+        )
     return HTMLResponse("", status_code=404)
 
 
@@ -120,6 +99,17 @@ def get_client_portal_page(portal_slug: str):
         with open(CLIENT_PORTAL_HTML_PATH, "r", encoding="utf-8") as f:
             return f.read()
     return "<h1>Portal de Cliente no disponible</h1>"
+
+
+@app.get("/verificar", response_class=HTMLResponse, tags=["Verificación Oficial"])
+@app.get("/verify", response_class=HTMLResponse, tags=["Verificación Oficial"])
+@app.get("/verificar/{folio}", response_class=HTMLResponse, tags=["Verificación Oficial"])
+def get_verify_page(folio: Optional[str] = None):
+    """Sirve la página oficial de validación pública de certificados sanitarios (QR)."""
+    if VERIFY_HTML_PATH.exists():
+        with open(VERIFY_HTML_PATH, "r", encoding="utf-8") as f:
+            return f.read()
+    return "<h1>Portal de Verificación no disponible</h1>"
 
 
 @app.get("/health", tags=["Health"])
