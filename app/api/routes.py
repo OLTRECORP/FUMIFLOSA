@@ -5,7 +5,7 @@ import zipfile
 from datetime import datetime, date, timedelta, timezone
 from typing import List, Optional, Dict, Any
 
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, status, Header
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, status, Header, Request
 from fastapi.responses import Response, StreamingResponse, RedirectResponse
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import select, func, or_, and_, desc
@@ -15,7 +15,7 @@ from app.models import (
     ServiceOrder, Certificate, CertificateChemical, Branch, Client, 
     Chemical, User, UserRole, CompanyConfig,
     RSCOItem, EPPLog, EPPAnnualMatrix, EquipmentCalibrationLog,
-    StationMonitoringLog, HazardousWasteLog
+    StationMonitoringLog, HazardousWasteLog, AuditLog, AuditActionType
 )
 from app.schemas import (
     LoginRequest, LoginResponse, AuthUserInfo,
@@ -34,7 +34,8 @@ from app.schemas import (
     EPPAnnualMatrixRow, EPPAnnualMatrixBatch, EPPAnnualRowCreate,
     EquipmentCalibrationCreate, EquipmentCalibrationResponse,
     StationMonitoringCreate, StationMonitoringResponse,
-    HazardousWasteCreate, HazardousWasteResponse
+    HazardousWasteCreate, HazardousWasteResponse,
+    AuditLogResponse, AuditLogPaginationResponse
 )
 from app.services.data_import import HistoricalDataImporter
 from app.services.pdf_service import OfficialCertificatePDFGenerator, OfficialWorkOrderPDFGenerator, BitacoraPDFGenerator
@@ -52,6 +53,7 @@ from app.services.pesticide_sheet_service import (
     OfficialTechnicalSheetPDFGenerator,
     OfficialSafetyDataSheetPDFGenerator
 )
+from app.services.audit_service import record_audit
 
 router = APIRouter(prefix="/api/v1", tags=["FUMIFLOSA Core"])
 
@@ -92,7 +94,7 @@ MASTER_SUPERUSER_PASSWORD = "FLOSA6303"
 
 
 @router.post("/auth/login", response_model=LoginResponse)
-def login_user(payload: LoginRequest, db: Session = Depends(get_db)):
+def login_user(payload: LoginRequest, request: Request, db: Session = Depends(get_db)):
     """
     Inicio de sesión Super Usuario Único y usuarios del portal FUMIFLOSA.
     Credenciales Master:
@@ -143,6 +145,19 @@ def login_user(payload: LoginRequest, db: Session = Depends(get_db)):
             db.rollback()
             print(f"[LOGIN MASTER DB WARNING]: {e}")
 
+        # Registrar evento en auditoría
+        record_audit(
+            db=db,
+            action_type="LOGIN_SUCCESS",
+            module="AUTH",
+            description=f"Inicio de sesión exitoso como Super Usuario Master ({full_name})",
+            user_id=master_user_id,
+            username=MASTER_SUPERUSER_USERNAME,
+            user_role="SuperAdmin",
+            entity_name=full_name,
+            request=request
+        )
+
         session_token = f"fumiflosa_sec_master_{uuid.uuid4().hex}"
         return LoginResponse(
             access_token=session_token,
@@ -171,12 +186,28 @@ def login_user(payload: LoginRequest, db: Session = Depends(get_db)):
                 User.is_deleted == False
             ).first()
         except Exception:
+            record_audit(
+                db=db,
+                action_type="LOGIN_FAILED",
+                module="AUTH",
+                description=f"Fallo de inicio de sesión: usuario '{input_username}' no encontrado",
+                username=input_username,
+                request=request
+            )
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Credenciales inválidas o usuario inactivo."
             )
 
     if not db_user or not db_user.is_active:
+        record_audit(
+            db=db,
+            action_type="LOGIN_FAILED",
+            module="AUTH",
+            description=f"Fallo de inicio de sesión: usuario '{input_username}' inactivo o inexistente",
+            username=input_username,
+            request=request
+        )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Credenciales inválidas o usuario inactivo."
@@ -189,10 +220,33 @@ def login_user(payload: LoginRequest, db: Session = Depends(get_db)):
     )
 
     if not valid_pwd:
+        record_audit(
+            db=db,
+            action_type="LOGIN_FAILED",
+            module="AUTH",
+            description=f"Fallo de inicio de sesión: contraseña incorrecta para usuario '{input_username}'",
+            user_id=db_user.id,
+            username=db_user.username or db_user.email,
+            user_role=str(db_user.role),
+            request=request
+        )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Contraseña incorrecta."
         )
+
+    # Registrar login exitoso
+    record_audit(
+        db=db,
+        action_type="LOGIN_SUCCESS",
+        module="AUTH",
+        description=f"Inicio de sesión exitoso de usuario ({db_user.full_name})",
+        user_id=db_user.id,
+        username=db_user.username or db_user.email,
+        user_role=str(db_user.role),
+        entity_name=db_user.full_name,
+        request=request
+    )
 
     session_token = f"fumiflosa_sec_usr_{uuid.uuid4().hex}"
     return LoginResponse(
@@ -252,7 +306,7 @@ def get_company_configuration(db: Session = Depends(get_db)):
 
 
 @router.put("/company-config", response_model=CompanyConfigResponse)
-def update_company_configuration(payload: CompanyConfigUpdate, db: Session = Depends(get_db)):
+def update_company_configuration(payload: CompanyConfigUpdate, request: Request, db: Session = Depends(get_db)):
     """Actualiza los datos fiscales, licencia sanitaria, STPS y SINTOX de la empresa."""
     config = get_or_create_company_config(db)
     update_data = payload.model_dump(exclude_unset=True)
@@ -260,6 +314,20 @@ def update_company_configuration(payload: CompanyConfigUpdate, db: Session = Dep
         setattr(config, key, value)
     db.commit()
     db.refresh(config)
+
+    record_audit(
+        db=db,
+        action_type="CONFIG_CHANGE",
+        module="EMPRESA",
+        description=f"Actualización de configuración general de la empresa ({config.company_name})",
+        entity_id=str(config.id),
+        entity_name=config.company_name,
+        changes_payload=update_data,
+        username="SuperAdmin",
+        user_role="SuperAdmin",
+        request=request
+    )
+
     return config
 
 
@@ -597,7 +665,7 @@ def get_users(role: Optional[UserRole] = None, db: Session = Depends(get_db)):
 
 
 @router.post("/users", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
-def create_user(payload: UserCreate, db: Session = Depends(get_db)):
+def create_user(payload: UserCreate, request: Request, db: Session = Depends(get_db)):
     existing = db.query(User).filter(User.email == payload.email, User.is_deleted == False).first()
     if existing:
         raise HTTPException(status_code=400, detail="El correo electrónico ya está registrado.")
@@ -617,11 +685,24 @@ def create_user(payload: UserCreate, db: Session = Depends(get_db)):
     db.add(user)
     db.commit()
     db.refresh(user)
+
+    record_audit(
+        db=db,
+        action_type="CREATE",
+        module="USUARIOS",
+        description=f"Alta de nuevo usuario '{user.full_name}' con rol {user.role}",
+        entity_id=str(user.id),
+        entity_name=user.full_name,
+        username="SuperAdmin",
+        user_role="SuperAdmin",
+        request=request
+    )
+
     return user
 
 
 @router.put("/users/{user_id}", response_model=UserResponse)
-def update_user(user_id: uuid.UUID, payload: UserUpdate, db: Session = Depends(get_db)):
+def update_user(user_id: uuid.UUID, payload: UserUpdate, request: Request, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.id == user_id, User.is_deleted == False).first()
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado.")
@@ -632,16 +713,45 @@ def update_user(user_id: uuid.UUID, payload: UserUpdate, db: Session = Depends(g
 
     db.commit()
     db.refresh(user)
+
+    record_audit(
+        db=db,
+        action_type="UPDATE",
+        module="USUARIOS",
+        description=f"Modificación de datos de usuario '{user.full_name}'",
+        entity_id=str(user.id),
+        entity_name=user.full_name,
+        changes_payload=update_data,
+        username="SuperAdmin",
+        user_role="SuperAdmin",
+        request=request
+    )
+
     return user
 
 
 @router.delete("/users/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_user(user_id: uuid.UUID, db: Session = Depends(get_db)):
+def delete_user(user_id: uuid.UUID, request: Request, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.id == user_id, User.is_deleted == False).first()
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado.")
+    
+    deleted_name = user.full_name
     user.soft_delete()
     db.commit()
+
+    record_audit(
+        db=db,
+        action_type="DELETE",
+        module="USUARIOS",
+        description=f"Eliminación de usuario '{deleted_name}'",
+        entity_id=str(user_id),
+        entity_name=deleted_name,
+        username="SuperAdmin",
+        user_role="SuperAdmin",
+        request=request
+    )
+
     return None
 
 
@@ -660,7 +770,7 @@ def get_clients(db: Session = Depends(get_db)):
 
 
 @router.post("/clients", response_model=ClientResponse, status_code=status.HTTP_201_CREATED)
-def create_client(payload: ClientCreate, db: Session = Depends(get_db)):
+def create_client(payload: ClientCreate, request: Request, db: Session = Depends(get_db)):
     existing = db.query(Client).filter(Client.rfc == payload.rfc, Client.is_deleted == False).first()
     if existing:
         raise HTTPException(status_code=400, detail="El RFC ya se encuentra registrado.")
@@ -679,11 +789,24 @@ def create_client(payload: ClientCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(client)
     client.portal_has_password = bool(client.portal_password)
+
+    record_audit(
+        db=db,
+        action_type="CREATE",
+        module="CLIENTES",
+        description=f"Alta de cliente matriz '{client.legal_name}' (RFC: {client.rfc})",
+        entity_id=str(client.id),
+        entity_name=client.legal_name,
+        username="SuperAdmin",
+        user_role="SuperAdmin",
+        request=request
+    )
+
     return client
 
 
 @router.put("/clients/{client_id}", response_model=ClientResponse)
-def update_client(client_id: uuid.UUID, payload: ClientUpdate, db: Session = Depends(get_db)):
+def update_client(client_id: uuid.UUID, payload: ClientUpdate, request: Request, db: Session = Depends(get_db)):
     client = db.query(Client).filter(Client.id == client_id, Client.is_deleted == False).first()
     if not client:
         raise HTTPException(status_code=404, detail="Cliente no encontrado.")
@@ -695,16 +818,45 @@ def update_client(client_id: uuid.UUID, payload: ClientUpdate, db: Session = Dep
     db.commit()
     db.refresh(client)
     client.portal_has_password = bool(client.portal_password)
+
+    record_audit(
+        db=db,
+        action_type="UPDATE",
+        module="CLIENTES",
+        description=f"Modificación de datos de cliente matriz '{client.legal_name}'",
+        entity_id=str(client.id),
+        entity_name=client.legal_name,
+        changes_payload=update_data,
+        username="SuperAdmin",
+        user_role="SuperAdmin",
+        request=request
+    )
+
     return client
 
 
 @router.delete("/clients/{client_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_client(client_id: uuid.UUID, db: Session = Depends(get_db)):
+def delete_client(client_id: uuid.UUID, request: Request, db: Session = Depends(get_db)):
     client = db.query(Client).filter(Client.id == client_id, Client.is_deleted == False).first()
     if not client:
         raise HTTPException(status_code=404, detail="Cliente no encontrado.")
+    
+    deleted_name = client.legal_name
     client.soft_delete()
     db.commit()
+
+    record_audit(
+        db=db,
+        action_type="DELETE",
+        module="CLIENTES",
+        description=f"Eliminación de cliente matriz '{deleted_name}'",
+        entity_id=str(client_id),
+        entity_name=deleted_name,
+        username="SuperAdmin",
+        user_role="SuperAdmin",
+        request=request
+    )
+
     return None
 
 
@@ -722,7 +874,7 @@ def get_branches(client_id: Optional[uuid.UUID] = None, db: Session = Depends(ge
 
 
 @router.post("/branches", response_model=BranchResponse, status_code=status.HTTP_201_CREATED)
-def create_branch(payload: BranchCreate, db: Session = Depends(get_db)):
+def create_branch(payload: BranchCreate, request: Request, db: Session = Depends(get_db)):
     client = db.query(Client).filter(Client.id == payload.client_id, Client.is_deleted == False).first()
     if not client:
         raise HTTPException(status_code=404, detail="Cliente Matriz no encontrado.")
@@ -740,11 +892,24 @@ def create_branch(payload: BranchCreate, db: Session = Depends(get_db)):
     db.add(branch)
     db.commit()
     db.refresh(branch)
+
+    record_audit(
+        db=db,
+        action_type="CREATE",
+        module="SUCURSALES",
+        description=f"Alta de sucursal '{branch.name}' para cliente '{client.legal_name}'",
+        entity_id=str(branch.id),
+        entity_name=branch.name,
+        username="SuperAdmin",
+        user_role="SuperAdmin",
+        request=request
+    )
+
     return branch
 
 
 @router.put("/branches/{branch_id}", response_model=BranchResponse)
-def update_branch(branch_id: uuid.UUID, payload: BranchUpdate, db: Session = Depends(get_db)):
+def update_branch(branch_id: uuid.UUID, payload: BranchUpdate, request: Request, db: Session = Depends(get_db)):
     branch = db.query(Branch).filter(Branch.id == branch_id, Branch.is_deleted == False).first()
     if not branch:
         raise HTTPException(status_code=404, detail="Sucursal no encontrada.")
@@ -760,11 +925,25 @@ def update_branch(branch_id: uuid.UUID, payload: BranchUpdate, db: Session = Dep
 
     db.commit()
     db.refresh(branch)
+
+    record_audit(
+        db=db,
+        action_type="UPDATE",
+        module="SUCURSALES",
+        description=f"Modificación de datos de sucursal '{branch.name}'",
+        entity_id=str(branch.id),
+        entity_name=branch.name,
+        changes_payload=update_data,
+        username="SuperAdmin",
+        user_role="SuperAdmin",
+        request=request
+    )
+
     return branch
 
 
 @router.post("/clients/{client_id}/branches/associate", response_model=List[BranchResponse])
-def associate_branches_to_client(client_id: uuid.UUID, payload: AssociateBranchesRequest, db: Session = Depends(get_db)):
+def associate_branches_to_client(client_id: uuid.UUID, payload: AssociateBranchesRequest, request: Request, db: Session = Depends(get_db)):
     """Asocia múltiples sucursales existentes a un cliente matriz específico."""
     client = db.query(Client).filter(Client.id == client_id, Client.is_deleted == False).first()
     if not client:
@@ -780,16 +959,44 @@ def associate_branches_to_client(client_id: uuid.UUID, payload: AssociateBranche
     db.commit()
     for b in updated_branches:
         db.refresh(b)
+
+    record_audit(
+        db=db,
+        action_type="UPDATE",
+        module="SUCURSALES",
+        description=f"Asociación de {len(updated_branches)} sucursales al cliente '{client.legal_name}'",
+        entity_id=str(client.id),
+        entity_name=client.legal_name,
+        username="SuperAdmin",
+        user_role="SuperAdmin",
+        request=request
+    )
+
     return updated_branches
 
 
 @router.delete("/branches/{branch_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_branch(branch_id: uuid.UUID, db: Session = Depends(get_db)):
+def delete_branch(branch_id: uuid.UUID, request: Request, db: Session = Depends(get_db)):
     branch = db.query(Branch).filter(Branch.id == branch_id, Branch.is_deleted == False).first()
     if not branch:
         raise HTTPException(status_code=404, detail="Sucursal no encontrada.")
+    
+    deleted_name = branch.name
     branch.soft_delete()
     db.commit()
+
+    record_audit(
+        db=db,
+        action_type="DELETE",
+        module="SUCURSALES",
+        description=f"Eliminación de sucursal '{deleted_name}'",
+        entity_id=str(branch_id),
+        entity_name=deleted_name,
+        username="SuperAdmin",
+        user_role="SuperAdmin",
+        request=request
+    )
+
     return None
 
 
@@ -1057,7 +1264,7 @@ def get_chemicals(db: Session = Depends(get_db)):
 
 
 @router.post("/chemicals", response_model=ChemicalResponse, status_code=status.HTTP_201_CREATED)
-def create_chemical(payload: ChemicalCreate, db: Session = Depends(get_db)):
+def create_chemical(payload: ChemicalCreate, request: Request, db: Session = Depends(get_db)):
     existing = db.query(Chemical).filter(Chemical.cicoplafest_number == payload.cicoplafest_number, Chemical.is_deleted == False).first()
     if existing:
         raise HTTPException(status_code=400, detail="El número de registro CICOPLAFEST ya existe.")
@@ -1085,11 +1292,24 @@ def create_chemical(payload: ChemicalCreate, db: Session = Depends(get_db)):
     db.add(chem)
     db.commit()
     db.refresh(chem)
+
+    record_audit(
+        db=db,
+        action_type="CREATE",
+        module="QUIMICOS",
+        description=f"Alta de plaguicida/químico '{chem.commercial_name}' (RSCO: {chem.cicoplafest_number})",
+        entity_id=str(chem.id),
+        entity_name=chem.commercial_name,
+        username="SuperAdmin",
+        user_role="SuperAdmin",
+        request=request
+    )
+
     return chem
 
 
 @router.put("/chemicals/{chemical_id}", response_model=ChemicalResponse)
-def update_chemical(chemical_id: uuid.UUID, payload: ChemicalUpdate, db: Session = Depends(get_db)):
+def update_chemical(chemical_id: uuid.UUID, payload: ChemicalUpdate, request: Request, db: Session = Depends(get_db)):
     chem = db.query(Chemical).filter(Chemical.id == chemical_id, Chemical.is_deleted == False).first()
     if not chem:
         raise HTTPException(status_code=404, detail="Químico no encontrado.")
@@ -1107,16 +1327,45 @@ def update_chemical(chemical_id: uuid.UUID, payload: ChemicalUpdate, db: Session
 
     db.commit()
     db.refresh(chem)
+
+    record_audit(
+        db=db,
+        action_type="UPDATE",
+        module="QUIMICOS",
+        description=f"Modificación de químico '{chem.commercial_name}' (RSCO: {chem.cicoplafest_number})",
+        entity_id=str(chem.id),
+        entity_name=chem.commercial_name,
+        changes_payload=update_data,
+        username="SuperAdmin",
+        user_role="SuperAdmin",
+        request=request
+    )
+
     return chem
 
 
 @router.delete("/chemicals/{chemical_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_chemical(chemical_id: uuid.UUID, db: Session = Depends(get_db)):
+def delete_chemical(chemical_id: uuid.UUID, request: Request, db: Session = Depends(get_db)):
     chem = db.query(Chemical).filter(Chemical.id == chemical_id, Chemical.is_deleted == False).first()
     if not chem:
         raise HTTPException(status_code=404, detail="Químico no encontrado.")
+    
+    deleted_name = chem.commercial_name
     chem.soft_delete()
     db.commit()
+
+    record_audit(
+        db=db,
+        action_type="DELETE",
+        module="QUIMICOS",
+        description=f"Eliminación de químico '{deleted_name}'",
+        entity_id=str(chemical_id),
+        entity_name=deleted_name,
+        username="SuperAdmin",
+        user_role="SuperAdmin",
+        request=request
+    )
+
     return None
 
 
@@ -1484,6 +1733,7 @@ def get_service_orders(
 @router.post("/services", response_model=ServiceOrderResponse, status_code=status.HTTP_201_CREATED)
 def create_service_order_with_certificate(
     payload: ServiceOrderCreate,
+    request: Request,
     db: Session = Depends(get_db)
 ):
     """
@@ -1566,6 +1816,20 @@ def create_service_order_with_certificate(
 
         db.commit()
         db.refresh(service_order)
+
+        client_name = branch.client.legal_name if branch.client else branch.name
+        record_audit(
+            db=db,
+            action_type="CREATE",
+            module="SERVICIOS",
+            description=f"Emisión de Orden {service_order.folio} y Certificado {certificate.certificate_folio} para '{client_name}' ({branch.name})",
+            entity_id=str(service_order.id),
+            entity_name=f"{service_order.folio} / {certificate.certificate_folio}",
+            username="SuperAdmin",
+            user_role="SuperAdmin",
+            request=request
+        )
+
         return service_order
 
     except Exception as e:
@@ -1759,7 +2023,7 @@ def get_services_calendar(
 
 
 @router.post("/services/schedule", response_model=ServiceOrderResponse, status_code=status.HTTP_201_CREATED)
-def schedule_upcoming_service(payload: ScheduleServiceRequest, db: Session = Depends(get_db)):
+def schedule_upcoming_service(payload: ScheduleServiceRequest, request: Request, db: Session = Depends(get_db)):
     """
     Agenda un próximo servicio ligado a una sucursal, cliente o servicio operativo previo.
     Crea la Orden de Servicio en estado 'scheduled' para seguimiento en el calendario.
@@ -1798,6 +2062,20 @@ def schedule_upcoming_service(payload: ScheduleServiceRequest, db: Session = Dep
         db.add(new_order)
         db.commit()
         db.refresh(new_order)
+
+        client_name = branch.client.legal_name if branch.client else branch.name
+        record_audit(
+            db=db,
+            action_type="CREATE",
+            module="SERVICIOS",
+            description=f"Programación/Agendamiento de nuevo servicio {new_order.folio} para '{client_name}' ({branch.name}) el {start_dt.strftime('%d/%m/%Y %H:%M')}",
+            entity_id=str(new_order.id),
+            entity_name=new_order.folio,
+            username="SuperAdmin",
+            user_role="SuperAdmin",
+            request=request
+        )
+
         return new_order
     except Exception as e:
         db.rollback()
@@ -1822,6 +2100,7 @@ def get_service_order_by_id(service_id: uuid.UUID, db: Session = Depends(get_db)
 def update_service_order_and_certificate(
     service_id: uuid.UUID,
     payload: ServiceOrderUpdate,
+    request: Request,
     db: Session = Depends(get_db)
 ):
     """
@@ -1891,6 +2170,20 @@ def update_service_order_and_certificate(
 
         db.commit()
         db.refresh(order)
+
+        record_audit(
+            db=db,
+            action_type="UPDATE",
+            module="SERVICIOS",
+            description=f"Modificación de Orden {order.folio} / Certificado",
+            entity_id=str(order.id),
+            entity_name=order.folio,
+            changes_payload=payload.model_dump(exclude_unset=True),
+            username="SuperAdmin",
+            user_role="SuperAdmin",
+            request=request
+        )
+
         return order
     except Exception as e:
         db.rollback()
@@ -1898,32 +2191,60 @@ def update_service_order_and_certificate(
 
 
 @router.delete("/services/{service_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_service_order(service_id: uuid.UUID, db: Session = Depends(get_db)):
+def delete_service_order(service_id: uuid.UUID, request: Request, db: Session = Depends(get_db)):
     """Eliminación lógica de la orden de servicio y su certificado asociado."""
     order = db.query(ServiceOrder).filter(ServiceOrder.id == service_id, ServiceOrder.is_deleted == False).first()
     if not order:
         raise HTTPException(status_code=404, detail="Orden de servicio no encontrada.")
     
+    order_folio = order.folio
     order.soft_delete()
     if order.certificate:
         order.certificate.soft_delete()
     
     db.commit()
+
+    record_audit(
+        db=db,
+        action_type="DELETE",
+        module="SERVICIOS",
+        description=f"Eliminación de orden de servicio '{order_folio}'",
+        entity_id=str(service_id),
+        entity_name=order_folio,
+        username="SuperAdmin",
+        user_role="SuperAdmin",
+        request=request
+    )
+
     return None
 
 
 @router.delete("/certificates/{certificate_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_certificate(certificate_id: uuid.UUID, db: Session = Depends(get_db)):
+def delete_certificate(certificate_id: uuid.UUID, request: Request, db: Session = Depends(get_db)):
     """Eliminación lógica del certificado y su orden de servicio asociada."""
     cert = db.query(Certificate).filter(Certificate.id == certificate_id, Certificate.is_deleted == False).first()
     if not cert:
         raise HTTPException(status_code=404, detail="Certificado no encontrado.")
     
+    cert_folio = cert.certificate_folio
     cert.soft_delete()
     if cert.service_order:
         cert.service_order.soft_delete()
     
     db.commit()
+
+    record_audit(
+        db=db,
+        action_type="DELETE",
+        module="CERTIFICADOS",
+        description=f"Eliminación de certificado oficial '{cert_folio}'",
+        entity_id=str(certificate_id),
+        entity_name=cert_folio,
+        username="SuperAdmin",
+        user_role="SuperAdmin",
+        request=request
+    )
+
     return None
 
 
@@ -1934,6 +2255,7 @@ def delete_certificate(certificate_id: uuid.UUID, db: Session = Depends(get_db))
 def cancel_certificate_by_id(
     certificate_id: uuid.UUID,
     payload: CertificateCancelRequest,
+    request: Request,
     db: Session = Depends(get_db)
 ):
     """
@@ -1957,6 +2279,19 @@ def cancel_certificate_by_id(
 
     db.commit()
     db.refresh(cert)
+
+    record_audit(
+        db=db,
+        action_type="CANCEL",
+        module="CERTIFICADOS",
+        description=f"Cancelación formal de certificado '{cert.certificate_folio}'. Motivo: {payload.reason}",
+        entity_id=str(cert.id),
+        entity_name=cert.certificate_folio,
+        username="SuperAdmin",
+        user_role="SuperAdmin",
+        request=request
+    )
+
     return {
         "status": "success",
         "message": f"Certificado {cert.certificate_folio} cancelado exitosamente.",
@@ -1971,6 +2306,7 @@ def cancel_certificate_by_id(
 def cancel_service_certificate(
     service_id: uuid.UUID,
     payload: CertificateCancelRequest,
+    request: Request,
     db: Session = Depends(get_db)
 ):
     """Cancela el certificado y la orden de servicio ligada."""
@@ -1990,6 +2326,19 @@ def cancel_service_certificate(
         order.observations = (order.observations or "") + f" [CANCELADO]: {payload.reason}"
 
     db.commit()
+
+    record_audit(
+        db=db,
+        action_type="CANCEL",
+        module="SERVICIOS",
+        description=f"Cancelación de servicio/orden '{order.folio}'. Motivo: {payload.reason}",
+        entity_id=str(order.id),
+        entity_name=order.folio,
+        username="SuperAdmin",
+        user_role="SuperAdmin",
+        request=request
+    )
+
     return {
         "status": "success",
         "message": f"Servicio {order.folio} cancelado exitosamente.",
@@ -2221,7 +2570,7 @@ def download_matrix_certificates_zip(client_id: uuid.UUID, db: Session = Depends
 # 12. IMPORTACIÓN HISTÓRICA CSV CON PANDAS
 # ============================================================================
 @router.post("/import/historical-csv")
-async def import_historical_csv(file: UploadFile = File(...), db: Session = Depends(get_db)):
+async def import_historical_csv(file: UploadFile = File(...), request: Request = None, db: Session = Depends(get_db)):
     """Procesa un archivo CSV histórico y migra órdenes/certificados en lote."""
     if not file.filename.lower().endswith('.csv'):
         raise HTTPException(status_code=400, detail="El archivo debe ser un CSV válido (.csv).")
@@ -2230,6 +2579,19 @@ async def import_historical_csv(file: UploadFile = File(...), db: Session = Depe
         contents = await file.read()
         importer = HistoricalDataImporter(db)
         result = importer.process_csv(contents)
+
+        record_audit(
+            db=db,
+            action_type="CSV_IMPORT",
+            module="IMPORTACION",
+            description=f"Importación masiva de datos CSV '{file.filename}'. Procesados: {result.get('total_rows_processed', 0)}, creados: {result.get('orders_created', 0)} servicios",
+            entity_name=file.filename,
+            changes_payload=result,
+            username="SuperAdmin",
+            user_role="SuperAdmin",
+            request=request
+        )
+
         return {"status": "success", "result": result}
     except ValueError as ve:
         raise HTTPException(status_code=400, detail=str(ve))
@@ -2881,5 +3243,157 @@ def get_mip_pest_detail(pest_id: str):
     if res and res.get("pest"):
         return res["pest"]
     raise HTTPException(status_code=404, detail="Plaga no encontrada en el catálogo MIP.")
+
+
+# ============================================================================
+# 19. AUDITORÍA Y LOGS DEL SISTEMA (MASTER / SUPERADMIN)
+# ============================================================================
+@router.get("/audit-logs", response_model=AuditLogPaginationResponse)
+def get_audit_logs(
+    action_type: Optional[str] = None,
+    module: Optional[str] = None,
+    user_id: Optional[uuid.UUID] = None,
+    search: Optional[str] = None,
+    start_date: Optional[date] = None,
+    end_date: Optional[date] = None,
+    page: int = 1,
+    page_size: int = 50,
+    db: Session = Depends(get_db)
+):
+    """
+    Registro histórico de auditoría y bitácora de actividad para el Usuario Master.
+    Registra inicios de sesión (exitosos/fallidos), altas, ediciones, eliminaciones y cancelaciones.
+    """
+    query = db.query(AuditLog)
+
+    if action_type and action_type.strip() and action_type.upper() != "ALL":
+        query = query.filter(AuditLog.action_type == action_type.strip().upper())
+    if module and module.strip() and module.upper() != "ALL":
+        query = query.filter(AuditLog.module == module.strip().upper())
+    if user_id:
+        query = query.filter(AuditLog.user_id == user_id)
+    if start_date:
+        start_dt = datetime.combine(start_date, datetime.min.time()).replace(tzinfo=timezone.utc)
+        query = query.filter(AuditLog.created_at >= start_dt)
+    if end_date:
+        end_dt = datetime.combine(end_date, datetime.max.time()).replace(tzinfo=timezone.utc)
+        query = query.filter(AuditLog.created_at <= end_dt)
+    if search and search.strip():
+        term = f"%{search.strip()}%"
+        query = query.filter(
+            or_(
+                AuditLog.description.ilike(term),
+                AuditLog.username.ilike(term),
+                AuditLog.entity_name.ilike(term),
+                AuditLog.ip_address.ilike(term)
+            )
+        )
+
+    total_records = query.count()
+    total_pages = max(1, (total_records + page_size - 1) // page_size)
+    offset = (max(1, page) - 1) * page_size
+
+    items = query.order_by(desc(AuditLog.created_at)).offset(offset).limit(page_size).all()
+
+    return AuditLogPaginationResponse(
+        total_records=total_records,
+        page=page,
+        page_size=page_size,
+        total_pages=total_pages,
+        items=items
+    )
+
+
+@router.get("/audit-logs/export-csv")
+def export_audit_logs_csv(
+    action_type: Optional[str] = None,
+    module: Optional[str] = None,
+    search: Optional[str] = None,
+    start_date: Optional[date] = None,
+    end_date: Optional[date] = None,
+    db: Session = Depends(get_db)
+):
+    """Exporta los logs de auditoría filtrados a un archivo CSV estructurado."""
+    query = db.query(AuditLog)
+
+    if action_type and action_type.strip() and action_type.upper() != "ALL":
+        query = query.filter(AuditLog.action_type == action_type.strip().upper())
+    if module and module.strip() and module.upper() != "ALL":
+        query = query.filter(AuditLog.module == module.strip().upper())
+    if start_date:
+        start_dt = datetime.combine(start_date, datetime.min.time()).replace(tzinfo=timezone.utc)
+        query = query.filter(AuditLog.created_at >= start_dt)
+    if end_date:
+        end_dt = datetime.combine(end_date, datetime.max.time()).replace(tzinfo=timezone.utc)
+        query = query.filter(AuditLog.created_at <= end_dt)
+    if search and search.strip():
+        term = f"%{search.strip()}%"
+        query = query.filter(
+            or_(
+                AuditLog.description.ilike(term),
+                AuditLog.username.ilike(term),
+                AuditLog.entity_name.ilike(term),
+                AuditLog.ip_address.ilike(term)
+            )
+        )
+
+    logs = query.order_by(desc(AuditLog.created_at)).limit(2000).all()
+
+    import csv
+    output = io.StringIO()
+    writer = csv.writer(output, quoting=csv.QUOTE_MINIMAL)
+    writer.writerow(["ID", "Fecha/Hora (UTC)", "Tipo Accion", "Modulo", "Usuario", "Rol", "Entidad / Afectado", "Descripcion", "Direccion IP", "Navegador / Dispositivo"])
+
+    for item in logs:
+        writer.writerow([
+            str(item.id),
+            item.created_at.strftime('%Y-%m-%d %H:%M:%S') if item.created_at else "",
+            str(item.action_type),
+            item.module or "",
+            item.username or "Sistema",
+            item.user_role or "-",
+            item.entity_name or "-",
+            item.description or "",
+            item.ip_address or "-",
+            (item.user_agent or "")[:120]
+        ])
+
+    csv_data = output.getvalue().encode('utf-8-sig')
+    filename = f"Auditoria_Master_FUMIFLOSA_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+    return Response(
+        content=csv_data,
+        media_type="text/csv",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'}
+    )
+
+
+@router.get("/audit-logs/stats")
+def get_audit_stats(db: Session = Depends(get_db)):
+    """Obtiene métricas clave de auditoría para el dashboard del usuario Master."""
+    now = datetime.now(timezone.utc)
+    today_start = datetime.combine(date.today(), datetime.min.time()).replace(tzinfo=timezone.utc)
+
+    total_logs = db.query(func.count(AuditLog.id)).scalar() or 0
+    logins_today = db.query(func.count(AuditLog.id)).filter(
+        AuditLog.action_type.in_(["LOGIN_SUCCESS", "LOGIN_FAILED"]),
+        AuditLog.created_at >= today_start
+    ).scalar() or 0
+    
+    modifications_today = db.query(func.count(AuditLog.id)).filter(
+        AuditLog.action_type.in_(["CREATE", "UPDATE", "CONFIG_CHANGE", "CSV_IMPORT"]),
+        AuditLog.created_at >= today_start
+    ).scalar() or 0
+    
+    deletions_today = db.query(func.count(AuditLog.id)).filter(
+        AuditLog.action_type.in_(["DELETE", "CANCEL"]),
+        AuditLog.created_at >= today_start
+    ).scalar() or 0
+
+    return {
+        "total_logs": total_logs,
+        "logins_today": logins_today,
+        "modifications_today": modifications_today,
+        "deletions_today": deletions_today
+    }
 
 

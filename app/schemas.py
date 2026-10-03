@@ -682,3 +682,33 @@ class HazardousWasteResponse(HazardousWasteBase):
     created_at: datetime
     model_config = ConfigDict(from_attributes=True)
 
+
+# ----------------------------------------------------------------------------
+# 12. Audit Log Schemas (Log de Auditoría, Modificaciones e Inicios de Sesión)
+# ----------------------------------------------------------------------------
+class AuditLogResponse(BaseModel):
+    id: uuid.UUID
+    action_type: str
+    module: str
+    description: str
+    user_id: Optional[uuid.UUID] = None
+    username: Optional[str] = None
+    user_role: Optional[str] = None
+    entity_id: Optional[str] = None
+    entity_name: Optional[str] = None
+    changes_payload: Optional[str] = None
+    ip_address: Optional[str] = None
+    user_agent: Optional[str] = None
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class AuditLogPaginationResponse(BaseModel):
+    total: int
+    page: int
+    page_size: int
+    total_pages: int
+    logs: List[AuditLogResponse]
+
+

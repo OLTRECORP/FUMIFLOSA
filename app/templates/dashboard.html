@@ -1268,6 +1268,9 @@
                     <button onclick="switchTab('tab-respaldos')" id="btn-tab-respaldos" class="tab-btn py-3.5 px-3 border-b-2 border-transparent font-medium text-xs text-slate-500 hover:text-slate-800 flex items-center gap-1.5">
                         <i class="fa-solid fa-cloud-arrow-down text-cyan-600"></i> Respaldos & Descarga Masiva
                     </button>
+                    <button onclick="switchTab('tab-auditoria')" id="btn-tab-auditoria" class="tab-btn py-3.5 px-3 border-b-2 border-transparent font-medium text-xs text-slate-500 hover:text-slate-800 flex items-center gap-1.5">
+                        <i class="fa-solid fa-shield-halved text-rose-600"></i> Auditoría & Log Master
+                    </button>
                 </nav>
             </div>
 
@@ -2759,6 +2762,145 @@
                     </div>
                 </div>
             </div>
+
+            <!-- ============================================================= -->
+            <!-- PESTAÑA: AUDITORÍA Y REGISTRO DE ACTIVIDAD (USUARIO MASTER) -->
+            <!-- ============================================================= -->
+            <div id="tab-auditoria" class="p-6 space-y-6 hidden">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                    <div>
+                        <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                            <i class="fa-solid fa-shield-halved text-rose-600"></i> Bitácora de Auditoría y Control de Actividad Master
+                        </h2>
+                        <p class="text-xs text-slate-500">Registro histórico e inmutable de inicios de sesión, modificaciones, altas, eliminaciones y cancelaciones operativas.</p>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <button onclick="exportAuditLogsCsv()" id="btn-export-audit-csv" class="bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs px-3.5 py-2 rounded-xl flex items-center gap-1.5 shadow-sm transition">
+                            <i class="fa-solid fa-file-csv text-emerald-400"></i> Descargar Reporte CSV
+                        </button>
+                        <button onclick="loadAuditLogs()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs px-3.5 py-2 rounded-xl flex items-center gap-1.5 transition">
+                            <i class="fa-solid fa-arrows-rotate text-rose-600"></i> Actualizar Log
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Resumen de Métricas de Auditoría -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div class="bg-gradient-to-br from-slate-900 to-slate-800 p-4 rounded-xl border border-slate-700 text-white shadow-sm">
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1"><i class="fa-solid fa-list-check text-indigo-400"></i> Total Eventos</p>
+                        <p id="audit-stat-total" class="text-xl font-extrabold font-mono mt-1 text-white">0</p>
+                    </div>
+                    <div class="bg-gradient-to-br from-emerald-950 to-emerald-900 p-4 rounded-xl border border-emerald-800 text-white shadow-sm">
+                        <p class="text-[10px] font-bold text-emerald-300 uppercase tracking-wider flex items-center gap-1"><i class="fa-solid fa-right-to-bracket text-emerald-400"></i> Logins Hoy</p>
+                        <p id="audit-stat-logins" class="text-xl font-extrabold font-mono mt-1 text-emerald-200">0</p>
+                    </div>
+                    <div class="bg-gradient-to-br from-blue-950 to-blue-900 p-4 rounded-xl border border-blue-800 text-white shadow-sm">
+                        <p class="text-[10px] font-bold text-blue-300 uppercase tracking-wider flex items-center gap-1"><i class="fa-solid fa-pen-to-square text-blue-400"></i> Modificaciones Hoy</p>
+                        <p id="audit-stat-mods" class="text-xl font-extrabold font-mono mt-1 text-blue-200">0</p>
+                    </div>
+                    <div class="bg-gradient-to-br from-rose-950 to-rose-900 p-4 rounded-xl border border-rose-800 text-white shadow-sm">
+                        <p class="text-[10px] font-bold text-rose-300 uppercase tracking-wider flex items-center gap-1"><i class="fa-solid fa-trash-can text-rose-400"></i> Bajas / Cancelaciones Hoy</p>
+                        <p id="audit-stat-dels" class="text-xl font-extrabold font-mono mt-1 text-rose-200">0</p>
+                    </div>
+                </div>
+
+                <!-- Filtros Interactivos -->
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs space-y-3 text-xs">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+                        <div>
+                            <label class="block font-semibold text-slate-700 mb-1">Tipo de Acción:</label>
+                            <select id="audit-filter-action" onchange="handleAuditFilterChange()" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 font-medium">
+                                <option value="ALL">Todas las acciones</option>
+                                <option value="LOGIN_SUCCESS">Inicio de Sesión Exitoso</option>
+                                <option value="LOGIN_FAILED">Fallo de Autenticación</option>
+                                <option value="CREATE">Alta / Creación</option>
+                                <option value="UPDATE">Modificación / Edición</option>
+                                <option value="DELETE">Eliminación (Baja)</option>
+                                <option value="CANCEL">Cancelación de Certificado</option>
+                                <option value="CONFIG_CHANGE">Cambio Datos Empresa</option>
+                                <option value="CSV_IMPORT">Importación CSV</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block font-semibold text-slate-700 mb-1">Módulo:</label>
+                            <select id="audit-filter-module" onchange="handleAuditFilterChange()" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 font-medium">
+                                <option value="ALL">Todos los módulos</option>
+                                <option value="AUTH">AUTH (Acceso / Logins)</option>
+                                <option value="SERVICIOS">SERVICIOS (Órdenes)</option>
+                                <option value="CERTIFICADOS">CERTIFICADOS (Sanitarios)</option>
+                                <option value="CLIENTES">CLIENTES (Matrices)</option>
+                                <option value="SUCURSALES">SUCURSALES (Operativas)</option>
+                                <option value="QUIMICOS">QUÍMICOS (Plaguicidas)</option>
+                                <option value="USUARIOS">USUARIOS (Técnicos/STPS)</option>
+                                <option value="EMPRESA">EMPRESA (Configuración)</option>
+                                <option value="IMPORTACION">IMPORTACIÓN (CSV)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block font-semibold text-slate-700 mb-1">Búsqueda Rápida:</label>
+                            <div class="relative">
+                                <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+                                <input type="text" id="audit-filter-search" oninput="debounceAuditSearch()" placeholder="Usuario, descripción, IP o entidad..." class="w-full pl-8 pr-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:bg-white" />
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block font-semibold text-slate-700 mb-1">Desde:</label>
+                            <input type="date" id="audit-filter-start" onchange="handleAuditFilterChange()" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 font-medium" />
+                        </div>
+                        <div>
+                            <label class="block font-semibold text-slate-700 mb-1">Hasta:</label>
+                            <input type="date" id="audit-filter-end" onchange="handleAuditFilterChange()" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 font-medium" />
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between pt-1 border-t border-slate-100 text-[11px]">
+                        <div class="flex items-center gap-2">
+                            <span class="text-slate-500 font-medium">Filas por página:</span>
+                            <select id="audit-page-size" onchange="handleAuditPageSizeChange()" class="bg-white border border-slate-300 rounded px-2 py-0.5 font-bold">
+                                <option value="25">25</option>
+                                <option value="50" selected>50</option>
+                                <option value="100">100</option>
+                            </select>
+                        </div>
+                        <button onclick="resetAuditFilters()" class="text-slate-500 hover:text-slate-800 font-semibold flex items-center gap-1">
+                            <i class="fa-solid fa-xmark"></i> Limpiar Filtros
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Tabla de Eventos de Auditoría -->
+                <div class="overflow-x-auto border border-slate-200 rounded-xl bg-white shadow-xs">
+                    <table class="w-full text-left text-xs border-collapse">
+                        <thead class="bg-slate-100 text-slate-700 uppercase text-[10px] font-bold">
+                            <tr>
+                                <th class="p-3 border-b border-slate-200 min-w-[140px]">Fecha & Hora</th>
+                                <th class="p-3 border-b border-slate-200 min-w-[130px]">Acción</th>
+                                <th class="p-3 border-b border-slate-200 min-w-[100px]">Módulo</th>
+                                <th class="p-3 border-b border-slate-200 min-w-[140px]">Usuario / Rol</th>
+                                <th class="p-3 border-b border-slate-200 min-w-[150px]">Afectado / Folio</th>
+                                <th class="p-3 border-b border-slate-200 min-w-[280px]">Detalle del Evento</th>
+                                <th class="p-3 border-b border-slate-200 min-w-[130px]">Dirección IP</th>
+                            </tr>
+                        </thead>
+                        <tbody id="audit-table-tbody" class="divide-y divide-slate-100 font-sans">
+                            <tr><td colspan="7" class="p-8 text-center text-slate-400">Cargando registros de auditoría...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Barra de Paginación -->
+                <div class="flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-600 bg-white p-3 rounded-xl border border-slate-200">
+                    <span id="audit-pagination-info" class="font-medium">Mostrando 0 de 0 eventos</span>
+                    <div class="flex items-center gap-1.5">
+                        <button onclick="prevAuditPage()" id="btn-audit-prev" class="px-3 py-1.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 font-bold disabled:opacity-40 disabled:cursor-not-allowed">
+                            <i class="fa-solid fa-chevron-left"></i> Anterior
+                        </button>
+                        <span id="audit-current-page-badge" class="px-3 py-1.5 rounded-lg font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">Pág. 1 / 1</span>
+                        <button onclick="nextAuditPage()" id="btn-audit-next" class="px-3 py-1.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 font-bold disabled:opacity-40 disabled:cursor-not-allowed">
+                            Siguiente <i class="fa-solid fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- AVISO NORMATIVO NOM-256 -->
@@ -2804,6 +2946,7 @@
             if(tabId === 'tab-nuevo-servicio') prepareNewServiceForm();
             if(tabId === 'tab-bitacoras') loadBitacorasTab();
             if(tabId === 'tab-mip') loadMipTab();
+            if(tabId === 'tab-auditoria') loadAuditTab();
         }
 
         async function loadSummaryStats() {
@@ -7041,6 +7184,242 @@
         function schedulePestService(pestName) {
             openScheduleModal();
             document.getElementById('schedule-pests').value = pestName;
+        }
+
+        // ====================================================================
+        // AUDITORÍA Y BITÁCORA DE ACTIVIDAD (MASTER)
+        // ====================================================================
+        let auditCurrentPage = 1;
+        let auditPageSize = 50;
+        let auditTotalPages = 1;
+        let auditSearchDebounceTimer = null;
+
+        function loadAuditTab() {
+            auditCurrentPage = 1;
+            loadAuditStats();
+            loadAuditLogs();
+        }
+
+        async function loadAuditStats() {
+            try {
+                const res = await fetch('/api/v1/audit-logs/stats');
+                if (!res.ok) return;
+                const data = await res.json();
+                document.getElementById('audit-stat-total').innerText = data.total_logs || 0;
+                document.getElementById('audit-stat-logins').innerText = data.logins_today || 0;
+                document.getElementById('audit-stat-mods').innerText = data.modifications_today || 0;
+                document.getElementById('audit-stat-dels').innerText = data.deletions_today || 0;
+            } catch(e) {
+                console.error('[AUDIT STATS ERROR]:', e);
+            }
+        }
+
+        function getAuditActionBadge(action) {
+            switch(action) {
+                case 'LOGIN_SUCCESS':
+                    return '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300"><i class="fa-solid fa-circle-check"></i> Login Exitoso</span>';
+                case 'LOGIN_FAILED':
+                    return '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-300"><i class="fa-solid fa-triangle-exclamation"></i> Login Fallido</span>';
+                case 'LOGOUT':
+                    return '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-800 border border-slate-300"><i class="fa-solid fa-right-from-bracket"></i> Salida</span>';
+                case 'CREATE':
+                    return '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800 border border-blue-300"><i class="fa-solid fa-plus-circle"></i> Alta / Creación</span>';
+                case 'UPDATE':
+                    return '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300"><i class="fa-solid fa-pen-to-square"></i> Modificación</span>';
+                case 'DELETE':
+                    return '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-900 border border-rose-400"><i class="fa-solid fa-trash-can"></i> Baja / Eliminación</span>';
+                case 'CANCEL':
+                    return '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-900 border border-purple-300"><i class="fa-solid fa-ban"></i> Cancelación</span>';
+                case 'CONFIG_CHANGE':
+                    return '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-cyan-100 text-cyan-900 border border-cyan-300"><i class="fa-solid fa-sliders"></i> Ajuste Empresa</span>';
+                case 'CSV_IMPORT':
+                    return '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-teal-100 text-teal-900 border border-teal-300"><i class="fa-solid fa-file-csv"></i> Importación CSV</span>';
+                case 'BACKUP_RESTORE':
+                    return '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-900 border border-indigo-300"><i class="fa-solid fa-database"></i> Respaldo/Restauración</span>';
+                default:
+                    return `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700">${action}</span>`;
+            }
+        }
+
+        function getAuditModuleBadge(mod) {
+            const m = (mod || 'GENERAL').toUpperCase();
+            let color = 'bg-slate-100 text-slate-700 border-slate-200';
+            if (m === 'AUTH') color = 'bg-emerald-50 text-emerald-700 border-emerald-200';
+            if (m === 'SERVICIOS') color = 'bg-blue-50 text-blue-700 border-blue-200';
+            if (m === 'CERTIFICADOS') color = 'bg-purple-50 text-purple-700 border-purple-200';
+            if (m === 'CLIENTES' || m === 'SUCURSALES') color = 'bg-indigo-50 text-indigo-700 border-indigo-200';
+            if (m === 'QUIMICOS') color = 'bg-teal-50 text-teal-700 border-teal-200';
+            if (m === 'USUARIOS') color = 'bg-amber-50 text-amber-800 border-amber-200';
+            if (m === 'EMPRESA') color = 'bg-cyan-50 text-cyan-700 border-cyan-200';
+            if (m === 'IMPORTACION') color = 'bg-emerald-50 text-emerald-800 border-emerald-200';
+
+            return `<span class="px-2 py-0.5 rounded text-[10px] font-bold font-mono border ${color}">${m}</span>`;
+        }
+
+        async function loadAuditLogs() {
+            const tbody = document.getElementById('audit-table-tbody');
+            if (!tbody) return;
+
+            tbody.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-slate-400"><i class="fa-solid fa-spinner fa-spin text-indigo-600 text-lg mb-2"></i><br/>Cargando eventos de auditoría...</td></tr>';
+
+            const action = document.getElementById('audit-filter-action')?.value || 'ALL';
+            const mod = document.getElementById('audit-filter-module')?.value || 'ALL';
+            const search = document.getElementById('audit-filter-search')?.value.trim() || '';
+            const startDate = document.getElementById('audit-filter-start')?.value || '';
+            const endDate = document.getElementById('audit-filter-end')?.value || '';
+            auditPageSize = parseInt(document.getElementById('audit-page-size')?.value || '50');
+
+            const params = new URLSearchParams();
+            params.append('page', auditCurrentPage);
+            params.append('page_size', auditPageSize);
+            if (action && action !== 'ALL') params.append('action_type', action);
+            if (mod && mod !== 'ALL') params.append('module', mod);
+            if (search) params.append('search', search);
+            if (startDate) params.append('start_date', startDate);
+            if (endDate) params.append('end_date', endDate);
+
+            try {
+                const res = await fetch(`/api/v1/audit-logs?${params.toString()}`);
+                if (!res.ok) throw new Error('Error al consultar registros de auditoría');
+                const data = await res.json();
+
+                auditTotalPages = data.total_pages || 1;
+                const totalRecords = data.total_records || 0;
+                const items = data.items || [];
+
+                // Actualizar info paginación
+                const startItem = totalRecords === 0 ? 0 : (auditCurrentPage - 1) * auditPageSize + 1;
+                const endItem = Math.min(totalRecords, auditCurrentPage * auditPageSize);
+                document.getElementById('audit-pagination-info').innerText = `Mostrando ${startItem} a ${endItem} de ${totalRecords} eventos`;
+                document.getElementById('audit-current-page-badge').innerText = `Pág. ${auditCurrentPage} / ${auditTotalPages}`;
+                
+                const prevBtn = document.getElementById('btn-audit-prev');
+                const nextBtn = document.getElementById('btn-audit-next');
+                if (prevBtn) prevBtn.disabled = (auditCurrentPage <= 1);
+                if (nextBtn) nextBtn.disabled = (auditCurrentPage >= auditTotalPages);
+
+                if (!items.length) {
+                    tbody.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-slate-400"><i class="fa-solid fa-folder-open text-2xl mb-1 text-slate-300"></i><br/>No se encontraron eventos con los filtros seleccionados.</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = items.map(item => {
+                    const dt = item.created_at ? new Date(item.created_at) : null;
+                    const dateFormatted = dt ? dt.toLocaleDateString('es-MX', { year: 'numeric', month: '2-digit', day: '2-digit' }) : '-';
+                    const timeFormatted = dt ? dt.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '';
+                    
+                    const userRole = item.user_role || 'Sistema';
+                    const username = item.username || 'Desconocido';
+                    const roleBadge = userRole === 'SuperAdmin' 
+                        ? '<span class="text-[9px] bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.2 rounded">Master</span>'
+                        : `<span class="text-[9px] bg-slate-100 text-slate-700 font-semibold px-1.5 py-0.2 rounded">${userRole}</span>`;
+
+                    const ip = item.ip_address || '-';
+                    const entity = item.entity_name ? `<span class="font-bold text-slate-800 font-mono text-[11px]">${item.entity_name}</span>` : '<span class="text-slate-400 italic text-[11px]">-</span>';
+
+                    return `
+                        <tr class="hover:bg-slate-50/80 transition text-xs">
+                            <td class="p-3 border-b border-slate-100 whitespace-nowrap">
+                                <span class="font-bold text-slate-800 font-mono text-[11px]">${dateFormatted}</span>
+                                <span class="block text-[10px] text-slate-500 font-mono">${timeFormatted}</span>
+                            </td>
+                            <td class="p-3 border-b border-slate-100 whitespace-nowrap">
+                                ${getAuditActionBadge(item.action_type)}
+                            </td>
+                            <td class="p-3 border-b border-slate-100 whitespace-nowrap">
+                                ${getAuditModuleBadge(item.module)}
+                            </td>
+                            <td class="p-3 border-b border-slate-100">
+                                <div class="font-bold text-slate-900 flex items-center gap-1">
+                                    <i class="fa-solid fa-user-shield text-slate-400 text-[10px]"></i>
+                                    <span>${username}</span>
+                                </div>
+                                <div class="mt-0.5">${roleBadge}</div>
+                            </td>
+                            <td class="p-3 border-b border-slate-100">
+                                ${entity}
+                            </td>
+                            <td class="p-3 border-b border-slate-100 text-slate-700 leading-snug">
+                                <span>${item.description || '-'}</span>
+                            </td>
+                            <td class="p-3 border-b border-slate-100 whitespace-nowrap text-[11px] font-mono text-slate-600">
+                                <span class="bg-slate-100 px-1.5 py-0.5 rounded">${ip}</span>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+
+            } catch(err) {
+                console.error(err);
+                tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-rose-600 font-bold">Error al cargar la bitácora: ${err.message}</td></tr>`;
+            }
+        }
+
+        function handleAuditFilterChange() {
+            auditCurrentPage = 1;
+            loadAuditLogs();
+        }
+
+        function handleAuditPageSizeChange() {
+            auditCurrentPage = 1;
+            loadAuditLogs();
+        }
+
+        function debounceAuditSearch() {
+            if (auditSearchDebounceTimer) clearTimeout(auditSearchDebounceTimer);
+            auditSearchDebounceTimer = setTimeout(() => {
+                auditCurrentPage = 1;
+                loadAuditLogs();
+            }, 300);
+        }
+
+        function resetAuditFilters() {
+            const actionEl = document.getElementById('audit-filter-action');
+            const modEl = document.getElementById('audit-filter-module');
+            const searchEl = document.getElementById('audit-filter-search');
+            const startEl = document.getElementById('audit-filter-start');
+            const endEl = document.getElementById('audit-filter-end');
+            
+            if (actionEl) actionEl.value = 'ALL';
+            if (modEl) modEl.value = 'ALL';
+            if (searchEl) searchEl.value = '';
+            if (startEl) startEl.value = '';
+            if (endEl) endEl.value = '';
+
+            auditCurrentPage = 1;
+            loadAuditLogs();
+        }
+
+        function prevAuditPage() {
+            if (auditCurrentPage > 1) {
+                auditCurrentPage--;
+                loadAuditLogs();
+            }
+        }
+
+        function nextAuditPage() {
+            if (auditCurrentPage < auditTotalPages) {
+                auditCurrentPage++;
+                loadAuditLogs();
+            }
+        }
+
+        function exportAuditLogsCsv() {
+            const action = document.getElementById('audit-filter-action')?.value || 'ALL';
+            const mod = document.getElementById('audit-filter-module')?.value || 'ALL';
+            const search = document.getElementById('audit-filter-search')?.value.trim() || '';
+            const startDate = document.getElementById('audit-filter-start')?.value || '';
+            const endDate = document.getElementById('audit-filter-end')?.value || '';
+
+            const params = new URLSearchParams();
+            if (action && action !== 'ALL') params.append('action_type', action);
+            if (mod && mod !== 'ALL') params.append('module', mod);
+            if (search) params.append('search', search);
+            if (startDate) params.append('start_date', startDate);
+            if (endDate) params.append('end_date', endDate);
+
+            const url = `/api/v1/audit-logs/export-csv?${params.toString()}`;
+            window.open(url, '_blank');
         }
 
         // Verificación inicial de sesión

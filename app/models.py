@@ -421,3 +421,43 @@ class HazardousWasteLog(Base, TimestampMixin, SoftDeleteMixin):
     disposal_manifest_number: Mapped[Optional[str]] = mapped_column(String(150), nullable=True)
     responsible_name: Mapped[str] = mapped_column(String(255), nullable=False)
 
+
+# ============================================================================
+# 12. LOG DE AUDITORÍA, MODIFICACIONES E INICIOS DE SESIÓN (SUPER USUARIO MASTER)
+# ============================================================================
+class AuditActionType(str, PyEnum):
+    LOGIN_SUCCESS = "LOGIN_SUCCESS"
+    LOGIN_FAILED = "LOGIN_FAILED"
+    LOGOUT = "LOGOUT"
+    CREATE = "CREATE"
+    UPDATE = "UPDATE"
+    DELETE = "DELETE"
+    CANCEL = "CANCEL"
+    CONFIG_CHANGE = "CONFIG_CHANGE"
+    CSV_IMPORT = "CSV_IMPORT"
+    BACKUP_RESTORE = "BACKUP_RESTORE"
+
+
+class AuditLog(Base, TimestampMixin):
+    """
+    Registro histórico inmutable de auditoría para control de accesos,
+    inicios de sesión y modificaciones de registros en el sistema FUMIFLOSA.
+    """
+    __tablename__ = "audit_logs"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    action_type: Mapped[str] = mapped_column(String(50), nullable=False, index=True) # LOGIN_SUCCESS, CREATE, UPDATE, DELETE, etc.
+    module: Mapped[str] = mapped_column(String(100), nullable=False, index=True) # AUTH, SERVICIOS, CERTIFICADOS, CLIENTES, SUCURSALES, QUIMICOS, EMPRESA, USUARIOS, BITACORAS
+    description: Mapped[str] = mapped_column(Text, nullable=False) # Detalle legible del evento
+    user_id: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    username: Mapped[Optional[str]] = mapped_column(String(100), nullable=True, index=True) # ej. "FOSM630329EA5", "SuperAdmin"
+    user_role: Mapped[Optional[str]] = mapped_column(String(50), nullable=True) # "SuperAdmin", "TecnicoCampo"
+    entity_id: Mapped[Optional[str]] = mapped_column(String(100), nullable=True) # Folio o UUID del registro afectado
+    entity_name: Mapped[Optional[str]] = mapped_column(String(255), nullable=True) # Identificador descriptivo (ej. "IMSS-2026-001", "Biothrine Flow")
+    changes_payload: Mapped[Optional[str]] = mapped_column(Text, nullable=True) # Metadatos de la operación en formato JSON/texto
+    ip_address: Mapped[Optional[str]] = mapped_column(String(100), nullable=True) # IP del cliente / terminal
+    user_agent: Mapped[Optional[str]] = mapped_column(String(500), nullable=True) # Navegador / Entorno de origen
+
+    user: Mapped[Optional["User"]] = relationship("User", lazy="joined")
+
+
