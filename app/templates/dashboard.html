@@ -49,9 +49,773 @@
 
         /* Contraste y nitidez global */
         .tab-btn { transition: all 0.15s ease-in-out; }
+
+        /* Estilos específicos para Modal de Guía de Uso */
+        .guide-nav-item.active {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            color: #78350f;
+            border-left: 4px solid #d97706;
+            font-weight: 800;
+        }
+
+        /* Reglas de Impresión para la Guía de Uso del Sistema */
+        @media print {
+            body * {
+                visibility: hidden !important;
+            }
+            #modal-system-user-guide, #modal-system-user-guide * {
+                visibility: visible !important;
+            }
+            #modal-system-user-guide {
+                position: absolute !important;
+                left: 0 !important;
+                top: 0 !important;
+                width: 100% !important;
+                background: white !important;
+                color: #0f172a !important;
+                display: block !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                z-index: 99999 !important;
+            }
+            #modal-system-user-guide .modal-dialog-container {
+                max-width: 100% !important;
+                box-shadow: none !important;
+                border: none !important;
+                border-radius: 0 !important;
+                max-height: none !important;
+                height: auto !important;
+            }
+            .guide-no-print {
+                display: none !important;
+            }
+            .guide-section-content {
+                display: block !important;
+                page-break-inside: avoid;
+                margin-bottom: 2rem !important;
+                border-bottom: 2px solid #cbd5e1 !important;
+                padding-bottom: 1.5rem !important;
+            }
+            .guide-content-area {
+                overflow: visible !important;
+                max-height: none !important;
+            }
+        }
     </style>
 </head>
 <body class="bg-slate-100 text-slate-800 font-sans min-h-screen flex flex-col antialiased">
+
+    <!-- ========================================================================= -->
+    <!-- MODAL PRINCIPAL: GUÍA DE USO Y MANUAL OPERATIVO DEL SISTEMA FUMIFLOSA -->
+    <!-- ========================================================================= -->
+    <div id="modal-system-user-guide" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-2 sm:p-4 hidden animate-fadeIn">
+        <div class="modal-dialog-container bg-white rounded-3xl shadow-2xl max-w-6xl w-full max-h-[94vh] flex flex-col border border-slate-200 overflow-hidden">
+            
+            <!-- HEADER DE LA GUÍA -->
+            <div class="bg-gradient-to-r from-slate-900 via-slate-850 to-slate-900 text-white p-4 sm:p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-800 flex-shrink-0">
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 bg-gradient-to-br from-amber-400 to-amber-600 rounded-2xl flex items-center justify-center text-slate-950 font-black text-xl shadow-lg shadow-amber-500/30 flex-shrink-0 border border-amber-300">
+                        <i class="fa-solid fa-book-open-reader"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <h2 class="text-base sm:text-lg font-black text-white tracking-tight flex items-center gap-2">
+                                Guía de Uso & Manual Operativo
+                            </h2>
+                            <span class="bg-amber-400/20 text-amber-300 border border-amber-400/40 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                                FUMIFLOSA SaaS v2.5
+                            </span>
+                            <span class="bg-emerald-950/80 text-emerald-300 border border-emerald-500/40 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                                NOM-256-SSA1-2012
+                            </span>
+                        </div>
+                        <p class="text-xs text-slate-300 mt-0.5">
+                            Manual integral de operación: servicios, certificados oficiales, químicos COFEPRIS, plagas MIP, STPS DC-3 y auditoría.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Acciones del Header -->
+                <div class="flex items-center gap-2 w-full sm:w-auto justify-end guide-no-print">
+                    <!-- Buscador en tiempo real dentro de la Guía -->
+                    <div class="relative flex-1 sm:w-64">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                        <input type="text" id="guide-search-input" oninput="filterUserGuide(this.value)" placeholder="Buscar en la guía..." class="w-full bg-slate-800/90 text-white placeholder-slate-400 text-xs pl-8 pr-7 py-2 rounded-xl border border-slate-700 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition" />
+                        <button type="button" onclick="clearGuideSearch()" id="btn-clear-guide-search" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white text-xs hidden">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+
+                    <!-- Botón Imprimir / PDF -->
+                    <button type="button" onclick="printSystemUserGuide()" title="Imprimir Manual o Guardar en PDF" class="bg-slate-800 hover:bg-slate-700 text-amber-300 hover:text-white border border-slate-700 px-3 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+                        <i class="fa-solid fa-print"></i> <span class="hidden md:inline">Imprimir / PDF</span>
+                    </button>
+
+                    <!-- Botón Cerrar -->
+                    <button type="button" onclick="closeSystemUserGuideModal()" title="Cerrar Guía" class="bg-slate-800 hover:bg-rose-900 text-slate-300 hover:text-white border border-slate-700 px-3 py-2 rounded-xl text-xs font-bold transition">
+                        <i class="fa-solid fa-xmark text-sm"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- CUERPO PRINCIPAL DE LA GUÍA (SIDEBAR ÍNDICE + CONTENIDO) -->
+            <div class="flex-1 flex flex-col md:flex-row overflow-hidden min-h-0 bg-slate-50">
+                
+                <!-- ÍNDICE LATERAL (SIDEBAR DE TEMAS) -->
+                <div class="w-full md:w-72 bg-white border-r border-slate-200 overflow-y-auto p-3 space-y-1 guide-no-print flex-shrink-0 max-h-48 md:max-h-full">
+                    <div class="px-2 py-1.5 text-[11px] font-extrabold uppercase tracking-wider text-slate-400 flex items-center justify-between">
+                        <span>Índice del Manual</span>
+                        <span class="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full font-mono">12 Secciones</span>
+                    </div>
+
+                    <button type="button" onclick="showGuideSection('guide-sec-inicio')" id="nav-guide-sec-inicio" class="guide-nav-item active w-full text-left px-3 py-2.5 rounded-xl text-xs flex items-center gap-2.5 transition text-slate-700 hover:bg-amber-50/70">
+                        <div class="w-6 h-6 rounded-lg bg-amber-100 text-amber-800 flex items-center justify-center text-xs font-bold flex-shrink-0">
+                            <i class="fa-solid fa-rocket"></i>
+                        </div>
+                        <span class="truncate">1. Inicio Rápido & Roles</span>
+                    </button>
+
+                    <button type="button" onclick="showGuideSection('guide-sec-calendario')" id="nav-guide-sec-calendario" class="guide-nav-item w-full text-left px-3 py-2.5 rounded-xl text-xs flex items-center gap-2.5 transition text-slate-700 hover:bg-amber-50/70">
+                        <div class="w-6 h-6 rounded-lg bg-indigo-100 text-indigo-800 flex items-center justify-center text-xs font-bold flex-shrink-0">
+                            <i class="fa-solid fa-calendar-days"></i>
+                        </div>
+                        <span class="truncate">2. Calendario & Citas</span>
+                    </button>
+
+                    <button type="button" onclick="showGuideSection('guide-sec-vencimientos')" id="nav-guide-sec-vencimientos" class="guide-nav-item w-full text-left px-3 py-2.5 rounded-xl text-xs flex items-center gap-2.5 transition text-slate-700 hover:bg-amber-50/70">
+                        <div class="w-6 h-6 rounded-lg bg-rose-100 text-rose-800 flex items-center justify-center text-xs font-bold flex-shrink-0">
+                            <i class="fa-solid fa-clock"></i>
+                        </div>
+                        <span class="truncate">3. Vencimientos Certificados</span>
+                    </button>
+
+                    <button type="button" onclick="showGuideSection('guide-sec-clientes')" id="nav-guide-sec-clientes" class="guide-nav-item w-full text-left px-3 py-2.5 rounded-xl text-xs flex items-center gap-2.5 transition text-slate-700 hover:bg-amber-50/70">
+                        <div class="w-6 h-6 rounded-lg bg-blue-100 text-blue-800 flex items-center justify-center text-xs font-bold flex-shrink-0">
+                            <i class="fa-solid fa-building"></i>
+                        </div>
+                        <span class="truncate">4. Clientes & Portal B2B</span>
+                    </button>
+
+                    <button type="button" onclick="showGuideSection('guide-sec-certificados')" id="nav-guide-sec-certificados" class="guide-nav-item w-full text-left px-3 py-2.5 rounded-xl text-xs flex items-center gap-2.5 transition text-slate-700 hover:bg-amber-50/70">
+                        <div class="w-6 h-6 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center text-xs font-bold flex-shrink-0">
+                            <i class="fa-solid fa-file-signature"></i>
+                        </div>
+                        <span class="truncate">5. Órdenes & NOM-256</span>
+                    </button>
+
+                    <button type="button" onclick="showGuideSection('guide-sec-quimicos')" id="nav-guide-sec-quimicos" class="guide-nav-item w-full text-left px-3 py-2.5 rounded-xl text-xs flex items-center gap-2.5 transition text-slate-700 hover:bg-amber-50/70">
+                        <div class="w-6 h-6 rounded-lg bg-teal-100 text-teal-800 flex items-center justify-center text-xs font-bold flex-shrink-0">
+                            <i class="fa-solid fa-flask-vial"></i>
+                        </div>
+                        <span class="truncate">6. Químicos & Fichas / HDS</span>
+                    </button>
+
+                    <button type="button" onclick="showGuideSection('guide-sec-mip')" id="nav-guide-sec-mip" class="guide-nav-item w-full text-left px-3 py-2.5 rounded-xl text-xs flex items-center gap-2.5 transition text-slate-700 hover:bg-amber-50/70">
+                        <div class="w-6 h-6 rounded-lg bg-purple-100 text-purple-800 flex items-center justify-center text-xs font-bold flex-shrink-0">
+                            <i class="fa-solid fa-bug"></i>
+                        </div>
+                        <span class="truncate">7. Plagas & Buscador IA</span>
+                    </button>
+
+                    <button type="button" onclick="showGuideSection('guide-sec-masivo')" id="nav-guide-sec-masivo" class="guide-nav-item w-full text-left px-3 py-2.5 rounded-xl text-xs flex items-center gap-2.5 transition text-slate-700 hover:bg-amber-50/70">
+                        <div class="w-6 h-6 rounded-lg bg-indigo-100 text-indigo-800 flex items-center justify-center text-xs font-bold flex-shrink-0">
+                            <i class="fa-solid fa-layer-group"></i>
+                        </div>
+                        <span class="truncate">8. Generación Masiva & Analytics</span>
+                    </button>
+
+                    <button type="button" onclick="showGuideSection('guide-sec-usuarios')" id="nav-guide-sec-usuarios" class="guide-nav-item w-full text-left px-3 py-2.5 rounded-xl text-xs flex items-center gap-2.5 transition text-slate-700 hover:bg-amber-50/70">
+                        <div class="w-6 h-6 rounded-lg bg-orange-100 text-orange-800 flex items-center justify-center text-xs font-bold flex-shrink-0">
+                            <i class="fa-solid fa-users-gear"></i>
+                        </div>
+                        <span class="truncate">9. Técnicos STPS DC-3</span>
+                    </button>
+
+                    <button type="button" onclick="showGuideSection('guide-sec-empresa')" id="nav-guide-sec-empresa" class="guide-nav-item w-full text-left px-3 py-2.5 rounded-xl text-xs flex items-center gap-2.5 transition text-slate-700 hover:bg-amber-50/70">
+                        <div class="w-6 h-6 rounded-lg bg-amber-100 text-amber-800 flex items-center justify-center text-xs font-bold flex-shrink-0">
+                            <i class="fa-solid fa-stamp"></i>
+                        </div>
+                        <span class="truncate">10. Empresa & FIEL SAT</span>
+                    </button>
+
+                    <button type="button" onclick="showGuideSection('guide-sec-auditoria')" id="nav-guide-sec-auditoria" class="guide-nav-item w-full text-left px-3 py-2.5 rounded-xl text-xs flex items-center gap-2.5 transition text-slate-700 hover:bg-amber-50/70">
+                        <div class="w-6 h-6 rounded-lg bg-rose-100 text-rose-800 flex items-center justify-center text-xs font-bold flex-shrink-0">
+                            <i class="fa-solid fa-shield-halved"></i>
+                        </div>
+                        <span class="truncate">11. Auditoría & Log Master</span>
+                    </button>
+
+                    <button type="button" onclick="showGuideSection('guide-sec-faq')" id="nav-guide-sec-faq" class="guide-nav-item w-full text-left px-3 py-2.5 rounded-xl text-xs flex items-center gap-2.5 transition text-slate-700 hover:bg-amber-50/70">
+                        <div class="w-6 h-6 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center text-xs font-bold flex-shrink-0">
+                            <i class="fa-solid fa-circle-question"></i>
+                        </div>
+                        <span class="truncate">12. FAQ, PWA Móvil & Soporte</span>
+                    </button>
+
+                    <!-- Banner de Soporte Rápido -->
+                    <div class="pt-4 mt-4 border-t border-slate-200">
+                        <div class="bg-slate-900 text-white p-3 rounded-2xl space-y-1.5 text-center">
+                            <p class="text-[11px] font-bold text-amber-300 flex items-center justify-center gap-1">
+                                <i class="fa-solid fa-headset"></i> ¿Dudas o Soporte?
+                            </p>
+                            <p class="text-[10px] text-slate-300">
+                                Responsable Sanitario:<br>
+                                <strong class="text-white">Marco Antonio Flores Sáenz</strong><br>
+                                Lic. 08 17 19 SA 0001
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ÁREA PRINCIPAL DE CONTENIDO DE LA GUÍA -->
+                <div id="guide-content-container" class="guide-content-area flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
+                    
+                    <!-- AVISO DE BÚSQUEDA ACTIVA -->
+                    <div id="guide-search-feedback" class="hidden bg-amber-50 border border-amber-200 p-3 rounded-xl text-xs text-amber-900 flex justify-between items-center">
+                        <span id="guide-search-count-text">Mostrando resultados para tu búsqueda...</span>
+                        <button onclick="clearGuideSearch()" class="text-amber-800 hover:underline font-bold text-xs">Mostrar todas las secciones</button>
+                    </div>
+
+                    <!-- ========================================================= -->
+                    <!-- 1. SECCIÓN: INICIO RÁPIDO & ROLES -->
+                    <!-- ========================================================= -->
+                    <div id="guide-sec-inicio" class="guide-section-content space-y-4">
+                        <div class="border-b border-slate-200 pb-3">
+                            <div class="flex items-center justify-between flex-wrap gap-2">
+                                <h3 class="text-base sm:text-lg font-black text-slate-900 flex items-center gap-2">
+                                    <span class="w-8 h-8 rounded-xl bg-amber-500 text-slate-950 flex items-center justify-center text-sm font-black shadow-sm">1</span>
+                                    Inicio Rápido, Acceso y Accesibilidad Visual
+                                </h3>
+                                <button onclick="goToModuleFromGuide('tab-cronologico')" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold px-3 py-1.5 rounded-lg text-xs border border-indigo-200 flex items-center gap-1 guide-no-print">
+                                    <i class="fa-solid fa-arrow-right"></i> Ir al Panel de Inicio
+                                </button>
+                            </div>
+                            <p class="text-xs text-slate-600 mt-1">
+                                Estructura general de FUMIFLOSA, credenciales operativas, roles de seguridad y opciones de accesibilidad visual.
+                            </p>
+                        </div>
+
+                        <!-- Tarjetas de Información -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-2">
+                                <h4 class="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5 text-amber-700">
+                                    <i class="fa-solid fa-user-shield text-base"></i> Rol: Super Administrador Master
+                                </h4>
+                                <ul class="text-xs text-slate-600 space-y-1.5 list-disc list-inside">
+                                    <li><strong>Usuario Master:</strong> <code class="bg-slate-100 px-1.5 py-0.5 rounded text-indigo-700 font-bold">FOSM630329EA5</code></li>
+                                    <li><strong>Alcance:</strong> Control total del sistema, configuración fiscal, FIEL SAT, edición de catálogo químico oficial, gestión de técnicos STPS y acceso exclusivo a la Bitácora de Auditoría.</li>
+                                    <li><strong>Seguridad:</strong> Todas las altas, bajas y modificaciones quedan firmadas con hora y dirección IP.</li>
+                                </ul>
+                            </div>
+
+                            <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-2">
+                                <h4 class="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5 text-blue-700">
+                                    <i class="fa-solid fa-user-gear text-base"></i> Rol: Técnicos Aplicadores STPS
+                                </h4>
+                                <ul class="text-xs text-slate-600 space-y-1.5 list-disc list-inside">
+                                    <li><strong>Acceso:</strong> Mediante CURP o usuario registrado con constancia DC-3 vigente.</li>
+                                    <li><strong>Funciones:</strong> Captura ágil de órdenes de servicio en campo, registro de dosis y áreas tratadas, firma táctil y generación del PDF para el cliente.</li>
+                                    <li><strong>Protección:</strong> No pueden alterar parámetros fiscales ni borrar historiales de auditoría.</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Barra de Accesibilidad Visual -->
+                        <div class="bg-gradient-to-r from-slate-900 to-indigo-950 text-white p-4 rounded-2xl border border-slate-800 space-y-2">
+                            <h4 class="text-xs font-bold text-amber-300 flex items-center gap-2">
+                                <i class="fa-solid fa-text-height"></i> Control de Tamaño de Letra y Accesibilidad Visual
+                            </h4>
+                            <p class="text-xs text-slate-300 leading-relaxed">
+                                En la barra superior derecha encontrarás los selectores de tamaño de texto:
+                                <strong class="text-white">A- (Compacto)</strong>, <strong class="text-white">A (Normal)</strong>, <strong class="text-white">A+ (Grande)</strong> y <strong class="text-white">A++ (Extra Grande / Fácil Lectura)</strong>.
+                                Este ajuste se guarda automáticamente en tu navegador y es ideal para técnicos en tablets de campo o pantallas de alta resolución.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- ========================================================= -->
+                    <!-- 2. SECCIÓN: CALENDARIO & CITAS -->
+                    <!-- ========================================================= -->
+                    <div id="guide-sec-calendario" class="guide-section-content space-y-4">
+                        <div class="border-b border-slate-200 pb-3">
+                            <div class="flex items-center justify-between flex-wrap gap-2">
+                                <h3 class="text-base sm:text-lg font-black text-slate-900 flex items-center gap-2">
+                                    <span class="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center text-sm font-black shadow-sm">2</span>
+                                    Calendario Cronológico de Servicios y Citas
+                                </h3>
+                                <button onclick="goToModuleFromGuide('tab-cronologico')" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold px-3 py-1.5 rounded-lg text-xs border border-indigo-200 flex items-center gap-1 guide-no-print">
+                                    <i class="fa-solid fa-calendar-plus"></i> Abrir Calendario
+                                </button>
+                            </div>
+                            <p class="text-xs text-slate-600 mt-1">
+                                Vista temporal para organizar rutas diarias, agendar servicios preventivos/correctivos y asignar técnicos certificados.
+                            </p>
+                        </div>
+
+                        <div class="space-y-3">
+                            <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+                                <h4 class="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2 text-indigo-700">
+                                    <i class="fa-solid fa-list-check"></i> Pasos para Agendar un Nuevo Servicio
+                                </h4>
+                                <ol class="text-xs text-slate-600 space-y-2 list-decimal list-inside">
+                                    <li>Haz clic en el botón azul <strong class="text-slate-900">+ Agendar Próximo Servicio</strong> en la pestaña del Calendario.</li>
+                                    <li>Selecciona el <strong>Cliente Matriz</strong> y la <strong>Sucursal</strong> correspondiente.</li>
+                                    <li>Especifica la fecha programada, hora estimada de inicio y el tipo de servicio (Fumigación General, Desratización, Desinfección, etc.).</li>
+                                    <li>Asigna al <strong>Técnico Responsable STPS</strong> que ejecutará el servicio.</li>
+                                    <li>Guarda el evento. Aparecerá inmediatamente en el calendario con código de color según su estado.</li>
+                                </ol>
+                            </div>
+
+                            <div class="bg-indigo-50/70 border border-indigo-200 p-3.5 rounded-xl text-xs text-indigo-950 flex items-start gap-2.5">
+                                <i class="fa-solid fa-lightbulb text-indigo-600 text-base mt-0.5"></i>
+                                <div>
+                                    <strong>Consejo Operativo:</strong> Al cargar el sistema, el calendario cronológico se muestra como pantalla inicial predeterminada. Esto optimiza el consumo de memoria y permite a los operadores ver la agenda del día sin demoras.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ========================================================= -->
+                    <!-- 3. SECCIÓN: CALENDARIO DE VENCIMIENTOS -->
+                    <!-- ========================================================= -->
+                    <div id="guide-sec-vencimientos" class="guide-section-content space-y-4">
+                        <div class="border-b border-slate-200 pb-3">
+                            <div class="flex items-center justify-between flex-wrap gap-2">
+                                <h3 class="text-base sm:text-lg font-black text-slate-900 flex items-center gap-2">
+                                    <span class="w-8 h-8 rounded-xl bg-rose-600 text-white flex items-center justify-center text-sm font-black shadow-sm">3</span>
+                                    Calendario de Vencimientos & Renovaciones
+                                </h3>
+                                <button onclick="goToModuleFromGuide('tab-vencimientos')" class="bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold px-3 py-1.5 rounded-lg text-xs border border-rose-200 flex items-center gap-1 guide-no-print">
+                                    <i class="fa-solid fa-clock"></i> Ver Vencimientos
+                                </button>
+                            </div>
+                            <p class="text-xs text-slate-600 mt-1">
+                                Control automático de vigencias legales de certificados de fumigación para evitar multas de salubridad a los clientes.
+                            </p>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <div class="bg-emerald-50 border border-emerald-200 p-3 rounded-xl text-xs space-y-1">
+                                <div class="font-bold text-emerald-800 flex items-center gap-1.5">
+                                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> 🟢 Vigente
+                                </div>
+                                <p class="text-emerald-950 text-[11px]">
+                                    El certificado se encuentra activo y dentro del plazo de cobertura reglamentaria.
+                                </p>
+                            </div>
+
+                            <div class="bg-amber-50 border border-amber-200 p-3 rounded-xl text-xs space-y-1">
+                                <div class="font-bold text-amber-800 flex items-center gap-1.5">
+                                    <span class="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse"></span> 🟡 Por Vencer (15-30 días)
+                                </div>
+                                <p class="text-amber-950 text-[11px]">
+                                    Alerta de renovación próxima para contactar al cliente y programar su siguiente póliza.
+                                </p>
+                            </div>
+
+                            <div class="bg-rose-50 border border-rose-200 p-3 rounded-xl text-xs space-y-1">
+                                <div class="font-bold text-rose-800 flex items-center gap-1.5">
+                                    <span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span> 🔴 Vencido
+                                </div>
+                                <p class="text-rose-950 text-[11px]">
+                                    Requiere re-aplicación urgente para mantener cumplimiento ante COFEPRIS / Protección Civil.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="bg-white p-4 rounded-2xl border border-slate-200 text-xs text-slate-600 space-y-2">
+                            <h4 class="font-bold text-slate-900">Filtrado Inteligente</h4>
+                            <p>
+                                Por defecto, la vista de vencimientos prioriza los certificados activos y permite filtrar por cliente específico mediante el buscador superior, evitando saturar la memoria del navegador.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- ========================================================= -->
+                    <!-- 4. SECCIÓN: CLIENTES & PORTAL B2B -->
+                    <!-- ========================================================= -->
+                    <div id="guide-sec-clientes" class="guide-section-content space-y-4">
+                        <div class="border-b border-slate-200 pb-3">
+                            <div class="flex items-center justify-between flex-wrap gap-2">
+                                <h3 class="text-base sm:text-lg font-black text-slate-900 flex items-center gap-2">
+                                    <span class="w-8 h-8 rounded-xl bg-blue-600 text-white flex items-center justify-center text-sm font-black shadow-sm">4</span>
+                                    Clientes, Sucursales y Portal Web de Autoservicio
+                                </h3>
+                                <button onclick="goToModuleFromGuide('tab-clientes')" class="bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold px-3 py-1.5 rounded-lg text-xs border border-blue-200 flex items-center gap-1 guide-no-print">
+                                    <i class="fa-solid fa-building"></i> Gestionar Clientes
+                                </button>
+                            </div>
+                            <p class="text-xs text-slate-600 mt-1">
+                                Administración de cuentas corporativas, sucursales múltiples y enlaces web exclusivos de consulta.
+                            </p>
+                        </div>
+
+                        <div class="space-y-3">
+                            <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-2">
+                                <h4 class="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5 text-blue-700">
+                                    <i class="fa-solid fa-sitemap"></i> Estructura Jerárquica Matriz / Sucursales
+                                </h4>
+                                <p class="text-xs text-slate-600 leading-relaxed">
+                                    Permite registrar una empresa matriz con su Razón Social y RFC fiscal, y asociarle múltiples sucursales con ubicaciones físicas independientes. Cada certificado se expide para una sucursal específica pero se consolida bajo el expediente de la matriz.
+                                </p>
+                            </div>
+
+                            <div class="bg-gradient-to-br from-indigo-900 to-slate-900 text-white p-4 rounded-2xl space-y-2">
+                                <h4 class="text-xs font-bold text-amber-300 flex items-center gap-2">
+                                    <i class="fa-solid fa-link"></i> Portal Web del Cliente (Enlace Permanente)
+                                </h4>
+                                <p class="text-xs text-slate-300 leading-relaxed">
+                                    Cada cliente cuenta con un enlace exclusivo: <code class="text-emerald-300 bg-slate-800 px-2 py-0.5 rounded font-mono">https://dominio.com/portal/c/{slug}</code>.
+                                    Al compartir este enlace, el cliente puede consultar y descargar en tiempo real sus certificados vigentes, órdenes de servicio, bitácoras y fichas técnicas oficiales.
+                                </p>
+                                <div class="bg-slate-800/80 p-2.5 rounded-xl border border-slate-700 text-[11px] text-slate-300">
+                                    🔒 <strong>Seguridad:</strong> Puedes configurar el portal en modo público directo o protegerlo con una contraseña/PIN numérico.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ========================================================= -->
+                    <!-- 5. SECCIÓN: ÓRDENES & NOM-256 -->
+                    <!-- ========================================================= -->
+                    <div id="guide-sec-certificados" class="guide-section-content space-y-4">
+                        <div class="border-b border-slate-200 pb-3">
+                            <div class="flex items-center justify-between flex-wrap gap-2">
+                                <h3 class="text-base sm:text-lg font-black text-slate-900 flex items-center gap-2">
+                                    <span class="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center text-sm font-black shadow-sm">5</span>
+                                    Emisión de Certificados y Órdenes de Servicio (NOM-256)
+                                </h3>
+                                <button onclick="goToModuleFromGuide('tab-nuevo-servicio')" class="bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold px-3 py-1.5 rounded-lg text-xs border border-emerald-200 flex items-center gap-1 guide-no-print">
+                                    <i class="fa-solid fa-file-circle-plus"></i> Registrar Servicio
+                                </button>
+                            </div>
+                            <p class="text-xs text-slate-600 mt-1">
+                                Emisión de documentación oficial con cumplimiento de la Norma Oficial Mexicana NOM-256-SSA1-2012.
+                            </p>
+                        </div>
+
+                        <div class="bg-emerald-50/80 border border-emerald-200 p-3.5 rounded-2xl text-xs space-y-2">
+                            <div class="font-bold text-emerald-900 flex items-center gap-2">
+                                <i class="fa-solid fa-award text-emerald-600 text-base"></i> Responsable Sanitario y Licencia Oficial
+                            </div>
+                            <p class="text-emerald-950">
+                                Todos los certificados y órdenes de servicio se emiten oficialmente bajo la titularidad de:
+                            </p>
+                            <div class="bg-white p-3 rounded-xl border border-emerald-300 font-mono text-[11px] space-y-1 text-slate-800">
+                                <p><strong>Responsable Técnico:</strong> MARCO ANTONIO FLORES SÁENZ</p>
+                                <p><strong>Licencia Sanitaria Oficial:</strong> 08 17 19 SA 0001</p>
+                                <p><strong>Razón Social:</strong> FLOSA FUMIGACIÓN (RFC: FOSM630329EA5)</p>
+                            </div>
+                        </div>
+
+                        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+                            <h4 class="text-xs font-bold text-slate-900 uppercase tracking-wider text-emerald-700">
+                                Flujo de Captura y Firma Digital
+                            </h4>
+                            <ol class="text-xs text-slate-600 space-y-2 list-decimal list-inside">
+                                <li><strong>Datos del Servicio:</strong> Selecciona cliente, sucursal, fecha y horarios de aplicación.</li>
+                                <li><strong>Diagnóstico y Métodos:</strong> Especifica el método (Aspersión, Termonebulización, Gel, etc.) y las áreas tratadas (Interiores, Perímetro, Cocinas, Almacenes).</li>
+                                <li><strong>Químicos Utilizados:</strong> Agrega los productos aplicados seleccionándolos del catálogo oficial con su dosis y registro RSCO.</li>
+                                <li><strong>Firma del Técnico y Cliente:</strong> El técnico firma en la pantalla táctil del móvil/tablet y el cliente plasma su firma de conformidad.</li>
+                                <li><strong>Generación de PDF:</strong> El sistema crea automáticamente el PDF oficial con membrete, logotipo, firma electrónica y <strong>Código QR de Validación Pública</strong>.</li>
+                            </ol>
+                        </div>
+
+                        <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 text-xs text-slate-600">
+                            ⚡ <strong>Paginación Rápida:</strong> El módulo de consulta muestra los últimos 20 certificados por página para mantener una respuesta instantánea. Puedes usar los filtros por cliente o fecha para localizar folios anteriores.
+                        </div>
+                    </div>
+
+                    <!-- ========================================================= -->
+                    <!-- 6. SECCIÓN: QUÍMICOS & FICHAS OFICIALES -->
+                    <!-- ========================================================= -->
+                    <div id="guide-sec-quimicos" class="guide-section-content space-y-4">
+                        <div class="border-b border-slate-200 pb-3">
+                            <div class="flex items-center justify-between flex-wrap gap-2">
+                                <h3 class="text-base sm:text-lg font-black text-slate-900 flex items-center gap-2">
+                                    <span class="w-8 h-8 rounded-xl bg-teal-600 text-white flex items-center justify-center text-sm font-black shadow-sm">6</span>
+                                    Catálogo de Químicos & Fichas Oficiales (HDS / Fichas Técnicas)
+                                </h3>
+                                <button onclick="goToModuleFromGuide('tab-quimicos')" class="bg-teal-50 hover:bg-teal-100 text-teal-800 font-bold px-3 py-1.5 rounded-lg text-xs border border-teal-200 flex items-center gap-1 guide-no-print">
+                                    <i class="fa-solid fa-flask-vial"></i> Catálogo Químicos
+                                </button>
+                            </div>
+                            <p class="text-xs text-slate-600 mt-1">
+                                Plaguicidas autorizados con registro RSCO oficial COFEPRIS y enlaces directos a documentación original del fabricante.
+                            </p>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-2">
+                                <h4 class="text-xs font-bold text-slate-900 uppercase tracking-wider text-teal-700 flex items-center gap-1.5">
+                                    <i class="fa-solid fa-file-pdf"></i> Fichas Técnicas & Hojas de Seguridad (HDS)
+                                </h4>
+                                <p class="text-xs text-slate-600 leading-relaxed">
+                                    Cada plaguicida registrado incluye enlaces directos y verificados a los archivos oficiales de los fabricantes (Envu/Bayer, Syngenta, BASF, etc.), cumpliendo con las normas de seguridad e higiene laboral.
+                                </p>
+                            </div>
+
+                            <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-2">
+                                <h4 class="text-xs font-bold text-slate-900 uppercase tracking-wider text-indigo-700 flex items-center gap-1.5">
+                                    <i class="fa-solid fa-shield-halved"></i> Registros RSCO / CICOPLAFEST
+                                </h4>
+                                <p class="text-xs text-slate-600 leading-relaxed">
+                                    El sistema cuenta con un buscador conectado a la base de datos de <strong>SIIPRIS COFEPRIS</strong> para autocompletar nombre comercial, ingrediente activo, dosis por litro y plazo de seguridad en horas.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="bg-amber-50 border border-amber-200 p-3.5 rounded-xl text-xs text-amber-950 flex items-start gap-2.5">
+                            <i class="fa-solid fa-triangle-exclamation text-amber-600 text-base mt-0.5"></i>
+                            <div>
+                                <strong>Regla de Cumplimiento:</strong> Las fichas técnicas y HDS son documentos oficiales emitidos por los laboratorios fabricantes y no deben ser modificadas ni sobrecargadas con logotipos ajenos para conservar su validez legal ante auditorías.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ========================================================= -->
+                    <!-- 7. SECCIÓN: MIP & BUSCADOR IA -->
+                    <!-- ========================================================= -->
+                    <div id="guide-sec-mip" class="guide-section-content space-y-4">
+                        <div class="border-b border-slate-200 pb-3">
+                            <div class="flex items-center justify-between flex-wrap gap-2">
+                                <h3 class="text-base sm:text-lg font-black text-slate-900 flex items-center gap-2">
+                                    <span class="w-8 h-8 rounded-xl bg-purple-600 text-white flex items-center justify-center text-sm font-black shadow-sm">7</span>
+                                    Manejo Integrado de Plagas (MIP) & Buscador Inteligente con IA
+                                </h3>
+                                <button onclick="goToModuleFromGuide('tab-mip')" class="bg-purple-50 hover:bg-purple-100 text-purple-800 font-bold px-3 py-1.5 rounded-lg text-xs border border-purple-200 flex items-center gap-1 guide-no-print">
+                                    <i class="fa-solid fa-bug"></i> Abrir Manual MIP
+                                </button>
+                            </div>
+                            <p class="text-xs text-slate-600 mt-1">
+                                Catálogo biológico y taxonómico de plagas urbanas con motor de investigación conectado a internet para nuevas especies.
+                            </p>
+                        </div>
+
+                        <div class="space-y-3">
+                            <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-2">
+                                <h4 class="text-xs font-bold text-slate-900 uppercase tracking-wider text-purple-700">
+                                    Categorías Principales de Plagas Urbanas
+                                </h4>
+                                <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs text-slate-700 pt-1">
+                                    <div class="bg-slate-50 p-2 rounded-lg border border-slate-100 font-medium">🪳 Cucarachas (Blattodea)</div>
+                                    <div class="bg-slate-50 p-2 rounded-lg border border-slate-100 font-medium">🐀 Roedores (Muridae)</div>
+                                    <div class="bg-slate-50 p-2 rounded-lg border border-slate-100 font-medium">🛏️ Chinches de Cama (Cimex)</div>
+                                    <div class="bg-slate-50 p-2 rounded-lg border border-slate-100 font-medium">🦟 Moscas y Mosquitos (Dípteros)</div>
+                                    <div class="bg-slate-50 p-2 rounded-lg border border-slate-100 font-medium">🐜 Hormigas y Termitas</div>
+                                    <div class="bg-slate-50 p-2 rounded-lg border border-slate-100 font-medium">🦂 Alacranes y Arácnidos</div>
+                                </div>
+                            </div>
+
+                            <div class="bg-gradient-to-r from-purple-900 to-indigo-950 text-white p-4 rounded-2xl space-y-2">
+                                <h4 class="text-xs font-bold text-amber-300 flex items-center gap-2">
+                                    <i class="fa-solid fa-brain"></i> Búsqueda en Línea con Inteligencia Artificial
+                                </h4>
+                                <p class="text-xs text-slate-300 leading-relaxed">
+                                    Si encuentras una plaga poco común en campo (por ejemplo: gorgojos específicos, araña violinista, polillas de granos, etc.), escribe su nombre en el buscador del manual. El sistema consultará fuentes científicas en tiempo real, generará su ficha biológica completa (morfología, daños, medidas de exclusión y productos recomendados) y <strong>la guardará permanentemente en el catálogo del sistema</strong>.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ========================================================= -->
+                    <!-- 8. SECCIÓN: GENERACIÓN MASIVA & ANALYTICS -->
+                    <!-- ========================================================= -->
+                    <div id="guide-sec-masivo" class="guide-section-content space-y-4">
+                        <div class="border-b border-slate-200 pb-3">
+                            <div class="flex items-center justify-between flex-wrap gap-2">
+                                <h3 class="text-base sm:text-lg font-black text-slate-900 flex items-center gap-2">
+                                    <span class="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center text-sm font-black shadow-sm">8</span>
+                                    Generación Mensual B2B & Métricas
+                                </h3>
+                                <button onclick="goToModuleFromGuide('tab-masivo')" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold px-3 py-1.5 rounded-lg text-xs border border-indigo-200 flex items-center gap-1 guide-no-print">
+                                    <i class="fa-solid fa-layer-group"></i> Emisión Masiva
+                                </button>
+                            </div>
+                            <p class="text-xs text-slate-600 mt-1">
+                                Procesamiento de pólizas recurrentes para clientes con múltiples sucursales y análisis estadístico del negocio.
+                            </p>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-2">
+                                <h4 class="text-xs font-bold text-slate-900 uppercase tracking-wider text-indigo-700">
+                                    Pólizas Recurrentes B2B
+                                </h4>
+                                <p class="text-xs text-slate-600 leading-relaxed">
+                                    Permite generar los certificados y órdenes del mes para todas las sucursales de un cliente corporativo en un solo paso, ahorrando horas de captura repetitiva.
+                                </p>
+                            </div>
+
+                            <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-2">
+                                <h4 class="text-xs font-bold text-slate-900 uppercase tracking-wider text-blue-700">
+                                    Métricas y Estadísticas
+                                </h4>
+                                <p class="text-xs text-slate-600 leading-relaxed">
+                                    Gráficas interactivas con el volumen de servicios por mes, químicos de mayor rotación, técnicos con mayor productividad y tasa de retención de clientes.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ========================================================= -->
+                    <!-- 9. SECCIÓN: TÉCNICOS STPS DC-3 -->
+                    <!-- ========================================================= -->
+                    <div id="guide-sec-usuarios" class="guide-section-content space-y-4">
+                        <div class="border-b border-slate-200 pb-3">
+                            <div class="flex items-center justify-between flex-wrap gap-2">
+                                <h3 class="text-base sm:text-lg font-black text-slate-900 flex items-center gap-2">
+                                    <span class="w-8 h-8 rounded-xl bg-orange-600 text-white flex items-center justify-center text-sm font-black shadow-sm">9</span>
+                                    Técnicos Certificados STPS DC-3 & Usuarios
+                                </h3>
+                                <button onclick="goToModuleFromGuide('tab-usuarios')" class="bg-orange-50 hover:bg-orange-100 text-orange-800 font-bold px-3 py-1.5 rounded-lg text-xs border border-orange-200 flex items-center gap-1 guide-no-print">
+                                    <i class="fa-solid fa-users-gear"></i> Gestionar Técnicos
+                                </button>
+                            </div>
+                            <p class="text-xs text-slate-600 mt-1">
+                                Expediente laboral, registro de constancias de habilidades laborales STPS y firmas digitales de aplicadores.
+                            </p>
+                        </div>
+
+                        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+                            <h4 class="text-xs font-bold text-slate-900 uppercase tracking-wider text-orange-700">
+                                Requisitos del Técnico en FUMIFLOSA
+                            </h4>
+                            <ul class="text-xs text-slate-600 space-y-1.5 list-disc list-inside">
+                                <li><strong>Constancia DC-3:</strong> Registro de capacitación oficial ante la Secretaría del Trabajo y Previsión Social (STPS).</li>
+                                <li><strong>Firma Digital:</strong> Registro de trazo de firma que se estampa en los certificados generados por el aplicador.</li>
+                                <li><strong>Baja de Técnicos:</strong> El administrador Master cuenta con el botón de eliminación y desactivación de técnicos cuando causan baja de la empresa.</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- ========================================================= -->
+                    <!-- 10. SECCIÓN: EMPRESA & FIEL SAT -->
+                    <!-- ========================================================= -->
+                    <div id="guide-sec-empresa" class="guide-section-content space-y-4">
+                        <div class="border-b border-slate-200 pb-3">
+                            <div class="flex items-center justify-between flex-wrap gap-2">
+                                <h3 class="text-base sm:text-lg font-black text-slate-900 flex items-center gap-2">
+                                    <span class="w-8 h-8 rounded-xl bg-amber-600 text-slate-950 flex items-center justify-center text-sm font-black shadow-sm">10</span>
+                                    Configuración de la Empresa & FIEL SAT
+                                </h3>
+                                <button onclick="goToModuleFromGuide('tab-empresa')" class="bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold px-3 py-1.5 rounded-lg text-xs border border-amber-200 flex items-center gap-1 guide-no-print">
+                                    <i class="fa-solid fa-stamp"></i> Configuración Empresa
+                                </button>
+                            </div>
+                            <p class="text-xs text-slate-600 mt-1">
+                                Datos corporativos, logotipo institucional de FLOSA FUMIGACIÓN y sellado criptográfico digital.
+                            </p>
+                        </div>
+
+                        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+                            <h4 class="text-xs font-bold text-slate-900 uppercase tracking-wider text-amber-700">
+                                Logotipo Oficial y Membrete
+                            </h4>
+                            <p class="text-xs text-slate-600 leading-relaxed">
+                                El logotipo oficial de <strong>FLOSA FUMIGACIÓN</strong> se integra automáticamente en el encabezado del portal y en todos los documentos generados (órdenes de servicio, certificados, cotizaciones y reportes).
+                            </p>
+                            <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 text-xs text-slate-700 space-y-1">
+                                <p class="font-bold text-slate-900">Sellado Electrónico FIEL SAT:</p>
+                                <p class="text-[11px] text-slate-600">
+                                    Permite cargar los certificados <code class="bg-white px-1.5 py-0.5 rounded border font-mono">.cer</code> y <code class="bg-white px-1.5 py-0.5 rounded border font-mono">.key</code> del SAT para la generación de la cadena original y firma electrónica avanzada.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ========================================================= -->
+                    <!-- 11. SECCIÓN: AUDITORÍA & LOG MASTER -->
+                    <!-- ========================================================= -->
+                    <div id="guide-sec-auditoria" class="guide-section-content space-y-4">
+                        <div class="border-b border-slate-200 pb-3">
+                            <div class="flex items-center justify-between flex-wrap gap-2">
+                                <h3 class="text-base sm:text-lg font-black text-slate-900 flex items-center gap-2">
+                                    <span class="w-8 h-8 rounded-xl bg-rose-600 text-white flex items-center justify-center text-sm font-black shadow-sm">11</span>
+                                    Bitácora de Auditoría & Trazabilidad de Seguridad
+                                </h3>
+                                <button onclick="goToModuleFromGuide('tab-auditoria')" class="bg-rose-50 hover:bg-rose-100 text-rose-800 font-bold px-3 py-1.5 rounded-lg text-xs border border-rose-200 flex items-center gap-1 guide-no-print">
+                                    <i class="fa-solid fa-shield-halved"></i> Ver Bitácora
+                                </button>
+                            </div>
+                            <p class="text-xs text-slate-600 mt-1">
+                                Registro inmutable de eventos, inicios de sesión y modificaciones de registros para control interno e inspecciones.
+                            </p>
+                        </div>
+
+                        <div class="space-y-3">
+                            <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-2">
+                                <h4 class="text-xs font-bold text-slate-900 uppercase tracking-wider text-rose-700">
+                                    ¿Qué Eventos se Registran en la Bitácora?
+                                </h4>
+                                <ul class="text-xs text-slate-600 space-y-1.5 list-disc list-inside">
+                                    <li><strong>Inicios de Sesión:</strong> Fecha, hora, usuario e IP de acceso.</li>
+                                    <li><strong>Creación de Certificados y Órdenes:</strong> Folio, cliente y técnico que emitió el servicio.</li>
+                                    <li><strong>Edición de Catálogos:</strong> Modificaciones en plaguicidas, precios o datos de clientes.</li>
+                                    <li><strong>Exportación CSV:</strong> Posibilidad de descargar el historial completo de auditoría para revisiones contables o auditorías de calidad.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ========================================================= -->
+                    <!-- 12. SECCIÓN: FAQ, PWA & SOPORTE -->
+                    <!-- ========================================================= -->
+                    <div id="guide-sec-faq" class="guide-section-content space-y-4">
+                        <div class="border-b border-slate-200 pb-3">
+                            <h3 class="text-base sm:text-lg font-black text-slate-900 flex items-center gap-2">
+                                <span class="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center text-sm font-black shadow-sm">12</span>
+                                Preguntas Frecuentes, Uso Móvil (PWA) & Soporte
+                            </h3>
+                            <p class="text-xs text-slate-600 mt-1">
+                                Respuestas rápidas a situaciones operativas comunes y asistencia directa.
+                            </p>
+                        </div>
+
+                        <div class="space-y-3">
+                            <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm space-y-1">
+                                <h4 class="text-xs font-bold text-slate-900">¿Cómo funciona la verificación de certificados por Código QR?</h4>
+                                <p class="text-xs text-slate-600 leading-relaxed">
+                                    Cualquier inspector de salubridad o cliente puede escanear con su teléfono el código QR impreso en el certificado. El sistema abrirá inmediatamente una página pública oficial confirmando la autenticidad, fecha de aplicación, técnico aplicador y vigencia.
+                                </p>
+                            </div>
+
+                            <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm space-y-1">
+                                <h4 class="text-xs font-bold text-slate-900">¿Se puede usar el sistema sin conexión a internet?</h4>
+                                <p class="text-xs text-slate-600 leading-relaxed">
+                                    El sistema cuenta con soporte PWA que permite cargar la interfaz en dispositivos móviles. Al recuperar conexión celular o Wi-Fi, los certificados y servicios capturados se sincronizan con la base de datos central.
+                                </p>
+                            </div>
+
+                            <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm space-y-1">
+                                <h4 class="text-xs font-bold text-slate-900">¿Por qué las listas muestran 20 registros por página?</h4>
+                                <p class="text-xs text-slate-600 leading-relaxed">
+                                    Para evitar problemas de saturación de memoria del servidor y del navegador. La paginación de 20 registros garantiza una velocidad de carga instantánea sin retrasos.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- FOOTER DEL MODAL -->
+            <div class="bg-slate-100 p-3 sm:p-4 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs flex-shrink-0 guide-no-print">
+                <div class="text-slate-500 text-[11px] text-center sm:text-left">
+                    <strong>FLOSA FUMIGACIÓN</strong> &bull; Sistema de Gestión Integral NOM-256-SSA1-2012 &bull; Lic. Sanitaria: 08 17 19 SA 0001
+                </div>
+                <div class="flex items-center gap-2">
+                    <button type="button" onclick="printSystemUserGuide()" class="px-3.5 py-1.5 bg-white hover:bg-slate-200 text-slate-800 font-bold rounded-xl border border-slate-300 transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-print"></i> Imprimir Guía
+                    </button>
+                    <button type="button" onclick="closeSystemUserGuideModal()" class="px-4 py-1.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl shadow-sm transition">
+                        Entendido / Cerrar
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
 
     <!-- MODAL DE CONFIGURACIÓN DE ENLACE PERMANENTE / PORTAL CLIENTE -->
     <div id="modal-portal-config" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
@@ -1317,9 +2081,16 @@
                 </div>
             </div>
             
-            <div class="flex items-center space-x-2.5">
+            <div class="flex items-center space-x-2 sm:space-x-3">
+                <!-- BOTÓN DESTACADO EN GRANDE: GUÍA DE USO Y MANUAL DEL SISTEMA -->
+                <button type="button" onclick="openSystemUserGuideModal()" id="btn-topbar-guia" title="Abrir Guía y Manual de Uso Oficial del Sistema" class="flex items-center gap-2 bg-gradient-to-r from-amber-400 via-amber-500 to-yellow-500 hover:from-amber-300 hover:to-yellow-400 text-slate-950 font-black px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-xl text-xs sm:text-sm shadow-lg shadow-amber-500/30 border-2 border-amber-300 ring-2 ring-amber-400/50 hover:ring-amber-300 transform active:scale-95 transition-all duration-150 cursor-pointer">
+                    <i class="fa-solid fa-book-open-reader text-slate-950 text-sm sm:text-base animate-pulse"></i>
+                    <span class="tracking-wider uppercase font-black">GUÍA DE USO</span>
+                    <span class="hidden lg:inline-block bg-slate-950 text-amber-300 text-[10px] px-2 py-0.5 rounded font-extrabold tracking-wide uppercase shadow-inner">MANUAL</span>
+                </button>
+
                 <!-- Control de Tamaño de Letra / Accesibilidad Visual -->
-                <div class="flex items-center bg-slate-800/90 border border-slate-700 rounded-lg p-1 gap-1 text-xs">
+                <div class="hidden sm:flex items-center bg-slate-800/90 border border-slate-700 rounded-lg p-1 gap-1 text-xs">
                     <span class="text-slate-400 text-[11px] px-1 font-bold flex items-center gap-1" title="Ajuste de Tamaño de Texto para Lectura Cómoda">
                         <i class="fa-solid fa-text-height text-emerald-400"></i> <span class="hidden xl:inline">Texto:</span>
                     </span>
@@ -1329,10 +2100,10 @@
                     <button type="button" onclick="setTextZoom('xl')" id="btn-zoom-xl" title="Texto Extra Grande (Fácil Lectura)" class="btn-zoom-option px-2 py-0.5 rounded text-[11px] font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700 transition">A++</button>
                 </div>
 
-                <a href="/docs" target="_blank" class="hidden sm:flex text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-md border border-slate-700 items-center gap-1.5 transition">
+                <a href="/docs" target="_blank" class="hidden md:flex text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-md border border-slate-700 items-center gap-1.5 transition">
                     <i class="fa-solid fa-code"></i> API Swagger
                 </a>
-                <span id="top-fiel-status-badge" class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-800 text-slate-300 border border-slate-700">
+                <span id="top-fiel-status-badge" class="hidden sm:inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-800 text-slate-300 border border-slate-700">
                     <span class="w-2 h-2 mr-1.5 bg-amber-400 rounded-full"></span> FIEL SAT
                 </span>
 
@@ -8707,6 +9478,110 @@
 
             const url = `/api/v1/audit-logs/export-csv?${params.toString()}`;
             window.open(url, '_blank');
+        }
+
+        // =========================================================================
+        // CONTROL Y NAVEGACIÓN DE LA GUÍA DE USO Y MANUAL OPERATIVO
+        // =========================================================================
+        let currentActiveGuideSection = 'guide-sec-inicio';
+
+        function openSystemUserGuideModal(targetSectionId = 'guide-sec-inicio') {
+            const modal = document.getElementById('modal-system-user-guide');
+            if (!modal) return;
+            modal.classList.remove('hidden');
+            clearGuideSearch();
+            showGuideSection(targetSectionId || 'guide-sec-inicio');
+        }
+
+        function closeSystemUserGuideModal() {
+            const modal = document.getElementById('modal-system-user-guide');
+            if (modal) modal.classList.add('hidden');
+        }
+
+        function showGuideSection(sectionId) {
+            currentActiveGuideSection = sectionId;
+
+            // Actualizar botones del índice
+            document.querySelectorAll('.guide-nav-item').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            const activeNavBtn = document.getElementById(`nav-${sectionId}`);
+            if (activeNavBtn) activeNavBtn.classList.add('active');
+
+            // Mostrar solo la sección seleccionada
+            document.querySelectorAll('.guide-section-content').forEach(sec => {
+                if (sec.id === sectionId) {
+                    sec.classList.remove('hidden');
+                } else {
+                    sec.classList.add('hidden');
+                }
+            });
+
+            // Scroll suave hacia arriba
+            const container = document.getElementById('guide-content-container');
+            if (container) container.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function filterUserGuide(query) {
+            const trimmed = (query || '').trim().toLowerCase();
+            const clearBtn = document.getElementById('btn-clear-guide-search');
+            const feedbackBox = document.getElementById('guide-search-feedback');
+            const countText = document.getElementById('guide-search-count-text');
+
+            if (!trimmed) {
+                if (clearBtn) clearBtn.classList.add('hidden');
+                if (feedbackBox) feedbackBox.classList.add('hidden');
+                showGuideSection(currentActiveGuideSection || 'guide-sec-inicio');
+                return;
+            }
+
+            if (clearBtn) clearBtn.classList.remove('hidden');
+            if (feedbackBox) feedbackBox.classList.remove('hidden');
+
+            let matchCount = 0;
+            document.querySelectorAll('.guide-section-content').forEach(sec => {
+                const text = (sec.textContent || '').toLowerCase();
+                if (text.includes(trimmed)) {
+                    sec.classList.remove('hidden');
+                    matchCount++;
+                } else {
+                    sec.classList.add('hidden');
+                }
+            });
+
+            if (countText) {
+                countText.textContent = matchCount > 0 
+                    ? `Se encontraron ${matchCount} sección(es) que coinciden con "${query}".`
+                    : `No se encontraron coincidencias para "${query}". Intenta con otro término.`;
+            }
+        }
+
+        function clearGuideSearch() {
+            const input = document.getElementById('guide-search-input');
+            if (input) input.value = '';
+            filterUserGuide('');
+        }
+
+        function printSystemUserGuide() {
+            // Mostrar todas las secciones para impresión completa
+            document.querySelectorAll('.guide-section-content').forEach(sec => {
+                sec.classList.remove('hidden');
+            });
+            window.print();
+            // Restaurar estado
+            setTimeout(() => {
+                showGuideSection(currentActiveGuideSection || 'guide-sec-inicio');
+            }, 500);
+        }
+
+        function goToModuleFromGuide(tabId, subAction = null) {
+            closeSystemUserGuideModal();
+            if (typeof switchTab === 'function') {
+                switchTab(tabId);
+            }
+            if (typeof subAction === 'function') {
+                setTimeout(subAction, 200);
+            }
         }
 
         // =========================================================================
