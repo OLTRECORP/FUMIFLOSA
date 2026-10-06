@@ -3221,19 +3221,98 @@
                 </div>
 
                 <form id="form-new-service" onsubmit="handleCreateService(event)" class="space-y-6 text-xs">
-                    <!-- Fila 1: Asignación y Folio -->
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                    <!-- Fila 1: Asignación y Selección de Cliente Matriz, Sucursal, Técnico y Folio -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 bg-slate-50 dark:bg-[#1a1a20] p-5 rounded-2xl border border-slate-200 dark:border-[#2e2e38] shadow-xs">
                         <div>
-                            <label class="block font-semibold text-slate-700 mb-1">Sucursal / Unidad Operativa *</label>
-                            <select id="srv-branch-id" required class="w-full bg-white border border-slate-300 rounded-lg p-2 focus:ring-1 focus:ring-brand-500"></select>
+                            <label class="block font-bold text-slate-800 dark:text-zinc-200 mb-1 flex items-center gap-1.5">
+                                <i class="fa-solid fa-building text-emerald-600 dark:text-emerald-400"></i> 1. Cliente Matriz *
+                            </label>
+                            <select id="srv-client-id" required onchange="onServiceClientChanged()" class="w-full bg-white dark:bg-zinc-800/90 border border-slate-300 dark:border-zinc-700 rounded-xl p-2.5 font-bold text-xs text-slate-800 dark:text-zinc-100 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition"></select>
+                            <p class="text-[10px] text-slate-400 mt-1">Selecciona la empresa o razón social</p>
                         </div>
                         <div>
-                            <label class="block font-semibold text-slate-700 mb-1">Técnico Asignado (STPS) *</label>
-                            <select id="srv-tech-id" required class="w-full bg-white border border-slate-300 rounded-lg p-2 focus:ring-1 focus:ring-brand-500"></select>
+                            <label class="block font-bold text-slate-800 dark:text-zinc-200 mb-1 flex items-center gap-1.5">
+                                <i class="fa-solid fa-store text-emerald-600 dark:text-emerald-400"></i> 2. Sucursal / Unidad *
+                            </label>
+                            <select id="srv-branch-id" required onchange="onServiceBranchChanged()" class="w-full bg-white dark:bg-zinc-800/90 border border-slate-300 dark:border-zinc-700 rounded-xl p-2.5 font-bold text-xs text-slate-800 dark:text-zinc-100 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition"></select>
+                            <p id="srv-branch-count-badge" class="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold mt-1 truncate"></p>
                         </div>
                         <div>
-                            <label class="block font-semibold text-slate-700 mb-1">Prefijo de Folio (ORD-#####)</label>
-                            <input type="text" id="srv-prefix" value="ORD" placeholder="ej. ORD" class="w-full bg-white border border-slate-300 rounded-lg p-2 uppercase font-bold font-mono" />
+                            <label class="block font-bold text-slate-800 dark:text-zinc-200 mb-1 flex items-center gap-1.5">
+                                <i class="fa-solid fa-helmet-safety text-emerald-600 dark:text-emerald-400"></i> 3. Técnico Asignado *
+                            </label>
+                            <select id="srv-tech-id" required class="w-full bg-white dark:bg-zinc-800/90 border border-slate-300 dark:border-zinc-700 rounded-xl p-2.5 font-bold text-xs text-slate-800 dark:text-zinc-100 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition"></select>
+                            <p class="text-[10px] text-slate-400 mt-1">Técnico aplicador certificado STPS</p>
+                        </div>
+                        <div>
+                            <label class="block font-bold text-slate-800 dark:text-zinc-200 mb-1 flex items-center gap-1.5">
+                                <i class="fa-solid fa-hashtag text-emerald-600 dark:text-emerald-400"></i> Prefijo de Folio
+                            </label>
+                            <input type="text" id="srv-prefix" value="ORD" placeholder="ej. ORD" class="w-full bg-white dark:bg-zinc-800/90 border border-slate-300 dark:border-zinc-700 rounded-xl p-2.5 uppercase font-bold font-mono text-xs text-slate-800 dark:text-zinc-100 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition" />
+                            <p class="text-[10px] text-slate-400 mt-1">Generará ORD-##### y CER-#####</p>
+                        </div>
+                    </div>
+
+                    <!-- Panel Informativo: Vista Previa de Datos de la Sucursal para la Nueva Orden y Certificado -->
+                    <div id="srv-branch-info-card" class="bg-gradient-to-br from-slate-50 via-emerald-50/20 to-slate-50 dark:from-[#1a1a20] dark:via-emerald-950/10 dark:to-[#1a1a20] p-4 sm:p-5 rounded-2xl border-2 border-emerald-200/80 dark:border-emerald-800/60 shadow-sm space-y-3 transition-all duration-200">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-emerald-100 dark:border-zinc-800 pb-2.5">
+                            <div class="flex items-center gap-2">
+                                <div class="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center text-sm font-bold shadow-sm">
+                                    <i class="fa-solid fa-file-shield"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-extrabold text-slate-900 dark:text-zinc-100 text-xs sm:text-sm">
+                                        Información Vinculada para la Nueva Orden de Servicio y Certificado NOM-256
+                                    </h4>
+                                    <p class="text-[11px] text-slate-500 dark:text-zinc-400">
+                                        Datos fiscales, ubicación y contacto que se estamparán en el documento oficial.
+                                    </p>
+                                </div>
+                            </div>
+                            <span class="inline-flex items-center gap-1.5 bg-emerald-100 dark:bg-emerald-950/80 text-emerald-900 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-700 px-2.5 py-1 rounded-full text-[10px] font-black w-fit">
+                                <i class="fa-solid fa-circle-check text-emerald-600 dark:text-emerald-400 text-[9px]"></i> Sucursal Seleccionada
+                            </span>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+                            <!-- Datos del Cliente Matriz -->
+                            <div class="bg-white dark:bg-zinc-800/80 p-3 rounded-xl border border-slate-200 dark:border-zinc-700 space-y-1">
+                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Empresa / Razón Social</span>
+                                <p id="srv-info-client-name" class="font-extrabold text-slate-900 dark:text-zinc-100 text-xs truncate">Cargando...</p>
+                                <p class="text-[11px] text-slate-500 dark:text-zinc-400 font-mono">
+                                    RFC: <span id="srv-info-client-rfc" class="font-bold text-amber-600 dark:text-amber-400">---</span>
+                                </p>
+                            </div>
+
+                            <!-- Sucursal & Giro -->
+                            <div class="bg-white dark:bg-zinc-800/80 p-3 rounded-xl border border-slate-200 dark:border-zinc-700 space-y-1">
+                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Sucursal & Unidad</span>
+                                <p id="srv-info-branch-name" class="font-bold text-slate-900 dark:text-zinc-100 text-xs truncate">Cargando...</p>
+                                <div class="flex items-center gap-2 text-[11px] text-slate-500 dark:text-zinc-400">
+                                    <span>Giro: <strong id="srv-info-branch-class" class="text-slate-700 dark:text-zinc-300">---</strong></span>
+                                    <span id="srv-info-branch-code-pill" class="font-mono text-[10px] bg-slate-100 dark:bg-zinc-700 px-1.5 py-0.5 rounded text-slate-600 dark:text-zinc-300"></span>
+                                </div>
+                            </div>
+
+                            <!-- Contacto & Teléfono -->
+                            <div class="bg-white dark:bg-zinc-800/80 p-3 rounded-xl border border-slate-200 dark:border-zinc-700 space-y-1">
+                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Encargado en Sitio</span>
+                                <p id="srv-info-branch-contact" class="font-bold text-slate-800 dark:text-zinc-200 text-xs truncate">---</p>
+                                <p class="text-[11px] text-slate-500 dark:text-zinc-400 font-mono">
+                                    <i class="fa-solid fa-phone text-[9px] mr-1 text-slate-400"></i><span id="srv-info-branch-phone">---</span>
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Domicilio Completo -->
+                        <div class="bg-white dark:bg-zinc-800/80 p-3 rounded-xl border border-slate-200 dark:border-zinc-700 flex items-start gap-2 text-xs">
+                            <i class="fa-solid fa-location-dot text-rose-500 mt-0.5 shrink-0"></i>
+                            <div class="min-w-0 flex-1">
+                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Domicilio del Servicio (Dirección física en Certificado Oficial)</span>
+                                <p id="srv-info-branch-address" class="text-slate-800 dark:text-zinc-200 font-medium text-xs leading-snug">
+                                    Selecciona una sucursal para ver la dirección física completa...
+                                </p>
+                            </div>
                         </div>
                     </div>
 
@@ -6677,6 +6756,12 @@
                         cachedClients.map(c => `<option value="${c.id}">${c.legal_name} (${c.rfc})</option>`).join('');
                 }
 
+                const srvClientSelect = document.getElementById('srv-client-id');
+                if (srvClientSelect && (!srvClientSelect.children.length || srvClientSelect.children.length === 1) && cachedClients.length) {
+                    srvClientSelect.innerHTML = cachedClients.map(c => `<option value="${c.id}">${c.legal_name} (${c.rfc})</option>`).join('');
+                    if (typeof onServiceClientChanged === 'function') onServiceClientChanged();
+                }
+
                 // Badges de conteo
                 const cliBadge = document.getElementById('clients-count-badge');
                 if (cliBadge) cliBadge.innerText = `${cachedClients.length} Clientes Matriz`;
@@ -7486,23 +7571,159 @@
             }
         }
 
-        async function prepareNewServiceForm() {
+        async function prepareNewServiceForm(presetBranchId = null) {
             await Promise.all([loadClientsAndBranches(), loadUsers(), loadChemicals(), loadCompanyConfig()]);
-            const branchSelect = document.getElementById('srv-branch-id');
+            const clientSelect = document.getElementById('srv-client-id');
             const techSelect = document.getElementById('srv-tech-id');
 
-            branchSelect.innerHTML = cachedBranches.map(b => `<option value="${b.id}">${b.client ? b.client.legal_name : 'Sin Cliente'} (${b.name})</option>`).join('');
-            techSelect.innerHTML = cachedTechnicians.map(t => `<option value="${t.id}">${t.full_name} (${t.role})</option>`).join('');
+            // 1. Cargar Técnicos Asignados
+            if (techSelect) {
+                techSelect.innerHTML = cachedTechnicians.map(t => `<option value="${t.id}">${t.full_name} (${t.role})</option>`).join('');
+            }
 
+            // 2. Cargar Clientes Matriz en el primer listado
+            if (clientSelect) {
+                if (!cachedClients.length) {
+                    clientSelect.innerHTML = '<option value="">(No hay clientes matriz registrados)</option>';
+                } else {
+                    clientSelect.innerHTML = cachedClients.map(c => `<option value="${c.id}">${c.legal_name} (${c.rfc})</option>`).join('');
+                }
+            }
+
+            // 3. Preselección si se envió presetBranchId (ej. desde el calendario o lista de órdenes)
+            if (presetBranchId) {
+                const targetBranch = cachedBranches.find(b => b.id === presetBranchId);
+                if (targetBranch) {
+                    const matchedClientId = targetBranch.client_id || (targetBranch.client ? targetBranch.client.id : null);
+                    if (matchedClientId && clientSelect) {
+                        clientSelect.value = matchedClientId;
+                    }
+                }
+            }
+
+            // 4. Filtrar y rellenar las sucursales del cliente seleccionado en el listado contiguo
+            onServiceClientChanged(presetBranchId);
+
+            // Fechas predeterminadas
             const now = new Date();
             const nowIso = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
             const laterIso = new Date(now.getTime() + 4 * 3600000 - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
 
-            document.getElementById('srv-start-date').value = nowIso;
-            document.getElementById('srv-end-date').value = laterIso;
+            const startEl = document.getElementById('srv-start-date');
+            const endEl = document.getElementById('srv-end-date');
+            if (startEl && !startEl.value) startEl.value = nowIso;
+            if (endEl && !endEl.value) endEl.value = laterIso;
 
             if(!document.getElementById('chemicals-rows-container').children.length) {
                 addChemicalRow();
+            }
+        }
+
+        function onServiceClientChanged(presetBranchId = null) {
+            const clientSelect = document.getElementById('srv-client-id');
+            const branchSelect = document.getElementById('srv-branch-id');
+            const countBadge = document.getElementById('srv-branch-count-badge');
+            if (!clientSelect || !branchSelect) return;
+
+            const selectedClientId = clientSelect.value;
+            if (!selectedClientId) {
+                branchSelect.innerHTML = '<option value="">-- Selecciona un cliente primero --</option>';
+                if (countBadge) countBadge.innerText = '';
+                updateServiceBranchPreview(null, null);
+                return;
+            }
+
+            // Filtrar las sucursales que corresponden exactamente a este cliente
+            const clientBranches = cachedBranches.filter(b => {
+                const bClientId = b.client_id || (b.client ? b.client.id : null);
+                return bClientId === selectedClientId;
+            });
+
+            if (countBadge) {
+                countBadge.innerText = clientBranches.length > 0 
+                    ? `✓ ${clientBranches.length} sucursal(es) disponible(s)` 
+                    : `⚠️ Sin sucursales registradas`;
+                countBadge.className = clientBranches.length > 0
+                    ? 'text-[10px] text-emerald-600 dark:text-emerald-400 font-bold mt-1 truncate'
+                    : 'text-[10px] text-amber-600 dark:text-amber-400 font-bold mt-1 truncate';
+            }
+
+            const clientObj = cachedClients.find(c => c.id === selectedClientId) || null;
+
+            if (!clientBranches.length) {
+                branchSelect.innerHTML = '<option value="">⚠️ Este cliente no tiene sucursales registradas aún</option>';
+                updateServiceBranchPreview(null, clientObj);
+                return;
+            }
+
+            branchSelect.innerHTML = clientBranches.map((b, idx) => {
+                const codeStr = b.unit_code ? ` [${b.unit_code}]` : '';
+                const mainLabel = idx === 0 ? ' (Principal)' : '';
+                return `<option value="${b.id}">${b.name}${mainLabel}${codeStr} - ${b.address.substring(0, 45)}...</option>`;
+            }).join('');
+
+            if (presetBranchId && clientBranches.some(b => b.id === presetBranchId)) {
+                branchSelect.value = presetBranchId;
+            } else {
+                branchSelect.value = clientBranches[0].id;
+            }
+
+            onServiceBranchChanged();
+        }
+
+        function onServiceBranchChanged() {
+            const branchSelect = document.getElementById('srv-branch-id');
+            const clientSelect = document.getElementById('srv-client-id');
+            if (!branchSelect) return;
+
+            const selectedBranchId = branchSelect.value;
+            const branchObj = cachedBranches.find(b => b.id === selectedBranchId) || null;
+            const selectedClientId = clientSelect ? clientSelect.value : (branchObj ? branchObj.client_id : null);
+            const clientObj = cachedClients.find(c => c.id === selectedClientId) || (branchObj ? branchObj.client : null);
+
+            updateServiceBranchPreview(branchObj, clientObj);
+        }
+
+        function updateServiceBranchPreview(branch, client) {
+            const infoCard = document.getElementById('srv-branch-info-card');
+            if (!infoCard) return;
+
+            const nameEl = document.getElementById('srv-info-client-name');
+            const rfcEl = document.getElementById('srv-info-client-rfc');
+            const bNameEl = document.getElementById('srv-info-branch-name');
+            const bClassEl = document.getElementById('srv-info-branch-class');
+            const bCodePill = document.getElementById('srv-info-branch-code-pill');
+            const bContactEl = document.getElementById('srv-info-branch-contact');
+            const bPhoneEl = document.getElementById('srv-info-branch-phone');
+            const bAddrEl = document.getElementById('srv-info-branch-address');
+
+            if (client) {
+                if (nameEl) nameEl.innerText = client.legal_name || 'Sin Razón Social';
+                if (rfcEl) rfcEl.innerText = client.rfc || '---';
+            } else {
+                if (nameEl) nameEl.innerText = 'Selecciona un cliente...';
+                if (rfcEl) rfcEl.innerText = '---';
+            }
+
+            if (branch) {
+                if (bNameEl) bNameEl.innerText = branch.name || 'Sucursal';
+                if (bClassEl) bClassEl.innerText = branch.classification || 'Comercial';
+                if (bCodePill) {
+                    bCodePill.innerText = branch.unit_code ? `Cód: ${branch.unit_code}` : '';
+                    bCodePill.style.display = branch.unit_code ? 'inline-block' : 'none';
+                }
+                if (bContactEl) bContactEl.innerText = branch.responsible_contact_name || (client ? client.legal_name : 'No asignado');
+                if (bPhoneEl) bPhoneEl.innerText = branch.phone || 'Sin teléfono';
+                if (bAddrEl) bAddrEl.innerText = branch.address || 'Sin dirección registrada';
+                infoCard.classList.remove('opacity-60');
+            } else {
+                if (bNameEl) bNameEl.innerText = 'Sin sucursal seleccionada';
+                if (bClassEl) bClassEl.innerText = '---';
+                if (bCodePill) bCodePill.style.display = 'none';
+                if (bContactEl) bContactEl.innerText = '---';
+                if (bPhoneEl) bPhoneEl.innerText = '---';
+                if (bAddrEl) bAddrEl.innerText = client ? `⚠️ Este cliente "${client.legal_name}" no tiene sucursales registradas aún. Ve a Clientes & Sucursales para registrar una.` : 'Selecciona un cliente y sucursal para visualizar el domicilio.';
+                infoCard.classList.add('opacity-60');
             }
         }
 
@@ -7554,8 +7775,16 @@
                 });
             });
 
+            const branchId = document.getElementById('srv-branch-id')?.value;
+            if (!branchId) {
+                alert('Por favor selecciona un Cliente Matriz y una Sucursal válida para generar la orden y certificado.');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-check"></i> Generar Orden y Certificado Oficial';
+                return;
+            }
+
             const payload = {
-                branch_id: document.getElementById('srv-branch-id').value,
+                branch_id: branchId,
                 technician_id: document.getElementById('srv-tech-id').value,
                 folio_prefix: document.getElementById('srv-prefix').value || "ORD",
                 service_start_date: new Date(document.getElementById('srv-start-date').value).toISOString(),
