@@ -1357,13 +1357,17 @@
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block font-semibold text-slate-700 mb-1">Teléfono / Clave Unidad *</label>
+                        <label class="block font-semibold text-slate-700 mb-1">Teléfono de Contacto *</label>
                         <input type="text" id="edit-br-phone" required class="w-full bg-white border border-slate-300 rounded-lg p-2" />
                     </div>
                     <div>
-                        <label class="block font-semibold text-slate-700 mb-1">Responsable en Sitio *</label>
-                        <input type="text" id="edit-br-resp" required class="w-full bg-white border border-slate-300 rounded-lg p-2" />
+                        <label class="block font-semibold text-slate-700 mb-1">Clave de Unidad / Código (ej. MAT-01)</label>
+                        <input type="text" id="edit-br-code" placeholder="ej. MAT-01, UMF-22" class="w-full bg-white border border-slate-300 rounded-lg p-2 uppercase font-mono font-bold" />
                     </div>
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Responsable en Sitio *</label>
+                    <input type="text" id="edit-br-resp" required class="w-full bg-white border border-slate-300 rounded-lg p-2" />
                 </div>
                 <div>
                     <label class="block font-semibold text-slate-700 mb-1">Cliente Matriz Asignado (Razón Social) *</label>
@@ -1373,6 +1377,73 @@
                 <div class="flex justify-end gap-2 pt-2 border-t border-slate-100">
                     <button type="button" onclick="closeEditBranchModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2 px-3 rounded-lg text-xs">Cancelar</button>
                     <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg text-xs shadow-sm">Guardar Sucursal</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL DE CREACIÓN RÁPIDA DE SUCURSAL / UNIDAD MATRIZ -->
+    <div id="modal-quick-create-branch" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 space-y-4 border border-slate-200">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 bg-emerald-100 text-emerald-700 rounded-lg flex items-center justify-center text-sm font-bold">
+                        <i class="fa-solid fa-store"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-900">Registrar Sucursal / Unidad para Cliente</h3>
+                        <p id="quick-br-client-hint" class="text-[11px] text-slate-500">Cliente Matriz: ---</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeQuickCreateBranchModal()" class="text-slate-400 hover:text-slate-600 p-1"><i class="fa-solid fa-xmark text-base"></i></button>
+            </div>
+            <form onsubmit="handleQuickCreateBranchSubmit(event)" class="space-y-4 text-xs">
+                <input type="hidden" id="quick-br-client-id" />
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Nombre de Sucursal / Unidad *</label>
+                        <input type="text" id="quick-br-name" required placeholder="ej. Matriz Principal, Planta Norte" class="w-full bg-white border border-slate-300 rounded-lg p-2 font-bold" />
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Clasificación *</label>
+                        <select id="quick-br-class" class="w-full bg-white border border-slate-300 rounded-lg p-2">
+                            <option value="Comercial">Comercial</option>
+                            <option value="Industrial">Industrial</option>
+                            <option value="Hospitalaria">Hospitalaria</option>
+                            <option value="Oficinas">Oficinas</option>
+                            <option value="Habitacional">Habitacional</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Dirección Completa (Se imprimirá en Certificado NOM-256) *</label>
+                    <input type="text" id="quick-br-addr" required placeholder="Calle, Número, Colonia, C.P., Municipio, Estado" class="w-full bg-white border border-slate-300 rounded-lg p-2" />
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Teléfono de Contacto *</label>
+                        <input type="text" id="quick-br-phone" required placeholder="ej. 833 123 4567" class="w-full bg-white border border-slate-300 rounded-lg p-2" />
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Código / Clave de Unidad (ej. MAT-01)</label>
+                        <input type="text" id="quick-br-code" placeholder="ej. MAT-01" class="w-full bg-white border border-slate-300 rounded-lg p-2 uppercase font-mono font-bold" />
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Responsable en Sitio *</label>
+                        <input type="text" id="quick-br-resp" required placeholder="Nombre del encargado en sitio" class="w-full bg-white border border-slate-300 rounded-lg p-2" />
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Correo Electrónico (Opcional)</label>
+                        <input type="email" id="quick-br-email" placeholder="contacto@sucursal.com" class="w-full bg-white border border-slate-300 rounded-lg p-2" />
+                    </div>
+                </div>
+                <div class="flex justify-end gap-2 pt-2 border-t border-slate-100">
+                    <button type="button" onclick="closeQuickCreateBranchModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2 px-3 rounded-lg text-xs">Cancelar</button>
+                    <button type="submit" id="btn-quick-create-branch-submit" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-4 rounded-lg text-xs shadow-sm flex items-center gap-1.5">
+                        <i class="fa-solid fa-check"></i> Guardar y Vincular al Servicio
+                    </button>
                 </div>
             </form>
         </div>
@@ -3253,7 +3324,7 @@
                         </div>
                     </div>
 
-                    <!-- Panel Informativo: Vista Previa de Datos de la Sucursal para la Nueva Orden y Certificado -->
+                    <!-- Panel Informativo: Vista Previa y Edición de Datos de la Sucursal o Matriz -->
                     <div id="srv-branch-info-card" class="bg-gradient-to-br from-slate-50 via-emerald-50/20 to-slate-50 dark:from-[#1a1a20] dark:via-emerald-950/10 dark:to-[#1a1a20] p-4 sm:p-5 rounded-2xl border-2 border-emerald-200/80 dark:border-emerald-800/60 shadow-sm space-y-3 transition-all duration-200">
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-emerald-100 dark:border-zinc-800 pb-2.5">
                             <div class="flex items-center gap-2">
@@ -3261,32 +3332,48 @@
                                     <i class="fa-solid fa-file-shield"></i>
                                 </div>
                                 <div>
-                                    <h4 class="font-extrabold text-slate-900 dark:text-zinc-100 text-xs sm:text-sm">
-                                        Información Vinculada para la Nueva Orden de Servicio y Certificado NOM-256
+                                    <h4 class="font-extrabold text-slate-900 dark:text-zinc-100 text-xs sm:text-sm flex items-center gap-2">
+                                        Información Vinculada para la Orden de Servicio y Certificado NOM-256
+                                        <span id="srv-branch-status-tag" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-200">Sucursal</span>
                                     </h4>
                                     <p class="text-[11px] text-slate-500 dark:text-zinc-400">
-                                        Datos fiscales, ubicación y contacto que se estamparán en el documento oficial.
+                                        Datos fiscales, ubicación y contacto que se estamparán en el documento oficial. Puedes editarlos directamente.
                                     </p>
                                 </div>
                             </div>
-                            <span class="inline-flex items-center gap-1.5 bg-emerald-100 dark:bg-emerald-950/80 text-emerald-900 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-700 px-2.5 py-1 rounded-full text-[10px] font-black w-fit">
-                                <i class="fa-solid fa-circle-check text-emerald-600 dark:text-emerald-400 text-[9px]"></i> Sucursal Seleccionada
-                            </span>
+                            <div class="flex items-center gap-2">
+                                <button type="button" id="btn-edit-current-entity" onclick="editCurrentServiceEntity()" class="inline-flex items-center gap-1.5 bg-white dark:bg-zinc-800 hover:bg-slate-100 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-200 border border-slate-300 dark:border-zinc-600 px-2.5 py-1.5 rounded-xl text-xs font-bold shadow-2xs transition cursor-pointer" title="Editar los datos de la sucursal o matriz">
+                                    <i class="fa-solid fa-pen-to-square text-emerald-600 dark:text-emerald-400"></i> Editar Datos
+                                </button>
+                                <button type="button" id="btn-create-branch-direct" onclick="quickCreateBranchForCurrentClient()" class="hidden inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1.5 rounded-xl text-xs font-bold shadow-2xs transition cursor-pointer" title="Crear y asignar una nueva sucursal">
+                                    <i class="fa-solid fa-plus"></i> Nueva Sucursal
+                                </button>
+                            </div>
                         </div>
 
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
                             <!-- Datos del Cliente Matriz -->
-                            <div class="bg-white dark:bg-zinc-800/80 p-3 rounded-xl border border-slate-200 dark:border-zinc-700 space-y-1">
-                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Empresa / Razón Social</span>
+                            <div class="bg-white dark:bg-zinc-800/80 p-3 rounded-xl border border-slate-200 dark:border-zinc-700 space-y-1 relative group">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Empresa / Razón Social</span>
+                                    <button type="button" onclick="editCurrentClientFromService()" class="text-slate-400 hover:text-emerald-600 text-[11px] p-0.5" title="Editar Razón Social / RFC">
+                                        <i class="fa-solid fa-pen"></i>
+                                    </button>
+                                </div>
                                 <p id="srv-info-client-name" class="font-extrabold text-slate-900 dark:text-zinc-100 text-xs truncate">Cargando...</p>
                                 <p class="text-[11px] text-slate-500 dark:text-zinc-400 font-mono">
                                     RFC: <span id="srv-info-client-rfc" class="font-bold text-amber-600 dark:text-amber-400">---</span>
                                 </p>
                             </div>
 
-                            <!-- Sucursal & Giro -->
-                            <div class="bg-white dark:bg-zinc-800/80 p-3 rounded-xl border border-slate-200 dark:border-zinc-700 space-y-1">
-                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Sucursal & Unidad</span>
+                            <!-- Sucursal & Giro / Unidad Matriz -->
+                            <div class="bg-white dark:bg-zinc-800/80 p-3 rounded-xl border border-slate-200 dark:border-zinc-700 space-y-1 relative group">
+                                <div class="flex items-center justify-between">
+                                    <span id="srv-info-branch-title-label" class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Sucursal & Unidad</span>
+                                    <button type="button" id="btn-quick-edit-branch-only" onclick="editCurrentServiceEntity()" class="text-slate-400 hover:text-emerald-600 text-[11px] p-0.5" title="Editar Sucursal">
+                                        <i class="fa-solid fa-pen"></i>
+                                    </button>
+                                </div>
                                 <p id="srv-info-branch-name" class="font-bold text-slate-900 dark:text-zinc-100 text-xs truncate">Cargando...</p>
                                 <div class="flex items-center gap-2 text-[11px] text-slate-500 dark:text-zinc-400">
                                     <span>Giro: <strong id="srv-info-branch-class" class="text-slate-700 dark:text-zinc-300">---</strong></span>
@@ -3305,14 +3392,19 @@
                         </div>
 
                         <!-- Domicilio Completo -->
-                        <div class="bg-white dark:bg-zinc-800/80 p-3 rounded-xl border border-slate-200 dark:border-zinc-700 flex items-start gap-2 text-xs">
-                            <i class="fa-solid fa-location-dot text-rose-500 mt-0.5 shrink-0"></i>
-                            <div class="min-w-0 flex-1">
-                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Domicilio del Servicio (Dirección física en Certificado Oficial)</span>
-                                <p id="srv-info-branch-address" class="text-slate-800 dark:text-zinc-200 font-medium text-xs leading-snug">
-                                    Selecciona una sucursal para ver la dirección física completa...
-                                </p>
+                        <div class="bg-white dark:bg-zinc-800/80 p-3 rounded-xl border border-slate-200 dark:border-zinc-700 flex items-start justify-between gap-3 text-xs">
+                            <div class="flex items-start gap-2 min-w-0 flex-1">
+                                <i class="fa-solid fa-location-dot text-rose-500 mt-0.5 shrink-0"></i>
+                                <div class="min-w-0 flex-1">
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Domicilio del Servicio (Dirección física en Certificado Oficial)</span>
+                                    <p id="srv-info-branch-address" class="text-slate-800 dark:text-zinc-200 font-medium text-xs leading-snug">
+                                        Selecciona una sucursal para ver la dirección física completa...
+                                    </p>
+                                </div>
                             </div>
+                            <button type="button" onclick="editCurrentServiceEntity()" class="shrink-0 text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1 self-center">
+                                <i class="fa-solid fa-pen"></i> Cambiar Dirección
+                            </button>
                         </div>
                     </div>
 
@@ -7158,11 +7250,14 @@
             const branch = cachedBranches.find(b => b.id === branchId);
             if (!branch) return;
             document.getElementById('edit-br-id').value = branch.id;
-            document.getElementById('edit-br-name').value = branch.name;
-            document.getElementById('edit-br-class').value = branch.classification;
-            document.getElementById('edit-br-addr').value = branch.address;
-            document.getElementById('edit-br-phone').value = branch.phone;
-            document.getElementById('edit-br-resp').value = branch.responsible_contact_name;
+            document.getElementById('edit-br-name').value = branch.name || '';
+            document.getElementById('edit-br-class').value = branch.classification || 'Comercial';
+            document.getElementById('edit-br-addr').value = branch.address || '';
+            document.getElementById('edit-br-phone').value = branch.phone || '';
+            if (document.getElementById('edit-br-code')) {
+                document.getElementById('edit-br-code').value = branch.unit_code || '';
+            }
+            document.getElementById('edit-br-resp').value = branch.responsible_contact_name || '';
             
             const selectClient = document.getElementById('edit-br-client-id');
             if (selectClient) {
@@ -7180,9 +7275,11 @@
         async function handleUpdateBranch(e) {
             e.preventDefault();
             const branchId = document.getElementById('edit-br-id').value;
+            const codeVal = document.getElementById('edit-br-code')?.value.trim();
             const payload = {
                 client_id: document.getElementById('edit-br-client-id') ? document.getElementById('edit-br-client-id').value : undefined,
                 name: document.getElementById('edit-br-name').value.trim(),
+                unit_code: codeVal ? codeVal.toUpperCase() : null,
                 classification: document.getElementById('edit-br-class').value,
                 address: document.getElementById('edit-br-addr').value.trim(),
                 phone: document.getElementById('edit-br-phone').value.trim(),
@@ -7198,9 +7295,16 @@
                 if (!res.ok) throw new Error((await res.json()).detail || 'Error al actualizar');
                 alert('¡Sucursal actualizada exitosamente!');
                 closeEditBranchModal();
-                loadClientsAndBranches();
-                loadDashboardData();
-                loadOrders();
+                await loadClientsAndBranches();
+                
+                // Si la sucursal editada es la que está seleccionada en el formulario de Nueva Orden, refrescar
+                const currentSrvBranch = document.getElementById('srv-branch-id')?.value;
+                if (currentSrvBranch === branchId) {
+                    onServiceBranchChanged();
+                }
+                
+                if (typeof loadDashboardData === 'function') loadDashboardData();
+                if (typeof loadOrders === 'function') loadOrders();
             } catch (err) {
                 alert('Error: ' + err.message);
             }
@@ -7623,12 +7727,14 @@
             const clientSelect = document.getElementById('srv-client-id');
             const branchSelect = document.getElementById('srv-branch-id');
             const countBadge = document.getElementById('srv-branch-count-badge');
+            const createBranchBtn = document.getElementById('btn-create-branch-direct');
             if (!clientSelect || !branchSelect) return;
 
             const selectedClientId = clientSelect.value;
             if (!selectedClientId) {
                 branchSelect.innerHTML = '<option value="">-- Selecciona un cliente primero --</option>';
                 if (countBadge) countBadge.innerText = '';
+                if (createBranchBtn) createBranchBtn.classList.add('hidden');
                 updateServiceBranchPreview(null, null);
                 return;
             }
@@ -7639,27 +7745,35 @@
                 return bClientId === selectedClientId;
             });
 
-            if (countBadge) {
-                countBadge.innerText = clientBranches.length > 0 
-                    ? `✓ ${clientBranches.length} sucursal(es) disponible(s)` 
-                    : `⚠️ Sin sucursales registradas`;
-                countBadge.className = clientBranches.length > 0
-                    ? 'text-[10px] text-emerald-600 dark:text-emerald-400 font-bold mt-1 truncate'
-                    : 'text-[10px] text-amber-600 dark:text-amber-400 font-bold mt-1 truncate';
-            }
-
             const clientObj = cachedClients.find(c => c.id === selectedClientId) || null;
 
+            if (countBadge) {
+                if (clientBranches.length > 0) {
+                    countBadge.innerText = `✓ ${clientBranches.length} sucursal(es) disponible(s)`;
+                    countBadge.className = 'text-[10px] text-emerald-600 dark:text-emerald-400 font-bold mt-1 truncate';
+                } else {
+                    countBadge.innerText = `ℹ️ Operando como Matriz Principal (0 sucursales secundarias)`;
+                    countBadge.className = 'text-[10px] text-amber-600 dark:text-amber-400 font-bold mt-1 truncate';
+                }
+            }
+
             if (!clientBranches.length) {
-                branchSelect.innerHTML = '<option value="">⚠️ Este cliente no tiene sucursales registradas aún</option>';
+                // Si no hay sucursales registradas, mostrar la Matriz como opción elegible
+                branchSelect.innerHTML = `
+                    <option value="CLIENT_ROOT:${selectedClientId}">🏢 Sede Matriz Principal (${clientObj ? clientObj.legal_name : 'Cliente'})</option>
+                `;
+                if (createBranchBtn) createBranchBtn.classList.remove('hidden');
                 updateServiceBranchPreview(null, clientObj);
                 return;
             }
 
+            if (createBranchBtn) createBranchBtn.classList.remove('hidden');
+
             branchSelect.innerHTML = clientBranches.map((b, idx) => {
                 const codeStr = b.unit_code ? ` [${b.unit_code}]` : '';
                 const mainLabel = idx === 0 ? ' (Principal)' : '';
-                return `<option value="${b.id}">${b.name}${mainLabel}${codeStr} - ${b.address.substring(0, 45)}...</option>`;
+                const addrSnippet = b.address ? ` - ${b.address.substring(0, 45)}...` : '';
+                return `<option value="${b.id}">${b.name}${mainLabel}${codeStr}${addrSnippet}</option>`;
             }).join('');
 
             if (presetBranchId && clientBranches.some(b => b.id === presetBranchId)) {
@@ -7676,26 +7790,37 @@
             const clientSelect = document.getElementById('srv-client-id');
             if (!branchSelect) return;
 
-            const selectedBranchId = branchSelect.value;
-            const branchObj = cachedBranches.find(b => b.id === selectedBranchId) || null;
-            const selectedClientId = clientSelect ? clientSelect.value : (branchObj ? branchObj.client_id : null);
-            const clientObj = cachedClients.find(c => c.id === selectedClientId) || (branchObj ? branchObj.client : null);
+            const selectedVal = branchSelect.value;
+            const selectedClientId = clientSelect ? clientSelect.value : null;
+            const clientObj = cachedClients.find(c => c.id === selectedClientId) || null;
 
-            updateServiceBranchPreview(branchObj, clientObj);
+            if (selectedVal && selectedVal.startsWith('CLIENT_ROOT:')) {
+                // Operando como Matriz Principal directa
+                updateServiceBranchPreview(null, clientObj);
+                return;
+            }
+
+            const branchObj = cachedBranches.find(b => b.id === selectedVal) || null;
+            const finalClient = clientObj || (branchObj ? cachedClients.find(c => c.id === (branchObj.client_id || (branchObj.client && branchObj.client.id))) : null);
+
+            updateServiceBranchPreview(branchObj, finalClient);
         }
 
         function updateServiceBranchPreview(branch, client) {
             const infoCard = document.getElementById('srv-branch-info-card');
             if (!infoCard) return;
 
+            const statusTag = document.getElementById('srv-branch-status-tag');
             const nameEl = document.getElementById('srv-info-client-name');
             const rfcEl = document.getElementById('srv-info-client-rfc');
+            const bTitleLabel = document.getElementById('srv-info-branch-title-label');
             const bNameEl = document.getElementById('srv-info-branch-name');
             const bClassEl = document.getElementById('srv-info-branch-class');
             const bCodePill = document.getElementById('srv-info-branch-code-pill');
             const bContactEl = document.getElementById('srv-info-branch-contact');
             const bPhoneEl = document.getElementById('srv-info-branch-phone');
             const bAddrEl = document.getElementById('srv-info-branch-address');
+            const editBtn = document.getElementById('btn-edit-current-entity');
 
             if (client) {
                 if (nameEl) nameEl.innerText = client.legal_name || 'Sin Razón Social';
@@ -7706,6 +7831,12 @@
             }
 
             if (branch) {
+                // Caso 1: Hay una sucursal seleccionada
+                if (statusTag) {
+                    statusTag.innerText = 'Sucursal Operativa';
+                    statusTag.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-200';
+                }
+                if (bTitleLabel) bTitleLabel.innerText = 'Sucursal & Unidad';
                 if (bNameEl) bNameEl.innerText = branch.name || 'Sucursal';
                 if (bClassEl) bClassEl.innerText = branch.classification || 'Comercial';
                 if (bCodePill) {
@@ -7715,15 +7846,145 @@
                 if (bContactEl) bContactEl.innerText = branch.responsible_contact_name || (client ? client.legal_name : 'No asignado');
                 if (bPhoneEl) bPhoneEl.innerText = branch.phone || 'Sin teléfono';
                 if (bAddrEl) bAddrEl.innerText = branch.address || 'Sin dirección registrada';
+                if (editBtn) {
+                    editBtn.innerHTML = '<i class="fa-solid fa-pen-to-square text-emerald-600 dark:text-emerald-400"></i> Editar Sucursal';
+                    editBtn.onclick = () => openEditBranchModal(branch.id);
+                }
+                infoCard.classList.remove('opacity-60');
+            } else if (client) {
+                // Caso 2: No existen sucursales aún, se muestra y opera con los datos de la Matriz Principal
+                if (statusTag) {
+                    statusTag.innerText = 'Sede Matriz Principal';
+                    statusTag.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 dark:bg-amber-950/80 dark:text-amber-200';
+                }
+                if (bTitleLabel) bTitleLabel.innerText = 'Sede / Unidad Matriz';
+                if (bNameEl) bNameEl.innerText = `Matriz Principal (${client.legal_name})`;
+                if (bClassEl) bClassEl.innerText = client.tax_regime || 'Comercial / Fiscal';
+                if (bCodePill) {
+                    bCodePill.innerText = 'Cód: MATRIZ';
+                    bCodePill.style.display = 'inline-block';
+                }
+                if (bContactEl) bContactEl.innerText = client.legal_name || 'Encargado Principal';
+                if (bPhoneEl) bPhoneEl.innerText = client.master_contract_number ? `Contrato: ${client.master_contract_number}` : 'Teléfono por asignar';
+                if (bAddrEl) bAddrEl.innerText = `🏢 Domicilio Matriz: Registrado bajo RFC ${client.rfc}. (Puedes registrar o especificar sucursal física con el botón "+ Nueva Sucursal").`;
+                if (editBtn) {
+                    editBtn.innerHTML = '<i class="fa-solid fa-pen-to-square text-amber-600 dark:text-amber-400"></i> Editar Cliente Matriz';
+                    editBtn.onclick = () => openEditClientModal(client.id);
+                }
                 infoCard.classList.remove('opacity-60');
             } else {
-                if (bNameEl) bNameEl.innerText = 'Sin sucursal seleccionada';
+                // Caso 3: Sin cliente ni sucursal
+                if (statusTag) {
+                    statusTag.innerText = 'Pendiente de Selección';
+                    statusTag.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 dark:bg-zinc-800 dark:text-zinc-300';
+                }
+                if (bNameEl) bNameEl.innerText = 'Sin sucursal o matriz seleccionada';
                 if (bClassEl) bClassEl.innerText = '---';
                 if (bCodePill) bCodePill.style.display = 'none';
                 if (bContactEl) bContactEl.innerText = '---';
                 if (bPhoneEl) bPhoneEl.innerText = '---';
-                if (bAddrEl) bAddrEl.innerText = client ? `⚠️ Este cliente "${client.legal_name}" no tiene sucursales registradas aún. Ve a Clientes & Sucursales para registrar una.` : 'Selecciona un cliente y sucursal para visualizar el domicilio.';
+                if (bAddrEl) bAddrEl.innerText = 'Selecciona un cliente matriz o sucursal para visualizar el domicilio físico oficial.';
+                if (editBtn) {
+                    editBtn.innerHTML = '<i class="fa-solid fa-pen-to-square"></i> Editar Datos';
+                    editBtn.onclick = () => alert('Por favor selecciona primero un cliente.');
+                }
                 infoCard.classList.add('opacity-60');
+            }
+        }
+
+        // Acciones interactivas directas desde la tarjeta del módulo de nueva orden
+        function editCurrentServiceEntity() {
+            const branchSelect = document.getElementById('srv-branch-id');
+            const clientSelect = document.getElementById('srv-client-id');
+            const branchVal = branchSelect ? branchSelect.value : null;
+            const clientVal = clientSelect ? clientSelect.value : null;
+
+            if (branchVal && !branchVal.startsWith('CLIENT_ROOT:')) {
+                openEditBranchModal(branchVal);
+            } else if (clientVal) {
+                openEditClientModal(clientVal);
+            } else {
+                alert('Selecciona un cliente primero para ver o editar sus datos.');
+            }
+        }
+
+        function editCurrentClientFromService() {
+            const clientSelect = document.getElementById('srv-client-id');
+            if (clientSelect && clientSelect.value) {
+                openEditClientModal(clientSelect.value);
+            } else {
+                alert('Selecciona un cliente matriz primero.');
+            }
+        }
+
+        function quickCreateBranchForCurrentClient() {
+            const clientSelect = document.getElementById('srv-client-id');
+            const clientId = clientSelect ? clientSelect.value : null;
+            if (!clientId) {
+                alert('Selecciona un Cliente Matriz primero para crearle una sucursal.');
+                return;
+            }
+
+            const clientObj = cachedClients.find(c => c.id === clientId);
+            document.getElementById('quick-br-client-id').value = clientId;
+            document.getElementById('quick-br-client-hint').innerText = clientObj ? `Cliente Matriz: ${clientObj.legal_name} (${clientObj.rfc})` : '';
+            document.getElementById('quick-br-name').value = 'Matriz Principal';
+            document.getElementById('quick-br-addr').value = '';
+            document.getElementById('quick-br-phone').value = '';
+            document.getElementById('quick-br-code').value = 'MAT-01';
+            document.getElementById('quick-br-resp').value = clientObj ? clientObj.legal_name : '';
+            document.getElementById('quick-br-email').value = '';
+
+            document.getElementById('modal-quick-create-branch').classList.remove('hidden');
+        }
+
+        function closeQuickCreateBranchModal() {
+            document.getElementById('modal-quick-create-branch').classList.add('hidden');
+        }
+
+        async function handleQuickCreateBranchSubmit(e) {
+            e.preventDefault();
+            const clientId = document.getElementById('quick-br-client-id').value;
+            const codeVal = document.getElementById('quick-br-code')?.value.trim();
+            const btn = document.getElementById('btn-quick-create-branch-submit');
+            
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Guardando...';
+
+            const payload = {
+                client_id: clientId,
+                name: document.getElementById('quick-br-name').value.trim(),
+                unit_code: codeVal ? codeVal.toUpperCase() : null,
+                classification: document.getElementById('quick-br-class').value,
+                address: document.getElementById('quick-br-addr').value.trim(),
+                phone: document.getElementById('quick-br-phone').value.trim(),
+                responsible_contact_name: document.getElementById('quick-br-resp').value.trim(),
+                responsible_contact_email: document.getElementById('quick-br-email').value.trim() || null
+            };
+
+            try {
+                const res = await fetch('/api/v1/branches', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.detail || 'Error al crear la sucursal');
+
+                alert(`¡Sucursal "${data.name}" registrada con éxito y vinculada a la nueva orden!`);
+                closeQuickCreateBranchModal();
+                
+                await loadClientsAndBranches();
+                
+                // Preseleccionar la nueva sucursal en el formulario de servicio
+                const clientSelect = document.getElementById('srv-client-id');
+                if (clientSelect) clientSelect.value = clientId;
+                onServiceClientChanged(data.id);
+            } catch (err) {
+                alert('Error: ' + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-check"></i> Guardar y Vincular al Servicio';
             }
         }
 
@@ -7775,12 +8036,44 @@
                 });
             });
 
-            const branchId = document.getElementById('srv-branch-id')?.value;
-            if (!branchId) {
+            let branchId = document.getElementById('srv-branch-id')?.value;
+            const clientId = document.getElementById('srv-client-id')?.value;
+
+            if (!branchId || !clientId) {
                 alert('Por favor selecciona un Cliente Matriz y una Sucursal válida para generar la orden y certificado.');
                 btn.disabled = false;
                 btn.innerHTML = '<i class="fa-solid fa-check"></i> Generar Orden y Certificado Oficial';
                 return;
+            }
+
+            // Si se seleccionó la Sede Matriz Principal sin sucursal previa, crear automáticamente la sucursal de Matriz
+            if (branchId.startsWith('CLIENT_ROOT:')) {
+                const clientObj = cachedClients.find(c => c.id === clientId);
+                try {
+                    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Registrando unidad Matriz...';
+                    const autoBrRes = await fetch('/api/v1/branches', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            client_id: clientId,
+                            name: `Matriz Principal (${clientObj ? clientObj.legal_name : 'Sede'})`,
+                            unit_code: "MAT-01",
+                            classification: "Comercial",
+                            address: `Domicilio Fiscal Matriz - RFC: ${clientObj ? clientObj.rfc : ''}`,
+                            phone: "Sin teléfono registrado",
+                            responsible_contact_name: clientObj ? clientObj.legal_name : "Responsable Matriz"
+                        })
+                    });
+                    const newBranchData = await autoBrRes.json();
+                    if (!autoBrRes.ok) throw new Error(newBranchData.detail || 'Error al auto-registrar la matriz');
+                    branchId = newBranchData.id;
+                    await loadClientsAndBranches();
+                } catch (autoErr) {
+                    alert('No se pudo vincular la sede matriz: ' + autoErr.message);
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fa-solid fa-check"></i> Generar Orden y Certificado Oficial';
+                    return;
+                }
             }
 
             const payload = {
