@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FUMIFLOSA - Panel SaaS de Control de Plagas (NOM-256 / COFEPRIS / STPS)</title>
+    <!-- Google Font Plus Jakarta Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Icons -->
@@ -14,10 +18,14 @@
         tailwind.config = {
             theme: {
                 extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'system-ui', '-apple-system', 'sans-serif'],
+                    },
                     colors: {
                         brand: {
                             50: '#f0fdf4',
                             100: '#dcfce7',
+                            200: '#bbf7d0',
                             500: '#22c55e',
                             600: '#16a34a',
                             700: '#15803d',
@@ -30,6 +38,25 @@
         }
     </script>
     <style>
+        /* Tipografía Moderna Global */
+        body {
+            font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+        }
+
+        /* Estilos de Menú Lateral (Mockup Imagen 1 & 2) */
+        .sidebar-nav-item {
+            transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .sidebar-nav-item.active {
+            background: #f0fdf4 !important;
+            color: #15803d !important;
+            font-weight: 800 !important;
+            box-shadow: 0 1px 3px rgba(22, 163, 74, 0.1) !important;
+            border-left: 3px solid #16a34a;
+        }
+        .sidebar-nav-item.active i {
+            color: #16a34a !important;
+        }
         /* Modos de Tamaño de Texto para Accesibilidad y Fácil Lectura */
         body.text-zoom-sm { font-size: 13px; }
         body.text-zoom-base { font-size: 14.5px; }
@@ -2066,97 +2093,382 @@
         </div>
     </div>
 
-    <!-- TOPBAR -->
-    <header class="bg-slate-900 text-white shadow-lg border-b border-slate-800 sticky top-0 z-40">
-        <div class="w-full max-w-[98%] 2xl:max-w-[1850px] mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-            <div class="flex items-center space-x-3">
-                <div class="bg-white/95 rounded-lg p-1 flex items-center justify-center shadow-md">
-                    <img src="/assets/logo_flosa.png" alt="FLOSA" class="h-9 w-auto object-contain" />
-                </div>
-                <div>
-                    <h1 id="topbar-trade-name" class="text-base font-bold tracking-tight text-white flex items-center gap-2">
-                        FLOSA FUMIGACIÓN <span class="text-[10px] bg-brand-700 text-brand-100 font-semibold px-2 py-0.5 rounded-full border border-brand-500">NOM-256-SSA1-2012</span>
-                    </h1>
-                    <p id="topbar-subtext" class="text-xs text-slate-400">Marco Antonio Flores Sáenz &bull; Lic. Sanitaria: 08 17 19 SA 0001</p>
-                </div>
-            </div>
+    <!-- ========================================================================= -->
+    <!-- WRAPPER GLOBAL SAAS CON MENÚ LATERAL Y TOPBAR (ESTILO MOCKUP IMÁGENES 1 & 2) -->
+    <!-- ========================================================================= -->
+    <div class="flex min-h-screen bg-[#f8fafc]">
+
+        <!-- OVERLAY MÓVIL PARA SIDEBAR -->
+        <div id="sidebar-backdrop" onclick="toggleMobileSidebar()" class="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-40 hidden md:hidden transition-opacity"></div>
+
+        <!-- ================================================================= -->
+        <!-- MENÚ LATERAL MODERNO (ESTILO MOCKUP IMÁGENES) -->
+        <!-- ================================================================= -->
+        <aside id="main-sidebar" class="fixed md:sticky top-0 left-0 h-screen w-72 bg-white border-r border-slate-200/80 z-40 flex flex-col justify-between transition-transform duration-300 -translate-x-full md:translate-x-0 shadow-xl md:shadow-none flex-shrink-0">
             
-            <div class="flex items-center space-x-2 sm:space-x-3">
-                <!-- BOTÓN DESTACADO EN GRANDE: GUÍA DE USO Y MANUAL DEL SISTEMA -->
-                <button type="button" onclick="openSystemUserGuideModal()" id="btn-topbar-guia" title="Abrir Guía y Manual de Uso Oficial del Sistema" class="flex items-center gap-2 bg-gradient-to-r from-amber-400 via-amber-500 to-yellow-500 hover:from-amber-300 hover:to-yellow-400 text-slate-950 font-black px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-xl text-xs sm:text-sm shadow-lg shadow-amber-500/30 border-2 border-amber-300 ring-2 ring-amber-400/50 hover:ring-amber-300 transform active:scale-95 transition-all duration-150 cursor-pointer">
-                    <i class="fa-solid fa-book-open-reader text-slate-950 text-sm sm:text-base animate-pulse"></i>
-                    <span class="tracking-wider uppercase font-black">GUÍA DE USO</span>
-                    <span class="hidden lg:inline-block bg-slate-950 text-amber-300 text-[10px] px-2 py-0.5 rounded font-extrabold tracking-wide uppercase shadow-inner">MANUAL</span>
+            <!-- HEADER DEL SIDEBAR: LOGO FLOSA & CUMPLIMIENTO -->
+            <div class="p-5 border-b border-slate-100 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-11 h-11 bg-white rounded-2xl flex items-center justify-center p-1.5 shadow-md shadow-brand-500/10 border border-slate-100">
+                        <img src="/assets/logo_flosa.png" alt="FLOSA" class="h-8 w-auto object-contain" />
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-1.5">
+                            <h2 class="text-base font-black tracking-tight text-slate-900">FLOSA</h2>
+                            <span class="text-[9px] font-bold bg-brand-100 text-brand-800 px-1.5 py-0.5 rounded-full border border-brand-300">NOM-256</span>
+                        </div>
+                        <p class="text-[11px] text-slate-400 font-medium">Control Integral de Plagas</p>
+                    </div>
+                </div>
+                <!-- Botón Cerrar en móvil -->
+                <button type="button" onclick="toggleMobileSidebar()" class="md:hidden text-slate-400 hover:text-slate-600 p-1.5">
+                    <i class="fa-solid fa-xmark text-lg"></i>
                 </button>
+            </div>
 
-                <!-- Control de Tamaño de Letra / Accesibilidad Visual -->
-                <div class="hidden sm:flex items-center bg-slate-800/90 border border-slate-700 rounded-lg p-1 gap-1 text-xs">
-                    <span class="text-slate-400 text-[11px] px-1 font-bold flex items-center gap-1" title="Ajuste de Tamaño de Texto para Lectura Cómoda">
-                        <i class="fa-solid fa-text-height text-emerald-400"></i> <span class="hidden xl:inline">Texto:</span>
-                    </span>
-                    <button type="button" onclick="setTextZoom('sm')" id="btn-zoom-sm" title="Texto Compacto" class="btn-zoom-option px-2 py-0.5 rounded text-[11px] font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700 transition">A-</button>
-                    <button type="button" onclick="setTextZoom('base')" id="btn-zoom-base" title="Texto Normal" class="btn-zoom-option px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-600 text-white border border-emerald-500 hover:bg-emerald-700 transition">A</button>
-                    <button type="button" onclick="setTextZoom('lg')" id="btn-zoom-lg" title="Texto Grande" class="btn-zoom-option px-2 py-0.5 rounded text-[11px] font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700 transition">A+</button>
-                    <button type="button" onclick="setTextZoom('xl')" id="btn-zoom-xl" title="Texto Extra Grande (Fácil Lectura)" class="btn-zoom-option px-2 py-0.5 rounded text-[11px] font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700 transition">A++</button>
+            <!-- NAVEGACIÓN PRINCIPAL (CATEGORIZADA COMO EN IMAGEN 1 & 2) -->
+            <div class="flex-1 overflow-y-auto px-4 py-4 space-y-5 text-xs">
+                
+                <!-- SECCIÓN 1: INICIO & RESUMEN -->
+                <div>
+                    <p class="px-3 text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-2">Inicio & Resumen</p>
+                    <div class="space-y-1">
+                        <button type="button" onclick="switchTab('tab-cronologico')" id="side-tab-cronologico" class="sidebar-nav-item active w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-slate-600 hover:bg-slate-50 hover:text-slate-900 group">
+                            <div class="flex items-center gap-3">
+                                <i class="fa-solid fa-calendar-days text-indigo-500 text-sm group-hover:scale-110 transition-transform"></i>
+                                <span class="font-semibold">Calendario & Citas</span>
+                            </div>
+                            <span class="text-[10px] font-bold bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full">Agenda</span>
+                        </button>
+
+                        <button type="button" onclick="switchTab('tab-vencimientos')" id="side-tab-vencimientos" class="sidebar-nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-slate-600 hover:bg-slate-50 hover:text-slate-900 group">
+                            <div class="flex items-center gap-3">
+                                <i class="fa-solid fa-clock text-rose-500 text-sm group-hover:scale-110 transition-transform"></i>
+                                <span class="font-semibold">Vencimientos (30d)</span>
+                            </div>
+                            <span class="text-[10px] font-bold bg-rose-50 text-rose-600 px-2 py-0.5 rounded-full">Alerta</span>
+                        </button>
+
+                        <button type="button" onclick="switchTab('tab-analytics')" id="side-tab-analytics" class="sidebar-nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-slate-600 hover:bg-slate-50 hover:text-slate-900 group">
+                            <div class="flex items-center gap-3">
+                                <i class="fa-solid fa-chart-pie text-cyan-500 text-sm group-hover:scale-110 transition-transform"></i>
+                                <span class="font-semibold">Métricas & Analytics</span>
+                            </div>
+                        </button>
+                    </div>
                 </div>
 
-                <a href="/docs" target="_blank" class="hidden md:flex text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-md border border-slate-700 items-center gap-1.5 transition">
-                    <i class="fa-solid fa-code"></i> API Swagger
-                </a>
-                <span id="top-fiel-status-badge" class="hidden sm:inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-800 text-slate-300 border border-slate-700">
-                    <span class="w-2 h-2 mr-1.5 bg-amber-400 rounded-full"></span> FIEL SAT
-                </span>
+                <!-- SECCIÓN 2: OPERACIÓN EN CAMPO (NOM-256) -->
+                <div>
+                    <p class="px-3 text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-2">Operación NOM-256</p>
+                    <div class="space-y-1">
+                        <button type="button" onclick="switchTab('tab-nuevo-servicio')" id="side-tab-nuevo-servicio" class="sidebar-nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-slate-600 hover:bg-slate-50 hover:text-slate-900 group">
+                            <div class="flex items-center gap-3">
+                                <i class="fa-solid fa-file-circle-plus text-brand-600 text-sm group-hover:scale-110 transition-transform"></i>
+                                <span class="font-semibold">Registrar Servicio</span>
+                            </div>
+                            <span class="text-[10px] font-bold bg-emerald-50 text-emerald-700 px-1.5 py-0.5 rounded-full">+ Nuevo</span>
+                        </button>
 
-                <!-- Super Usuario Logged In Badge -->
-                <div id="topbar-user-badge" class="flex items-center gap-2 bg-slate-800/90 text-slate-200 border border-slate-700 px-3 py-1.5 rounded-lg text-xs">
-                    <div class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></div>
-                    <i class="fa-solid fa-user-shield text-emerald-400"></i>
-                    <div class="text-left leading-tight hidden sm:block">
-                        <p id="topbar-username" class="font-bold text-white font-mono text-[11px]">FOSM630329EA5</p>
-                        <p id="topbar-role" class="text-[9px] text-emerald-400 uppercase font-bold tracking-wide">SuperAdmin Master</p>
+                        <button type="button" onclick="switchTab('tab-ordenes')" id="side-tab-ordenes" class="sidebar-nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-slate-600 hover:bg-slate-50 hover:text-slate-900 group">
+                            <div class="flex items-center gap-3">
+                                <i class="fa-solid fa-file-signature text-blue-500 text-sm group-hover:scale-110 transition-transform"></i>
+                                <span class="font-semibold">Órdenes & PDF</span>
+                            </div>
+                        </button>
+
+                        <button type="button" onclick="switchTab('tab-masivo')" id="side-tab-masivo" class="sidebar-nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-slate-600 hover:bg-slate-50 hover:text-slate-900 group">
+                            <div class="flex items-center gap-3">
+                                <i class="fa-solid fa-layer-group text-purple-500 text-sm group-hover:scale-110 transition-transform"></i>
+                                <span class="font-semibold">Emisión Mensual B2B</span>
+                            </div>
+                        </button>
+
+                        <button type="button" onclick="switchTab('tab-bitacoras')" id="side-tab-bitacoras" class="sidebar-nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-slate-600 hover:bg-slate-50 hover:text-slate-900 group">
+                            <div class="flex items-center gap-3">
+                                <i class="fa-solid fa-clipboard-list text-amber-500 text-sm group-hover:scale-110 transition-transform"></i>
+                                <span class="font-semibold">Bitácoras Oficiales MIP</span>
+                            </div>
+                        </button>
                     </div>
-                    <button onclick="logoutMasterUser()" title="Cerrar Sesión" class="ml-1.5 bg-rose-950/80 hover:bg-rose-900 text-rose-300 border border-rose-800/80 px-2 py-1 rounded text-[11px] font-bold transition flex items-center gap-1">
-                        <i class="fa-solid fa-right-from-bracket"></i> <span class="hidden md:inline">Salir</span>
+                </div>
+
+                <!-- SECCIÓN 3: CATÁLOGOS & MIP -->
+                <div>
+                    <p class="px-3 text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-2">Catálogos & MIP</p>
+                    <div class="space-y-1">
+                        <button type="button" onclick="switchTab('tab-clientes')" id="side-tab-clientes" class="sidebar-nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-slate-600 hover:bg-slate-50 hover:text-slate-900 group">
+                            <div class="flex items-center gap-3">
+                                <i class="fa-solid fa-building text-blue-600 text-sm group-hover:scale-110 transition-transform"></i>
+                                <span class="font-semibold">Clientes & Sucursales</span>
+                            </div>
+                        </button>
+
+                        <button type="button" onclick="switchTab('tab-quimicos')" id="side-tab-quimicos" class="sidebar-nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-slate-600 hover:bg-slate-50 hover:text-slate-900 group">
+                            <div class="flex items-center gap-3">
+                                <i class="fa-solid fa-flask-vial text-teal-500 text-sm group-hover:scale-110 transition-transform"></i>
+                                <span class="font-semibold">Químicos COFEPRIS</span>
+                            </div>
+                            <span class="text-[10px] font-bold bg-teal-50 text-teal-700 px-1.5 py-0.5 rounded-full">HDS</span>
+                        </button>
+
+                        <button type="button" onclick="switchTab('tab-mip')" id="side-tab-mip" class="sidebar-nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-slate-600 hover:bg-slate-50 hover:text-slate-900 group">
+                            <div class="flex items-center gap-3">
+                                <i class="fa-solid fa-bug text-purple-600 text-sm group-hover:scale-110 transition-transform"></i>
+                                <span class="font-semibold">Manual MIP & Plagas IA</span>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- SECCIÓN 4: ADMINISTRACIÓN & SISTEMA -->
+                <div>
+                    <p class="px-3 text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-2">Administración</p>
+                    <div class="space-y-1">
+                        <button type="button" onclick="switchTab('tab-usuarios')" id="side-tab-usuarios" class="sidebar-nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-slate-600 hover:bg-slate-50 hover:text-slate-900 group">
+                            <div class="flex items-center gap-3">
+                                <i class="fa-solid fa-users-gear text-orange-500 text-sm group-hover:scale-110 transition-transform"></i>
+                                <span class="font-semibold">Técnicos STPS DC-3</span>
+                            </div>
+                        </button>
+
+                        <button type="button" onclick="switchTab('tab-empresa')" id="side-tab-empresa" class="sidebar-nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-slate-600 hover:bg-slate-50 hover:text-slate-900 group">
+                            <div class="flex items-center gap-3">
+                                <i class="fa-solid fa-stamp text-amber-600 text-sm group-hover:scale-110 transition-transform"></i>
+                                <span class="font-semibold">Empresa & FIEL SAT</span>
+                            </div>
+                        </button>
+
+                        <button type="button" onclick="switchTab('tab-importacion')" id="side-tab-importacion" class="sidebar-nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-slate-600 hover:bg-slate-50 hover:text-slate-900 group">
+                            <div class="flex items-center gap-3">
+                                <i class="fa-solid fa-file-csv text-emerald-600 text-sm group-hover:scale-110 transition-transform"></i>
+                                <span class="font-semibold">Ingesta CSV</span>
+                            </div>
+                        </button>
+
+                        <button type="button" onclick="switchTab('tab-respaldos')" id="side-tab-respaldos" class="sidebar-nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-slate-600 hover:bg-slate-50 hover:text-slate-900 group">
+                            <div class="flex items-center gap-3">
+                                <i class="fa-solid fa-cloud-arrow-down text-cyan-600 text-sm group-hover:scale-110 transition-transform"></i>
+                                <span class="font-semibold">Respaldos & Nube</span>
+                            </div>
+                        </button>
+
+                        <button type="button" onclick="switchTab('tab-auditoria')" id="side-tab-auditoria" class="sidebar-nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-slate-600 hover:bg-slate-50 hover:text-slate-900 group">
+                            <div class="flex items-center gap-3">
+                                <i class="fa-solid fa-shield-halved text-rose-600 text-sm group-hover:scale-110 transition-transform"></i>
+                                <span class="font-semibold">Auditoría & Log Master</span>
+                            </div>
+                            <span class="text-[10px] font-bold bg-rose-50 text-rose-700 px-1.5 py-0.5 rounded-full">Audit</span>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- FOOTER DEL SIDEBAR: TARJETA DE PERFIL (ESTILO IMAGEN 1) -->
+            <div class="p-4 border-t border-slate-100 bg-slate-50/70">
+                <div class="flex items-center justify-between gap-3">
+                    <div class="flex items-center gap-2.5 min-w-0">
+                        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-brand-600 to-emerald-400 text-white font-bold flex items-center justify-center text-sm shadow-sm flex-shrink-0">
+                            M
+                        </div>
+                        <div class="min-w-0">
+                            <p id="sidebar-user-name" class="text-xs font-bold text-slate-900 truncate">Marco Antonio Flores</p>
+                            <p id="sidebar-user-role" class="text-[10px] text-brand-700 font-extrabold uppercase truncate">SuperAdmin Master</p>
+                        </div>
+                    </div>
+                    <button type="button" onclick="logoutMasterUser()" title="Cerrar Sesión" class="text-slate-400 hover:text-rose-600 hover:bg-rose-50 p-2 rounded-xl transition flex-shrink-0">
+                        <i class="fa-solid fa-right-from-bracket"></i>
                     </button>
                 </div>
             </div>
-        </div>
-    </header>
 
-    <!-- CONTENEDOR PRINCIPAL -->
-    <main class="flex-1 w-full max-w-[98%] 2xl:max-w-[1850px] mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+        </aside>
 
-        <!-- RESUMEN DE INDICADORES / METRICS HEADLINES -->
-        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-                <p class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Clientes Matriz</p>
-                <p id="stat-clients" class="text-xl font-bold text-slate-900 mt-1">0</p>
-            </div>
-            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-                <p class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Sucursales</p>
-                <p id="stat-branches" class="text-xl font-bold text-indigo-600 mt-1">0</p>
-            </div>
-            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-                <p class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Técnicos STPS</p>
-                <p id="stat-technicians" class="text-xl font-bold text-blue-600 mt-1">0</p>
-            </div>
-            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-                <p class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Total Servicios</p>
-                <p id="stat-total-orders" class="text-xl font-bold text-teal-600 mt-1">0</p>
-            </div>
-            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-                <p class="text-[11px] font-semibold text-rose-600 uppercase tracking-wider">Vencen en ≤7 Días</p>
-                <p id="stat-exp-7" class="text-xl font-bold text-rose-600 mt-1">0</p>
-            </div>
-            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-                <p class="text-[11px] font-semibold text-amber-600 uppercase tracking-wider">Vencen en ≤30 Días</p>
-                <p id="stat-exp-30" class="text-xl font-bold text-amber-600 mt-1">0</p>
-            </div>
-        </div>
+        <!-- ================================================================= -->
+        <!-- WRAPPER DE CONTENIDO DERECHO -->
+        <!-- ================================================================= -->
+        <div class="flex-1 min-w-0 flex flex-col">
+            
+            <!-- TOPBAR MODERNA (ESTILO IMAGEN 1 & 2) -->
+            <header class="bg-white/90 backdrop-blur-md sticky top-0 z-30 border-b border-slate-200/80 px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between gap-4">
+                
+                <!-- Lado Izquierdo: Botón Menú Móvil + Título Dinámico / Breadcrumb -->
+                <div class="flex items-center gap-3">
+                    <button type="button" onclick="toggleMobileSidebar()" class="md:hidden text-slate-600 hover:text-slate-900 p-2 rounded-xl border border-slate-200 hover:bg-slate-100 transition">
+                        <i class="fa-solid fa-bars text-base"></i>
+                    </button>
+                    <div>
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <h1 id="topbar-page-title" class="text-base sm:text-lg font-black text-slate-900 tracking-tight">
+                                Calendario Cronológico & Citas
+                            </h1>
+                            <span id="topbar-page-badge" class="hidden sm:inline-block text-[10px] bg-brand-50 text-brand-700 font-bold px-2 py-0.5 rounded-full border border-brand-200">
+                                NOM-256-SSA1-2012
+                            </span>
+                        </div>
+                        <p class="text-[11px] text-slate-400 hidden sm:block">Marco Antonio Flores Sáenz &bull; Lic. Sanitaria: 08 17 19 SA 0001</p>
+                    </div>
+                </div>
 
-        <!-- TABS DE NAVEGACIÓN COMPLETA -->
-        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-            <div class="border-b border-slate-200 bg-slate-50/70 px-4 overflow-x-auto">
+                <!-- Centro: Buscador Pill Search Anything Here (Estilo Imagen 1 & 2) -->
+                <div class="hidden xl:flex flex-1 max-w-md mx-4">
+                    <div class="relative w-full">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                        <input type="text" id="global-dashboard-search" oninput="handleGlobalSearch(this.value)" placeholder="Search anything here... (Clientes, folio, químicos, plagas)" class="w-full pl-9 pr-4 py-2 bg-slate-100/80 hover:bg-slate-100 focus:bg-white text-xs rounded-full border border-slate-200 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition shadow-inner font-medium" />
+                    </div>
+                </div>
+
+                <!-- Lado Derecho: GUÍA DE USO EN GRANDE + Accesibilidad + Badges -->
+                <div class="flex items-center space-x-2 sm:space-x-3">
+                    <!-- BOTÓN DESTACADO EN GRANDE: GUÍA DE USO Y MANUAL DEL SISTEMA -->
+                    <button type="button" onclick="openSystemUserGuideModal()" id="btn-topbar-guia" title="Abrir Guía y Manual de Uso Oficial del Sistema" class="flex items-center gap-2 bg-gradient-to-r from-amber-400 via-amber-500 to-yellow-500 hover:from-amber-300 hover:to-yellow-400 text-slate-950 font-black px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-xl text-xs sm:text-sm shadow-md shadow-amber-500/25 border-2 border-amber-300 ring-2 ring-amber-400/40 hover:ring-amber-300 transform active:scale-95 transition-all duration-150 cursor-pointer">
+                        <i class="fa-solid fa-book-open-reader text-slate-950 text-sm sm:text-base animate-pulse"></i>
+                        <span class="tracking-wider uppercase font-black">GUÍA DE USO</span>
+                        <span class="hidden lg:inline-block bg-slate-950 text-amber-300 text-[10px] px-2 py-0.5 rounded font-extrabold tracking-wide uppercase shadow-inner">MANUAL</span>
+                    </button>
+
+                    <!-- Control de Tamaño de Letra / Accesibilidad Visual -->
+                    <div class="hidden lg:flex items-center bg-slate-100 border border-slate-200 rounded-xl p-1 gap-1 text-xs">
+                        <span class="text-slate-500 text-[11px] px-1 font-bold flex items-center gap-1">
+                            <i class="fa-solid fa-text-height text-brand-600"></i>
+                        </span>
+                        <button type="button" onclick="setTextZoom('sm')" id="btn-zoom-sm" title="Texto Compacto" class="btn-zoom-option px-2 py-0.5 rounded-lg text-[11px] font-bold bg-white text-slate-700 hover:bg-slate-200 border border-slate-200 transition">A-</button>
+                        <button type="button" onclick="setTextZoom('base')" id="btn-zoom-base" title="Texto Normal" class="btn-zoom-option px-2 py-0.5 rounded-lg text-[11px] font-bold bg-brand-600 text-white border border-brand-500 hover:bg-brand-700 transition">A</button>
+                        <button type="button" onclick="setTextZoom('lg')" id="btn-zoom-lg" title="Texto Grande" class="btn-zoom-option px-2 py-0.5 rounded-lg text-[11px] font-bold bg-white text-slate-700 hover:bg-slate-200 border border-slate-200 transition">A+</button>
+                        <button type="button" onclick="setTextZoom('xl')" id="btn-zoom-xl" title="Texto Extra Grande (Fácil Lectura)" class="btn-zoom-option px-2 py-0.5 rounded-lg text-[11px] font-bold bg-white text-slate-700 hover:bg-slate-200 border border-slate-200 transition">A++</button>
+                    </div>
+
+                    <a href="/docs" target="_blank" class="hidden sm:flex text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-xl border border-slate-200 items-center gap-1.5 font-semibold transition">
+                        <i class="fa-solid fa-code text-brand-600"></i> API
+                    </a>
+                    <span id="top-fiel-status-badge" class="hidden sm:inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200">
+                        <span class="w-2 h-2 mr-1.5 bg-amber-500 rounded-full"></span> FIEL SAT
+                    </span>
+                </div>
+            </header>
+
+            <!-- CONTENEDOR PRINCIPAL CON SCROLL SUAVE -->
+            <main class="flex-1 w-full max-w-[99%] 2xl:max-w-[1920px] mx-auto px-3 sm:px-6 py-6 space-y-6">
+
+                <!-- ========================================================= -->
+                <!-- TARJETAS DE MÉTRICAS KPI (ESTILO MOCKUP IMAGEN 1) -->
+                <!-- ========================================================= -->
+                <div id="top-metrics-row" class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3.5">
+                    
+                    <!-- Tarjeta 1: Clientes Matriz -->
+                    <div class="bg-white p-4 rounded-3xl border border-slate-200/80 shadow-xs flex items-center justify-between gap-2 hover:shadow-md transition-shadow">
+                        <div class="space-y-1">
+                            <div class="flex items-center gap-1.5">
+                                <span class="text-xl font-black text-slate-900" id="stat-clients">0</span>
+                                <span class="text-[9px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200 px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
+                                    <i class="fa-solid fa-arrow-trend-up text-[8px]"></i> +100%
+                                </span>
+                            </div>
+                            <p class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Clientes Matriz</p>
+                        </div>
+                        <div class="w-12 h-9 flex items-center justify-center">
+                            <svg class="w-12 h-7 text-indigo-500" viewBox="0 0 100 40" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round">
+                                <path d="M5 30 Q 25 5, 45 25 T 85 10 T 95 20" />
+                            </svg>
+                        </div>
+                    </div>
+
+                    <!-- Tarjeta 2: Sucursales Activas -->
+                    <div class="bg-white p-4 rounded-3xl border border-slate-200/80 shadow-xs flex items-center justify-between gap-2 hover:shadow-md transition-shadow">
+                        <div class="space-y-1">
+                            <div class="flex items-center gap-1.5">
+                                <span class="text-xl font-black text-indigo-600" id="stat-branches">0</span>
+                                <span class="text-[9px] font-extrabold bg-indigo-50 text-indigo-700 border border-indigo-200 px-1.5 py-0.5 rounded-full">
+                                    B2B
+                                </span>
+                            </div>
+                            <p class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Sucursales</p>
+                        </div>
+                        <div class="w-12 h-9 flex items-center justify-center">
+                            <svg class="w-12 h-7 text-emerald-500" viewBox="0 0 100 40" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round">
+                                <path d="M5 35 Q 30 10, 50 30 T 80 15 T 95 8" />
+                            </svg>
+                        </div>
+                    </div>
+
+                    <!-- Tarjeta 3: Técnicos STPS -->
+                    <div class="bg-white p-4 rounded-3xl border border-slate-200/80 shadow-xs flex items-center justify-between gap-2 hover:shadow-md transition-shadow">
+                        <div class="space-y-1">
+                            <div class="flex items-center gap-1.5">
+                                <span class="text-xl font-black text-blue-600" id="stat-technicians">0</span>
+                                <span class="text-[9px] font-extrabold bg-blue-50 text-blue-700 border border-blue-200 px-1.5 py-0.5 rounded-full">
+                                    DC-3
+                                </span>
+                            </div>
+                            <p class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Técnicos STPS</p>
+                        </div>
+                        <div class="w-12 h-9 flex items-center justify-center">
+                            <svg class="w-12 h-7 text-blue-500" viewBox="0 0 100 40" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round">
+                                <path d="M5 25 Q 35 35, 55 15 T 80 25 T 95 10" />
+                            </svg>
+                        </div>
+                    </div>
+
+                    <!-- Tarjeta 4: Servicios Totales -->
+                    <div class="bg-white p-4 rounded-3xl border border-slate-200/80 shadow-xs flex items-center justify-between gap-2 hover:shadow-md transition-shadow">
+                        <div class="space-y-1">
+                            <div class="flex items-center gap-1.5">
+                                <span class="text-xl font-black text-teal-600" id="stat-total-orders">0</span>
+                                <span class="text-[9px] font-extrabold bg-teal-50 text-teal-700 border border-teal-200 px-1.5 py-0.5 rounded-full">
+                                    NOM-256
+                                </span>
+                            </div>
+                            <p class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Total Servicios</p>
+                        </div>
+                        <div class="w-12 h-9 flex items-center justify-center">
+                            <svg class="w-12 h-7 text-teal-500" viewBox="0 0 100 40" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round">
+                                <path d="M5 20 Q 25 35, 55 10 T 80 20 T 95 5" />
+                            </svg>
+                        </div>
+                    </div>
+
+                    <!-- Tarjeta 5: Vencen en <= 7 Días -->
+                    <div class="bg-white p-4 rounded-3xl border border-slate-200/80 shadow-xs flex items-center justify-between gap-2 hover:shadow-md transition-shadow">
+                        <div class="space-y-1">
+                            <div class="flex items-center gap-1.5">
+                                <span class="text-xl font-black text-rose-600" id="stat-exp-7">0</span>
+                                <span class="text-[9px] font-extrabold bg-rose-50 text-rose-700 border border-rose-200 px-1.5 py-0.5 rounded-full">
+                                    ≤ 7d
+                                </span>
+                            </div>
+                            <p class="text-[11px] font-bold text-rose-600 uppercase tracking-wider">Urgente Re-MIP</p>
+                        </div>
+                        <div class="w-12 h-9 flex items-center justify-center">
+                            <svg class="w-12 h-7 text-rose-500" viewBox="0 0 100 40" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round">
+                                <path d="M5 10 Q 30 30, 50 15 T 80 35 T 95 25" />
+                            </svg>
+                        </div>
+                    </div>
+
+                    <!-- Tarjeta 6: Vencen en <= 30 Días -->
+                    <div class="bg-white p-4 rounded-3xl border border-slate-200/80 shadow-xs flex items-center justify-between gap-2 hover:shadow-md transition-shadow">
+                        <div class="space-y-1">
+                            <div class="flex items-center gap-1.5">
+                                <span class="text-xl font-black text-amber-600" id="stat-exp-30">0</span>
+                                <span class="text-[9px] font-extrabold bg-amber-50 text-amber-700 border border-amber-200 px-1.5 py-0.5 rounded-full">
+                                    ≤ 30d
+                                </span>
+                            </div>
+                            <p class="text-[11px] font-bold text-amber-600 uppercase tracking-wider">Por Renovar</p>
+                        </div>
+                        <div class="w-12 h-9 flex items-center justify-center">
+                            <svg class="w-12 h-7 text-amber-500" viewBox="0 0 100 40" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round">
+                                <path d="M5 25 Q 35 15, 60 30 T 85 10 T 95 20" />
+                            </svg>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- CONTENEDOR DE PESTAÑAS Y VISTAS -->
+                <div class="bg-white rounded-3xl shadow-xs border border-slate-200/80 overflow-hidden">
+                    <div class="border-b border-slate-200 bg-slate-50/70 px-4 overflow-x-auto">
                 <nav class="flex space-x-2 sm:space-x-3 min-w-max">
                     <button onclick="switchTab('tab-cronologico')" id="btn-tab-cronologico" class="tab-btn py-3.5 px-3 border-b-2 border-brand-600 font-bold text-xs text-brand-700 flex items-center gap-1.5">
                         <i class="fa-solid fa-calendar-days text-indigo-600"></i> Calendario Cronológico & Citas
@@ -2209,67 +2521,21 @@
             <!-- ============================================================= -->
             <!-- 1. PESTAÑA: CALENDARIO CRONOLÓGICO DE SERVICIOS Y CITAS -->
             <!-- ============================================================= -->
-            <div id="tab-cronologico" class="p-6 space-y-6">
+            <div id="tab-cronologico" class="p-4 sm:p-6 space-y-5">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                     <div>
-                        <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                        <h2 class="text-base font-black text-slate-900 tracking-tight flex items-center gap-2">
                             <i class="fa-solid fa-calendar-days text-indigo-600"></i> Calendario Cronológico de Servicios
                         </h2>
-                        <p class="text-xs text-slate-500">Historial temporal de aplicaciones, estados operativos y agendamiento de próximos servicios ligados a órdenes.</p>
+                        <p class="text-xs text-slate-500">Historial operativo de aplicaciones, estado de certificados y agendamiento de visitas técnicas.</p>
                     </div>
                     <div class="flex items-center gap-2">
                         <button onclick="openScheduleModal()" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-3.5 py-2 rounded-xl flex items-center gap-1.5 shadow-sm transition">
                             <i class="fa-solid fa-plus"></i> Agendar Próximo Servicio
                         </button>
-                        <button onclick="loadChronologicalCalendar()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs px-3 py-2 rounded-xl font-semibold flex items-center gap-1.5">
+                        <button onclick="loadChronologicalCalendar()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs px-3 py-2 rounded-xl font-semibold flex items-center gap-1.5 transition">
                             <i class="fa-solid fa-rotate"></i> Actualizar
                         </button>
-                    </div>
-                </div>
-
-                <!-- Barra de Navegación del Calendario -->
-                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
-                    <div class="flex flex-wrap items-center gap-2">
-                        <button onclick="navCalendarMonth(-1)" class="w-8 h-8 rounded-lg border border-slate-200 hover:bg-slate-100 flex items-center justify-center text-slate-600"><i class="fa-solid fa-chevron-left text-xs"></i></button>
-                        <button onclick="navCalendarToday()" class="px-2.5 py-1 text-xs font-bold border border-slate-200 rounded-lg hover:bg-slate-100 text-slate-700">Hoy</button>
-                        <button onclick="navCalendarMonth(1)" class="w-8 h-8 rounded-lg border border-slate-200 hover:bg-slate-100 flex items-center justify-center text-slate-600"><i class="fa-solid fa-chevron-right text-xs"></i></button>
-                        
-                        <!-- Selectores de Mes y Año para Navegación Inmediata -->
-                        <select id="cal-month-select" onchange="onCalendarSelectChange()" class="border border-slate-300 rounded-lg px-2 py-1 text-xs font-bold text-slate-800 bg-white">
-                            <option value="0">Enero</option>
-                            <option value="1">Febrero</option>
-                            <option value="2">Marzo</option>
-                            <option value="3">Abril</option>
-                            <option value="4">Mayo</option>
-                            <option value="5">Junio</option>
-                            <option value="6">Julio</option>
-                            <option value="7">Agosto</option>
-                            <option value="8">Septiembre</option>
-                            <option value="9">Octubre</option>
-                            <option value="10">Noviembre</option>
-                            <option value="11">Diciembre</option>
-                        </select>
-                        <select id="cal-year-select" onchange="onCalendarSelectChange()" class="border border-slate-300 rounded-lg px-2 py-1 text-xs font-bold text-slate-800 bg-white">
-                            <!-- Opciones de 2020 a 2030 -->
-                        </select>
-                        <button onclick="jumpToLatestService()" title="Navegar al mes con los servicios más recientes registrados" class="px-2.5 py-1 text-xs font-bold border border-indigo-200 bg-indigo-50 text-indigo-700 rounded-lg hover:bg-indigo-100 flex items-center gap-1 transition">
-                            <i class="fa-solid fa-crosshairs text-indigo-600"></i> Último Servicio
-                        </button>
-                        <span id="calendar-month-title" class="text-sm font-extrabold text-slate-800 ml-2 hidden lg:inline">Septiembre 2026</span>
-                    </div>
-
-                    <!-- Filtros de Estado -->
-                    <div class="flex flex-wrap items-center gap-1.5 text-xs">
-                        <button onclick="filterCalendarStatus('all')" id="cal-filter-all" class="cal-status-pill px-2.5 py-1 rounded-full font-bold bg-slate-800 text-white text-[11px]">Todos</button>
-                        <button onclick="filterCalendarStatus('scheduled')" id="cal-filter-scheduled" class="cal-status-pill px-2.5 py-1 rounded-full font-medium bg-blue-50 text-blue-700 hover:bg-blue-100 text-[11px]"><i class="fa-solid fa-circle text-[7px] text-blue-500"></i> Agendados</button>
-                        <button onclick="filterCalendarStatus('completed')" id="cal-filter-completed" class="cal-status-pill px-2.5 py-1 rounded-full font-medium bg-emerald-50 text-emerald-700 hover:bg-emerald-100 text-[11px]"><i class="fa-solid fa-circle text-[7px] text-emerald-500"></i> Completados</button>
-                        <button onclick="filterCalendarStatus('cancelled')" id="cal-filter-cancelled" class="cal-status-pill px-2.5 py-1 rounded-full font-medium bg-rose-50 text-rose-700 hover:bg-rose-100 text-[11px]"><i class="fa-solid fa-circle text-[7px] text-rose-500"></i> Cancelados</button>
-                    </div>
-
-                    <!-- Selector de Vista -->
-                    <div class="flex bg-slate-100 p-0.5 rounded-lg border border-slate-200 text-xs">
-                        <button onclick="setCalendarViewMode('grid')" id="btn-view-grid" class="px-2.5 py-1 rounded-md font-bold bg-white text-slate-800 shadow-xs flex items-center gap-1"><i class="fa-solid fa-calendar"></i> Mes</button>
-                        <button onclick="setCalendarViewMode('list')" id="btn-view-list" class="px-2.5 py-1 rounded-md font-medium text-slate-500 hover:text-slate-800 flex items-center gap-1"><i class="fa-solid fa-list-ul"></i> Lista</button>
                     </div>
                 </div>
 
@@ -2279,27 +2545,106 @@
                     <div id="calendar-year-chips" class="flex items-center gap-1.5 flex-nowrap"></div>
                 </div>
 
-                <!-- Contenedor del Calendario: Cuadrícula Mes -->
-                <div id="calendar-grid-view" class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-                    <div class="grid grid-cols-7 bg-slate-50 border-b border-slate-200 text-center text-xs font-bold text-slate-600 py-2.5">
-                        <div>Dom</div>
-                        <div>Lun</div>
-                        <div>Mar</div>
-                        <div>Mié</div>
-                        <div>Jue</div>
-                        <div>Vie</div>
-                        <div>Sáb</div>
-                    </div>
-                    <div id="calendar-cells" class="grid grid-cols-7 auto-rows-fr divide-x divide-y divide-slate-100 min-h-[460px]">
-                        <!-- Celdas de días generadas dinámicamente -->
-                    </div>
-                </div>
+                <!-- LAYOUT SPLIT (ESTILO MOCKUP IMAGEN 2): DETALLES DÍA / AGENDA + GRID DEL CALENDARIO -->
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+                    
+                    <!-- COLUMNA IZQUIERDA (lg:col-span-4): "DETAILS DAY" / AGENDA DE EVENTOS -->
+                    <div class="lg:col-span-4 xl:col-span-4 space-y-4">
+                        <div class="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-xs space-y-4">
+                            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                                <div>
+                                    <h3 class="text-sm font-black text-slate-900 tracking-tight flex items-center gap-2">
+                                        <i class="fa-solid fa-list-check text-indigo-600"></i> Details Day
+                                    </h3>
+                                    <p class="text-[11px] text-slate-400 font-medium">Servicios agendados y visitas</p>
+                                </div>
+                                <span id="cal-selected-day-badge" class="text-[10px] font-extrabold bg-indigo-50 text-indigo-700 border border-indigo-200 px-2.5 py-1 rounded-full">Mes en curso</span>
+                            </div>
+                            
+                            <div class="flex items-center justify-between text-xs">
+                                <span id="cal-details-count" class="font-extrabold text-slate-700">0 servicios</span>
+                                <button type="button" onclick="clearDaySelection()" id="btn-clear-day-filter" class="hidden text-brand-600 hover:text-brand-800 font-bold text-[11px] items-center gap-1 cursor-pointer">
+                                    <i class="fa-solid fa-rotate-left"></i> Ver todo el mes
+                                </button>
+                            </div>
 
-                <!-- Contenedor del Calendario: Lista Cronológica -->
-                <div id="calendar-list-view" class="hidden bg-white rounded-xl border border-slate-200 shadow-sm p-4 space-y-3">
-                    <div id="calendar-timeline-container" class="space-y-3">
-                        <!-- Elementos de línea temporal -->
+                            <!-- Lista de tarjetas de eventos estilo Mockup Imagen 2 -->
+                            <div id="calendar-day-details-list" class="space-y-3 max-h-[640px] overflow-y-auto pr-1">
+                                <div class="p-6 text-center text-slate-400 text-xs">Cargando agenda del periodo...</div>
+                            </div>
+                        </div>
                     </div>
+
+                    <!-- COLUMNA DERECHA (lg:col-span-8): CALENDARIO CUADRÍCULA & LISTA -->
+                    <div class="lg:col-span-8 xl:col-span-8 space-y-4">
+                        <!-- Barra Superior de Navegación del Calendario -->
+                        <div class="bg-white p-3.5 sm:p-4 rounded-3xl border border-slate-200/80 shadow-xs flex flex-col md:flex-row items-center justify-between gap-3">
+                            <div class="flex flex-wrap items-center gap-2">
+                                <button onclick="navCalendarMonth(-1)" class="w-8 h-8 rounded-xl border border-slate-200 hover:bg-slate-100 flex items-center justify-center text-slate-600 transition"><i class="fa-solid fa-chevron-left text-xs"></i></button>
+                                <button onclick="navCalendarToday()" class="px-3 py-1.5 text-xs font-black bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl transition">Hoy</button>
+                                <button onclick="navCalendarMonth(1)" class="w-8 h-8 rounded-xl border border-slate-200 hover:bg-slate-100 flex items-center justify-center text-slate-600 transition"><i class="fa-solid fa-chevron-right text-xs"></i></button>
+                                
+                                <select id="cal-month-select" onchange="onCalendarSelectChange()" class="border border-slate-300 rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-800 bg-white focus:ring-2 focus:ring-indigo-500/20">
+                                    <option value="0">Enero</option>
+                                    <option value="1">Febrero</option>
+                                    <option value="2">Marzo</option>
+                                    <option value="3">Abril</option>
+                                    <option value="4">Mayo</option>
+                                    <option value="5">Junio</option>
+                                    <option value="6">Julio</option>
+                                    <option value="7">Agosto</option>
+                                    <option value="8">Septiembre</option>
+                                    <option value="9">Octubre</option>
+                                    <option value="10">Noviembre</option>
+                                    <option value="11">Diciembre</option>
+                                </select>
+                                <select id="cal-year-select" onchange="onCalendarSelectChange()" class="border border-slate-300 rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-800 bg-white focus:ring-2 focus:ring-indigo-500/20">
+                                    <!-- Opciones generadas -->
+                                </select>
+                                <button onclick="jumpToLatestService()" title="Navegar al mes con los servicios más recientes registrados" class="px-2.5 py-1.5 text-xs font-bold border border-indigo-200 bg-indigo-50 text-indigo-700 rounded-xl hover:bg-indigo-100 flex items-center gap-1 transition">
+                                    <i class="fa-solid fa-crosshairs text-indigo-600"></i> Último
+                                </button>
+                                <span id="calendar-month-title" class="text-xs font-extrabold text-slate-800 ml-1 hidden xl:inline">Septiembre 2026</span>
+                            </div>
+
+                            <!-- Filtros y Vistas -->
+                            <div class="flex items-center gap-2">
+                                <div class="flex items-center gap-1 text-xs">
+                                    <button onclick="filterCalendarStatus('all')" id="cal-filter-all" class="cal-status-pill px-2.5 py-1 rounded-full font-bold bg-slate-800 text-white text-[11px]">Todos</button>
+                                    <button onclick="filterCalendarStatus('scheduled')" id="cal-filter-scheduled" class="cal-status-pill px-2.5 py-1 rounded-full font-medium bg-blue-50 text-blue-700 hover:bg-blue-100 text-[11px]"><i class="fa-solid fa-circle text-[7px] text-blue-500"></i> Agendados</button>
+                                    <button onclick="filterCalendarStatus('completed')" id="cal-filter-completed" class="cal-status-pill px-2.5 py-1 rounded-full font-medium bg-emerald-50 text-emerald-700 hover:bg-emerald-100 text-[11px]"><i class="fa-solid fa-circle text-[7px] text-emerald-500"></i> Hechos</button>
+                                </div>
+                                <div class="flex bg-slate-100 p-0.5 rounded-xl border border-slate-200 text-xs">
+                                    <button onclick="setCalendarViewMode('grid')" id="btn-view-grid" class="px-2.5 py-1 rounded-lg font-bold bg-white text-slate-800 shadow-xs flex items-center gap-1"><i class="fa-solid fa-calendar"></i> Mes</button>
+                                    <button onclick="setCalendarViewMode('list')" id="btn-view-list" class="px-2.5 py-1 rounded-lg font-medium text-slate-500 hover:text-slate-800 flex items-center gap-1"><i class="fa-solid fa-list-ul"></i> Lista</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Contenedor del Calendario: Cuadrícula Mes -->
+                        <div id="calendar-grid-view" class="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
+                            <div class="grid grid-cols-7 bg-slate-50/80 border-b border-slate-200/80 text-center text-xs font-bold text-slate-500 py-3">
+                                <div>Dom</div>
+                                <div>Lun</div>
+                                <div>Mar</div>
+                                <div>Mié</div>
+                                <div>Jue</div>
+                                <div>Vie</div>
+                                <div>Sáb</div>
+                            </div>
+                            <div id="calendar-cells" class="grid grid-cols-7 auto-rows-fr divide-x divide-y divide-slate-100 min-h-[500px]">
+                                <!-- Celdas de días generadas dinámicamente -->
+                            </div>
+                        </div>
+
+                        <!-- Contenedor del Calendario: Lista Cronológica -->
+                        <div id="calendar-list-view" class="hidden bg-white rounded-3xl border border-slate-200/80 shadow-xs p-5 space-y-3">
+                            <div id="calendar-timeline-container" class="space-y-3">
+                                <!-- Elementos de línea temporal -->
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
             </div>
 
@@ -4005,8 +4350,9 @@
             <div class="text-xs text-emerald-900 leading-relaxed">
                 <span class="font-bold">Acreditación Sanitaria y Legal:</span> Este sistema genera constancias bajo la <b>NOM-256-SSA1-2012</b>, calcula automáticamente la vigencia obligatoria a 30 días, registra ingredientes activos autorizados por <b>COFEPRIS/CICOPLAFEST</b>, permite firma digital avanzada con <b>e.firma / FIEL del SAT</b> e incorpora el protocolo oficial de emergencias toxicológicas <b>SINTOX (01-800-0092800 / 800-009-2800)</b>.
             </div>
-        </div>
     </main>
+        </div>
+    </div>
 
     <!-- ============================================================= -->
     <!-- MODAL 1: DUPLICAR ORDEN PARA NUEVO MES -->
@@ -4192,6 +4538,37 @@
         let chartProcsInstance = null;
         let chartClassInstance = null;
 
+        function toggleMobileSidebar() {
+            const sidebar = document.getElementById('main-sidebar');
+            const backdrop = document.getElementById('sidebar-backdrop');
+            if (!sidebar || !backdrop) return;
+            const isHidden = sidebar.classList.contains('-translate-x-full');
+            if (isHidden) {
+                sidebar.classList.remove('-translate-x-full');
+                backdrop.classList.remove('hidden');
+            } else {
+                sidebar.classList.add('-translate-x-full');
+                backdrop.classList.add('hidden');
+            }
+        }
+
+        function handleGlobalSearch(query) {
+            query = (query || '').toLowerCase().trim();
+            if (!query) return;
+            const searchInputs = [
+                document.getElementById('search-orders'),
+                document.getElementById('search-clients-input'),
+                document.getElementById('search-chem-input'),
+                document.getElementById('search-plagas-input')
+            ];
+            searchInputs.forEach(input => {
+                if (input) {
+                    input.value = query;
+                    input.dispatchEvent(new Event('input', { bubbles: true }));
+                }
+            });
+        }
+
         function switchTab(tabId) {
             document.querySelectorAll('[id^="tab-"]').forEach(el => el.classList.add('hidden'));
             document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -4204,6 +4581,42 @@
             if(activeBtn) {
                 activeBtn.classList.remove('border-transparent', 'text-slate-500', 'font-medium');
                 activeBtn.classList.add('border-brand-600', 'text-brand-700', 'font-bold');
+            }
+
+            // Sincronizar navegación en Sidebar lateral (Mockup Imagen 1 & 2)
+            document.querySelectorAll('.sidebar-nav-item').forEach(el => el.classList.remove('active'));
+            const sideBtn = document.getElementById('side-' + tabId);
+            if (sideBtn) sideBtn.classList.add('active');
+
+            // Actualizar Título Dinámico en Topbar
+            const tabTitles = {
+                'tab-cronologico': 'Calendario Cronológico & Citas',
+                'tab-vencimientos': 'Vigencias Sanitarias (30 Días)',
+                'tab-masivo': 'Generación Mensual B2B',
+                'tab-analytics': 'Métricas & Analytics',
+                'tab-nuevo-servicio': 'Registrar Servicio (NOM-256)',
+                'tab-ordenes': 'Órdenes de Servicio & PDF',
+                'tab-clientes': 'Clientes Matriz & Sucursales',
+                'tab-quimicos': 'Catálogo Químicos COFEPRIS',
+                'tab-usuarios': 'Usuarios & Técnicos STPS',
+                'tab-empresa': 'Configuración Empresa & FIEL SAT',
+                'tab-bitacoras': 'Bitácoras Oficiales (MIP)',
+                'tab-mip': 'Manual MIP & Combate de Plagas',
+                'tab-importacion': 'Ingesta Masiva CSV',
+                'tab-respaldos': 'Respaldos & Descarga Masiva',
+                'tab-auditoria': 'Auditoría & Bitácora Master'
+            };
+            const pageTitleEl = document.getElementById('topbar-page-title');
+            if (pageTitleEl) pageTitleEl.innerText = tabTitles[tabId] || 'Panel Operativo';
+
+            // Cerrar menú móvil si está abierto
+            if (window.innerWidth < 768) {
+                const sidebar = document.getElementById('main-sidebar');
+                const backdrop = document.getElementById('sidebar-backdrop');
+                if (sidebar && !sidebar.classList.contains('-translate-x-full')) {
+                    sidebar.classList.add('-translate-x-full');
+                    if (backdrop) backdrop.classList.add('hidden');
+                }
             }
 
             if(tabId === 'tab-cronologico') loadChronologicalCalendar();
@@ -6675,6 +7088,14 @@
 
         function logoutMasterUser() {
             if (confirm('¿Deseas cerrar tu sesión del Panel de Super Usuario?')) {
+                try {
+                    const u = JSON.parse(localStorage.getItem('fumiflosa_auth_user') || '{}');
+                    fetch('/api/v1/auth/logout', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ username: u.username || 'master' })
+                    }).catch(e => console.warn('Logout log error:', e));
+                } catch(e) {}
                 localStorage.removeItem('fumiflosa_auth_token');
                 localStorage.removeItem('fumiflosa_auth_user');
                 const loginModal = document.getElementById('modal-auth-login');
@@ -6703,6 +7124,21 @@
                         loginModal.classList.remove('flex');
                         loginModal.style.cssText = 'display: none !important;';
                     }
+
+                    // Registrar de manera permanente en PostgreSQL (Render) la apertura/restauración de sesión
+                    if (!window._sessionPingSent) {
+                        window._sessionPingSent = true;
+                        fetch('/api/v1/auth/session-ping', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                username: user.username || 'master',
+                                role: user.role || 'SuperAdmin',
+                                user_id: user.id || null
+                            })
+                        }).catch(e => console.warn('Session ping error:', e));
+                    }
+
                     setTimeout(() => {
                         refreshAllDashboardData();
                     }, 10);
@@ -7142,6 +7578,140 @@
             }
         }
 
+        let calSelectedDate = null;
+
+        function selectCalendarDay(year, month, day) {
+            // Si ya estaba seleccionado ese mismo día, deseleccionar
+            if (calSelectedDate && calSelectedDate.getFullYear() === year && calSelectedDate.getMonth() === month && calSelectedDate.getDate() === day) {
+                calSelectedDate = null;
+            } else {
+                calSelectedDate = new Date(year, month, day);
+            }
+            renderCalendar();
+        }
+
+        function clearDaySelection() {
+            calSelectedDate = null;
+            renderCalendar();
+        }
+
+        function renderCalendarDayDetails() {
+            const listContainer = document.getElementById('calendar-day-details-list');
+            const badgeEl = document.getElementById('cal-selected-day-badge');
+            const countEl = document.getElementById('cal-details-count');
+            const clearBtn = document.getElementById('btn-clear-day-filter');
+            if (!listContainer) return;
+
+            const monthsNames = [
+                'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+                'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+            ];
+            const daysNames = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+
+            let targetEvents = [];
+            if (calSelectedDate) {
+                const sY = calSelectedDate.getFullYear();
+                const sM = calSelectedDate.getMonth();
+                const sD = calSelectedDate.getDate();
+
+                if (badgeEl) badgeEl.innerText = `${daysNames[calSelectedDate.getDay()]} ${sD} de ${monthsNames[sM]}`;
+                if (clearBtn) clearBtn.classList.remove('hidden');
+
+                targetEvents = calEvents.filter(ev => {
+                    if (!ev.start) return false;
+                    const datePart = ev.start.split('T')[0];
+                    const [evY, evM, evD] = datePart.split('-').map(Number);
+                    return evY === sY && (evM - 1) === sM && evD === sD;
+                });
+            } else {
+                const cY = calCurrentDate.getFullYear();
+                const cM = calCurrentDate.getMonth();
+
+                if (badgeEl) badgeEl.innerText = `${monthsNames[cM]} ${cY}`;
+                if (clearBtn) clearBtn.classList.add('hidden');
+
+                targetEvents = calEvents.filter(ev => {
+                    if (!ev.start) return false;
+                    const datePart = ev.start.split('T')[0];
+                    const [evY, evM, evD] = datePart.split('-').map(Number);
+                    return evY === cY && (evM - 1) === cM;
+                });
+            }
+
+            if (calStatusFilter !== 'all') {
+                targetEvents = targetEvents.filter(ev => (ev.status || 'completed').toLowerCase() === calStatusFilter.toLowerCase());
+            }
+
+            if (countEl) {
+                countEl.innerText = `${targetEvents.length} ${targetEvents.length === 1 ? 'servicio' : 'servicios'}`;
+            }
+
+            if (targetEvents.length === 0) {
+                listContainer.innerHTML = `
+                    <div class="p-8 text-center text-slate-400 space-y-2 border border-dashed border-slate-200 rounded-3xl bg-slate-50/50">
+                        <i class="fa-solid fa-calendar-xmark text-2xl text-slate-300"></i>
+                        <p class="text-xs font-semibold text-slate-600">Sin citas ni servicios</p>
+                        <p class="text-[11px] text-slate-400">No hay servicios registrados para esta fecha o periodo.</p>
+                        <button onclick="openScheduleModal()" class="mt-2 text-[11px] bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold px-3 py-1.5 rounded-xl border border-indigo-200 inline-flex items-center gap-1 transition">
+                            <i class="fa-solid fa-plus"></i> Agendar Servicio
+                        </button>
+                    </div>`;
+                return;
+            }
+
+            // Ordenar por hora / fecha
+            targetEvents.sort((a, b) => new Date(a.start) - new Date(b.start));
+
+            listContainer.innerHTML = targetEvents.map(ev => {
+                let pillClass = 'bg-emerald-50 text-emerald-800 border-emerald-200';
+                let dotColor = 'bg-emerald-500';
+                let timeStr = 'Completado';
+                if (ev.is_cancelled) {
+                    pillClass = 'bg-rose-50 text-rose-800 border-rose-200';
+                    dotColor = 'bg-rose-500';
+                    timeStr = 'Cancelado';
+                } else if (ev.status === 'scheduled') {
+                    pillClass = 'bg-blue-50 text-blue-800 border-blue-200';
+                    dotColor = 'bg-blue-500';
+                    timeStr = ev.start.includes('T') ? ev.start.split('T')[1].substring(0, 5) + ' hrs' : 'Agendado';
+                } else if (ev.status_text && ev.status_text.includes('Vencido')) {
+                    pillClass = 'bg-amber-50 text-amber-800 border-amber-200';
+                    dotColor = 'bg-amber-500';
+                    timeStr = 'Vencido';
+                } else if (ev.start.includes('T')) {
+                    timeStr = ev.start.split('T')[1].substring(0, 5) + ' hrs';
+                }
+
+                const evDate = new Date(ev.start);
+                const dateStr = !isNaN(evDate) ? `${daysNames[evDate.getDay()]}, ${evDate.getDate()} ${monthsNames[evDate.getMonth()].substring(0, 3)}` : 'Fecha prog.';
+
+                return `
+                    <div onclick="openEventDetailModal('${ev.id}')" class="bg-white p-3.5 rounded-2xl border border-slate-200/80 shadow-2xs hover:shadow-md hover:border-indigo-300 transition-all space-y-2 cursor-pointer group">
+                        <div class="flex items-start justify-between gap-2">
+                            <div class="min-w-0">
+                                <h4 class="font-black text-slate-900 text-xs truncate group-hover:text-indigo-600 transition flex items-center gap-1.5">
+                                    <span class="w-2 h-2 rounded-full ${dotColor} flex-shrink-0"></span>
+                                    <span class="truncate">${ev.client_name || 'Cliente'}</span>
+                                </h4>
+                                <p class="text-[11px] text-slate-500 truncate font-medium ml-3.5">${ev.branch_name || 'Sucursal Matriz'}</p>
+                            </div>
+                            <span class="text-[10px] font-black px-2 py-0.5 rounded-full border flex-shrink-0 ${pillClass}">
+                                ${timeStr}
+                            </span>
+                        </div>
+                        <div class="flex items-center justify-between text-[10px] text-slate-400 pt-1.5 border-t border-slate-100 ml-3.5">
+                            <span class="flex items-center gap-1.5 font-semibold text-slate-600">
+                                <i class="fa-solid fa-calendar text-indigo-500 text-[9px]"></i>
+                                ${dateStr}
+                            </span>
+                            <span class="font-bold text-slate-700 bg-slate-50 px-2 py-0.5 rounded-md border border-slate-100">
+                                ${ev.folio ? 'Folio #' + ev.folio : (ev.technician_name || 'NOM-256')}
+                            </span>
+                        </div>
+                    </div>`;
+            }).join('');
+        }
+
         function renderCalendar() {
             const monthsNames = [
                 'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
@@ -7158,6 +7728,9 @@
             } else {
                 renderCalendarList();
             }
+
+            // Renderizar la columna izquierda "Details Day" (Mockup Imagen 2)
+            renderCalendarDayDetails();
         }
 
         function renderCalendarGrid() {
@@ -7179,7 +7752,7 @@
             for (let i = startingDayOfWeek - 1; i >= 0; i--) {
                 const dayNum = totalDaysInPrevMonth - i;
                 cellsHtml += `
-                    <div class="bg-slate-50/50 p-2 min-h-[90px] opacity-40 text-slate-400">
+                    <div class="bg-slate-50/50 p-2 min-h-[95px] opacity-40 text-slate-400">
                         <span class="text-xs font-semibold">${dayNum}</span>
                     </div>`;
             }
@@ -7187,6 +7760,7 @@
             // Días del mes actual
             for (let day = 1; day <= totalDaysInMonth; day++) {
                 const isToday = today.getFullYear() === year && today.getMonth() === month && today.getDate() === day;
+                const isSelected = calSelectedDate && calSelectedDate.getFullYear() === year && calSelectedDate.getMonth() === month && calSelectedDate.getDate() === day;
 
                 // Filtrar eventos de este día (soporte robusto para fecha exacta sin desfase horario)
                 const dayEvents = calEvents.filter(ev => {
@@ -7217,7 +7791,7 @@
 
                     const timeStr = ev.start.includes('T') ? ev.start.split('T')[1].substring(0, 5) : '';
                     eventsPills += `
-                        <div onclick="openEventDetailModal('${ev.id}')" title="${ev.title} (${ev.status_text})" class="cursor-pointer text-[10px] p-1 rounded border ${pillBg} truncate font-medium flex items-center gap-1 shadow-2xs hover:opacity-80 transition">
+                        <div onclick="event.stopPropagation(); openEventDetailModal('${ev.id}')" title="${ev.title} (${ev.status_text})" class="cursor-pointer text-[10px] p-1 rounded-lg border ${pillBg} truncate font-medium flex items-center gap-1 shadow-2xs hover:opacity-80 transition">
                             <i class="fa-solid ${icon} text-[8px] flex-shrink-0"></i>
                             <span class="font-bold flex-shrink-0">${timeStr || 'Servicio'}</span>
                             <span class="truncate">${ev.client_name}</span>
@@ -7225,10 +7799,10 @@
                 });
 
                 cellsHtml += `
-                    <div class="p-2 min-h-[90px] flex flex-col justify-start gap-1 bg-white hover:bg-slate-50/60 transition ${isToday ? 'ring-2 ring-indigo-500 ring-inset rounded-lg' : ''}">
+                    <div onclick="selectCalendarDay(${year}, ${month}, ${day})" class="p-2 min-h-[95px] flex flex-col justify-start gap-1 bg-white hover:bg-indigo-50/40 cursor-pointer transition ${isSelected ? 'ring-2 ring-indigo-600 bg-indigo-50/40 rounded-xl' : (isToday ? 'ring-2 ring-indigo-400 ring-inset rounded-lg' : '')}">
                         <div class="flex justify-between items-center">
-                            <span class="text-xs font-bold ${isToday ? 'bg-indigo-600 text-white rounded-full w-5 h-5 flex items-center justify-center' : 'text-slate-700'}">${day}</span>
-                            ${dayEvents.length > 0 ? `<span class="text-[9px] font-bold text-slate-400 bg-slate-100 px-1.5 py-0.2 rounded-full">${dayEvents.length}</span>` : ''}
+                            <span class="text-xs font-black ${isSelected ? 'bg-indigo-600 text-white rounded-full w-5 h-5 flex items-center justify-center shadow-xs' : (isToday ? 'bg-indigo-100 text-indigo-900 rounded-full w-5 h-5 flex items-center justify-center font-black' : 'text-slate-700')}">${day}</span>
+                            ${dayEvents.length > 0 ? `<span class="text-[9px] font-extrabold text-slate-500 bg-slate-100 px-1.5 py-0.2 rounded-full">${dayEvents.length}</span>` : ''}
                         </div>
                         <div class="space-y-1 mt-1 overflow-y-auto max-h-[85px]">
                             ${eventsPills}
@@ -7241,7 +7815,7 @@
             const remainder = (7 - (totalCellsSoFar % 7)) % 7;
             for (let i = 1; i <= remainder; i++) {
                 cellsHtml += `
-                    <div class="bg-slate-50/50 p-2 min-h-[90px] opacity-40 text-slate-400">
+                    <div class="bg-slate-50/50 p-2 min-h-[95px] opacity-40 text-slate-400">
                         <span class="text-xs font-semibold">${i}</span>
                     </div>`;
             }

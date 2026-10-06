@@ -14,6 +14,12 @@ class LoginRequest(BaseModel):
     password: str = Field(..., description="Contraseña de acceso")
 
 
+class SessionPingRequest(BaseModel):
+    username: Optional[str] = None
+    role: Optional[str] = None
+    user_id: Optional[str] = None
+
+
 class AuthUserInfo(BaseModel):
     id: uuid.UUID
     username: Optional[str] = None

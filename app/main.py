@@ -30,9 +30,21 @@ def startup_db_sync():
         # Sincronizar catálogo inicial RSCO, Químicos, Usuarios, Clientes, Certificados y Bitácoras
         from app.database import SessionLocal
         from app.services.seed_service import seed_all_database_defaults
+        from app.services.audit_service import record_audit
         with SessionLocal() as db_session:
             seed_results = seed_all_database_defaults(db_session)
             print(f"[STARTUP DB SEED COMPLETE]: {seed_results}")
+            try:
+                record_audit(
+                    db=db_session,
+                    action_type="SYSTEM_START",
+                    module="SYSTEM",
+                    description="Servidor iniciado y base de datos sincronizada con éxito en Render.",
+                    username="SISTEMA",
+                    user_role="SystemDaemon"
+                )
+            except Exception as audit_err:
+                print(f"[STARTUP AUDIT LOG WARNING]: {audit_err}")
     except Exception as e:
         print(f"[STARTUP DB SYNC WARNING]: {e}")
 

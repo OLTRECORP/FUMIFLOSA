@@ -16,20 +16,36 @@ if "sqlite" in db_url:
         pool_pre_ping=True
     )
 else:
-    # Conexión optimizada para PostgreSQL con pool robusto para concurrencia
-    try:
-        engine = create_engine(
-            db_url,
-            pool_pre_ping=True,
-            pool_size=15,
-            max_overflow=25,
-            pool_timeout=30,
-            pool_recycle=1800
-        )
-        with engine.connect() as test_conn:
-            pass
-    except Exception as pg_err:
-        print(f"[DATABASE ADAPTER]: PostgreSQL no disponible ({pg_err}). Activando SQLite de respaldo 'sqlite:///./fumiflosa.db'.")
+    # Conexión optimizada para PostgreSQL con reintentos para entornos en la nube (Render)
+    import time
+    pg_connected = False
+    last_err = None
+    max_retries = 5 if ("localhost" not in db_url and "127.0.0.1" not in db_url) else 2
+
+    for attempt in range(1, max_retries + 1):
+        try:
+            candidate_engine = create_engine(
+                db_url,
+                pool_pre_ping=True,
+                pool_size=10,
+                max_overflow=20,
+                pool_timeout=30,
+                pool_recycle=1800
+            )
+            with candidate_engine.connect() as test_conn:
+                test_conn.execute(text("SELECT 1"))
+            engine = candidate_engine
+            pg_connected = True
+            print(f"[DATABASE ADAPTER]: Conexión exitosa a PostgreSQL en el intento {attempt}.")
+            break
+        except Exception as pg_err:
+            last_err = pg_err
+            print(f"[DATABASE ADAPTER]: Intento {attempt}/{max_retries} a PostgreSQL falló: {pg_err}")
+            if attempt < max_retries:
+                time.sleep(2)
+
+    if not pg_connected:
+        print(f"[DATABASE ADAPTER WARNING]: PostgreSQL no disponible tras {max_retries} intentos ({last_err}). Activando SQLite de respaldo 'sqlite:///./fumiflosa.db'.")
         sqlite_url = "sqlite:///./fumiflosa.db"
         engine = create_engine(
             sqlite_url,

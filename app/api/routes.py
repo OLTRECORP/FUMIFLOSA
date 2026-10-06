@@ -18,7 +18,7 @@ from app.models import (
     StationMonitoringLog, HazardousWasteLog, AuditLog, AuditActionType
 )
 from app.schemas import (
-    LoginRequest, LoginResponse, AuthUserInfo,
+    LoginRequest, LoginResponse, SessionPingRequest, AuthUserInfo,
     ServiceOrderCreate, ServiceOrderUpdate, ServiceOrderResponse, DashboardExpirationsResponse,
     ClientExpirationsGroup, ExpirationDetail, DashboardSummaryStats,
     UserCreate, UserUpdate, UserResponse,
@@ -343,9 +343,51 @@ def get_current_user_profile(
     )
 
 
+@router.post("/auth/session-ping")
+def session_ping(payload: SessionPingRequest, request: Request, db: Session = Depends(get_db)):
+    """
+    Registra en la bitácora de auditoría cuando un usuario abre el sistema en Render
+    con una sesión activa existente o restaurada en el navegador.
+    """
+    uname = (payload.username or MASTER_SUPERUSER_USERNAME).strip()
+    role = (payload.role or "SuperAdmin").strip()
+    
+    parsed_uuid = None
+    if payload.user_id:
+        try:
+            parsed_uuid = uuid.UUID(payload.user_id)
+        except Exception:
+            parsed_uuid = None
+
+    record_audit(
+        db=db,
+        action_type="LOGIN_SUCCESS",
+        module="AUTH",
+        description=f"Apertura del sistema / Sesión activa validada para '{uname}'",
+        user_id=parsed_uuid,
+        username=uname,
+        user_role=role,
+        entity_name=uname,
+        request=request
+    )
+    return {"status": "success", "message": "Sesión registrada en bitácora de auditoría."}
+
+
 @router.post("/auth/logout")
-def logout_user():
-    """Cierra la sesión del usuario."""
+def logout_user(request: Request, db: Session = Depends(get_db)):
+    """Cierra la sesión del usuario y registra el evento en auditoría."""
+    try:
+        record_audit(
+            db=db,
+            action_type="LOGOUT",
+            module="AUTH",
+            description="Cierre de sesión manual de usuario",
+            username=MASTER_SUPERUSER_USERNAME,
+            user_role="SuperAdmin",
+            request=request
+        )
+    except Exception:
+        pass
     return {"status": "success", "message": "Sesión cerrada correctamente."}
 
 
