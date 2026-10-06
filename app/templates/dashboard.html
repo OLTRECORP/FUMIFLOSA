@@ -15,7 +15,15 @@
     <!-- Chart.js para Métricas y Analytics -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
+        // Inicialización inmediata del tema para evitar parpadeo blanco
+        if (localStorage.getItem('fumiflosa_theme') === 'dark') {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+
         tailwind.config = {
+            darkMode: 'class',
             theme: {
                 extend: {
                     fontFamily: {
@@ -76,6 +84,180 @@
 
         /* Contraste y nitidez global */
         .tab-btn { transition: all 0.15s ease-in-out; }
+
+        /* ============================================================= */
+        /* ESTILOS DE MODO OSCURO (PORTAL CLARO / OSCURO) */
+        /* ============================================================= */
+        html.dark {
+            color-scheme: dark;
+        }
+        html.dark body {
+            background-color: #0b1120 !important;
+            color: #e2e8f0 !important;
+        }
+        html.dark .bg-\[\#f8fafc\] {
+            background-color: #0b1120 !important;
+        }
+        html.dark #main-sidebar {
+            background-color: #0f172a !important;
+            border-color: #1e293b !important;
+        }
+        html.dark #main-sidebar .border-b,
+        html.dark #main-sidebar .border-t,
+        html.dark #main-sidebar .border-slate-100 {
+            border-color: #1e293b !important;
+        }
+        html.dark .sidebar-nav-item {
+            color: #94a3b8 !important;
+        }
+        html.dark .sidebar-nav-item:hover {
+            background-color: #1e293b !important;
+            color: #f8fafc !important;
+        }
+        html.dark .sidebar-nav-item.active {
+            background: rgba(16, 185, 129, 0.15) !important;
+            color: #34d399 !important;
+            box-shadow: 0 1px 3px rgba(16, 185, 129, 0.2) !important;
+            border-left: 3px solid #10b981 !important;
+        }
+        html.dark .sidebar-nav-item.active i {
+            color: #34d399 !important;
+        }
+        html.dark #main-topbar,
+        html.dark header {
+            background-color: rgba(15, 23, 42, 0.94) !important;
+            border-color: #1e293b !important;
+        }
+        html.dark #topbar-page-title {
+            color: #f8fafc !important;
+        }
+        html.dark #global-dashboard-search {
+            background-color: #1e293b !important;
+            color: #f8fafc !important;
+            border-color: #334155 !important;
+        }
+        html.dark #global-dashboard-search::placeholder {
+            color: #64748b !important;
+        }
+        html.dark #btn-theme-toggle {
+            background-color: #1e293b !important;
+            color: #fbbf24 !important;
+            border-color: #334155 !important;
+        }
+        html.dark #btn-theme-toggle:hover {
+            background-color: #334155 !important;
+        }
+        html.dark #top-metrics-row > div {
+            background-color: #0f172a !important;
+            border-color: #1e293b !important;
+        }
+        html.dark #top-metrics-row span[id^="stat-"] {
+            color: #f8fafc !important;
+        }
+        html.dark #top-metrics-row p {
+            color: #94a3b8 !important;
+        }
+        html.dark .bg-white {
+            background-color: #0f172a !important;
+            color: #e2e8f0 !important;
+        }
+        html.dark .border-slate-200,
+        html.dark .border-slate-200\/80,
+        html.dark .border-slate-100 {
+            border-color: #1e293b !important;
+        }
+        html.dark .border-slate-300 {
+            border-color: #334155 !important;
+        }
+        html.dark .bg-slate-50,
+        html.dark .bg-slate-50\/70,
+        html.dark .bg-slate-50\/80,
+        html.dark .bg-slate-50\/50,
+        html.dark .bg-slate-50\/60 {
+            background-color: #090d16 !important;
+        }
+        html.dark .bg-slate-100,
+        html.dark .bg-slate-100\/80 {
+            background-color: #1e293b !important;
+        }
+        html.dark .text-slate-900,
+        html.dark .text-slate-800,
+        html.dark .text-slate-700 {
+            color: #f8fafc !important;
+        }
+        html.dark .text-slate-600,
+        html.dark .text-slate-500 {
+            color: #94a3b8 !important;
+        }
+        html.dark .text-slate-400 {
+            color: #64748b !important;
+        }
+        html.dark input:not([type="checkbox"]):not([type="radio"]), 
+        html.dark select, 
+        html.dark textarea {
+            background-color: #1e293b !important;
+            color: #f8fafc !important;
+            border-color: #334155 !important;
+        }
+        html.dark input::placeholder,
+        html.dark textarea::placeholder {
+            color: #64748b !important;
+        }
+        html.dark table thead {
+            background-color: #090d16 !important;
+            color: #94a3b8 !important;
+        }
+        html.dark table thead th {
+            color: #94a3b8 !important;
+            border-color: #1e293b !important;
+        }
+        html.dark table tbody tr {
+            border-color: #1e293b !important;
+        }
+        html.dark table tbody tr:hover {
+            background-color: rgba(30, 41, 59, 0.5) !important;
+        }
+        html.dark table td {
+            color: #e2e8f0 !important;
+        }
+        html.dark .divide-slate-100 > :not([hidden]) ~ :not([hidden]),
+        html.dark .divide-slate-200 > :not([hidden]) ~ :not([hidden]) {
+            border-color: #1e293b !important;
+        }
+        html.dark #calendar-cells > div {
+            background-color: #0f172a !important;
+            border-color: #1e293b !important;
+        }
+        html.dark #calendar-cells > div:hover {
+            background-color: #1e293b !important;
+        }
+        html.dark #calendar-cells > div.opacity-40 {
+            background-color: #090d16 !important;
+            color: #475569 !important;
+        }
+        html.dark #calendar-day-details-list > div {
+            background-color: #1e293b !important;
+            border-color: #334155 !important;
+        }
+        html.dark #calendar-day-details-list > div h4 {
+            color: #f8fafc !important;
+        }
+        html.dark .tab-btn.text-slate-500 {
+            color: #94a3b8 !important;
+        }
+        html.dark .tab-btn.text-slate-500:hover {
+            color: #f8fafc !important;
+        }
+        html.dark .modal-dialog-container,
+        html.dark [id^="modal-"]:not(#modal-auth-login) > div:not(.backdrop-blur-md):not(.backdrop-blur-sm) {
+            background-color: #0f172a !important;
+            border-color: #1e293b !important;
+            color: #f8fafc !important;
+        }
+        html.dark [id^="modal-"]:not(#modal-auth-login) .bg-slate-50,
+        html.dark [id^="modal-"]:not(#modal-auth-login) .bg-slate-100 {
+            background-color: #1e293b !important;
+        }
 
         /* Estilos específicos para Modal de Guía de Uso */
         .guide-nav-item.active {
@@ -2338,6 +2520,12 @@
                         <button type="button" onclick="setTextZoom('lg')" id="btn-zoom-lg" title="Texto Grande" class="btn-zoom-option px-2 py-0.5 rounded-lg text-[11px] font-bold bg-white text-slate-700 hover:bg-slate-200 border border-slate-200 transition">A+</button>
                         <button type="button" onclick="setTextZoom('xl')" id="btn-zoom-xl" title="Texto Extra Grande (Fácil Lectura)" class="btn-zoom-option px-2 py-0.5 rounded-lg text-[11px] font-bold bg-white text-slate-700 hover:bg-slate-200 border border-slate-200 transition">A++</button>
                     </div>
+
+                    <!-- BOTÓN PORTAL CLARO / OBSCURO -->
+                    <button type="button" onclick="toggleThemeMode()" id="btn-theme-toggle" title="Alternar entre Portal Claro y Obscuro" class="flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl text-xs font-bold border border-slate-200 transition shadow-2xs cursor-pointer">
+                        <i id="theme-toggle-icon" class="fa-solid fa-moon text-indigo-600 text-xs sm:text-sm"></i>
+                        <span id="theme-toggle-text" class="hidden sm:inline font-bold">Oscuro</span>
+                    </button>
 
                     <a href="/docs" target="_blank" class="hidden sm:flex text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-xl border border-slate-200 items-center gap-1.5 font-semibold transition">
                         <i class="fa-solid fa-code text-brand-600"></i> API
@@ -10178,19 +10366,57 @@
             }
         }
 
+        function toggleThemeMode() {
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.setItem('fumiflosa_theme', isDark ? 'dark' : 'light');
+            updateThemeToggleUI(isDark);
+        }
+
+        function updateThemeToggleUI(isDark) {
+            const icon = document.getElementById('theme-toggle-icon');
+            const text = document.getElementById('theme-toggle-text');
+            const btn = document.getElementById('btn-theme-toggle');
+            if (!icon || !text) return;
+            if (isDark) {
+                icon.className = 'fa-solid fa-sun text-amber-400 text-xs sm:text-sm';
+                text.innerText = 'Claro';
+                if (btn) btn.title = 'Cambiar a Portal Claro';
+            } else {
+                icon.className = 'fa-solid fa-moon text-indigo-600 text-xs sm:text-sm';
+                text.innerText = 'Oscuro';
+                if (btn) btn.title = 'Cambiar a Portal Oscuro';
+            }
+        }
+
+        function initThemeMode() {
+            const savedTheme = localStorage.getItem('fumiflosa_theme');
+            const isDark = savedTheme === 'dark';
+            if (isDark) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+            updateThemeToggleUI(isDark);
+        }
+
         function initTextZoom() {
             const savedZoom = localStorage.getItem('fumiflosa_text_zoom') || 'base';
             setTextZoom(savedZoom);
         }
 
-        // Verificación inicial de sesión y accesibilidad
+        // Verificación inicial de sesión, accesibilidad y tema (claro / obscuro)
+        initThemeMode();
         initTextZoom();
         checkAuthSession();
         document.addEventListener('DOMContentLoaded', () => {
+            initThemeMode();
             initTextZoom();
             checkAuthSession();
         });
-        window.addEventListener('load', checkAuthSession);
+        window.addEventListener('load', () => {
+            initThemeMode();
+            checkAuthSession();
+        });
     </script>
 </body>
 </html>
