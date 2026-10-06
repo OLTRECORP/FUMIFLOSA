@@ -3665,9 +3665,18 @@
 
                 <!-- 1. Tabla de Clientes Matriz Registrados -->
                 <div class="border border-slate-200 rounded-xl overflow-hidden bg-white shadow-sm space-y-0">
-                    <div class="bg-slate-50 p-3.5 border-b border-slate-200 font-bold text-xs text-slate-800 flex justify-between items-center">
-                        <span class="flex items-center gap-2"><i class="fa-solid fa-building text-brand-600"></i> Directorio de Clientes Matriz (Corporativos)</span>
-                        <span id="clients-count-badge" class="bg-brand-100 text-brand-800 text-[10px] font-bold px-2 py-0.5 rounded-full">0 Clientes</span>
+                    <div class="bg-slate-50 p-3.5 border-b border-slate-200 font-bold text-xs text-slate-800 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                        <div class="flex items-center gap-2">
+                            <span class="flex items-center gap-2"><i class="fa-solid fa-building text-brand-600"></i> Directorio de Clientes Matriz (Corporativos)</span>
+                            <span id="clients-count-badge" class="bg-brand-100 text-brand-800 text-[10px] font-bold px-2 py-0.5 rounded-full">0 Clientes</span>
+                        </div>
+                        <div class="relative w-full sm:w-72">
+                            <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+                            <input type="text" id="search-clients-input" oninput="filterClientsTable()" placeholder="Buscar cliente por razón social, RFC, contrato o slug..." class="w-full pl-8 pr-7 py-1.5 border border-slate-300 rounded-lg text-xs bg-white focus:ring-1 focus:ring-brand-500 text-slate-800 placeholder:text-slate-400">
+                            <button type="button" id="btn-clear-clients-search" onclick="clearClientsSearch()" class="absolute right-2.5 top-2 text-slate-400 hover:text-slate-600 hidden text-xs" title="Limpiar búsqueda">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        </div>
                     </div>
                     <div class="overflow-x-auto">
                         <table class="w-full text-left text-xs">
@@ -3687,9 +3696,18 @@
 
                 <!-- 2. Tabla de Sucursales y Unidades Operativas -->
                 <div class="border border-slate-200 rounded-xl overflow-hidden bg-white shadow-sm space-y-0">
-                    <div class="bg-slate-50 p-3.5 border-b border-slate-200 font-bold text-xs text-slate-800 flex justify-between items-center">
-                        <span class="flex items-center gap-2"><i class="fa-solid fa-hospital text-indigo-600"></i> Sucursales y Unidades Operativas</span>
-                        <span id="branches-count-badge" class="bg-indigo-100 text-indigo-800 text-[10px] font-bold px-2 py-0.5 rounded-full">0 Sucursales</span>
+                    <div class="bg-slate-50 p-3.5 border-b border-slate-200 font-bold text-xs text-slate-800 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                        <div class="flex items-center gap-2">
+                            <span class="flex items-center gap-2"><i class="fa-solid fa-hospital text-indigo-600"></i> Sucursales y Unidades Operativas</span>
+                            <span id="branches-count-badge" class="bg-indigo-100 text-indigo-800 text-[10px] font-bold px-2 py-0.5 rounded-full">0 Sucursales</span>
+                        </div>
+                        <div class="relative w-full sm:w-72">
+                            <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+                            <input type="text" id="search-branches-input" oninput="filterBranchesTable()" placeholder="Buscar sucursal por nombre, matriz, dirección o teléfono..." class="w-full pl-8 pr-7 py-1.5 border border-slate-300 rounded-lg text-xs bg-white focus:ring-1 focus:ring-indigo-500 text-slate-800 placeholder:text-slate-400">
+                            <button type="button" id="btn-clear-branches-search" onclick="clearBranchesSearch()" class="absolute right-2.5 top-2 text-slate-400 hover:text-slate-600 hidden text-xs" title="Limpiar búsqueda">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        </div>
                     </div>
                     <div class="overflow-x-auto">
                         <table class="w-full text-left text-xs">
@@ -6854,79 +6872,151 @@
                     if (typeof onServiceClientChanged === 'function') onServiceClientChanged();
                 }
 
-                // Badges de conteo
-                const cliBadge = document.getElementById('clients-count-badge');
-                if (cliBadge) cliBadge.innerText = `${cachedClients.length} Clientes Matriz`;
-                const brBadge = document.getElementById('branches-count-badge');
-                if (brBadge) brBadge.innerText = `${cachedBranches.length} Sucursales`;
-
-                // 1. Render Clientes Matriz
-                const clientsTbody = document.getElementById('clients-tbody');
-                if (clientsTbody) {
-                    if (!cachedClients.length) {
-                        clientsTbody.innerHTML = '<tr><td colspan="5" class="p-6 text-center text-slate-400">No hay clientes matriz registrados.</td></tr>';
-                    } else {
-                        clientsTbody.innerHTML = cachedClients.map(c => `
-                            <tr class="hover:bg-slate-50">
-                                <td class="p-3 font-bold text-slate-800">${c.legal_name}</td>
-                                <td class="p-3 font-mono font-bold text-slate-600">${c.rfc}</td>
-                                <td class="p-3 text-slate-600">${c.master_contract_number || 'N/A'}</td>
-                                <td class="p-3 font-mono text-[11px] text-brand-700">${c.portal_slug}</td>
-                                <td class="p-3 text-right">
-                                    <div class="flex items-center justify-end gap-1.5">
-                                        <button onclick="goToBatchForClient('${c.id}')" class="text-xs bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold px-2 py-1 rounded border border-purple-200 flex items-center gap-1" title="Emisión Masiva Mensual B2B">
-                                            <i class="fa-solid fa-wand-magic-sparkles"></i> Lote Mes
-                                        </button>
-                                        <button onclick="openAssociateBranchesModal('${c.id}')" class="text-xs bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold px-2 py-1 rounded border border-indigo-200 flex items-center gap-1" title="Asociar Sucursales a este Cliente">
-                                            <i class="fa-solid fa-network-wired"></i> Sucursales
-                                        </button>
-                                        <button onclick="openPortalModal('${c.id}')" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold px-2 py-1 rounded border border-slate-300 flex items-center gap-1">
-                                            <i class="fa-solid fa-gear"></i> Enlace B2B
-                                        </button>
-                                        <a href="/portal/c/${c.portal_slug}" target="_blank" class="text-xs bg-brand-50 hover:bg-brand-100 text-brand-700 font-bold px-2 py-1 rounded border border-brand-200 flex items-center gap-1">
-                                            <i class="fa-solid fa-arrow-up-right-from-square"></i> Abrir
-                                        </a>
-                                        <button onclick="openEditClientModal('${c.id}')" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-2 py-1 rounded border border-slate-300 flex items-center gap-1" title="Editar Cliente">
-                                            <i class="fa-solid fa-pen-to-square"></i>
-                                        </button>
-                                        <button onclick="deleteClient('${c.id}', '${c.legal_name}')" class="text-xs bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold px-2 py-1 rounded border border-rose-200 flex items-center gap-1" title="Eliminar Cliente">
-                                            <i class="fa-solid fa-trash"></i>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        `).join('');
-                    }
-                }
-
-                // 2. Render Sucursales
-                const branchesTbody = document.getElementById('branches-tbody');
-                if (branchesTbody) {
-                    if (!cachedBranches.length) {
-                        branchesTbody.innerHTML = '<tr><td colspan="6" class="p-6 text-center text-slate-400">No hay sucursales registradas.</td></tr>';
-                    } else {
-                        branchesTbody.innerHTML = cachedBranches.map(b => `
-                            <tr class="hover:bg-slate-50">
-                                <td class="p-3 font-bold text-slate-800">${b.client ? b.client.legal_name : 'N/A'}</td>
-                                <td class="p-3 font-medium text-slate-800">${b.name}</td>
-                                <td class="p-3"><span class="bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded text-[10px] font-semibold">${b.classification}</span></td>
-                                <td class="p-3 text-slate-600">${b.address}</td>
-                                <td class="p-3 text-slate-600">${b.responsible_contact_name} (${b.phone})</td>
-                                <td class="p-3 text-right">
-                                    <div class="flex items-center justify-end gap-1.5">
-                                        <button onclick="openEditBranchModal('${b.id}')" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-2 py-1 rounded border border-slate-300 flex items-center gap-1">
-                                            <i class="fa-solid fa-pen-to-square"></i> Editar
-                                        </button>
-                                        <button onclick="deleteBranch('${b.id}', '${b.name}')" class="text-xs bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold px-2 py-1 rounded border border-rose-200 flex items-center gap-1">
-                                            <i class="fa-solid fa-trash"></i>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        `).join('');
-                    }
-                }
+                // Renderizar tablas con soporte de búsqueda y filtrado dinámico
+                filterClientsTable();
+                filterBranchesTable();
             } catch(e) { console.error(e); }
+        }
+
+        function filterClientsTable() {
+            const input = document.getElementById('search-clients-input');
+            const clearBtn = document.getElementById('btn-clear-clients-search');
+            const query = input ? input.value.trim().toLowerCase() : '';
+            const clientsTbody = document.getElementById('clients-tbody');
+            const cliBadge = document.getElementById('clients-count-badge');
+
+            if (clearBtn) {
+                if (query) clearBtn.classList.remove('hidden');
+                else clearBtn.classList.add('hidden');
+            }
+
+            if (!clientsTbody) return;
+
+            let filtered = cachedClients || [];
+            if (query) {
+                filtered = cachedClients.filter(c => {
+                    const name = (c.legal_name || '').toLowerCase();
+                    const rfc = (c.rfc || '').toLowerCase();
+                    const contract = (c.master_contract_number || '').toLowerCase();
+                    const slug = (c.portal_slug || '').toLowerCase();
+                    return name.includes(query) || rfc.includes(query) || contract.includes(query) || slug.includes(query);
+                });
+            }
+
+            if (cliBadge) {
+                cliBadge.innerText = query ? `${filtered.length} de ${cachedClients.length} Clientes` : `${cachedClients.length} Clientes Matriz`;
+            }
+
+            if (!filtered.length) {
+                const emptyMsg = query 
+                    ? `No se encontraron clientes que coincidan con "${query}".`
+                    : 'No hay clientes matriz registrados.';
+                clientsTbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-400">${emptyMsg}</td></tr>`;
+                return;
+            }
+
+            clientsTbody.innerHTML = filtered.map(c => `
+                <tr class="hover:bg-slate-50 transition-colors">
+                    <td class="p-3 font-bold text-slate-800">${c.legal_name}</td>
+                    <td class="p-3 font-mono font-bold text-slate-600">${c.rfc}</td>
+                    <td class="p-3 text-slate-600">${c.master_contract_number || 'N/A'}</td>
+                    <td class="p-3 font-mono text-[11px] text-brand-700">${c.portal_slug}</td>
+                    <td class="p-3 text-right">
+                        <div class="flex items-center justify-end gap-1.5">
+                            <button onclick="goToBatchForClient('${c.id}')" class="text-xs bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold px-2 py-1 rounded border border-purple-200 flex items-center gap-1" title="Emisión Masiva Mensual B2B">
+                                <i class="fa-solid fa-wand-magic-sparkles"></i> Lote Mes
+                            </button>
+                            <button onclick="openAssociateBranchesModal('${c.id}')" class="text-xs bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold px-2 py-1 rounded border border-indigo-200 flex items-center gap-1" title="Asociar Sucursales a este Cliente">
+                                <i class="fa-solid fa-network-wired"></i> Sucursales
+                            </button>
+                            <button onclick="openPortalModal('${c.id}')" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold px-2 py-1 rounded border border-slate-300 flex items-center gap-1">
+                                <i class="fa-solid fa-gear"></i> Enlace B2B
+                            </button>
+                            <a href="/portal/c/${c.portal_slug}" target="_blank" class="text-xs bg-brand-50 hover:bg-brand-100 text-brand-700 font-bold px-2 py-1 rounded border border-brand-200 flex items-center gap-1">
+                                <i class="fa-solid fa-arrow-up-right-from-square"></i> Abrir
+                            </a>
+                            <button onclick="openEditClientModal('${c.id}')" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-2 py-1 rounded border border-slate-300 flex items-center gap-1" title="Editar Cliente">
+                                <i class="fa-solid fa-pen-to-square"></i>
+                            </button>
+                            <button onclick="deleteClient('${c.id}', '${c.legal_name}')" class="text-xs bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold px-2 py-1 rounded border border-rose-200 flex items-center gap-1" title="Eliminar Cliente">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function clearClientsSearch() {
+            const input = document.getElementById('search-clients-input');
+            if (input) input.value = '';
+            filterClientsTable();
+        }
+
+        function filterBranchesTable() {
+            const input = document.getElementById('search-branches-input');
+            const clearBtn = document.getElementById('btn-clear-branches-search');
+            const query = input ? input.value.trim().toLowerCase() : '';
+            const branchesTbody = document.getElementById('branches-tbody');
+            const brBadge = document.getElementById('branches-count-badge');
+
+            if (clearBtn) {
+                if (query) clearBtn.classList.remove('hidden');
+                else clearBtn.classList.add('hidden');
+            }
+
+            if (!branchesTbody) return;
+
+            let filtered = cachedBranches || [];
+            if (query) {
+                filtered = cachedBranches.filter(b => {
+                    const clientName = (b.client && b.client.legal_name ? b.client.legal_name : '').toLowerCase();
+                    const name = (b.name || '').toLowerCase();
+                    const addr = (b.address || '').toLowerCase();
+                    const phone = (b.phone || '').toLowerCase();
+                    const contact = (b.responsible_contact_name || '').toLowerCase();
+                    const code = (b.unit_code || '').toLowerCase();
+                    return clientName.includes(query) || name.includes(query) || addr.includes(query) || phone.includes(query) || contact.includes(query) || code.includes(query);
+                });
+            }
+
+            if (brBadge) {
+                brBadge.innerText = query ? `${filtered.length} de ${cachedBranches.length} Sucursales` : `${cachedBranches.length} Sucursales`;
+            }
+
+            if (!filtered.length) {
+                const emptyMsg = query 
+                    ? `No se encontraron sucursales que coincidan con "${query}".`
+                    : 'No hay sucursales registradas.';
+                branchesTbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-400">${emptyMsg}</td></tr>`;
+                return;
+            }
+
+            branchesTbody.innerHTML = filtered.map(b => `
+                <tr class="hover:bg-slate-50 transition-colors">
+                    <td class="p-3 font-bold text-slate-800">${b.client ? b.client.legal_name : 'N/A'}</td>
+                    <td class="p-3 font-medium text-slate-800">${b.name}</td>
+                    <td class="p-3"><span class="bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded text-[10px] font-semibold">${b.classification}</span></td>
+                    <td class="p-3 text-slate-600">${b.address}</td>
+                    <td class="p-3 text-slate-600">${b.responsible_contact_name} (${b.phone})</td>
+                    <td class="p-3 text-right">
+                        <div class="flex items-center justify-end gap-1.5">
+                            <button onclick="openEditBranchModal('${b.id}')" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-2 py-1 rounded border border-slate-300 flex items-center gap-1">
+                                <i class="fa-solid fa-pen-to-square"></i> Editar
+                            </button>
+                            <button onclick="deleteBranch('${b.id}', '${b.name}')" class="text-xs bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold px-2 py-1 rounded border border-rose-200 flex items-center gap-1">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function clearBranchesSearch() {
+            const input = document.getElementById('search-branches-input');
+            if (input) input.value = '';
+            filterBranchesTable();
         }
 
         async function openPortalModal(clientId) {
