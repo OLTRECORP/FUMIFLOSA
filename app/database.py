@@ -45,8 +45,22 @@ else:
                 time.sleep(2)
 
     if not pg_connected:
-        print(f"[DATABASE ADAPTER WARNING]: PostgreSQL no disponible tras {max_retries} intentos ({last_err}). Activando SQLite de respaldo 'sqlite:///./fumiflosa.db'.")
-        sqlite_url = "sqlite:///./fumiflosa.db"
+        import os
+        from pathlib import Path
+        
+        # Detectar rutas persistentes en Render o entornos contenerizados
+        custom_sqlite_path = os.getenv("SQLITE_PATH")
+        if custom_sqlite_path:
+            sqlite_file = Path(custom_sqlite_path)
+        elif Path("/data").is_dir() and os.access("/data", os.W_OK):
+            sqlite_file = Path("/data/fumiflosa.db")
+        elif Path("/var/data").is_dir() and os.access("/var/data", os.W_OK):
+            sqlite_file = Path("/var/data/fumiflosa.db")
+        else:
+            sqlite_file = Path("./fumiflosa.db")
+            
+        sqlite_url = f"sqlite:///{sqlite_file.resolve()}"
+        print(f"[DATABASE ADAPTER WARNING]: PostgreSQL no disponible tras {max_retries} intentos ({last_err}). Usando SQLite en: {sqlite_url}")
         engine = create_engine(
             sqlite_url,
             connect_args={"check_same_thread": False},

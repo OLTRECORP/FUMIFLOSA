@@ -51,20 +51,52 @@
             font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
         }
 
-        /* Estilos de Menú Lateral (Mockup Imagen 1 & 2) */
+        /* ============================================================= */
+        /* IDENTIDAD VISUAL FLOSA & MENÚ LATERAL (COLORES OFICIALES) */
+        /* ============================================================= */
+        #main-sidebar {
+            background: linear-gradient(180deg, #166534 0%, #14532d 100%) !important;
+            border-right: 2px solid #d4a017 !important;
+            box-shadow: 4px 0 20px rgba(20, 83, 45, 0.15) !important;
+        }
+
         .sidebar-nav-item {
+            color: #dcfce7 !important;
+            font-weight: 600;
             transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
         }
+        .sidebar-nav-item:hover {
+            background-color: rgba(255, 255, 255, 0.12) !important;
+            color: #ffffff !important;
+            transform: translateX(2px);
+        }
         .sidebar-nav-item.active {
-            background: #f0fdf4 !important;
-            color: #15803d !important;
-            font-weight: 800 !important;
-            box-shadow: 0 1px 3px rgba(22, 163, 74, 0.1) !important;
-            border-left: 3px solid #16a34a;
+            background: #ffffff !important;
+            color: #14532d !important;
+            font-weight: 900 !important;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15) !important;
+            border-left: 4px solid #d4a017 !important;
         }
         .sidebar-nav-item.active i {
             color: #16a34a !important;
         }
+
+        /* CONTORNOS CLAROS DE RECUADROS (MODO CLARO) */
+        body {
+            background-color: #f1f3f6 !important;
+        }
+        .bg-\[\#f8fafc\] {
+            background-color: #f1f3f6 !important;
+        }
+        .bg-white {
+            border: 1px solid #cbd5e1 !important;
+            box-shadow: 0 4px 18px -2px rgba(0, 0, 0, 0.06), 0 2px 6px -1px rgba(0, 0, 0, 0.04) !important;
+        }
+        #top-metrics-row > div {
+            border: 1px solid #cbd5e1 !important;
+            box-shadow: 0 4px 16px -2px rgba(0, 0, 0, 0.06), 0 2px 4px -1px rgba(0, 0, 0, 0.03) !important;
+        }
+
         /* Modos de Tamaño de Texto para Accesibilidad y Fácil Lectura */
         body.text-zoom-sm { font-size: 13px; }
         body.text-zoom-base { font-size: 14.5px; }
@@ -86,177 +118,185 @@
         .tab-btn { transition: all 0.15s ease-in-out; }
 
         /* ============================================================= */
-        /* ESTILOS DE MODO OSCURO (PORTAL CLARO / OSCURO) */
+        /* ESTILOS DE MODO OSCURO (GRIS CARBÓN NEUTRAL - SIN AZUL OSCURO) */
         /* ============================================================= */
         html.dark {
             color-scheme: dark;
         }
         html.dark body {
-            background-color: #0b1120 !important;
-            color: #e2e8f0 !important;
+            background-color: #121214 !important;
+            color: #f4f4f6 !important;
         }
         html.dark .bg-\[\#f8fafc\] {
-            background-color: #0b1120 !important;
+            background-color: #121214 !important;
         }
         html.dark #main-sidebar {
-            background-color: #0f172a !important;
-            border-color: #1e293b !important;
+            background: linear-gradient(180deg, #111a13 0%, #15271a 100%) !important;
+            border-right: 2px solid #d4a017 !important;
+            box-shadow: 4px 0 25px rgba(0, 0, 0, 0.4) !important;
         }
         html.dark #main-sidebar .border-b,
         html.dark #main-sidebar .border-t,
         html.dark #main-sidebar .border-slate-100 {
-            border-color: #1e293b !important;
+            border-color: rgba(212, 160, 23, 0.2) !important;
         }
         html.dark .sidebar-nav-item {
-            color: #94a3b8 !important;
+            color: #a7f3d0 !important;
         }
         html.dark .sidebar-nav-item:hover {
-            background-color: #1e293b !important;
-            color: #f8fafc !important;
+            background-color: rgba(255, 255, 255, 0.08) !important;
+            color: #ffffff !important;
         }
         html.dark .sidebar-nav-item.active {
-            background: rgba(16, 185, 129, 0.15) !important;
-            color: #34d399 !important;
-            box-shadow: 0 1px 3px rgba(16, 185, 129, 0.2) !important;
-            border-left: 3px solid #10b981 !important;
+            background: #16a34a !important;
+            color: #ffffff !important;
+            box-shadow: 0 4px 16px rgba(22, 163, 74, 0.35) !important;
+            border-left: 4px solid #f59e0b !important;
         }
         html.dark .sidebar-nav-item.active i {
-            color: #34d399 !important;
+            color: #ffffff !important;
         }
         html.dark #main-topbar,
         html.dark header {
-            background-color: rgba(15, 23, 42, 0.94) !important;
-            border-color: #1e293b !important;
+            background-color: rgba(24, 24, 28, 0.95) !important;
+            border-color: #2e2e38 !important;
         }
         html.dark #topbar-page-title {
-            color: #f8fafc !important;
+            color: #f4f4f6 !important;
         }
         html.dark #global-dashboard-search {
-            background-color: #1e293b !important;
-            color: #f8fafc !important;
-            border-color: #334155 !important;
+            background-color: #16161a !important;
+            color: #f4f4f6 !important;
+            border-color: #383844 !important;
         }
         html.dark #global-dashboard-search::placeholder {
-            color: #64748b !important;
+            color: #71717a !important;
+        }
+        html.dark #global-search-dropdown {
+            background-color: #1e1e24 !important;
+            border-color: #383844 !important;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7) !important;
         }
         html.dark #btn-theme-toggle {
-            background-color: #1e293b !important;
+            background-color: #26262e !important;
             color: #fbbf24 !important;
-            border-color: #334155 !important;
+            border-color: #383844 !important;
         }
         html.dark #btn-theme-toggle:hover {
-            background-color: #334155 !important;
+            background-color: #31313a !important;
         }
         html.dark #top-metrics-row > div {
-            background-color: #0f172a !important;
-            border-color: #1e293b !important;
+            background-color: #1e1e24 !important;
+            border: 1px solid #383844 !important;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 2px 6px 0 rgba(0, 0, 0, 0.3) !important;
         }
         html.dark #top-metrics-row span[id^="stat-"] {
-            color: #f8fafc !important;
+            color: #f4f4f6 !important;
         }
         html.dark #top-metrics-row p {
-            color: #94a3b8 !important;
+            color: #a1a1aa !important;
         }
         html.dark .bg-white {
-            background-color: #0f172a !important;
-            color: #e2e8f0 !important;
+            background-color: #1e1e24 !important;
+            color: #f4f4f6 !important;
+            border: 1px solid #383844 !important;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 2px 6px 0 rgba(0, 0, 0, 0.3) !important;
         }
         html.dark .border-slate-200,
         html.dark .border-slate-200\/80,
-        html.dark .border-slate-100 {
-            border-color: #1e293b !important;
-        }
+        html.dark .border-slate-100,
         html.dark .border-slate-300 {
-            border-color: #334155 !important;
+            border-color: #383844 !important;
         }
         html.dark .bg-slate-50,
         html.dark .bg-slate-50\/70,
         html.dark .bg-slate-50\/80,
         html.dark .bg-slate-50\/50,
         html.dark .bg-slate-50\/60 {
-            background-color: #090d16 !important;
+            background-color: #16161a !important;
+            border-color: #2c2c34 !important;
         }
         html.dark .bg-slate-100,
         html.dark .bg-slate-100\/80 {
-            background-color: #1e293b !important;
+            background-color: #27272e !important;
         }
         html.dark .text-slate-900,
         html.dark .text-slate-800,
         html.dark .text-slate-700 {
-            color: #f8fafc !important;
+            color: #f4f4f6 !important;
         }
         html.dark .text-slate-600,
         html.dark .text-slate-500 {
-            color: #94a3b8 !important;
+            color: #a1a1aa !important;
         }
         html.dark .text-slate-400 {
-            color: #64748b !important;
+            color: #71717a !important;
         }
         html.dark input:not([type="checkbox"]):not([type="radio"]), 
         html.dark select, 
         html.dark textarea {
-            background-color: #1e293b !important;
-            color: #f8fafc !important;
-            border-color: #334155 !important;
+            background-color: #16161a !important;
+            color: #f4f4f6 !important;
+            border-color: #383844 !important;
         }
         html.dark input::placeholder,
         html.dark textarea::placeholder {
-            color: #64748b !important;
+            color: #71717a !important;
         }
         html.dark table thead {
-            background-color: #090d16 !important;
-            color: #94a3b8 !important;
+            background-color: #16161a !important;
+            color: #a1a1aa !important;
         }
         html.dark table thead th {
-            color: #94a3b8 !important;
-            border-color: #1e293b !important;
+            color: #a1a1aa !important;
+            border-color: #2c2c34 !important;
         }
         html.dark table tbody tr {
-            border-color: #1e293b !important;
+            border-color: #2c2c34 !important;
         }
         html.dark table tbody tr:hover {
-            background-color: rgba(30, 41, 59, 0.5) !important;
+            background-color: rgba(45, 45, 55, 0.5) !important;
         }
         html.dark table td {
-            color: #e2e8f0 !important;
+            color: #f4f4f6 !important;
         }
         html.dark .divide-slate-100 > :not([hidden]) ~ :not([hidden]),
         html.dark .divide-slate-200 > :not([hidden]) ~ :not([hidden]) {
-            border-color: #1e293b !important;
+            border-color: #2c2c34 !important;
         }
         html.dark #calendar-cells > div {
-            background-color: #0f172a !important;
-            border-color: #1e293b !important;
+            background-color: #1e1e24 !important;
+            border-color: #2c2c34 !important;
         }
         html.dark #calendar-cells > div:hover {
-            background-color: #1e293b !important;
+            background-color: #27272e !important;
         }
         html.dark #calendar-cells > div.opacity-40 {
-            background-color: #090d16 !important;
-            color: #475569 !important;
+            background-color: #141418 !important;
+            color: #52525b !important;
         }
         html.dark #calendar-day-details-list > div {
-            background-color: #1e293b !important;
-            border-color: #334155 !important;
+            background-color: #16161a !important;
+            border-color: #2c2c34 !important;
         }
         html.dark #calendar-day-details-list > div h4 {
-            color: #f8fafc !important;
+            color: #f4f4f6 !important;
         }
         html.dark .tab-btn.text-slate-500 {
-            color: #94a3b8 !important;
+            color: #a1a1aa !important;
         }
         html.dark .tab-btn.text-slate-500:hover {
-            color: #f8fafc !important;
+            color: #f4f4f6 !important;
         }
         html.dark .modal-dialog-container,
         html.dark [id^="modal-"]:not(#modal-auth-login) > div:not(.backdrop-blur-md):not(.backdrop-blur-sm) {
-            background-color: #0f172a !important;
-            border-color: #1e293b !important;
-            color: #f8fafc !important;
+            background-color: #1e1e24 !important;
+            border-color: #383844 !important;
+            color: #f4f4f6 !important;
         }
         html.dark [id^="modal-"]:not(#modal-auth-login) .bg-slate-50,
         html.dark [id^="modal-"]:not(#modal-auth-login) .bg-slate-100 {
-            background-color: #1e293b !important;
+            background-color: #16161a !important;
         }
 
         /* Estilos específicos para Modal de Guía de Uso */
@@ -2286,55 +2326,82 @@
         <!-- ================================================================= -->
         <!-- MENÚ LATERAL MODERNO (ESTILO MOCKUP IMÁGENES) -->
         <!-- ================================================================= -->
-        <aside id="main-sidebar" class="fixed md:sticky top-0 left-0 h-screen w-72 bg-white border-r border-slate-200/80 z-40 flex flex-col justify-between transition-transform duration-300 -translate-x-full md:translate-x-0 shadow-xl md:shadow-none flex-shrink-0">
+        <aside id="main-sidebar" class="fixed md:sticky top-0 left-0 h-screen w-72 z-40 flex flex-col justify-between transition-transform duration-300 -translate-x-full md:translate-x-0 shadow-2xl md:shadow-none flex-shrink-0">
             
-            <!-- HEADER DEL SIDEBAR: LOGO FLOSA & CUMPLIMIENTO -->
-            <div class="p-5 border-b border-slate-100 flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                    <div class="w-11 h-11 bg-white rounded-2xl flex items-center justify-center p-1.5 shadow-md shadow-brand-500/10 border border-slate-100">
-                        <img src="/assets/logo_flosa.png" alt="FLOSA" class="h-8 w-auto object-contain" />
-                    </div>
-                    <div>
-                        <div class="flex items-center gap-1.5">
-                            <h2 class="text-base font-black tracking-tight text-slate-900">FLOSA</h2>
-                            <span class="text-[9px] font-bold bg-brand-100 text-brand-800 px-1.5 py-0.5 rounded-full border border-brand-300">NOM-256</span>
+            <!-- HEADER DEL SIDEBAR: LOGO FLOSA + PERFIL DESTACADO -->
+            <div class="p-4 border-b border-emerald-600/30 bg-emerald-950/20">
+                <!-- LOGO FLOSA BADGE -->
+                <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center gap-2.5 bg-white/95 backdrop-blur-sm px-3 py-1.5 rounded-2xl shadow-md border border-amber-400/40">
+                        <img src="/assets/logo_flosa.png" alt="FLOSA" class="h-7 w-auto object-contain" />
+                        <div>
+                            <div class="flex items-center gap-1">
+                                <span class="text-xs font-black tracking-tight text-emerald-950">FLOSA</span>
+                                <span class="text-[8px] font-black bg-emerald-700 text-white px-1 py-0.2 rounded">MIP</span>
+                            </div>
+                            <span class="text-[9px] text-slate-600 font-semibold block leading-none">NOM-256</span>
                         </div>
-                        <p class="text-[11px] text-slate-400 font-medium">Control Integral de Plagas</p>
+                    </div>
+                    <!-- Botón Cerrar en móvil -->
+                    <button type="button" onclick="toggleMobileSidebar()" class="md:hidden text-white/80 hover:text-white p-1.5 rounded-lg hover:bg-white/10">
+                        <i class="fa-solid fa-xmark text-lg"></i>
+                    </button>
+                </div>
+
+                <!-- TARJETA DE PERFIL DESTACADA (ESTILO MOCKUP IMAGEN 1) -->
+                <div class="bg-white/10 backdrop-blur-md rounded-2xl p-3 border border-white/15 flex items-center gap-3">
+                    <div class="relative flex-shrink-0">
+                        <div class="w-12 h-12 rounded-full bg-gradient-to-tr from-amber-400 to-yellow-300 ring-4 ring-amber-400/70 text-slate-950 font-black flex items-center justify-center text-sm shadow-lg">
+                            <span class="tracking-tighter font-extrabold text-slate-950 text-base">MA</span>
+                        </div>
+                        <span class="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-400 rounded-full border-2 border-emerald-900 flex items-center justify-center" title="En Línea">
+                            <i class="fa-solid fa-check text-[7px] text-emerald-950 font-bold"></i>
+                        </span>
+                    </div>
+                    <div class="min-w-0 flex-1">
+                        <div class="flex items-center gap-1">
+                            <h3 id="sidebar-user-name" class="text-xs font-black text-white truncate leading-tight">Marco Antonio Flores</h3>
+                        </div>
+                        <span id="sidebar-user-role" class="inline-flex items-center gap-1 text-[9px] font-black text-amber-300 bg-amber-950/60 border border-amber-400/40 px-2 py-0.5 rounded-full mt-0.5 tracking-wider uppercase">
+                            <i class="fa-solid fa-shield-halved text-[8px] text-amber-400"></i> SuperAdmin Master
+                        </span>
+                        <p class="text-[9px] text-emerald-200/90 font-mono mt-0.5 truncate">
+                            <i class="fa-solid fa-certificate text-amber-400 text-[8px] mr-0.5"></i>Lic. 08 17 19 SA 0001
+                        </p>
                     </div>
                 </div>
-                <!-- Botón Cerrar en móvil -->
-                <button type="button" onclick="toggleMobileSidebar()" class="md:hidden text-slate-400 hover:text-slate-600 p-1.5">
-                    <i class="fa-solid fa-xmark text-lg"></i>
-                </button>
             </div>
 
-            <!-- NAVEGACIÓN PRINCIPAL (CATEGORIZADA COMO EN IMAGEN 1 & 2) -->
-            <div class="flex-1 overflow-y-auto px-4 py-4 space-y-5 text-xs">
+            <!-- NAVEGACIÓN PRINCIPAL (CATEGORIZADA CON ESTILO FLOSA & GOLD) -->
+            <div class="flex-1 overflow-y-auto px-3.5 py-4 space-y-4 text-xs">
                 
                 <!-- SECCIÓN 1: INICIO & RESUMEN -->
                 <div>
-                    <p class="px-3 text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-2">Inicio & Resumen</p>
+                    <div class="sidebar-section-title px-3 mb-1.5 flex items-center justify-between">
+                        <span>Inicio & Resumen</span>
+                        <i class="fa-solid fa-gauge text-[8px] text-amber-400/70"></i>
+                    </div>
                     <div class="space-y-1">
-                        <button type="button" onclick="switchTab('tab-cronologico')" id="side-tab-cronologico" class="sidebar-nav-item active w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-slate-600 hover:bg-slate-50 hover:text-slate-900 group">
-                            <div class="flex items-center gap-3">
-                                <i class="fa-solid fa-calendar-days text-indigo-500 text-sm group-hover:scale-110 transition-transform"></i>
-                                <span class="font-semibold">Calendario & Citas</span>
+                        <button type="button" onclick="switchTab('tab-cronologico')" id="side-tab-cronologico" class="sidebar-nav-item active w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl group cursor-pointer">
+                            <div class="flex items-center gap-2.5">
+                                <i class="fa-solid fa-calendar-days text-sm"></i>
+                                <span>Calendario & Citas</span>
                             </div>
-                            <span class="text-[10px] font-bold bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full">Agenda</span>
+                            <span class="text-[9px] font-extrabold bg-amber-400 text-slate-950 px-2 py-0.5 rounded-full shadow-xs">Agenda</span>
                         </button>
 
-                        <button type="button" onclick="switchTab('tab-vencimientos')" id="side-tab-vencimientos" class="sidebar-nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-slate-600 hover:bg-slate-50 hover:text-slate-900 group">
-                            <div class="flex items-center gap-3">
-                                <i class="fa-solid fa-clock text-rose-500 text-sm group-hover:scale-110 transition-transform"></i>
-                                <span class="font-semibold">Vencimientos (30d)</span>
+                        <button type="button" onclick="switchTab('tab-vencimientos')" id="side-tab-vencimientos" class="sidebar-nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl group cursor-pointer">
+                            <div class="flex items-center gap-2.5">
+                                <i class="fa-solid fa-clock text-sm"></i>
+                                <span>Vencimientos (30d)</span>
                             </div>
-                            <span class="text-[10px] font-bold bg-rose-50 text-rose-600 px-2 py-0.5 rounded-full">Alerta</span>
+                            <span class="text-[9px] font-bold bg-rose-500/20 text-rose-300 border border-rose-400/30 px-2 py-0.5 rounded-full">Alerta</span>
                         </button>
 
-                        <button type="button" onclick="switchTab('tab-analytics')" id="side-tab-analytics" class="sidebar-nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-slate-600 hover:bg-slate-50 hover:text-slate-900 group">
-                            <div class="flex items-center gap-3">
-                                <i class="fa-solid fa-chart-pie text-cyan-500 text-sm group-hover:scale-110 transition-transform"></i>
-                                <span class="font-semibold">Métricas & Analytics</span>
+                        <button type="button" onclick="switchTab('tab-analytics')" id="side-tab-analytics" class="sidebar-nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl group cursor-pointer">
+                            <div class="flex items-center gap-2.5">
+                                <i class="fa-solid fa-chart-pie text-sm"></i>
+                                <span>Métricas & Analytics</span>
                             </div>
                         </button>
                     </div>
@@ -2342,34 +2409,37 @@
 
                 <!-- SECCIÓN 2: OPERACIÓN EN CAMPO (NOM-256) -->
                 <div>
-                    <p class="px-3 text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-2">Operación NOM-256</p>
+                    <div class="sidebar-section-title px-3 mb-1.5 flex items-center justify-between">
+                        <span>Operación NOM-256</span>
+                        <i class="fa-solid fa-spray-can-sparkles text-[8px] text-amber-400/70"></i>
+                    </div>
                     <div class="space-y-1">
-                        <button type="button" onclick="switchTab('tab-nuevo-servicio')" id="side-tab-nuevo-servicio" class="sidebar-nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-slate-600 hover:bg-slate-50 hover:text-slate-900 group">
-                            <div class="flex items-center gap-3">
-                                <i class="fa-solid fa-file-circle-plus text-brand-600 text-sm group-hover:scale-110 transition-transform"></i>
-                                <span class="font-semibold">Registrar Servicio</span>
+                        <button type="button" onclick="switchTab('tab-nuevo-servicio')" id="side-tab-nuevo-servicio" class="sidebar-nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl group cursor-pointer">
+                            <div class="flex items-center gap-2.5">
+                                <i class="fa-solid fa-file-circle-plus text-sm"></i>
+                                <span>Registrar Servicio</span>
                             </div>
-                            <span class="text-[10px] font-bold bg-emerald-50 text-emerald-700 px-1.5 py-0.5 rounded-full">+ Nuevo</span>
+                            <span class="text-[9px] font-bold bg-amber-400/20 text-amber-300 border border-amber-400/40 px-1.5 py-0.5 rounded-full">+ Nuevo</span>
                         </button>
 
-                        <button type="button" onclick="switchTab('tab-ordenes')" id="side-tab-ordenes" class="sidebar-nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-slate-600 hover:bg-slate-50 hover:text-slate-900 group">
-                            <div class="flex items-center gap-3">
-                                <i class="fa-solid fa-file-signature text-blue-500 text-sm group-hover:scale-110 transition-transform"></i>
-                                <span class="font-semibold">Órdenes & PDF</span>
-                            </div>
-                        </button>
-
-                        <button type="button" onclick="switchTab('tab-masivo')" id="side-tab-masivo" class="sidebar-nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-slate-600 hover:bg-slate-50 hover:text-slate-900 group">
-                            <div class="flex items-center gap-3">
-                                <i class="fa-solid fa-layer-group text-purple-500 text-sm group-hover:scale-110 transition-transform"></i>
-                                <span class="font-semibold">Emisión Mensual B2B</span>
+                        <button type="button" onclick="switchTab('tab-ordenes')" id="side-tab-ordenes" class="sidebar-nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl group cursor-pointer">
+                            <div class="flex items-center gap-2.5">
+                                <i class="fa-solid fa-file-signature text-sm"></i>
+                                <span>Órdenes & PDF</span>
                             </div>
                         </button>
 
-                        <button type="button" onclick="switchTab('tab-bitacoras')" id="side-tab-bitacoras" class="sidebar-nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-slate-600 hover:bg-slate-50 hover:text-slate-900 group">
-                            <div class="flex items-center gap-3">
-                                <i class="fa-solid fa-clipboard-list text-amber-500 text-sm group-hover:scale-110 transition-transform"></i>
-                                <span class="font-semibold">Bitácoras Oficiales MIP</span>
+                        <button type="button" onclick="switchTab('tab-masivo')" id="side-tab-masivo" class="sidebar-nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl group cursor-pointer">
+                            <div class="flex items-center gap-2.5">
+                                <i class="fa-solid fa-layer-group text-sm"></i>
+                                <span>Emisión Mensual B2B</span>
+                            </div>
+                        </button>
+
+                        <button type="button" onclick="switchTab('tab-bitacoras')" id="side-tab-bitacoras" class="sidebar-nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl group cursor-pointer">
+                            <div class="flex items-center gap-2.5">
+                                <i class="fa-solid fa-clipboard-list text-sm"></i>
+                                <span>Bitácoras Oficiales MIP</span>
                             </div>
                         </button>
                     </div>
@@ -2377,27 +2447,30 @@
 
                 <!-- SECCIÓN 3: CATÁLOGOS & MIP -->
                 <div>
-                    <p class="px-3 text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-2">Catálogos & MIP</p>
+                    <div class="sidebar-section-title px-3 mb-1.5 flex items-center justify-between">
+                        <span>Catálogos & MIP</span>
+                        <i class="fa-solid fa-folder-tree text-[8px] text-amber-400/70"></i>
+                    </div>
                     <div class="space-y-1">
-                        <button type="button" onclick="switchTab('tab-clientes')" id="side-tab-clientes" class="sidebar-nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-slate-600 hover:bg-slate-50 hover:text-slate-900 group">
-                            <div class="flex items-center gap-3">
-                                <i class="fa-solid fa-building text-blue-600 text-sm group-hover:scale-110 transition-transform"></i>
-                                <span class="font-semibold">Clientes & Sucursales</span>
+                        <button type="button" onclick="switchTab('tab-clientes')" id="side-tab-clientes" class="sidebar-nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl group cursor-pointer">
+                            <div class="flex items-center gap-2.5">
+                                <i class="fa-solid fa-building text-sm"></i>
+                                <span>Clientes & Sucursales</span>
                             </div>
                         </button>
 
-                        <button type="button" onclick="switchTab('tab-quimicos')" id="side-tab-quimicos" class="sidebar-nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-slate-600 hover:bg-slate-50 hover:text-slate-900 group">
-                            <div class="flex items-center gap-3">
-                                <i class="fa-solid fa-flask-vial text-teal-500 text-sm group-hover:scale-110 transition-transform"></i>
-                                <span class="font-semibold">Químicos COFEPRIS</span>
+                        <button type="button" onclick="switchTab('tab-quimicos')" id="side-tab-quimicos" class="sidebar-nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl group cursor-pointer">
+                            <div class="flex items-center gap-2.5">
+                                <i class="fa-solid fa-flask-vial text-sm"></i>
+                                <span>Químicos COFEPRIS</span>
                             </div>
-                            <span class="text-[10px] font-bold bg-teal-50 text-teal-700 px-1.5 py-0.5 rounded-full">HDS</span>
+                            <span class="text-[9px] font-bold bg-teal-400/20 text-teal-200 border border-teal-400/30 px-1.5 py-0.5 rounded-full">HDS</span>
                         </button>
 
-                        <button type="button" onclick="switchTab('tab-mip')" id="side-tab-mip" class="sidebar-nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-slate-600 hover:bg-slate-50 hover:text-slate-900 group">
-                            <div class="flex items-center gap-3">
-                                <i class="fa-solid fa-bug text-purple-600 text-sm group-hover:scale-110 transition-transform"></i>
-                                <span class="font-semibold">Manual MIP & Plagas IA</span>
+                        <button type="button" onclick="switchTab('tab-mip')" id="side-tab-mip" class="sidebar-nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl group cursor-pointer">
+                            <div class="flex items-center gap-2.5">
+                                <i class="fa-solid fa-bug text-sm"></i>
+                                <span>Manual MIP & Plagas IA</span>
                             </div>
                         </button>
                     </div>
@@ -2405,62 +2478,61 @@
 
                 <!-- SECCIÓN 4: ADMINISTRACIÓN & SISTEMA -->
                 <div>
-                    <p class="px-3 text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-2">Administración</p>
+                    <div class="sidebar-section-title px-3 mb-1.5 flex items-center justify-between">
+                        <span>Administración</span>
+                        <i class="fa-solid fa-gear text-[8px] text-amber-400/70"></i>
+                    </div>
                     <div class="space-y-1">
-                        <button type="button" onclick="switchTab('tab-usuarios')" id="side-tab-usuarios" class="sidebar-nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-slate-600 hover:bg-slate-50 hover:text-slate-900 group">
-                            <div class="flex items-center gap-3">
-                                <i class="fa-solid fa-users-gear text-orange-500 text-sm group-hover:scale-110 transition-transform"></i>
-                                <span class="font-semibold">Técnicos STPS DC-3</span>
+                        <button type="button" onclick="switchTab('tab-usuarios')" id="side-tab-usuarios" class="sidebar-nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl group cursor-pointer">
+                            <div class="flex items-center gap-2.5">
+                                <i class="fa-solid fa-users-gear text-sm"></i>
+                                <span>Técnicos STPS DC-3</span>
                             </div>
                         </button>
 
-                        <button type="button" onclick="switchTab('tab-empresa')" id="side-tab-empresa" class="sidebar-nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-slate-600 hover:bg-slate-50 hover:text-slate-900 group">
-                            <div class="flex items-center gap-3">
-                                <i class="fa-solid fa-stamp text-amber-600 text-sm group-hover:scale-110 transition-transform"></i>
-                                <span class="font-semibold">Empresa & FIEL SAT</span>
+                        <button type="button" onclick="switchTab('tab-empresa')" id="side-tab-empresa" class="sidebar-nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl group cursor-pointer">
+                            <div class="flex items-center gap-2.5">
+                                <i class="fa-solid fa-stamp text-sm"></i>
+                                <span>Empresa & FIEL SAT</span>
                             </div>
                         </button>
 
-                        <button type="button" onclick="switchTab('tab-importacion')" id="side-tab-importacion" class="sidebar-nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-slate-600 hover:bg-slate-50 hover:text-slate-900 group">
-                            <div class="flex items-center gap-3">
-                                <i class="fa-solid fa-file-csv text-emerald-600 text-sm group-hover:scale-110 transition-transform"></i>
-                                <span class="font-semibold">Ingesta CSV</span>
+                        <button type="button" onclick="switchTab('tab-importacion')" id="side-tab-importacion" class="sidebar-nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl group cursor-pointer">
+                            <div class="flex items-center gap-2.5">
+                                <i class="fa-solid fa-file-csv text-sm"></i>
+                                <span>Ingesta CSV</span>
                             </div>
                         </button>
 
-                        <button type="button" onclick="switchTab('tab-respaldos')" id="side-tab-respaldos" class="sidebar-nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-slate-600 hover:bg-slate-50 hover:text-slate-900 group">
-                            <div class="flex items-center gap-3">
-                                <i class="fa-solid fa-cloud-arrow-down text-cyan-600 text-sm group-hover:scale-110 transition-transform"></i>
-                                <span class="font-semibold">Respaldos & Nube</span>
+                        <button type="button" onclick="switchTab('tab-respaldos')" id="side-tab-respaldos" class="sidebar-nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl group cursor-pointer">
+                            <div class="flex items-center gap-2.5">
+                                <i class="fa-solid fa-cloud-arrow-down text-sm"></i>
+                                <span>Respaldos & Nube</span>
                             </div>
                         </button>
 
-                        <button type="button" onclick="switchTab('tab-auditoria')" id="side-tab-auditoria" class="sidebar-nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-slate-600 hover:bg-slate-50 hover:text-slate-900 group">
-                            <div class="flex items-center gap-3">
-                                <i class="fa-solid fa-shield-halved text-rose-600 text-sm group-hover:scale-110 transition-transform"></i>
-                                <span class="font-semibold">Auditoría & Log Master</span>
+                        <button type="button" onclick="switchTab('tab-auditoria')" id="side-tab-auditoria" class="sidebar-nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl group cursor-pointer">
+                            <div class="flex items-center gap-2.5">
+                                <i class="fa-solid fa-shield-halved text-sm"></i>
+                                <span>Auditoría & Log Master</span>
                             </div>
-                            <span class="text-[10px] font-bold bg-rose-50 text-rose-700 px-1.5 py-0.5 rounded-full">Audit</span>
+                            <span class="text-[9px] font-bold bg-amber-400/20 text-amber-300 border border-amber-400/40 px-1.5 py-0.5 rounded-full">Audit</span>
                         </button>
                     </div>
                 </div>
 
             </div>
 
-            <!-- FOOTER DEL SIDEBAR: TARJETA DE PERFIL (ESTILO IMAGEN 1) -->
-            <div class="p-4 border-t border-slate-100 bg-slate-50/70">
-                <div class="flex items-center justify-between gap-3">
-                    <div class="flex items-center gap-2.5 min-w-0">
-                        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-brand-600 to-emerald-400 text-white font-bold flex items-center justify-center text-sm shadow-sm flex-shrink-0">
-                            M
-                        </div>
-                        <div class="min-w-0">
-                            <p id="sidebar-user-name" class="text-xs font-bold text-slate-900 truncate">Marco Antonio Flores</p>
-                            <p id="sidebar-user-role" class="text-[10px] text-brand-700 font-extrabold uppercase truncate">SuperAdmin Master</p>
-                        </div>
+            <!-- FOOTER DEL SIDEBAR: ESTADO & CERRAR SESIÓN -->
+            <div class="p-3.5 border-t border-emerald-600/30 bg-emerald-950/40">
+                <div class="flex items-center justify-between gap-2">
+                    <div class="flex items-center gap-2 text-[10px] text-emerald-200/90 font-medium">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                        <span>Servidor Conectado</span>
                     </div>
-                    <button type="button" onclick="logoutMasterUser()" title="Cerrar Sesión" class="text-slate-400 hover:text-rose-600 hover:bg-rose-50 p-2 rounded-xl transition flex-shrink-0">
-                        <i class="fa-solid fa-right-from-bracket"></i>
+                    <button type="button" onclick="logoutMasterUser()" title="Cerrar Sesión Segura" class="flex items-center gap-1.5 bg-white/10 hover:bg-rose-500 text-white hover:text-white px-2.5 py-1.5 rounded-xl text-xs font-bold transition border border-white/10 cursor-pointer">
+                        <i class="fa-solid fa-right-from-bracket text-xs"></i>
+                        <span class="text-[11px]">Salir</span>
                     </button>
                 </div>
             </div>
@@ -2493,11 +2565,18 @@
                     </div>
                 </div>
 
-                <!-- Centro: Buscador Pill Search Anything Here (Estilo Imagen 1 & 2) -->
-                <div class="hidden xl:flex flex-1 max-w-md mx-4">
+                <!-- Centro: Buscador Inteligente con Dropdown de Resultados (Estilo Mockup) -->
+                <div id="global-search-container" class="relative hidden xl:flex flex-1 max-w-md mx-4">
                     <div class="relative w-full">
-                        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-                        <input type="text" id="global-dashboard-search" oninput="handleGlobalSearch(this.value)" placeholder="Search anything here... (Clientes, folio, químicos, plagas)" class="w-full pl-9 pr-4 py-2 bg-slate-100/80 hover:bg-slate-100 focus:bg-white text-xs rounded-full border border-slate-200 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition shadow-inner font-medium" />
+                        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-zinc-500 text-xs"></i>
+                        <input type="text" id="global-dashboard-search" oninput="handleGlobalSearch(this.value)" onfocus="handleGlobalSearch(this.value)" placeholder="Buscar clientes, folios, químicos, plagas o módulos..." class="w-full pl-9 pr-8 py-2 bg-slate-100/90 dark:bg-[#1a1a20] hover:bg-slate-100 dark:hover:bg-[#22222a] focus:bg-white dark:focus:bg-[#1e1e24] text-xs text-slate-800 dark:text-zinc-100 rounded-full border border-slate-200 dark:border-[#383844] focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-500/20 transition shadow-inner font-medium placeholder:text-slate-400 dark:placeholder:text-zinc-500" autocomplete="off" />
+                        <button type="button" id="btn-clear-global-search" onclick="clearGlobalSearch()" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-zinc-200 text-xs p-1 cursor-pointer">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+                    <!-- Dropdown Flotante de Resultados en Tiempo Real -->
+                    <div id="global-search-dropdown" class="hidden absolute top-full left-0 right-0 mt-2 bg-white dark:bg-[#1e1e24] rounded-2xl border border-slate-200 dark:border-[#383844] shadow-2xl z-50 max-h-96 overflow-y-auto p-2 space-y-2 text-xs">
+                        <!-- Inyectado dinámicamente por handleGlobalSearch -->
                     </div>
                 </div>
 
@@ -2538,6 +2617,32 @@
 
             <!-- CONTENEDOR PRINCIPAL CON SCROLL SUAVE -->
             <main class="flex-1 w-full max-w-[99%] 2xl:max-w-[1920px] mx-auto px-3 sm:px-6 py-6 space-y-6">
+
+                <!-- BANNER DE BIENVENIDA Y ESTADO NOM-256 (ESTILO DASHBOARD MODERNO) -->
+                <div class="bg-gradient-to-r from-emerald-800 via-emerald-900 to-slate-900 rounded-3xl p-5 sm:p-6 text-white shadow-lg border border-emerald-700/50 relative overflow-hidden flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                    <div class="absolute -right-8 -bottom-8 w-48 h-48 bg-amber-400/10 rounded-full blur-2xl pointer-events-none"></div>
+                    <div class="space-y-1 relative z-10">
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <h2 class="text-xl sm:text-2xl font-black tracking-tight">¡Bienvenido al Portal, Marco Antonio!</h2>
+                            <span class="text-[10px] font-extrabold bg-amber-400 text-slate-950 px-2.5 py-0.5 rounded-full uppercase tracking-wider shadow-sm flex items-center gap-1">
+                                <i class="fa-solid fa-shield-check"></i> SuperAdmin
+                            </span>
+                        </div>
+                        <p class="text-xs sm:text-sm text-emerald-200/90 font-medium">
+                            Control Integral de Plagas Urbanas &bull; Licencia Sanitaria: <span class="font-mono font-bold text-amber-300">08 17 19 SA 0001</span> &bull; Jurisdicción Sanitaria No. II
+                        </p>
+                    </div>
+                    <div class="flex items-center gap-2 relative z-10 flex-shrink-0">
+                        <div class="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl px-3.5 py-2 text-right">
+                            <p class="text-[10px] text-emerald-200 font-bold uppercase tracking-wider" id="header-today-day">Hoy</p>
+                            <p class="text-xs sm:text-sm font-black text-white" id="header-today-date">--</p>
+                        </div>
+                        <button type="button" onclick="switchTab('tab-nuevo-servicio')" class="bg-amber-400 hover:bg-amber-300 text-slate-950 font-black px-4 py-2.5 rounded-2xl text-xs shadow-md shadow-amber-400/20 flex items-center gap-2 transition transform active:scale-95 cursor-pointer">
+                            <i class="fa-solid fa-plus-circle text-sm"></i>
+                            <span>Nuevo Servicio</span>
+                        </button>
+                    </div>
+                </div>
 
                 <!-- ========================================================= -->
                 <!-- TARJETAS DE MÉTRICAS KPI (ESTILO MOCKUP IMAGEN 1) -->
@@ -4741,8 +4846,22 @@
         }
 
         function handleGlobalSearch(query) {
-            query = (query || '').toLowerCase().trim();
-            if (!query) return;
+            const dropdown = document.getElementById('global-search-dropdown');
+            const clearBtn = document.getElementById('btn-clear-global-search');
+            const q = (query || '').toLowerCase().trim();
+
+            if (!dropdown) return;
+
+            if (!q) {
+                dropdown.classList.add('hidden');
+                dropdown.innerHTML = '';
+                if (clearBtn) clearBtn.classList.add('hidden');
+                return;
+            }
+
+            if (clearBtn) clearBtn.classList.remove('hidden');
+
+            // Dispatch to inner inputs for tab continuity
             const searchInputs = [
                 document.getElementById('search-orders'),
                 document.getElementById('search-clients-input'),
@@ -4750,12 +4869,268 @@
                 document.getElementById('search-plagas-input')
             ];
             searchInputs.forEach(input => {
-                if (input) {
-                    input.value = query;
+                if (input && input.value !== q) {
+                    input.value = q;
                     input.dispatchEvent(new Event('input', { bubbles: true }));
                 }
             });
+
+            // 1. Módulos y Atajos del Sistema
+            const allModules = [
+                { name: 'Calendario & Citas', tab: 'tab-cronologico', icon: 'fa-calendar-days text-indigo-500', desc: 'Agenda de servicios programados' },
+                { name: 'Vencimientos Sanitarios (30d)', tab: 'tab-vencimientos', icon: 'fa-clock text-rose-500', desc: 'Alertas de caducidad de certificados' },
+                { name: 'Registrar Nuevo Servicio', tab: 'tab-nuevo-servicio', icon: 'fa-file-circle-plus text-emerald-600', desc: 'Formulario oficial NOM-256' },
+                { name: 'Órdenes & Certificados PDF', tab: 'tab-ordenes', icon: 'fa-file-signature text-blue-500', desc: 'Historial, descarga y firma digital' },
+                { name: 'Emisión Mensual B2B Masiva', tab: 'tab-masivo', icon: 'fa-layer-group text-purple-500', desc: 'Generación múltiple para corporativos' },
+                { name: 'Clientes & Sucursales', tab: 'tab-clientes', icon: 'fa-building text-blue-600', desc: 'Directorio de empresas y establecimientos' },
+                { name: 'Químicos COFEPRIS & Fichas', tab: 'tab-quimicos', icon: 'fa-flask-vial text-teal-500', desc: 'Catálogo de plaguicidas autorizados y RSCO' },
+                { name: 'Manual MIP & Plagas IA', tab: 'tab-mip', icon: 'fa-bug text-purple-600', desc: 'Catálogo de insectos, roedores y fichas MIP' },
+                { name: 'Bitácoras Oficiales MIP', tab: 'tab-bitacoras', icon: 'fa-clipboard-list text-amber-500', desc: 'Libros de registro y consumo mensual' },
+                { name: 'Técnicos STPS DC-3', tab: 'tab-usuarios', icon: 'fa-users-gear text-orange-500', desc: 'Personal operativo y certificaciones' },
+                { name: 'Empresa & FIEL SAT', tab: 'tab-empresa', icon: 'fa-stamp text-amber-600', desc: 'Datos fiscales y sello digital criptográfico' },
+                { name: 'Auditoría & Bitácora Master', tab: 'tab-auditoria', icon: 'fa-shield-halved text-rose-600', desc: 'Log inmutable de cambios y accesos' },
+                { name: 'Guía y Manual de Uso Oficial', action: 'guia', icon: 'fa-book-open-reader text-amber-500', desc: 'Tutorial y manual completo del sistema' }
+            ];
+
+            const matchedModules = allModules.filter(m => 
+                m.name.toLowerCase().includes(q) || 
+                (m.desc && m.desc.toLowerCase().includes(q))
+            ).slice(0, 3);
+
+            // 2. Clientes
+            const matchedClients = (cachedClients || []).filter(c => 
+                (c.name && c.name.toLowerCase().includes(q)) ||
+                (c.rfc && c.rfc.toLowerCase().includes(q)) ||
+                (c.email && c.email.toLowerCase().includes(q)) ||
+                (c.contact_name && c.contact_name.toLowerCase().includes(q))
+            ).slice(0, 4);
+
+            // 3. Órdenes de Servicio
+            const orderSource = (cachedOrdersList && cachedOrdersList.length) ? cachedOrdersList : (cachedOrders || []);
+            const matchedOrders = orderSource.filter(o => 
+                (o.folio && o.folio.toLowerCase().includes(q)) ||
+                (o.client_name && o.client_name.toLowerCase().includes(q)) ||
+                (o.service_type && o.service_type.toLowerCase().includes(q))
+            ).slice(0, 4);
+
+            // 4. Químicos COFEPRIS
+            const matchedChems = (cachedChemicals || []).filter(ch => 
+                (ch.commercial_name && ch.commercial_name.toLowerCase().includes(q)) ||
+                (ch.active_ingredient && ch.active_ingredient.toLowerCase().includes(q)) ||
+                (ch.rsco && ch.rsco.toLowerCase().includes(q))
+            ).slice(0, 3);
+
+            // 5. Plagas MIP
+            const matchedPests = (cachedMipPests || []).filter(p => 
+                (p.common_name && p.common_name.toLowerCase().includes(q)) ||
+                (p.scientific_name && p.scientific_name.toLowerCase().includes(q))
+            ).slice(0, 3);
+
+            const totalMatches = matchedModules.length + matchedClients.length + matchedOrders.length + matchedChems.length + matchedPests.length;
+
+            if (totalMatches === 0) {
+                dropdown.innerHTML = `
+                    <div class="p-4 text-center text-slate-500 dark:text-zinc-400">
+                        <i class="fa-solid fa-magnifying-glass-chart text-2xl text-slate-300 dark:text-zinc-600 mb-2 block"></i>
+                        <p class="font-bold">No se encontraron resultados para "${q}"</p>
+                        <p class="text-[11px] text-slate-400 dark:text-zinc-500 mt-1">Prueba buscando por nombre de cliente, RFC, folio de orden, plaguicida o módulo.</p>
+                    </div>
+                `;
+                dropdown.classList.remove('hidden');
+                return;
+            }
+
+            let html = '';
+
+            // Módulos
+            if (matchedModules.length > 0) {
+                html += `<div class="pb-1"><p class="px-2 text-[10px] font-black uppercase tracking-wider text-amber-600 dark:text-amber-400 flex items-center gap-1.5"><i class="fa-solid fa-compass text-[9px]"></i> Módulos y Secciones (${matchedModules.length})</p><div class="mt-1 space-y-1">`;
+                matchedModules.forEach(m => {
+                    const clickAction = m.action === 'guia' ? `openSystemUserGuideModal(); closeGlobalSearchDropdown();` : `switchTab('${m.tab}'); closeGlobalSearchDropdown();`;
+                    html += `
+                        <button type="button" onclick="${clickAction}" class="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-100 dark:hover:bg-[#282834] flex items-center justify-between group transition cursor-pointer">
+                            <div class="flex items-center gap-2.5 min-w-0">
+                                <div class="w-7 h-7 rounded-lg bg-slate-100 dark:bg-[#121214] border border-slate-200 dark:border-[#383844] flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition">
+                                    <i class="fa-solid ${m.icon} text-xs"></i>
+                                </div>
+                                <div class="min-w-0">
+                                    <p class="font-bold text-slate-800 dark:text-zinc-100 truncate">${m.name}</p>
+                                    <p class="text-[10px] text-slate-400 dark:text-zinc-400 truncate">${m.desc}</p>
+                                </div>
+                            </div>
+                            <i class="fa-solid fa-arrow-right text-[10px] text-slate-400 dark:text-zinc-500 group-hover:translate-x-1 transition-transform"></i>
+                        </button>
+                    `;
+                });
+                html += `</div></div>`;
+            }
+
+            // Clientes
+            if (matchedClients.length > 0) {
+                html += `<div class="border-t border-slate-100 dark:border-[#282834] pt-2"><p class="px-2 text-[10px] font-black uppercase tracking-wider text-blue-600 dark:text-blue-400 flex items-center gap-1.5"><i class="fa-solid fa-building text-[9px]"></i> Clientes Coincidentes (${matchedClients.length})</p><div class="mt-1 space-y-1">`;
+                matchedClients.forEach(c => {
+                    html += `
+                        <button type="button" onclick="selectSearchClient('${c.id || ''}', '${(c.name || '').replace(/'/g, "\\'")}'); closeGlobalSearchDropdown();" class="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-100 dark:hover:bg-[#282834] flex items-center justify-between group transition cursor-pointer">
+                            <div class="flex items-center gap-2.5 min-w-0">
+                                <div class="w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/50 flex items-center justify-center text-blue-600 dark:text-blue-400 flex-shrink-0">
+                                    <i class="fa-solid fa-building-user text-xs"></i>
+                                </div>
+                                <div class="min-w-0">
+                                    <p class="font-bold text-slate-800 dark:text-zinc-100 truncate">${c.name || 'Sin nombre'}</p>
+                                    <p class="text-[10px] text-slate-400 dark:text-zinc-400 font-mono truncate">RFC: ${c.rfc || 'S/R'} &bull; ${c.contact_name || ''}</p>
+                                </div>
+                            </div>
+                            <span class="text-[9px] font-bold bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded-full border border-blue-200 dark:border-blue-800">Ver Ficha</span>
+                        </button>
+                    `;
+                });
+                html += `</div></div>`;
+            }
+
+            // Órdenes
+            if (matchedOrders.length > 0) {
+                html += `<div class="border-t border-slate-100 dark:border-[#282834] pt-2"><p class="px-2 text-[10px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5"><i class="fa-solid fa-file-signature text-[9px]"></i> Órdenes de Servicio (${matchedOrders.length})</p><div class="mt-1 space-y-1">`;
+                matchedOrders.forEach(o => {
+                    html += `
+                        <button type="button" onclick="selectSearchOrder('${o.folio || ''}'); closeGlobalSearchDropdown();" class="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-100 dark:hover:bg-[#282834] flex items-center justify-between group transition cursor-pointer">
+                            <div class="flex items-center gap-2.5 min-w-0">
+                                <div class="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/50 flex items-center justify-center text-emerald-600 dark:text-emerald-400 flex-shrink-0">
+                                    <i class="fa-solid fa-certificate text-xs"></i>
+                                </div>
+                                <div class="min-w-0">
+                                    <p class="font-bold text-slate-800 dark:text-zinc-100 font-mono truncate">${o.folio || 'FOLIO'} &bull; ${o.client_name || ''}</p>
+                                    <p class="text-[10px] text-slate-400 dark:text-zinc-400 truncate">${o.service_type || 'MIP'} &bull; ${o.service_date || ''}</p>
+                                </div>
+                            </div>
+                            <span class="text-[9px] font-bold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">Ir a Orden</span>
+                        </button>
+                    `;
+                });
+                html += `</div></div>`;
+            }
+
+            // Químicos
+            if (matchedChems.length > 0) {
+                html += `<div class="border-t border-slate-100 dark:border-[#282834] pt-2"><p class="px-2 text-[10px] font-black uppercase tracking-wider text-teal-600 dark:text-teal-400 flex items-center gap-1.5"><i class="fa-solid fa-flask-vial text-[9px]"></i> Químicos y Plaguicidas (${matchedChems.length})</p><div class="mt-1 space-y-1">`;
+                matchedChems.forEach(ch => {
+                    html += `
+                        <button type="button" onclick="selectSearchChemical('${(ch.commercial_name || '').replace(/'/g, "\\'")}'); closeGlobalSearchDropdown();" class="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-100 dark:hover:bg-[#282834] flex items-center justify-between group transition cursor-pointer">
+                            <div class="flex items-center gap-2.5 min-w-0">
+                                <div class="w-7 h-7 rounded-lg bg-teal-50 dark:bg-teal-950/40 border border-teal-200 dark:border-teal-900/50 flex items-center justify-center text-teal-600 dark:text-teal-400 flex-shrink-0">
+                                    <i class="fa-solid fa-flask text-xs"></i>
+                                </div>
+                                <div class="min-w-0">
+                                    <p class="font-bold text-slate-800 dark:text-zinc-100 truncate">${ch.commercial_name || ''}</p>
+                                    <p class="text-[10px] text-slate-400 dark:text-zinc-400 truncate">${ch.active_ingredient || ''} &bull; RSCO: ${ch.rsco || 'S/R'}</p>
+                                </div>
+                            </div>
+                            <span class="text-[9px] font-bold bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 px-2 py-0.5 rounded-full border border-teal-200 dark:border-teal-800">COFEPRIS</span>
+                        </button>
+                    `;
+                });
+                html += `</div></div>`;
+            }
+
+            // Plagas
+            if (matchedPests.length > 0) {
+                html += `<div class="border-t border-slate-100 dark:border-[#282834] pt-2"><p class="px-2 text-[10px] font-black uppercase tracking-wider text-purple-600 dark:text-purple-400 flex items-center gap-1.5"><i class="fa-solid fa-bug text-[9px]"></i> Catálogo Plagas MIP (${matchedPests.length})</p><div class="mt-1 space-y-1">`;
+                matchedPests.forEach(p => {
+                    html += `
+                        <button type="button" onclick="selectSearchPest('${(p.common_name || '').replace(/'/g, "\\'")}'); closeGlobalSearchDropdown();" class="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-100 dark:hover:bg-[#282834] flex items-center justify-between group transition cursor-pointer">
+                            <div class="flex items-center gap-2.5 min-w-0">
+                                <div class="w-7 h-7 rounded-lg bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-900/50 flex items-center justify-center text-purple-600 dark:text-purple-400 flex-shrink-0">
+                                    <i class="fa-solid fa-shield-virus text-xs"></i>
+                                </div>
+                                <div class="min-w-0">
+                                    <p class="font-bold text-slate-800 dark:text-zinc-100 truncate">${p.common_name || ''}</p>
+                                    <p class="text-[10px] text-slate-400 dark:text-zinc-400 italic truncate">${p.scientific_name || ''}</p>
+                                </div>
+                            </div>
+                            <span class="text-[9px] font-bold bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 px-2 py-0.5 rounded-full border border-purple-200 dark:border-purple-800">Ver Ficha</span>
+                        </button>
+                    `;
+                });
+                html += `</div></div>`;
+            }
+
+            dropdown.innerHTML = html;
+            dropdown.classList.remove('hidden');
         }
+
+        function closeGlobalSearchDropdown() {
+            const dropdown = document.getElementById('global-search-dropdown');
+            if (dropdown) dropdown.classList.add('hidden');
+        }
+
+        function clearGlobalSearch() {
+            const input = document.getElementById('global-dashboard-search');
+            if (input) input.value = '';
+            closeGlobalSearchDropdown();
+            const clearBtn = document.getElementById('btn-clear-global-search');
+            if (clearBtn) clearBtn.classList.add('hidden');
+        }
+
+        function selectSearchClient(id, name) {
+            switchTab('tab-clientes');
+            const searchInput = document.getElementById('search-clients-input');
+            if (searchInput) {
+                searchInput.value = name;
+                searchInput.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+        }
+
+        function selectSearchOrder(folio) {
+            switchTab('tab-ordenes');
+            const searchInput = document.getElementById('search-orders');
+            if (searchInput) {
+                searchInput.value = folio;
+                searchInput.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+        }
+
+        function selectSearchChemical(name) {
+            switchTab('tab-quimicos');
+            const searchInput = document.getElementById('search-chem-input');
+            if (searchInput) {
+                searchInput.value = name;
+                searchInput.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+        }
+
+        function selectSearchPest(name) {
+            switchTab('tab-mip');
+            const searchInput = document.getElementById('search-plagas-input');
+            if (searchInput) {
+                searchInput.value = name;
+                searchInput.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+        }
+
+        function updateHeaderDateDisplay() {
+            const dayElem = document.getElementById('header-today-day');
+            const dateElem = document.getElementById('header-today-date');
+            if (!dayElem || !dateElem) return;
+
+            const now = new Date();
+            const days = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+            const months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+            
+            dayElem.textContent = days[now.getDay()];
+            dateElem.textContent = `${now.getDate()} de ${months[now.getMonth()]}, ${now.getFullYear()}`;
+        }
+
+        // Eventos para cerrar dropdown de búsqueda al hacer clic fuera o con Escape
+        document.addEventListener('click', (e) => {
+            const container = document.getElementById('global-search-container');
+            if (container && !container.contains(e.target)) {
+                closeGlobalSearchDropdown();
+            }
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeGlobalSearchDropdown();
+            }
+        });
 
         function switchTab(tabId) {
             document.querySelectorAll('[id^="tab-"]').forEach(el => el.classList.add('hidden'));
@@ -10408,14 +10783,17 @@
         initThemeMode();
         initTextZoom();
         checkAuthSession();
+        updateHeaderDateDisplay();
         document.addEventListener('DOMContentLoaded', () => {
             initThemeMode();
             initTextZoom();
             checkAuthSession();
+            updateHeaderDateDisplay();
         });
         window.addEventListener('load', () => {
             initThemeMode();
             checkAuthSession();
+            updateHeaderDateDisplay();
         });
     </script>
 </body>
