@@ -201,8 +201,8 @@ class ServiceOrder(Base, TimestampMixin, SoftDeleteMixin):
     branch_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("branches.id"), nullable=False, index=True)
     technician_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, index=True)
     
-    service_start_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
-    service_end_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    service_start_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
+    service_end_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
     
     # Plagas a controlar (NOM-256)
     pest_crawling_insects: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
@@ -223,7 +223,7 @@ class ServiceOrder(Base, TimestampMixin, SoftDeleteMixin):
     client_signature_data: Mapped[Optional[str]] = mapped_column(Text, nullable=True)  # Base64 o S3 URL
     
     # Estado Operativo y Agendamiento de Servicios
-    status: Mapped[str] = mapped_column(String(50), default="completed", nullable=False) # completed, scheduled, cancelled
+    status: Mapped[str] = mapped_column(String(50), default="completed", nullable=False, index=True) # completed, scheduled, cancelled
     scheduled_for: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
 
     # Relaciones

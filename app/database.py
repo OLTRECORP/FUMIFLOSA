@@ -277,7 +277,17 @@ def auto_migrate_schema(db_engine=None):
                 "ALTER TABLE IF EXISTS audit_logs ADD COLUMN IF NOT EXISTS ip_address VARCHAR(100);",
                 "ALTER TABLE IF EXISTS audit_logs ADD COLUMN IF NOT EXISTS user_agent VARCHAR(500);",
                 "ALTER TABLE IF EXISTS audit_logs ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();",
-                "ALTER TABLE IF EXISTS audit_logs ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();"
+                "ALTER TABLE IF EXISTS audit_logs ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();",
+
+                # Índices de aceleración de consultas frecuentes (Calendario, Vencimientos, Dashboard)
+                "CREATE INDEX IF NOT EXISTS ix_service_orders_start_date ON service_orders (service_start_date DESC);",
+                "CREATE INDEX IF NOT EXISTS ix_service_orders_end_date ON service_orders (service_end_date);",
+                "CREATE INDEX IF NOT EXISTS ix_service_orders_status ON service_orders (status);",
+                "CREATE INDEX IF NOT EXISTS ix_service_orders_branch_deleted ON service_orders (branch_id, is_deleted);",
+                "CREATE INDEX IF NOT EXISTS ix_certificates_validity_end ON certificates (validity_end_date);",
+                "CREATE INDEX IF NOT EXISTS ix_certificates_issue_date ON certificates (issue_date);",
+                "CREATE INDEX IF NOT EXISTS ix_certificates_order_deleted ON certificates (service_order_id, is_deleted);",
+                "CREATE INDEX IF NOT EXISTS ix_branches_client_deleted ON branches (client_id, is_deleted);"
             ]
 
             with db_engine.begin() as conn:

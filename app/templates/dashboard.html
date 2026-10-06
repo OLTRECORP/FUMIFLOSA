@@ -11577,25 +11577,29 @@
             setTextZoom(savedZoom);
         }
 
-        // Verificación inicial de sesión, accesibilidad, precarga de datos y tema (claro / obscuro)
-        initThemeMode();
-        initTextZoom();
-        checkAuthSession();
-        updateHeaderDateDisplay();
-        preloadGlobalSearchIndex();
-        document.addEventListener('DOMContentLoaded', () => {
+        // Verificación inicial de sesión, accesibilidad y tema (claro / obscuro)
+        let _dashboardInitialized = false;
+        function initDashboardApp() {
+            if (_dashboardInitialized) return;
+            _dashboardInitialized = true;
             initThemeMode();
             initTextZoom();
             checkAuthSession();
             updateHeaderDateDisplay();
-            preloadGlobalSearchIndex();
-        });
-        window.addEventListener('load', () => {
-            initThemeMode();
-            checkAuthSession();
-            updateHeaderDateDisplay();
-            preloadGlobalSearchIndex();
-        });
+
+            // Defer global search index preload until browser is idle to ensure instant UI rendering
+            if ('requestIdleCallback' in window) {
+                requestIdleCallback(() => preloadGlobalSearchIndex(), { timeout: 3000 });
+            } else {
+                setTimeout(preloadGlobalSearchIndex, 1500);
+            }
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initDashboardApp);
+        } else {
+            initDashboardApp();
+        }
     </script>
 </body>
 </html>

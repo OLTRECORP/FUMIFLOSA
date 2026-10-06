@@ -2421,15 +2421,22 @@ def get_services_calendar(
             "color": color
         })
 
-    # Verificar si existen certificados adicionales huérfanos o no asociados a órdenes listadas
-    all_certs = db.query(Certificate).options(
+    # Verificar si existen certificados huérfanos no capturados por las órdenes anteriores
+    orphan_cert_query = db.query(Certificate).options(
         joinedload(Certificate.service_order).joinedload(ServiceOrder.branch).joinedload(Branch.client),
         joinedload(Certificate.service_order).joinedload(ServiceOrder.technician)
-    ).filter(Certificate.is_deleted == False).all()
+    ).filter(Certificate.is_deleted == False)
 
-    for c in all_certs:
-        if c.id in seen_cert_ids:
-            continue
+    if seen_cert_ids:
+        orphan_cert_query = orphan_cert_query.filter(~Certificate.id.in_(seen_cert_ids))
+    if start_date:
+        orphan_cert_query = orphan_cert_query.filter(Certificate.issue_date >= start_date)
+    if end_date:
+        orphan_cert_query = orphan_cert_query.filter(Certificate.issue_date <= end_date)
+
+    orphan_certs = orphan_cert_query.limit(200).all()
+
+    for c in orphan_certs:
         seen_cert_ids.add(c.id)
         
         s_order = c.service_order
