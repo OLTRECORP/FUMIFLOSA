@@ -306,6 +306,35 @@
             border-left: 4px solid #d97706;
             font-weight: 800;
         }
+        html.dark .guide-nav-item {
+            color: #d1d5db !important;
+        }
+        html.dark .guide-nav-item:hover {
+            background-color: #27272e !important;
+            color: #ffffff !important;
+        }
+        html.dark .guide-nav-item.active {
+            background: linear-gradient(135deg, #2e2616 0%, #3f3118 100%) !important;
+            color: #fde68a !important;
+            border-left: 4px solid #f59e0b !important;
+        }
+        html.dark #modal-system-user-guide .modal-dialog-container {
+            background-color: #1a1a20 !important;
+            border-color: #383844 !important;
+            color: #f4f4f6 !important;
+        }
+        html.dark #modal-system-user-guide .guide-content-area {
+            background-color: #121216 !important;
+        }
+        html.dark #modal-system-user-guide .w-full.md\:w-72 {
+            background-color: #1a1a20 !important;
+            border-color: #2c2c34 !important;
+        }
+        html.dark #modal-system-user-guide .bg-slate-100 {
+            background-color: #16161a !important;
+            border-color: #2c2c34 !important;
+            color: #a1a1aa !important;
+        }
 
         /* Reglas de Impresión para la Guía de Uso del Sistema */
         @media print {
@@ -569,15 +598,48 @@
                             </div>
                         </div>
 
+                        <!-- Nuevo Panel SaaS: Navegación, Buscador Inteligente y Modos Visuales -->
+                        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+                            <h4 class="text-xs font-bold text-slate-900 uppercase tracking-wider text-emerald-800 flex items-center gap-2">
+                                <i class="fa-solid fa-desktop text-base text-emerald-600"></i> Nuevo Diseño SaaS: Navegación Lateral y Búsqueda Global
+                            </h4>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1">
+                                <div class="bg-emerald-50/70 border border-emerald-200 p-3 rounded-xl space-y-1.5">
+                                    <div class="font-bold text-xs text-emerald-900 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-bars-staggered text-emerald-700"></i> Menú Lateral Verde FLOSA
+                                    </div>
+                                    <p class="text-[11px] text-emerald-950 leading-relaxed">
+                                        Organizado en 4 bloques operativos (Operación Diaria, Clientes & Cobertura, Catálogos Técnicos, y Administración & Seguridad) con perfil del Director Técnico y botón colapsable en móviles.
+                                    </p>
+                                </div>
+                                <div class="bg-amber-50/70 border border-amber-200 p-3 rounded-xl space-y-1.5">
+                                    <div class="font-bold text-xs text-amber-900 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-magnifying-glass text-amber-700"></i> Buscador Superior en Vivo
+                                    </div>
+                                    <p class="text-[11px] text-amber-950 leading-relaxed">
+                                        Escribe el nombre de un cliente, RFC, folio de certificado (<code>CERT-...</code>), orden (<code>ORD-...</code>), químico o plaga. Al hacer clic te traslada y abre el registro de forma instantánea.
+                                    </p>
+                                </div>
+                                <div class="bg-slate-100 border border-slate-300 p-3 rounded-xl space-y-1.5">
+                                    <div class="font-bold text-xs text-slate-900 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-circle-half-stroke text-slate-700"></i> Modo Claro & Modo Oscuro
+                                    </div>
+                                    <p class="text-[11px] text-slate-700 leading-relaxed">
+                                        Alterna entre tema diurno y nocturno con el botón sol/luna. Utiliza tonalidades grafito y carbón neutro de alto contraste para evitar fatiga visual en campo y oficinas.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Barra de Accesibilidad Visual -->
-                        <div class="bg-gradient-to-r from-slate-900 to-indigo-950 text-white p-4 rounded-2xl border border-slate-800 space-y-2">
+                        <div class="bg-gradient-to-r from-slate-900 to-emerald-950 text-white p-4 rounded-2xl border border-slate-800 space-y-2">
                             <h4 class="text-xs font-bold text-amber-300 flex items-center gap-2">
                                 <i class="fa-solid fa-text-height"></i> Control de Tamaño de Letra y Accesibilidad Visual
                             </h4>
                             <p class="text-xs text-slate-300 leading-relaxed">
-                                En la barra superior derecha encontrarás los selectores de tamaño de texto:
-                                <strong class="text-white">A- (Compacto)</strong>, <strong class="text-white">A (Normal)</strong>, <strong class="text-white">A+ (Grande)</strong> y <strong class="text-white">A++ (Extra Grande / Fácil Lectura)</strong>.
-                                Este ajuste se guarda automáticamente en tu navegador y es ideal para técnicos en tablets de campo o pantallas de alta resolución.
+                                En la barra superior derecha encontrarás los selectores de escala tipográfica:
+                                <strong class="text-white">A- (Compacto)</strong>, <strong class="text-white">A (Normal)</strong>, <strong class="text-white">A+ (Grande)</strong> y <strong class="text-white">A++ (Extra Grande / Alta Legibilidad)</strong>.
+                                Este ajuste se memoriza en tu dispositivo y adapta tarjetas, tablas y formularios para técnicos en tablets de campo o monitores de escritorio.
                             </p>
                         </div>
                     </div>
@@ -1004,6 +1066,13 @@
                                     <li><strong>Exportación CSV:</strong> Posibilidad de descargar el historial completo de auditoría para revisiones contables o auditorías de calidad.</li>
                                 </ul>
                             </div>
+
+                            <div class="bg-emerald-50/80 border border-emerald-200 p-3.5 rounded-xl text-xs text-emerald-950 flex items-start gap-2.5">
+                                <i class="fa-solid fa-server text-emerald-600 text-base mt-0.5"></i>
+                                <div>
+                                    <strong>Persistencia de Datos en la Nube (Render):</strong> La base de datos y la bitácora de auditoría cuentan con detección de discos persistentes dedicados (<code>/data/fumiflosa.db</code>) y soporte PostgreSQL administrado. Los eventos y folios no se reinician ni se borran tras cada sesión o despliegue.
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -1033,6 +1102,20 @@
                                 <h4 class="text-xs font-bold text-slate-900">¿Se puede usar el sistema sin conexión a internet?</h4>
                                 <p class="text-xs text-slate-600 leading-relaxed">
                                     El sistema cuenta con soporte PWA que permite cargar la interfaz en dispositivos móviles. Al recuperar conexión celular o Wi-Fi, los certificados y servicios capturados se sincronizan con la base de datos central.
+                                </p>
+                            </div>
+
+                            <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm space-y-1">
+                                <h4 class="text-xs font-bold text-slate-900">¿Cómo utilizo el buscador superior en tiempo real?</h4>
+                                <p class="text-xs text-slate-600 leading-relaxed">
+                                    En la barra superior escribe al menos 2 caracteres. El motor rastrea al instante módulos, nombres o RFC de clientes, sucursales, folios de certificados (<code class="bg-slate-100 px-1 py-0.5 rounded text-indigo-700 font-mono">CERT-...</code>), folios de órdenes (<code class="bg-slate-100 px-1 py-0.5 rounded text-indigo-700 font-mono">ORD-...</code>), ingredientes químicos y plagas. Haz clic en el resultado y el sistema te llevará al módulo exacto abriendo el visor/formulario automáticamente.
+                                </p>
+                            </div>
+
+                            <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm space-y-1">
+                                <h4 class="text-xs font-bold text-slate-900">¿Cómo alterno entre Modo Claro y Modo Oscuro?</h4>
+                                <p class="text-xs text-slate-600 leading-relaxed">
+                                    Haz clic en el botón circular con el icono de sol/luna ubicado en la barra superior junto al buscador. El sistema guardará tu preferencia de color (modo diurno nítido o modo nocturno grafito neutro) en tu navegador para tus siguientes visitas.
                                 </p>
                             </div>
 
