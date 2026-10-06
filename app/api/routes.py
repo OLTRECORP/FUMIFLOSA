@@ -211,7 +211,7 @@ def login_user(payload: LoginRequest, request: Request, db: Session = Depends(ge
             request=request
         )
 
-        session_token = f"fumiflosa_sec_master_{uuid.uuid4().hex}"
+        session_token = f"fumiflosa_sec_master_{master_user_id}_{uuid.uuid4().hex}"
         return LoginResponse(
             access_token=session_token,
             token_type="bearer",
@@ -301,7 +301,7 @@ def login_user(payload: LoginRequest, request: Request, db: Session = Depends(ge
         request=request
     )
 
-    session_token = f"fumiflosa_sec_usr_{uuid.uuid4().hex}"
+    session_token = f"fumiflosa_sec_usr_{db_user.id}_{uuid.uuid4().hex}"
     return LoginResponse(
         access_token=session_token,
         token_type="bearer",
@@ -320,7 +320,36 @@ def get_current_user_profile(
     authorization: Optional[str] = Header(None),
     db: Session = Depends(get_db)
 ):
-    """Valida la sesión activa y devuelve el perfil del usuario."""
+    """
+    Valida la sesión activa y devuelve el perfil del usuario autenticado actual
+    (soporta múltiples usuarios concurrentes, Master y Operadores simultáneos).
+    """
+    token = None
+    if authorization:
+        parts = authorization.strip().split()
+        if len(parts) == 2 and parts[0].lower() == "bearer":
+            token = parts[1]
+        elif len(parts) == 1:
+            token = parts[0]
+
+    if token and "fumiflosa_sec_" in token:
+        token_parts = token.split("_")
+        for part in token_parts:
+            try:
+                candidate_id = uuid.UUID(part)
+                user = db.query(User).filter(User.id == candidate_id, User.is_deleted == False).first()
+                if user and user.is_active:
+                    return AuthUserInfo(
+                        id=user.id,
+                        username=user.username or user.email,
+                        email=user.email,
+                        full_name=user.full_name or "Usuario FUMIFLOSA",
+                        role=user.role
+                    )
+            except Exception:
+                continue
+
+    # Si no hay token de usuario específico, buscar SuperAdmin en BD
     master_user = db.query(User).filter(
         or_(User.username == MASTER_SUPERUSER_USERNAME, User.email == MASTER_SUPERUSER_EMAIL)
     ).first()
@@ -769,15 +798,32 @@ def get_users(role: Optional[UserRole] = None, db: Session = Depends(get_db)):
 
 @router.post("/users", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 def create_user(payload: UserCreate, request: Request, db: Session = Depends(get_db)):
-    existing = db.query(User).filter(User.email == payload.email, User.is_deleted == False).first()
+    clean_email = payload.email.strip().lower()
+    existing = db.query(User).filter(func.lower(User.email) == clean_email, User.is_deleted == False).first()
     if existing:
         raise HTTPException(status_code=400, detail="El correo electrónico ya está registrado.")
 
+    username = (payload.username or "").strip()
+    if username:
+        existing_u = db.query(User).filter(func.lower(User.username) == username.lower(), User.is_deleted == False).first()
+        if existing_u:
+            raise HTTPException(status_code=400, detail=f"El nombre de usuario / clave '{username}' ya está en uso.")
+    else:
+        # Generar un nombre de usuario predeterminado a partir del correo o nombre
+        base_u = clean_email.split("@")[0].replace(".", "_")
+        candidate = base_u
+        idx = 1
+        while db.query(User).filter(func.lower(User.username) == candidate.lower(), User.is_deleted == False).first():
+            candidate = f"{base_u}_{idx}"
+            idx += 1
+        username = candidate
+
+    raw_pwd = (payload.password or "Fumiflosa2026*").strip()
     user = User(
-        username=payload.username,
-        email=payload.email,
-        full_name=payload.full_name,
-        hashed_password=f"hash_{payload.password}",
+        username=username,
+        email=clean_email,
+        full_name=payload.full_name.strip(),
+        hashed_password=f"hash_{raw_pwd}",
         role=payload.role,
         is_active=payload.is_active,
         stps_dc3_file_url=payload.stps_dc3_file_url,
@@ -793,7 +839,7 @@ def create_user(payload: UserCreate, request: Request, db: Session = Depends(get
         db=db,
         action_type="CREATE",
         module="USUARIOS",
-        description=f"Alta de nuevo usuario '{user.full_name}' con rol {user.role}",
+        description=f"Alta de nuevo usuario '{user.full_name}' ({user.username}) con rol {user.role}",
         entity_id=str(user.id),
         entity_name=user.full_name,
         username="SuperAdmin",
@@ -811,6 +857,11 @@ def update_user(user_id: uuid.UUID, payload: UserUpdate, request: Request, db: S
         raise HTTPException(status_code=404, detail="Usuario no encontrado.")
 
     update_data = payload.model_dump(exclude_unset=True)
+    if "password" in update_data:
+        new_pwd = update_data.pop("password")
+        if new_pwd and str(new_pwd).strip():
+            user.hashed_password = f"hash_{str(new_pwd).strip()}"
+
     for key, value in update_data.items():
         setattr(user, key, value)
 

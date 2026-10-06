@@ -2335,17 +2335,17 @@
                 <p class="text-xs text-emerald-300 font-medium">Control de Plagas Urbanas & Normatividad NOM-256</p>
                 
                 <div class="flex items-center justify-center gap-1.5 mt-3">
-                    <span class="text-[10px] bg-emerald-900/80 text-emerald-200 px-2 py-0.5 rounded-full border border-emerald-700/60 font-semibold">COFEPRIS</span>
-                    <span class="text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded-full border border-slate-700 font-semibold">STPS DC-3</span>
-                    <span class="text-[10px] bg-emerald-800/80 text-emerald-100 px-2 py-0.5 rounded-full border border-emerald-600 font-semibold">SuperAdmin</span>
+                    <span class="text-[10px] bg-amber-500/30 text-amber-300 px-2 py-0.5 rounded-full border border-amber-400/40 font-bold"><i class="fa-solid fa-crown text-[8px] mr-1"></i>Master</span>
+                    <span class="text-[10px] bg-emerald-500/30 text-emerald-300 px-2 py-0.5 rounded-full border border-emerald-400/40 font-bold"><i class="fa-solid fa-helmet-safety text-[8px] mr-1"></i>Operador</span>
+                    <span class="text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded-full border border-slate-700 font-semibold">NOM-256</span>
                 </div>
             </div>
 
             <!-- Formulario de Acceso -->
             <div class="p-6 sm:p-8 space-y-5">
                 <div class="text-center">
-                    <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider">Acceso al Panel Principal</h3>
-                    <p class="text-xs text-slate-500 mt-0.5">Ingresa con tus credenciales maestras autorizadas</p>
+                    <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider">Acceso al Sistema FUMIFLOSA</h3>
+                    <p class="text-xs text-slate-500 mt-0.5">Ingresa con tus credenciales de Super Administrador (Master) u Operador</p>
                 </div>
 
                 <!-- Error Alert Box -->
@@ -2356,12 +2356,12 @@
 
                 <form id="form-auth-login" onsubmit="event.preventDefault(); handleMasterLogin(event); return false;" class="space-y-4">
                     <div>
-                        <label class="block text-xs font-bold text-slate-700 mb-1">Usuario o Correo:</label>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Usuario, Clave o Correo:</label>
                         <div class="relative">
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
                                 <i class="fa-solid fa-user-shield text-xs"></i>
                             </div>
-                            <input type="text" id="login-input-username" required placeholder="Usuario o correo electrónico" autocomplete="username"
+                            <input type="text" id="login-input-username" required placeholder="ej. FOSM630329EA5 o tecnico1" autocomplete="username"
                                 onkeydown="if(event.key === 'Enter'){ event.preventDefault(); handleMasterLogin(event); }"
                                 class="w-full pl-9 pr-3 py-2.5 text-xs font-mono font-bold bg-slate-50 border border-slate-300 rounded-xl focus:bg-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500 focus:outline-none transition" />
                         </div>
@@ -2385,9 +2385,22 @@
                         </div>
                     </div>
 
+                    <!-- Botones de relleno rápido para prueba de roles y concurrencia -->
+                    <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-200 text-[11px] space-y-1.5">
+                        <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Acceso Rápido de Prueba:</span>
+                        <div class="grid grid-cols-2 gap-1.5">
+                            <button type="button" onclick="autofillMasterCredentials()" class="py-1 px-2 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 font-bold text-[10px] flex items-center justify-center gap-1 transition">
+                                <i class="fa-solid fa-crown text-amber-600"></i> Master
+                            </button>
+                            <button type="button" onclick="autofillOperatorCredentials()" class="py-1 px-2 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-300 font-bold text-[10px] flex items-center justify-center gap-1 transition">
+                                <i class="fa-solid fa-helmet-safety text-emerald-600"></i> Operador
+                            </button>
+                        </div>
+                    </div>
+
                     <button type="button" id="btn-login-submit" onclick="handleMasterLogin(event)"
                         class="w-full bg-brand-600 hover:bg-brand-700 text-white font-extrabold py-3 px-4 rounded-xl text-xs shadow-lg shadow-brand-600/25 flex items-center justify-center gap-2 transition hover:-translate-y-0.5 active:translate-y-0">
-                        <i class="fa-solid fa-arrow-right-to-bracket"></i> Iniciar Sesión Super Usuario
+                        <i class="fa-solid fa-arrow-right-to-bracket"></i> Iniciar Sesión en el Sistema
                     </button>
                 </form>
 
@@ -2432,26 +2445,32 @@
                 </div>
 
                 <!-- TARJETA DE PERFIL DESTACADA (ESTILO MOCKUP IMAGEN 1) -->
-                <div class="bg-white/10 backdrop-blur-md rounded-2xl p-3 border border-white/15 flex items-center gap-3">
-                    <div class="relative flex-shrink-0">
-                        <div class="w-12 h-12 rounded-full bg-gradient-to-tr from-amber-400 to-yellow-300 ring-4 ring-amber-400/70 text-slate-950 font-black flex items-center justify-center text-sm shadow-lg">
-                            <span class="tracking-tighter font-extrabold text-slate-950 text-base">MA</span>
+                <div class="bg-white/10 backdrop-blur-md rounded-2xl p-3 border border-white/15 flex items-center justify-between gap-2.5">
+                    <div class="flex items-center gap-2.5 min-w-0 flex-1">
+                        <div class="relative flex-shrink-0">
+                            <div id="sidebar-user-avatar" class="w-11 h-11 rounded-full bg-gradient-to-tr from-amber-400 to-yellow-300 ring-4 ring-amber-400/70 text-slate-950 font-black flex items-center justify-center text-sm shadow-lg transition-all duration-300">
+                                <span id="sidebar-user-initials" class="tracking-tighter font-extrabold text-slate-950 text-sm">MA</span>
+                            </div>
+                            <span class="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-emerald-400 rounded-full border-2 border-emerald-900 flex items-center justify-center" title="En Línea">
+                                <i class="fa-solid fa-check text-[6px] text-emerald-950 font-bold"></i>
+                            </span>
                         </div>
-                        <span class="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-400 rounded-full border-2 border-emerald-900 flex items-center justify-center" title="En Línea">
-                            <i class="fa-solid fa-check text-[7px] text-emerald-950 font-bold"></i>
-                        </span>
-                    </div>
-                    <div class="min-w-0 flex-1">
-                        <div class="flex items-center gap-1">
-                            <h3 id="sidebar-user-name" class="text-xs font-black text-white truncate leading-tight">Marco Antonio Flores</h3>
+                        <div class="min-w-0 flex-1">
+                            <div class="flex items-center gap-1">
+                                <h3 id="sidebar-user-name" class="text-xs font-black text-white truncate leading-tight">Marco Antonio Flores</h3>
+                            </div>
+                            <span id="sidebar-user-role" class="inline-flex items-center gap-1 text-[9px] font-black text-amber-300 bg-amber-950/60 border border-amber-400/40 px-2 py-0.5 rounded-full mt-0.5 tracking-wider uppercase">
+                                <i class="fa-solid fa-shield-halved text-[8px] text-amber-400"></i> SuperAdmin Master
+                            </span>
+                            <p class="text-[9px] text-emerald-200/90 font-mono mt-0.5 truncate">
+                                <i class="fa-solid fa-certificate text-amber-400 text-[8px] mr-0.5"></i>Lic. 08 17 19 SA 0001
+                            </p>
                         </div>
-                        <span id="sidebar-user-role" class="inline-flex items-center gap-1 text-[9px] font-black text-amber-300 bg-amber-950/60 border border-amber-400/40 px-2 py-0.5 rounded-full mt-0.5 tracking-wider uppercase">
-                            <i class="fa-solid fa-shield-halved text-[8px] text-amber-400"></i> SuperAdmin Master
-                        </span>
-                        <p class="text-[9px] text-emerald-200/90 font-mono mt-0.5 truncate">
-                            <i class="fa-solid fa-certificate text-amber-400 text-[8px] mr-0.5"></i>Lic. 08 17 19 SA 0001
-                        </p>
                     </div>
+                    <!-- Botón rápido de Salir / Cambiar de Usuario -->
+                    <button type="button" onclick="logoutMasterUser()" title="Cerrar sesión / Cambiar de cuenta" class="p-2 rounded-xl bg-white/10 hover:bg-rose-500/80 text-white/80 hover:text-white transition flex-shrink-0 cursor-pointer text-xs" aria-label="Cerrar sesión">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                    </button>
                 </div>
             </div>
 
@@ -2569,7 +2588,7 @@
                         <button type="button" onclick="switchTab('tab-usuarios')" id="side-tab-usuarios" class="sidebar-nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl group cursor-pointer">
                             <div class="flex items-center gap-2.5">
                                 <i class="fa-solid fa-users-gear text-sm"></i>
-                                <span>Técnicos STPS DC-3</span>
+                                <span>Usuarios & Operadores</span>
                             </div>
                         </button>
 
@@ -2695,6 +2714,17 @@
                     <span id="top-fiel-status-badge" class="hidden sm:inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200">
                         <span class="w-2 h-2 mr-1.5 bg-amber-500 rounded-full"></span> FIEL SAT
                     </span>
+
+                    <!-- Perfil de Usuario en Topbar con Switch / Logout -->
+                    <div id="topbar-user-badge-container" class="flex items-center gap-2 pl-2 border-l border-slate-200 dark:border-zinc-700">
+                        <div class="text-right hidden sm:block">
+                            <p id="topbar-user-name" class="text-xs font-bold text-slate-800 dark:text-zinc-100 leading-none truncate max-w-[130px]">Marco Antonio</p>
+                            <span id="topbar-user-role-badge" class="inline-block text-[9px] text-amber-600 dark:text-amber-400 font-extrabold mt-0.5">👑 Master</span>
+                        </div>
+                        <button type="button" onclick="logoutMasterUser()" title="Cerrar Sesión / Cambiar de Usuario" class="p-1.5 sm:p-2 text-xs text-slate-500 hover:text-rose-600 dark:text-zinc-400 dark:hover:text-rose-400 rounded-xl hover:bg-rose-50 dark:hover:bg-rose-950/40 transition cursor-pointer">
+                            <i class="fa-solid fa-power-off"></i>
+                        </button>
+                    </div>
                 </div>
             </header>
 
@@ -2706,8 +2736,8 @@
                     <div class="absolute -right-8 -bottom-8 w-48 h-48 bg-amber-400/10 rounded-full blur-2xl pointer-events-none"></div>
                     <div class="space-y-1 relative z-10">
                         <div class="flex items-center gap-2 flex-wrap">
-                            <h2 class="text-xl sm:text-2xl font-black tracking-tight">¡Bienvenido al Portal, Marco Antonio!</h2>
-                            <span class="text-[10px] font-extrabold bg-amber-400 text-slate-950 px-2.5 py-0.5 rounded-full uppercase tracking-wider shadow-sm flex items-center gap-1">
+                            <h2 id="banner-welcome-heading" class="text-xl sm:text-2xl font-black tracking-tight">¡Bienvenido al Portal, Marco Antonio!</h2>
+                            <span id="banner-welcome-badge" class="text-[10px] font-extrabold bg-amber-400 text-slate-950 px-2.5 py-0.5 rounded-full uppercase tracking-wider shadow-sm flex items-center gap-1">
                                 <i class="fa-solid fa-shield-check"></i> SuperAdmin
                             </span>
                         </div>
@@ -3622,72 +3652,105 @@
             </div>
 
             <!-- ============================================================= -->
-            <!-- 7. PESTAÑA: USUARIOS Y ROLES (STPS DC-3) -->
+            <!-- 7. PESTAÑA: USUARIOS Y ROLES (MASTER & OPERADORES STPS DC-3) -->
             <!-- ============================================================= -->
             <div id="tab-usuarios" class="p-6 space-y-6 hidden">
-                <div class="bg-slate-50 p-5 rounded-xl border border-slate-200 space-y-3">
-                    <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2">
-                        <i class="fa-solid fa-user-plus text-blue-600"></i> Registrar Personal Técnico o Administrativo
-                    </h3>
-                    <form onsubmit="handleCreateUser(event)" class="space-y-3 text-xs">
+                <div class="bg-white dark:bg-[#1a1a20] p-6 rounded-2xl border border-slate-200 dark:border-[#2e2e38] shadow-sm space-y-4">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 dark:border-zinc-800 pb-3">
+                        <div>
+                            <h3 class="font-black text-slate-900 dark:text-zinc-100 text-sm sm:text-base flex items-center gap-2">
+                                <i class="fa-solid fa-user-plus text-emerald-600 dark:text-emerald-400"></i> Registrar Usuario del Sistema (Master u Operador)
+                            </h3>
+                            <p class="text-xs text-slate-500 dark:text-zinc-400 mt-0.5">
+                                Selecciona el tipo de cuenta: <strong>Super Administrador (Master)</strong> para control total o <strong>Operador / Técnico de Campo</strong> para registro de servicios y bitácoras.
+                            </p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-[10px] bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700/60 px-2.5 py-1 rounded-full font-bold flex items-center gap-1">
+                                <i class="fa-solid fa-crown text-[9px] text-amber-500"></i> Master
+                            </span>
+                            <span class="text-[10px] bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700/60 px-2.5 py-1 rounded-full font-bold flex items-center gap-1">
+                                <i class="fa-solid fa-helmet-safety text-[9px] text-emerald-500"></i> Operador
+                            </span>
+                        </div>
+                    </div>
+
+                    <form onsubmit="handleCreateUser(event)" class="space-y-4 text-xs">
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                             <div>
-                                <label class="block text-slate-700 font-semibold mb-1">Nombre Completo *</label>
-                                <input type="text" id="usr-name" required placeholder="Ing. Carlos Mendoza Silva" class="w-full bg-white border border-slate-300 rounded-lg p-2" />
-                            </div>
-                            <div class="grid grid-cols-2 gap-2">
-                                <div>
-                                    <label class="block text-slate-700 font-semibold mb-1">Usuario / Clave</label>
-                                    <input type="text" id="usr-username" placeholder="ej. TEC-MORALES" class="w-full bg-white border border-slate-300 rounded-lg p-2 font-mono" />
-                                </div>
-                                <div>
-                                    <label class="block text-slate-700 font-semibold mb-1">Contraseña</label>
-                                    <input type="password" id="usr-password" placeholder="Contraseña de acceso" class="w-full bg-white border border-slate-300 rounded-lg p-2" />
-                                </div>
+                                <label class="block text-slate-700 dark:text-zinc-300 font-bold mb-1">Nombre Completo *</label>
+                                <input type="text" id="usr-name" required placeholder="ej. Ing. Carlos Mendoza Silva" class="w-full bg-slate-50 dark:bg-zinc-800/80 border border-slate-300 dark:border-zinc-700 rounded-xl p-2.5 text-slate-800 dark:text-zinc-100 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20" />
                             </div>
                             <div>
-                                <label class="block text-slate-700 font-semibold mb-1">Correo Electrónico *</label>
-                                <input type="email" id="usr-email" required placeholder="carlos.mendoza@fumiflosa.mx" class="w-full bg-white border border-slate-300 rounded-lg p-2" />
+                                <label class="block text-slate-700 dark:text-zinc-300 font-bold mb-1">Usuario / Clave de Acceso *</label>
+                                <input type="text" id="usr-username" required placeholder="ej. carlos_mendoza o TEC-01" class="w-full bg-slate-50 dark:bg-zinc-800/80 border border-slate-300 dark:border-zinc-700 rounded-xl p-2.5 font-mono text-slate-800 dark:text-zinc-100 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20" />
                             </div>
                             <div>
-                                <label class="block text-slate-700 font-semibold mb-1">Rol en el Sistema *</label>
-                                <select id="usr-role" class="w-full bg-white border border-slate-300 rounded-lg p-2">
-                                    <option value="TecnicoCampo">Técnico de Campo</option>
-                                    <option value="SuperAdmin">Super Administrador</option>
-                                    <option value="ClienteMatriz">Cliente Matriz (B2B)</option>
-                                    <option value="ClienteSucursal">Cliente Sucursal</option>
+                                <label class="block text-slate-700 dark:text-zinc-300 font-bold mb-1">Contraseña de Acceso *</label>
+                                <input type="password" id="usr-password" placeholder="Contraseña segura (mínimo 6 caracteres)" class="w-full bg-slate-50 dark:bg-zinc-800/80 border border-slate-300 dark:border-zinc-700 rounded-xl p-2.5 font-mono text-slate-800 dark:text-zinc-100 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20" />
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-slate-700 dark:text-zinc-300 font-bold mb-1">Correo Electrónico *</label>
+                                <input type="email" id="usr-email" required placeholder="carlos.mendoza@fumiflosa.mx" class="w-full bg-slate-50 dark:bg-zinc-800/80 border border-slate-300 dark:border-zinc-700 rounded-xl p-2.5 text-slate-800 dark:text-zinc-100 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20" />
+                            </div>
+                            <div>
+                                <label class="block text-slate-700 dark:text-zinc-300 font-bold mb-1">Tipo de Usuario / Rol en el Sistema *</label>
+                                <select id="usr-role" class="w-full bg-slate-50 dark:bg-zinc-800/80 border border-slate-300 dark:border-zinc-700 rounded-xl p-2.5 text-slate-800 dark:text-zinc-100 font-bold focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20">
+                                    <option value="TecnicoCampo" selected>🛠️ Operador / Técnico de Campo (Servicios, Órdenes, Certificados & MIP)</option>
+                                    <option value="SuperAdmin">👑 Super Administrador (Master - Control Total del Sistema & Auditoría)</option>
+                                    <option value="ClienteMatriz">🏢 Cliente Matriz (B2B Portal de Consulta)</option>
+                                    <option value="ClienteSucursal">🏪 Cliente Sucursal (Consulta Local)</option>
                                 </select>
                             </div>
                         </div>
+
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                             <div>
-                                <label class="block text-slate-700 font-semibold mb-1">No. Registro STPS (Técnicos)</label>
-                                <input type="text" id="usr-stps-num" placeholder="ej. STPS-AGP-99120" class="w-full bg-white border border-slate-300 rounded-lg p-2 uppercase font-mono" />
+                                <label class="block text-slate-700 dark:text-zinc-300 font-bold mb-1">No. Registro STPS (Operadores / Técnicos)</label>
+                                <input type="text" id="usr-stps-num" placeholder="ej. STPS-AGP-99120" class="w-full bg-slate-50 dark:bg-zinc-800/80 border border-slate-300 dark:border-zinc-700 rounded-xl p-2.5 uppercase font-mono text-slate-800 dark:text-zinc-100 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20" />
                             </div>
                             <div>
-                                <label class="block text-slate-700 font-semibold mb-1">URL / Enlace Archivo DC-3</label>
-                                <input type="text" id="usr-stps-url" placeholder="https://cloud.fumiflosa.mx/dc3/carlos.pdf" class="w-full bg-white border border-slate-300 rounded-lg p-2" />
+                                <label class="block text-slate-700 dark:text-zinc-300 font-bold mb-1">URL / Enlace Constancia DC-3 (PDF)</label>
+                                <input type="text" id="usr-stps-url" placeholder="https://cloud.fumiflosa.mx/dc3/carlos.pdf" class="w-full bg-slate-50 dark:bg-zinc-800/80 border border-slate-300 dark:border-zinc-700 rounded-xl p-2.5 text-slate-800 dark:text-zinc-100 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20" />
                             </div>
                         </div>
-                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg text-xs">Guardar Usuario</button>
+
+                        <div class="flex items-center justify-between pt-2">
+                            <p class="text-[11px] text-slate-500 dark:text-zinc-400">
+                                <i class="fa-solid fa-circle-info text-emerald-600 mr-1"></i>Ambos tipos de usuario pueden acceder al sistema de forma simultánea desde distintos navegadores o dispositivos.
+                            </p>
+                            <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold py-2.5 px-6 rounded-xl text-xs flex items-center gap-2 shadow-md hover:-translate-y-0.5 active:translate-y-0 transition cursor-pointer">
+                                <i class="fa-solid fa-user-plus"></i> Guardar Usuario
+                            </button>
+                        </div>
                     </form>
                 </div>
 
-                <div class="border border-slate-200 rounded-xl overflow-hidden bg-white">
-                    <div class="bg-slate-50 p-3 border-b border-slate-200 font-bold text-xs text-slate-700">Usuarios y Técnicos de Campo Certificados</div>
-                    <table class="w-full text-left text-xs">
-                        <thead class="bg-slate-100 text-slate-600 font-bold uppercase text-[10px]">
-                            <tr>
-                                <th class="p-3">Nombre</th>
-                                <th class="p-3">Email</th>
-                                <th class="p-3">Rol</th>
-                                <th class="p-3">Registro STPS</th>
-                                <th class="p-3">Constancia DC-3</th>
-                                <th class="p-3 text-right">Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody id="users-tbody" class="divide-y divide-slate-100"></tbody>
-                    </table>
+                <div class="border border-slate-200 dark:border-[#2e2e38] rounded-2xl overflow-hidden bg-white dark:bg-[#1a1a20] shadow-sm">
+                    <div class="bg-slate-50 dark:bg-zinc-800/70 p-4 border-b border-slate-200 dark:border-[#2e2e38] flex items-center justify-between">
+                        <div class="font-extrabold text-xs sm:text-sm text-slate-800 dark:text-zinc-100 flex items-center gap-2">
+                            <i class="fa-solid fa-users text-emerald-600"></i> Usuarios Registrados y Personal Autorizado
+                        </div>
+                        <span class="text-[11px] text-slate-400 font-medium">Acceso Concurrente Habilitado</span>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-slate-100 dark:bg-zinc-800/90 text-slate-600 dark:text-zinc-300 font-bold uppercase text-[10px]">
+                                <tr>
+                                    <th class="p-3.5">Usuario & Nombre</th>
+                                    <th class="p-3.5">Email</th>
+                                    <th class="p-3.5">Tipo de Usuario (Rol)</th>
+                                    <th class="p-3.5">Registro STPS</th>
+                                    <th class="p-3.5">Constancia DC-3</th>
+                                    <th class="p-3.5 text-right">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="users-tbody" class="divide-y divide-slate-100 dark:divide-zinc-800"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
@@ -6544,27 +6607,42 @@
                 const res = await fetch('/api/v1/users');
                 cachedTechnicians = await res.json();
                 const tbody = document.getElementById('users-tbody');
-                if (!cachedTechnicians.length) {
+                if (!cachedTechnicians || !cachedTechnicians.length) {
                     tbody.innerHTML = '<tr><td colspan="6" class="p-6 text-center text-slate-400">No hay usuarios registrados.</td></tr>';
                     return;
                 }
-                tbody.innerHTML = cachedTechnicians.map(u => `
-                    <tr class="hover:bg-slate-50">
-                        <td class="p-3 font-bold text-slate-800">${u.full_name}</td>
-                        <td class="p-3 text-slate-600">${u.email}</td>
-                        <td class="p-3"><span class="bg-slate-100 text-slate-800 px-2 py-0.5 rounded text-[10px] font-semibold">${u.role}</span></td>
-                        <td class="p-3 font-mono text-slate-600">${u.stps_registration_number || 'N/A'}</td>
-                        <td class="p-3">
-                            ${u.stps_dc3_file_url ? `<a href="${u.stps_dc3_file_url}" target="_blank" class="text-blue-600 hover:underline inline-flex items-center gap-1 font-semibold"><i class="fa-solid fa-link"></i> Ver DC-3</a>` : '<span class="text-slate-400">Sin archivo</span>'}
+                tbody.innerHTML = cachedTechnicians.map(u => {
+                    const isMaster = (u.role === 'SuperAdmin' || u.role === 'superadmin' || u.role === 'Master');
+                    const roleBadge = isMaster
+                        ? `<span class="inline-flex items-center gap-1 bg-amber-50 dark:bg-amber-950/80 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-700 px-2.5 py-1 rounded-full text-[10px] font-black"><i class="fa-solid fa-crown text-[9px] text-amber-500"></i> SuperAdmin Master</span>`
+                        : (u.role === 'TecnicoCampo'
+                            ? `<span class="inline-flex items-center gap-1 bg-emerald-50 dark:bg-emerald-950/80 text-emerald-900 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-700 px-2.5 py-1 rounded-full text-[10px] font-black"><i class="fa-solid fa-helmet-safety text-[9px] text-emerald-600 dark:text-emerald-400"></i> Operador / Técnico</span>`
+                            : `<span class="inline-flex items-center gap-1 bg-blue-50 dark:bg-blue-950/80 text-blue-900 dark:text-blue-200 border border-blue-300 dark:border-blue-700 px-2.5 py-1 rounded-full text-[10px] font-bold">${u.role}</span>`
+                        );
+                    
+                    return `
+                    <tr class="hover:bg-slate-50 dark:hover:bg-zinc-800/50 transition">
+                        <td class="p-3.5">
+                            <div class="font-bold text-slate-800 dark:text-zinc-100">${u.full_name}</div>
+                            <div class="text-[11px] text-slate-400 dark:text-zinc-400 font-mono flex items-center gap-1">
+                                <i class="fa-solid fa-user text-[9px]"></i> @${u.username || 'sin-usuario'}
+                            </div>
                         </td>
-                        <td class="p-3 text-right">
-                            <button onclick="deleteUser('${u.id}', '${u.full_name}')" class="inline-flex items-center gap-1 text-xs bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold px-2.5 py-1 rounded border border-rose-200 transition" title="Eliminar este usuario del sistema">
+                        <td class="p-3.5 text-slate-600 dark:text-zinc-300 font-mono">${u.email}</td>
+                        <td class="p-3.5">${roleBadge}</td>
+                        <td class="p-3.5 font-mono text-slate-600 dark:text-zinc-300">${u.stps_registration_number || '<span class="text-slate-400 italic">N/A</span>'}</td>
+                        <td class="p-3.5">
+                            ${u.stps_dc3_file_url ? `<a href="${u.stps_dc3_file_url}" target="_blank" class="text-blue-600 dark:text-blue-400 hover:underline inline-flex items-center gap-1 font-semibold"><i class="fa-solid fa-link"></i> Ver DC-3</a>` : '<span class="text-slate-400">Sin archivo</span>'}
+                        </td>
+                        <td class="p-3.5 text-right">
+                            <button onclick="deleteUser('${u.id}', '${u.full_name}')" class="inline-flex items-center gap-1 text-xs bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold px-2.5 py-1.5 rounded-xl border border-rose-200 transition cursor-pointer" title="Eliminar este usuario del sistema">
                                 <i class="fa-solid fa-trash"></i> Eliminar
                             </button>
                         </td>
                     </tr>
-                `).join('');
-            } catch(e) { console.error(e); }
+                    `;
+                }).join('');
+            } catch(e) { console.error('Error al cargar usuarios:', e); }
         }
 
         async function deleteUser(userId, userName) {
@@ -7640,6 +7718,12 @@
             hideLoginError();
         }
 
+        function autofillOperatorCredentials() {
+            document.getElementById('login-input-username').value = 'tecnico1';
+            document.getElementById('login-input-password').value = 'tec123';
+            hideLoginError();
+        }
+
         function showLoginError(msg) {
             const alertBox = document.getElementById('login-error-alert');
             const alertText = document.getElementById('login-error-text');
@@ -7665,7 +7749,7 @@
             const btn = document.getElementById('btn-login-submit');
 
             if (!username || !password) {
-                showLoginError('Por favor ingresa tu usuario y contraseña.');
+                showLoginError('Por favor ingresa tu usuario o correo y tu contraseña.');
                 return false;
             }
 
@@ -7696,7 +7780,7 @@
                     throw new Error('Respuesta del servidor no válida.');
                 }
 
-                // 1. Guardar Sesión Activa en Storage Local
+                // 1. Guardar Sesión Activa en Storage Local (aislada por navegador/dispositivo)
                 localStorage.setItem('fumiflosa_auth_token', data.access_token);
                 localStorage.setItem('fumiflosa_auth_user', JSON.stringify(data.user));
 
@@ -7708,7 +7792,7 @@
                     loginModal.style.cssText = 'display: none !important;';
                 }
 
-                // 3. Renderizar usuario en cabecera
+                // 3. Renderizar usuario dinámico en cabecera, sidebar y banner
                 renderAuthenticatedUser(data.user);
 
                 // 4. Disparar carga integral de todos los módulos y calendarios
@@ -7722,7 +7806,7 @@
                 return false;
             } finally {
                 btn.disabled = false;
-                btn.innerHTML = '<i class="fa-solid fa-arrow-right-to-bracket"></i> Iniciar Sesión Super Usuario';
+                btn.innerHTML = '<i class="fa-solid fa-arrow-right-to-bracket"></i> Iniciar Sesión en el Sistema';
             }
         }
 
@@ -7764,20 +7848,78 @@
 
         function renderAuthenticatedUser(user) {
             if (!user) return;
-            const usrElem = document.getElementById('topbar-username');
-            const roleElem = document.getElementById('topbar-role');
-            if (usrElem) usrElem.innerText = user.username || user.full_name || 'SuperAdmin';
-            if (roleElem) roleElem.innerText = (user.role === 'SuperAdmin' ? 'SuperAdmin Master' : user.role);
+            const fullName = user.full_name || user.username || 'Usuario FUMIFLOSA';
+            const firstName = fullName.split(' ')[0] || fullName;
+            const isMaster = (user.role === 'SuperAdmin' || user.role === 'superadmin' || user.role === 'Master');
+            
+            // 1. Sidebar User Profile
+            const sideName = document.getElementById('sidebar-user-name');
+            if (sideName) sideName.innerText = fullName;
+
+            const sideRole = document.getElementById('sidebar-user-role');
+            if (sideRole) {
+                if (isMaster) {
+                    sideRole.className = "inline-flex items-center gap-1 text-[9px] font-black text-amber-300 bg-amber-950/60 border border-amber-400/40 px-2 py-0.5 rounded-full mt-0.5 tracking-wider uppercase";
+                    sideRole.innerHTML = '<i class="fa-solid fa-crown text-[8px] text-amber-400"></i> SuperAdmin Master';
+                } else {
+                    sideRole.className = "inline-flex items-center gap-1 text-[9px] font-black text-emerald-200 bg-emerald-950/60 border border-emerald-400/40 px-2 py-0.5 rounded-full mt-0.5 tracking-wider uppercase";
+                    sideRole.innerHTML = '<i class="fa-solid fa-helmet-safety text-[8px] text-emerald-300"></i> Operador / Técnico';
+                }
+            }
+
+            // Initials Avatar
+            const initials = fullName.split(' ').filter(Boolean).map(n => n[0]).slice(0, 2).join('').toUpperCase() || 'U';
+            const initialsElem = document.getElementById('sidebar-user-initials');
+            if (initialsElem) initialsElem.innerText = initials;
+
+            const avatarBg = document.getElementById('sidebar-user-avatar');
+            if (avatarBg) {
+                if (isMaster) {
+                    avatarBg.className = "w-11 h-11 rounded-full bg-gradient-to-tr from-amber-400 to-yellow-300 ring-4 ring-amber-400/70 text-slate-950 font-black flex items-center justify-center text-sm shadow-lg transition-all duration-300";
+                } else {
+                    avatarBg.className = "w-11 h-11 rounded-full bg-gradient-to-tr from-emerald-400 to-teal-400 ring-4 ring-emerald-400/70 text-slate-950 font-black flex items-center justify-center text-sm shadow-lg transition-all duration-300";
+                }
+            }
+
+            // 2. Banner de Bienvenida
+            const bannerHeading = document.getElementById('banner-welcome-heading');
+            if (bannerHeading) bannerHeading.innerText = `¡Bienvenido al Portal, ${firstName}!`;
+
+            const bannerBadge = document.getElementById('banner-welcome-badge');
+            if (bannerBadge) {
+                if (isMaster) {
+                    bannerBadge.className = "text-[10px] font-extrabold bg-amber-400 text-slate-950 px-2.5 py-0.5 rounded-full uppercase tracking-wider shadow-sm flex items-center gap-1";
+                    bannerBadge.innerHTML = '<i class="fa-solid fa-crown"></i> SuperAdmin Master';
+                } else {
+                    bannerBadge.className = "text-[10px] font-extrabold bg-emerald-400 text-slate-950 px-2.5 py-0.5 rounded-full uppercase tracking-wider shadow-sm flex items-center gap-1";
+                    bannerBadge.innerHTML = '<i class="fa-solid fa-helmet-safety"></i> Operador / Técnico';
+                }
+            }
+
+            // 3. Topbar Profile Pill
+            const topUserEl = document.getElementById('topbar-user-name');
+            if (topUserEl) topUserEl.innerText = fullName;
+
+            const topRoleEl = document.getElementById('topbar-user-role-badge');
+            if (topRoleEl) {
+                topRoleEl.innerText = isMaster ? '👑 Master' : '🛠️ Operador';
+                topRoleEl.className = isMaster ? 'inline-block text-[9px] text-amber-600 dark:text-amber-400 font-extrabold mt-0.5' : 'inline-block text-[9px] text-emerald-600 dark:text-emerald-400 font-extrabold mt-0.5';
+            }
+
+            const legacyUsrElem = document.getElementById('topbar-username');
+            if (legacyUsrElem) legacyUsrElem.innerText = fullName;
+            const legacyRoleElem = document.getElementById('topbar-role');
+            if (legacyRoleElem) legacyRoleElem.innerText = isMaster ? 'SuperAdmin Master' : 'Operador / Técnico';
         }
 
         function logoutMasterUser() {
-            if (confirm('¿Deseas cerrar tu sesión del Panel de Super Usuario?')) {
+            if (confirm('¿Deseas cerrar tu sesión actual en el sistema?')) {
                 try {
                     const u = JSON.parse(localStorage.getItem('fumiflosa_auth_user') || '{}');
                     fetch('/api/v1/auth/logout', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ username: u.username || 'master' })
+                        body: JSON.stringify({ username: u.username || 'usuario' })
                     }).catch(e => console.warn('Logout log error:', e));
                 } catch(e) {}
                 localStorage.removeItem('fumiflosa_auth_token');
@@ -7809,14 +7951,27 @@
                         loginModal.style.cssText = 'display: none !important;';
                     }
 
-                    // Registrar de manera permanente en PostgreSQL (Render) la apertura/restauración de sesión
+                    // Sincronizar y revalidar con /api/v1/auth/me en segundo plano
+                    fetch('/api/v1/auth/me', {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    })
+                    .then(r => r.ok ? r.json() : null)
+                    .then(freshUser => {
+                        if (freshUser) {
+                            localStorage.setItem('fumiflosa_auth_user', JSON.stringify(freshUser));
+                            renderAuthenticatedUser(freshUser);
+                        }
+                    })
+                    .catch(e => console.warn('Auth validation warning:', e));
+
+                    // Registrar de manera permanente en PostgreSQL (Render) la apertura/restauración de sesión concurrente
                     if (!window._sessionPingSent) {
                         window._sessionPingSent = true;
                         fetch('/api/v1/auth/session-ping', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
-                                username: user.username || 'master',
+                                username: user.username || 'usuario',
                                 role: user.role || 'SuperAdmin',
                                 user_id: user.id || null
                             })

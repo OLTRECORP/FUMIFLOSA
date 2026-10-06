@@ -111,6 +111,7 @@ class UserUpdate(BaseModel):
     is_active: Optional[bool] = None
     stps_dc3_file_url: Optional[str] = None
     stps_registration_number: Optional[str] = None
+    password: Optional[str] = None
     client_id: Optional[uuid.UUID] = None
     branch_id: Optional[uuid.UUID] = None
 
