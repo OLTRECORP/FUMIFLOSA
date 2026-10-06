@@ -2644,172 +2644,18 @@
                     </div>
                 </div>
 
-                <!-- ========================================================= -->
-                <!-- TARJETAS DE MÉTRICAS KPI (ESTILO MOCKUP IMAGEN 1) -->
-                <!-- ========================================================= -->
-                <div id="top-metrics-row" class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3.5">
-                    
-                    <!-- Tarjeta 1: Clientes Matriz -->
-                    <div class="bg-white p-4 rounded-3xl border border-slate-200/80 shadow-xs flex items-center justify-between gap-2 hover:shadow-md transition-shadow">
-                        <div class="space-y-1">
-                            <div class="flex items-center gap-1.5">
-                                <span class="text-xl font-black text-slate-900" id="stat-clients">0</span>
-                                <span class="text-[9px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200 px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
-                                    <i class="fa-solid fa-arrow-trend-up text-[8px]"></i> +100%
-                                </span>
-                            </div>
-                            <p class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Clientes Matriz</p>
-                        </div>
-                        <div class="w-12 h-9 flex items-center justify-center">
-                            <svg class="w-12 h-7 text-indigo-500" viewBox="0 0 100 40" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round">
-                                <path d="M5 30 Q 25 5, 45 25 T 85 10 T 95 20" />
-                            </svg>
-                        </div>
-                    </div>
-
-                    <!-- Tarjeta 2: Sucursales Activas -->
-                    <div class="bg-white p-4 rounded-3xl border border-slate-200/80 shadow-xs flex items-center justify-between gap-2 hover:shadow-md transition-shadow">
-                        <div class="space-y-1">
-                            <div class="flex items-center gap-1.5">
-                                <span class="text-xl font-black text-indigo-600" id="stat-branches">0</span>
-                                <span class="text-[9px] font-extrabold bg-indigo-50 text-indigo-700 border border-indigo-200 px-1.5 py-0.5 rounded-full">
-                                    B2B
-                                </span>
-                            </div>
-                            <p class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Sucursales</p>
-                        </div>
-                        <div class="w-12 h-9 flex items-center justify-center">
-                            <svg class="w-12 h-7 text-emerald-500" viewBox="0 0 100 40" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round">
-                                <path d="M5 35 Q 30 10, 50 30 T 80 15 T 95 8" />
-                            </svg>
-                        </div>
-                    </div>
-
-                    <!-- Tarjeta 3: Técnicos STPS -->
-                    <div class="bg-white p-4 rounded-3xl border border-slate-200/80 shadow-xs flex items-center justify-between gap-2 hover:shadow-md transition-shadow">
-                        <div class="space-y-1">
-                            <div class="flex items-center gap-1.5">
-                                <span class="text-xl font-black text-blue-600" id="stat-technicians">0</span>
-                                <span class="text-[9px] font-extrabold bg-blue-50 text-blue-700 border border-blue-200 px-1.5 py-0.5 rounded-full">
-                                    DC-3
-                                </span>
-                            </div>
-                            <p class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Técnicos STPS</p>
-                        </div>
-                        <div class="w-12 h-9 flex items-center justify-center">
-                            <svg class="w-12 h-7 text-blue-500" viewBox="0 0 100 40" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round">
-                                <path d="M5 25 Q 35 35, 55 15 T 80 25 T 95 10" />
-                            </svg>
-                        </div>
-                    </div>
-
-                    <!-- Tarjeta 4: Servicios Totales -->
-                    <div class="bg-white p-4 rounded-3xl border border-slate-200/80 shadow-xs flex items-center justify-between gap-2 hover:shadow-md transition-shadow">
-                        <div class="space-y-1">
-                            <div class="flex items-center gap-1.5">
-                                <span class="text-xl font-black text-teal-600" id="stat-total-orders">0</span>
-                                <span class="text-[9px] font-extrabold bg-teal-50 text-teal-700 border border-teal-200 px-1.5 py-0.5 rounded-full">
-                                    NOM-256
-                                </span>
-                            </div>
-                            <p class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Total Servicios</p>
-                        </div>
-                        <div class="w-12 h-9 flex items-center justify-center">
-                            <svg class="w-12 h-7 text-teal-500" viewBox="0 0 100 40" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round">
-                                <path d="M5 20 Q 25 35, 55 10 T 80 20 T 95 5" />
-                            </svg>
-                        </div>
-                    </div>
-
-                    <!-- Tarjeta 5: Vencen en <= 7 Días -->
-                    <div class="bg-white p-4 rounded-3xl border border-slate-200/80 shadow-xs flex items-center justify-between gap-2 hover:shadow-md transition-shadow">
-                        <div class="space-y-1">
-                            <div class="flex items-center gap-1.5">
-                                <span class="text-xl font-black text-rose-600" id="stat-exp-7">0</span>
-                                <span class="text-[9px] font-extrabold bg-rose-50 text-rose-700 border border-rose-200 px-1.5 py-0.5 rounded-full">
-                                    ≤ 7d
-                                </span>
-                            </div>
-                            <p class="text-[11px] font-bold text-rose-600 uppercase tracking-wider">Urgente Re-MIP</p>
-                        </div>
-                        <div class="w-12 h-9 flex items-center justify-center">
-                            <svg class="w-12 h-7 text-rose-500" viewBox="0 0 100 40" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round">
-                                <path d="M5 10 Q 30 30, 50 15 T 80 35 T 95 25" />
-                            </svg>
-                        </div>
-                    </div>
-
-                    <!-- Tarjeta 6: Vencen en <= 30 Días -->
-                    <div class="bg-white p-4 rounded-3xl border border-slate-200/80 shadow-xs flex items-center justify-between gap-2 hover:shadow-md transition-shadow">
-                        <div class="space-y-1">
-                            <div class="flex items-center gap-1.5">
-                                <span class="text-xl font-black text-amber-600" id="stat-exp-30">0</span>
-                                <span class="text-[9px] font-extrabold bg-amber-50 text-amber-700 border border-amber-200 px-1.5 py-0.5 rounded-full">
-                                    ≤ 30d
-                                </span>
-                            </div>
-                            <p class="text-[11px] font-bold text-amber-600 uppercase tracking-wider">Por Renovar</p>
-                        </div>
-                        <div class="w-12 h-9 flex items-center justify-center">
-                            <svg class="w-12 h-7 text-amber-500" viewBox="0 0 100 40" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round">
-                                <path d="M5 25 Q 35 15, 60 30 T 85 10 T 95 20" />
-                            </svg>
-                        </div>
-                    </div>
-
+                <!-- PLACEHOLDERS OCULTOS PARA ESTADÍSTICAS (PREVIENE ERRORES JS SIN MOSTRAR RECUADROS) -->
+                <div id="top-metrics-row" class="hidden" aria-hidden="true">
+                    <span id="stat-clients">0</span>
+                    <span id="stat-branches">0</span>
+                    <span id="stat-technicians">0</span>
+                    <span id="stat-total-orders">0</span>
+                    <span id="stat-exp-7">0</span>
+                    <span id="stat-exp-30">0</span>
                 </div>
 
-                <!-- CONTENEDOR DE PESTAÑAS Y VISTAS -->
-                <div class="bg-white rounded-3xl shadow-xs border border-slate-200/80 overflow-hidden">
-                    <div class="border-b border-slate-200 bg-slate-50/70 px-4 overflow-x-auto">
-                <nav class="flex space-x-2 sm:space-x-3 min-w-max">
-                    <button onclick="switchTab('tab-cronologico')" id="btn-tab-cronologico" class="tab-btn py-3.5 px-3 border-b-2 border-brand-600 font-bold text-xs text-brand-700 flex items-center gap-1.5">
-                        <i class="fa-solid fa-calendar-days text-indigo-600"></i> Calendario Cronológico & Citas
-                    </button>
-                    <button onclick="switchTab('tab-vencimientos')" id="btn-tab-vencimientos" class="tab-btn py-3.5 px-3 border-b-2 border-transparent font-medium text-xs text-slate-500 hover:text-slate-800 flex items-center gap-1.5">
-                        <i class="fa-solid fa-clock"></i> Calendario Vencimientos
-                    </button>
-                    <button onclick="switchTab('tab-masivo')" id="btn-tab-masivo" class="tab-btn py-3.5 px-3 border-b-2 border-transparent font-medium text-xs text-slate-500 hover:text-slate-800 flex items-center gap-1.5">
-                        <i class="fa-solid fa-layer-group text-purple-600"></i> Generación Mensual B2B
-                    </button>
-                    <button onclick="switchTab('tab-analytics')" id="btn-tab-analytics" class="tab-btn py-3.5 px-3 border-b-2 border-transparent font-medium text-xs text-slate-500 hover:text-slate-800 flex items-center gap-1.5">
-                        <i class="fa-solid fa-chart-pie text-indigo-600"></i> Métricas & Analytics
-                    </button>
-                    <button onclick="switchTab('tab-nuevo-servicio')" id="btn-tab-nuevo-servicio" class="tab-btn py-3.5 px-3 border-b-2 border-transparent font-medium text-xs text-slate-500 hover:text-slate-800 flex items-center gap-1.5">
-                        <i class="fa-solid fa-file-circle-plus text-brand-600"></i> Registrar Servicio (NOM-256)
-                    </button>
-                    <button onclick="switchTab('tab-ordenes')" id="btn-tab-ordenes" class="tab-btn py-3.5 px-3 border-b-2 border-transparent font-medium text-xs text-slate-500 hover:text-slate-800 flex items-center gap-1.5">
-                        <i class="fa-solid fa-file-lines"></i> Órdenes & PDF
-                    </button>
-                    <button onclick="switchTab('tab-clientes')" id="btn-tab-clientes" class="tab-btn py-3.5 px-3 border-b-2 border-transparent font-medium text-xs text-slate-500 hover:text-slate-800 flex items-center gap-1.5">
-                        <i class="fa-solid fa-building"></i> Clientes & Enlaces B2B
-                    </button>
-                    <button onclick="switchTab('tab-quimicos')" id="btn-tab-quimicos" class="tab-btn py-3.5 px-3 border-b-2 border-transparent font-medium text-xs text-slate-500 hover:text-slate-800 flex items-center gap-1.5">
-                        <i class="fa-solid fa-flask-vial"></i> Catálogo Químicos
-                    </button>
-                    <button onclick="switchTab('tab-usuarios')" id="btn-tab-usuarios" class="tab-btn py-3.5 px-3 border-b-2 border-transparent font-medium text-xs text-slate-500 hover:text-slate-800 flex items-center gap-1.5">
-                        <i class="fa-solid fa-users-gear"></i> Usuarios & STPS
-                    </button>
-                    <button onclick="switchTab('tab-empresa')" id="btn-tab-empresa" class="tab-btn py-3.5 px-3 border-b-2 border-transparent font-medium text-xs text-slate-500 hover:text-slate-800 flex items-center gap-1.5">
-                        <i class="fa-solid fa-stamp text-amber-600"></i> Configuración Empresa & FIEL SAT
-                    </button>
-                    <button onclick="switchTab('tab-bitacoras')" id="btn-tab-bitacoras" class="tab-btn py-3.5 px-3 border-b-2 border-transparent font-medium text-xs text-slate-500 hover:text-slate-800 flex items-center gap-1.5">
-                        <i class="fa-solid fa-clipboard-list text-purple-600"></i> Bitácoras Oficiales (MIP)
-                    </button>
-                    <button onclick="switchTab('tab-mip')" id="btn-tab-mip" class="tab-btn py-3.5 px-3 border-b-2 border-transparent font-medium text-xs text-slate-500 hover:text-slate-800 flex items-center gap-1.5">
-                        <i class="fa-solid fa-book-medical text-emerald-600"></i> Manual MIP & Combate Plagas
-                    </button>
-                    <button onclick="switchTab('tab-importacion')" id="btn-tab-importacion" class="tab-btn py-3.5 px-3 border-b-2 border-transparent font-medium text-xs text-slate-500 hover:text-slate-800 flex items-center gap-1.5">
-                        <i class="fa-solid fa-file-csv text-emerald-600"></i> Ingesta CSV
-                    </button>
-                    <button onclick="switchTab('tab-respaldos')" id="btn-tab-respaldos" class="tab-btn py-3.5 px-3 border-b-2 border-transparent font-medium text-xs text-slate-500 hover:text-slate-800 flex items-center gap-1.5">
-                        <i class="fa-solid fa-cloud-arrow-down text-cyan-600"></i> Respaldos & Descarga Masiva
-                    </button>
-                    <button onclick="switchTab('tab-auditoria')" id="btn-tab-auditoria" class="tab-btn py-3.5 px-3 border-b-2 border-transparent font-medium text-xs text-slate-500 hover:text-slate-800 flex items-center gap-1.5">
-                        <i class="fa-solid fa-shield-halved text-rose-600"></i> Auditoría & Log Master
-                    </button>
-                </nav>
-            </div>
+                <!-- CONTENEDOR DE PESTAÑAS Y VISTAS DE TRABAJO (SIN PESTAÑAS HORIZONTALES REDUNDANTES) -->
+                <div class="bg-white rounded-3xl shadow-sm border border-slate-200/90 overflow-hidden">
 
             <!-- ============================================================= -->
             <!-- 1. PESTAÑA: CALENDARIO CRONOLÓGICO DE SERVICIOS Y CITAS -->
@@ -4845,7 +4691,39 @@
             }
         }
 
-        function handleGlobalSearch(query) {
+        // =====================================================================
+        // ÍNDICE GLOBAL DE BÚSQUEDA Y RESULTADOS EN TIEMPO REAL
+        // =====================================================================
+        let currentSearchResults = [];
+        let isPreloadingSearchIndex = false;
+
+        async function preloadGlobalSearchIndex() {
+            if (isPreloadingSearchIndex) return;
+            isPreloadingSearchIndex = true;
+            try {
+                const [resC, resB, resO, resCh] = await Promise.all([
+                    fetch('/api/v1/clients').then(r => r.ok ? r.json() : []).catch(() => []),
+                    fetch('/api/v1/branches').then(r => r.ok ? r.json() : []).catch(() => []),
+                    fetch('/api/v1/services?limit=500').then(r => r.ok ? r.json() : []).catch(() => []),
+                    fetch('/api/v1/chemicals').then(r => r.ok ? r.json() : []).catch(() => [])
+                ]);
+
+                if (Array.isArray(resC) && resC.length) cachedClients = resC;
+                if (Array.isArray(resB) && resB.length) cachedBranches = resB;
+                if (Array.isArray(resO) && resO.length) cachedOrdersList = resO;
+                if (Array.isArray(resCh) && resCh.length) cachedChemicals = resCh;
+                
+                if (typeof loadMipPests === 'function' && (!cachedMipPests || !cachedMipPests.length)) {
+                    loadMipPests();
+                }
+            } catch(e) {
+                console.warn('Error precargando índice de búsqueda:', e);
+            } finally {
+                isPreloadingSearchIndex = false;
+            }
+        }
+
+        async function handleGlobalSearch(query) {
             const dropdown = document.getElementById('global-search-dropdown');
             const clearBtn = document.getElementById('btn-clear-global-search');
             const q = (query || '').toLowerCase().trim();
@@ -4855,41 +4733,42 @@
             if (!q) {
                 dropdown.classList.add('hidden');
                 dropdown.innerHTML = '';
+                currentSearchResults = [];
                 if (clearBtn) clearBtn.classList.add('hidden');
                 return;
             }
 
             if (clearBtn) clearBtn.classList.remove('hidden');
 
-            // Dispatch to inner inputs for tab continuity
-            const searchInputs = [
-                document.getElementById('search-orders'),
-                document.getElementById('search-clients-input'),
-                document.getElementById('search-chem-input'),
-                document.getElementById('search-plagas-input')
-            ];
-            searchInputs.forEach(input => {
-                if (input && input.value !== q) {
-                    input.value = q;
-                    input.dispatchEvent(new Event('input', { bubbles: true }));
-                }
-            });
+            // Si los datos no han cargado aún en memoria, disparar carga en segundo plano
+            if ((!cachedClients || !cachedClients.length) && (!cachedOrdersList || !cachedOrdersList.length)) {
+                preloadGlobalSearchIndex().then(() => {
+                    const currentInput = document.getElementById('global-dashboard-search');
+                    if (currentInput && currentInput.value.trim().length > 0) {
+                        handleGlobalSearch(currentInput.value);
+                    }
+                });
+            }
 
-            // 1. Módulos y Atajos del Sistema
+            currentSearchResults = [];
+
+            // 1. Módulos y Secciones del Sistema
             const allModules = [
-                { name: 'Calendario & Citas', tab: 'tab-cronologico', icon: 'fa-calendar-days text-indigo-500', desc: 'Agenda de servicios programados' },
-                { name: 'Vencimientos Sanitarios (30d)', tab: 'tab-vencimientos', icon: 'fa-clock text-rose-500', desc: 'Alertas de caducidad de certificados' },
-                { name: 'Registrar Nuevo Servicio', tab: 'tab-nuevo-servicio', icon: 'fa-file-circle-plus text-emerald-600', desc: 'Formulario oficial NOM-256' },
-                { name: 'Órdenes & Certificados PDF', tab: 'tab-ordenes', icon: 'fa-file-signature text-blue-500', desc: 'Historial, descarga y firma digital' },
-                { name: 'Emisión Mensual B2B Masiva', tab: 'tab-masivo', icon: 'fa-layer-group text-purple-500', desc: 'Generación múltiple para corporativos' },
-                { name: 'Clientes & Sucursales', tab: 'tab-clientes', icon: 'fa-building text-blue-600', desc: 'Directorio de empresas y establecimientos' },
-                { name: 'Químicos COFEPRIS & Fichas', tab: 'tab-quimicos', icon: 'fa-flask-vial text-teal-500', desc: 'Catálogo de plaguicidas autorizados y RSCO' },
-                { name: 'Manual MIP & Plagas IA', tab: 'tab-mip', icon: 'fa-bug text-purple-600', desc: 'Catálogo de insectos, roedores y fichas MIP' },
-                { name: 'Bitácoras Oficiales MIP', tab: 'tab-bitacoras', icon: 'fa-clipboard-list text-amber-500', desc: 'Libros de registro y consumo mensual' },
+                { name: 'Calendario & Citas', tab: 'tab-cronologico', icon: 'fa-calendar-days text-indigo-500', desc: 'Agenda y programación de servicios' },
+                { name: 'Vencimientos Sanitarios (30d)', tab: 'tab-vencimientos', icon: 'fa-clock text-rose-500', desc: 'Alertas de caducidad y vigencias' },
+                { name: 'Registrar Nuevo Servicio (NOM-256)', tab: 'tab-nuevo-servicio', icon: 'fa-file-circle-plus text-emerald-600', desc: 'Emisión de orden y certificado' },
+                { name: 'Órdenes & Certificados PDF', tab: 'tab-ordenes', icon: 'fa-file-signature text-blue-500', desc: 'Descarga de PDF y firma digital SAT' },
+                { name: 'Emisión Mensual B2B Masiva', tab: 'tab-masivo', icon: 'fa-layer-group text-purple-500', desc: 'Generación múltiple para sucursales' },
+                { name: 'Clientes & Sucursales', tab: 'tab-clientes', icon: 'fa-building text-blue-600', desc: 'Directorio y administración de empresas' },
+                { name: 'Químicos COFEPRIS & Fichas', tab: 'tab-quimicos', icon: 'fa-flask-vial text-teal-500', desc: 'Plaguicidas, RSCO y HDS de seguridad' },
+                { name: 'Manual MIP & Plagas IA', tab: 'tab-mip', icon: 'fa-bug text-purple-600', desc: 'Insectos, roedores y fichas de biología' },
+                { name: 'Bitácoras Oficiales MIP', tab: 'tab-bitacoras', icon: 'fa-clipboard-list text-amber-500', desc: 'Libros oficiales y residuos peligrosos' },
                 { name: 'Técnicos STPS DC-3', tab: 'tab-usuarios', icon: 'fa-users-gear text-orange-500', desc: 'Personal operativo y certificaciones' },
-                { name: 'Empresa & FIEL SAT', tab: 'tab-empresa', icon: 'fa-stamp text-amber-600', desc: 'Datos fiscales y sello digital criptográfico' },
-                { name: 'Auditoría & Bitácora Master', tab: 'tab-auditoria', icon: 'fa-shield-halved text-rose-600', desc: 'Log inmutable de cambios y accesos' },
-                { name: 'Guía y Manual de Uso Oficial', action: 'guia', icon: 'fa-book-open-reader text-amber-500', desc: 'Tutorial y manual completo del sistema' }
+                { name: 'Empresa & FIEL SAT', tab: 'tab-empresa', icon: 'fa-stamp text-amber-600', desc: 'Sello digital y datos de licencia sanitaria' },
+                { name: 'Ingesta Masiva CSV', tab: 'tab-importacion', icon: 'fa-file-csv text-emerald-600', desc: 'Carga masiva de clientes y servicios' },
+                { name: 'Respaldos & Nube', tab: 'tab-respaldos', icon: 'fa-cloud-arrow-down text-cyan-600', desc: 'Copias de seguridad del sistema' },
+                { name: 'Auditoría & Log Master', tab: 'tab-auditoria', icon: 'fa-shield-halved text-rose-600', desc: 'Registro inmutable de movimientos' },
+                { name: 'Guía y Manual de Uso Oficial', action: 'guia', icon: 'fa-book-open-reader text-amber-500', desc: 'Tutorial y manual completo del portal' }
             ];
 
             const matchedModules = allModules.filter(m => 
@@ -4897,43 +4776,140 @@
                 (m.desc && m.desc.toLowerCase().includes(q))
             ).slice(0, 3);
 
-            // 2. Clientes
-            const matchedClients = (cachedClients || []).filter(c => 
-                (c.name && c.name.toLowerCase().includes(q)) ||
-                (c.rfc && c.rfc.toLowerCase().includes(q)) ||
-                (c.email && c.email.toLowerCase().includes(q)) ||
-                (c.contact_name && c.contact_name.toLowerCase().includes(q))
-            ).slice(0, 4);
+            matchedModules.forEach(m => {
+                currentSearchResults.push({
+                    type: 'module',
+                    name: m.name,
+                    tab: m.tab,
+                    action: m.action,
+                    icon: m.icon,
+                    desc: m.desc
+                });
+            });
 
-            // 3. Órdenes de Servicio
+            // 2. Clientes y Sucursales
+            const matchedClients = (cachedClients || []).filter(c => {
+                const name = (c.legal_name || c.name || '').toLowerCase();
+                const rfc = (c.rfc || '').toLowerCase();
+                const contract = (c.master_contract_number || '').toLowerCase();
+                return name.includes(q) || rfc.includes(q) || contract.includes(q);
+            }).slice(0, 4);
+
+            matchedClients.forEach(c => {
+                currentSearchResults.push({
+                    type: 'client',
+                    id: c.id,
+                    name: c.legal_name || c.name || 'Cliente',
+                    rfc: c.rfc || 'S/R',
+                    contract: c.master_contract_number || ''
+                });
+            });
+
+            // 3. Certificados Sanitarios Oficiales NOM-256
             const orderSource = (cachedOrdersList && cachedOrdersList.length) ? cachedOrdersList : (cachedOrders || []);
-            const matchedOrders = orderSource.filter(o => 
-                (o.folio && o.folio.toLowerCase().includes(q)) ||
-                (o.client_name && o.client_name.toLowerCase().includes(q)) ||
-                (o.service_type && o.service_type.toLowerCase().includes(q))
-            ).slice(0, 4);
+            const matchedCertificates = [];
+            const seenCertFolios = new Set();
 
-            // 4. Químicos COFEPRIS
-            const matchedChems = (cachedChemicals || []).filter(ch => 
-                (ch.commercial_name && ch.commercial_name.toLowerCase().includes(q)) ||
-                (ch.active_ingredient && ch.active_ingredient.toLowerCase().includes(q)) ||
-                (ch.rsco && ch.rsco.toLowerCase().includes(q))
-            ).slice(0, 3);
+            orderSource.forEach(o => {
+                if (matchedCertificates.length >= 4) return;
+                const cert = o.certificate;
+                const certFolio = (cert && cert.certificate_folio) ? cert.certificate_folio : (o.certificate_folio || '');
+                if (!certFolio) return;
+                
+                const clientName = (o.branch && o.branch.client && o.branch.client.legal_name) || o.client_name || '';
+                const branchName = (o.branch && o.branch.name) || '';
+                
+                if (
+                    certFolio.toLowerCase().includes(q) || 
+                    clientName.toLowerCase().includes(q) || 
+                    branchName.toLowerCase().includes(q) ||
+                    'certificado'.includes(q)
+                ) {
+                    if (!seenCertFolios.has(certFolio)) {
+                        seenCertFolios.add(certFolio);
+                        matchedCertificates.push({
+                            type: 'certificate',
+                            serviceId: o.id,
+                            certId: cert ? cert.id : null,
+                            certFolio: certFolio,
+                            orderFolio: o.folio || '',
+                            clientName: clientName || branchName,
+                            validityDate: cert ? cert.validity_end_date : (o.validity_end_date || '')
+                        });
+                    }
+                }
+            });
 
-            // 5. Plagas MIP
-            const matchedPests = (cachedMipPests || []).filter(p => 
-                (p.common_name && p.common_name.toLowerCase().includes(q)) ||
-                (p.scientific_name && p.scientific_name.toLowerCase().includes(q))
-            ).slice(0, 3);
+            matchedCertificates.forEach(cert => {
+                currentSearchResults.push(cert);
+            });
 
-            const totalMatches = matchedModules.length + matchedClients.length + matchedOrders.length + matchedChems.length + matchedPests.length;
+            // 4. Órdenes de Servicio
+            const matchedOrders = [];
+            orderSource.forEach(o => {
+                if (matchedOrders.length >= 4) return;
+                const folio = (o.folio || '').toLowerCase();
+                const clientName = ((o.branch && o.branch.client && o.branch.client.legal_name) || o.client_name || '').toLowerCase();
+                const branchName = ((o.branch && o.branch.name) || '').toLowerCase();
+                const sType = (o.service_type || '').toLowerCase();
 
-            if (totalMatches === 0) {
+                if (folio.includes(q) || clientName.includes(q) || branchName.includes(q) || sType.includes(q)) {
+                    matchedOrders.push({
+                        type: 'order',
+                        id: o.id,
+                        folio: o.folio || 'ORD',
+                        clientName: (o.branch && o.branch.client && o.branch.client.legal_name) || o.client_name || branchName,
+                        serviceType: o.service_type || 'MIP',
+                        serviceDate: o.service_start_date ? o.service_start_date.split('T')[0] : (o.service_date || '')
+                    });
+                }
+            });
+
+            matchedOrders.forEach(ord => {
+                currentSearchResults.push(ord);
+            });
+
+            // 5. Químicos COFEPRIS
+            const matchedChems = (cachedChemicals || []).filter(ch => {
+                const cName = (ch.commercial_name || ch.name || '').toLowerCase();
+                const active = (ch.active_ingredient || '').toLowerCase();
+                const rsco = (ch.cicoplafest_number || ch.rsco || '').toLowerCase();
+                return cName.includes(q) || active.includes(q) || rsco.includes(q);
+            }).slice(0, 3);
+
+            matchedChems.forEach(ch => {
+                currentSearchResults.push({
+                    type: 'chemical',
+                    id: ch.id,
+                    name: ch.commercial_name || ch.name || 'Químico',
+                    active: ch.active_ingredient || '',
+                    rsco: ch.cicoplafest_number || ch.rsco || 'S/R'
+                });
+            });
+
+            // 6. Plagas MIP
+            const matchedPests = (cachedMipPests || []).filter(p => {
+                const pName = (p.name || p.common_name || '').toLowerCase();
+                const sci = (p.scientific_name || '').toLowerCase();
+                const cat = (p.category || '').toLowerCase();
+                return pName.includes(q) || sci.includes(q) || cat.includes(q);
+            }).slice(0, 3);
+
+            matchedPests.forEach(p => {
+                currentSearchResults.push({
+                    type: 'pest',
+                    name: p.name || p.common_name || 'Plaga',
+                    sci: p.scientific_name || '',
+                    category: p.category || 'MIP'
+                });
+            });
+
+            if (currentSearchResults.length === 0) {
                 dropdown.innerHTML = `
                     <div class="p-4 text-center text-slate-500 dark:text-zinc-400">
                         <i class="fa-solid fa-magnifying-glass-chart text-2xl text-slate-300 dark:text-zinc-600 mb-2 block"></i>
                         <p class="font-bold">No se encontraron resultados para "${q}"</p>
-                        <p class="text-[11px] text-slate-400 dark:text-zinc-500 mt-1">Prueba buscando por nombre de cliente, RFC, folio de orden, plaguicida o módulo.</p>
+                        <p class="text-[11px] text-slate-400 dark:text-zinc-500 mt-1">Busca por cliente, RFC, folio de orden (ORD), certificado (CERT), químico o módulo.</p>
                     </div>
                 `;
                 dropdown.classList.remove('hidden');
@@ -4941,120 +4917,217 @@
             }
 
             let html = '';
+            let currentGroup = '';
 
-            // Módulos
-            if (matchedModules.length > 0) {
-                html += `<div class="pb-1"><p class="px-2 text-[10px] font-black uppercase tracking-wider text-amber-600 dark:text-amber-400 flex items-center gap-1.5"><i class="fa-solid fa-compass text-[9px]"></i> Módulos y Secciones (${matchedModules.length})</p><div class="mt-1 space-y-1">`;
-                matchedModules.forEach(m => {
-                    const clickAction = m.action === 'guia' ? `openSystemUserGuideModal(); closeGlobalSearchDropdown();` : `switchTab('${m.tab}'); closeGlobalSearchDropdown();`;
+            currentSearchResults.forEach((item, idx) => {
+                let groupTitle = '';
+                let groupIcon = '';
+                let groupColor = '';
+
+                if (item.type === 'module') {
+                    groupTitle = 'Módulos y Secciones';
+                    groupIcon = 'fa-compass';
+                    groupColor = 'text-amber-600 dark:text-amber-400';
+                } else if (item.type === 'client') {
+                    groupTitle = 'Clientes y Sucursales';
+                    groupIcon = 'fa-building';
+                    groupColor = 'text-blue-600 dark:text-blue-400';
+                } else if (item.type === 'certificate') {
+                    groupTitle = 'Certificados Sanitarios NOM-256';
+                    groupIcon = 'fa-certificate';
+                    groupColor = 'text-amber-600 dark:text-amber-400';
+                } else if (item.type === 'order') {
+                    groupTitle = 'Órdenes de Servicio';
+                    groupIcon = 'fa-file-signature';
+                    groupColor = 'text-emerald-600 dark:text-emerald-400';
+                } else if (item.type === 'chemical') {
+                    groupTitle = 'Químicos y Plaguicidas COFEPRIS';
+                    groupIcon = 'fa-flask-vial';
+                    groupColor = 'text-teal-600 dark:text-teal-400';
+                } else if (item.type === 'pest') {
+                    groupTitle = 'Catálogo Plagas MIP';
+                    groupIcon = 'fa-bug';
+                    groupColor = 'text-purple-600 dark:text-purple-400';
+                }
+
+                if (groupTitle !== currentGroup) {
+                    currentGroup = groupTitle;
+                    const borderClass = idx > 0 ? 'border-t border-slate-100 dark:border-[#282834] pt-2' : 'pt-1';
                     html += `
-                        <button type="button" onclick="${clickAction}" class="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-100 dark:hover:bg-[#282834] flex items-center justify-between group transition cursor-pointer">
+                        <div class="${borderClass} pb-1">
+                            <p class="px-2 text-[10px] font-black uppercase tracking-wider ${groupColor} flex items-center gap-1.5">
+                                <i class="fa-solid ${groupIcon} text-[9px]"></i> ${groupTitle}
+                            </p>
+                        </div>
+                    `;
+                }
+
+                if (item.type === 'module') {
+                    html += `
+                        <button type="button" onclick="executeSearchResult(${idx})" class="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-100 dark:hover:bg-[#282834] flex items-center justify-between group transition cursor-pointer">
                             <div class="flex items-center gap-2.5 min-w-0">
                                 <div class="w-7 h-7 rounded-lg bg-slate-100 dark:bg-[#121214] border border-slate-200 dark:border-[#383844] flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition">
-                                    <i class="fa-solid ${m.icon} text-xs"></i>
+                                    <i class="fa-solid ${item.icon} text-xs"></i>
                                 </div>
                                 <div class="min-w-0">
-                                    <p class="font-bold text-slate-800 dark:text-zinc-100 truncate">${m.name}</p>
-                                    <p class="text-[10px] text-slate-400 dark:text-zinc-400 truncate">${m.desc}</p>
+                                    <p class="font-bold text-slate-800 dark:text-zinc-100 truncate">${item.name}</p>
+                                    <p class="text-[10px] text-slate-400 dark:text-zinc-400 truncate">${item.desc}</p>
                                 </div>
                             </div>
-                            <i class="fa-solid fa-arrow-right text-[10px] text-slate-400 dark:text-zinc-500 group-hover:translate-x-1 transition-transform"></i>
+                            <span class="text-[9px] font-bold bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 px-2 py-0.5 rounded-full border border-amber-200 dark:border-amber-800">Abrir Módulo</span>
                         </button>
                     `;
-                });
-                html += `</div></div>`;
-            }
-
-            // Clientes
-            if (matchedClients.length > 0) {
-                html += `<div class="border-t border-slate-100 dark:border-[#282834] pt-2"><p class="px-2 text-[10px] font-black uppercase tracking-wider text-blue-600 dark:text-blue-400 flex items-center gap-1.5"><i class="fa-solid fa-building text-[9px]"></i> Clientes Coincidentes (${matchedClients.length})</p><div class="mt-1 space-y-1">`;
-                matchedClients.forEach(c => {
+                } else if (item.type === 'client') {
                     html += `
-                        <button type="button" onclick="selectSearchClient('${c.id || ''}', '${(c.name || '').replace(/'/g, "\\'")}'); closeGlobalSearchDropdown();" class="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-100 dark:hover:bg-[#282834] flex items-center justify-between group transition cursor-pointer">
+                        <button type="button" onclick="executeSearchResult(${idx})" class="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-100 dark:hover:bg-[#282834] flex items-center justify-between group transition cursor-pointer">
                             <div class="flex items-center gap-2.5 min-w-0">
                                 <div class="w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/50 flex items-center justify-center text-blue-600 dark:text-blue-400 flex-shrink-0">
-                                    <i class="fa-solid fa-building-user text-xs"></i>
+                                    <i class="fa-solid fa-building text-xs"></i>
                                 </div>
                                 <div class="min-w-0">
-                                    <p class="font-bold text-slate-800 dark:text-zinc-100 truncate">${c.name || 'Sin nombre'}</p>
-                                    <p class="text-[10px] text-slate-400 dark:text-zinc-400 font-mono truncate">RFC: ${c.rfc || 'S/R'} &bull; ${c.contact_name || ''}</p>
+                                    <p class="font-bold text-slate-800 dark:text-zinc-100 truncate">${item.name}</p>
+                                    <p class="text-[10px] text-slate-400 dark:text-zinc-400 font-mono truncate">RFC: ${item.rfc} ${item.contract ? `&bull; Contrato: ${item.contract}` : ''}</p>
                                 </div>
                             </div>
-                            <span class="text-[9px] font-bold bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded-full border border-blue-200 dark:border-blue-800">Ver Ficha</span>
+                            <span class="text-[9px] font-bold bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded-full border border-blue-200 dark:border-blue-800">Ver Cliente</span>
                         </button>
                     `;
-                });
-                html += `</div></div>`;
-            }
-
-            // Órdenes
-            if (matchedOrders.length > 0) {
-                html += `<div class="border-t border-slate-100 dark:border-[#282834] pt-2"><p class="px-2 text-[10px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5"><i class="fa-solid fa-file-signature text-[9px]"></i> Órdenes de Servicio (${matchedOrders.length})</p><div class="mt-1 space-y-1">`;
-                matchedOrders.forEach(o => {
+                } else if (item.type === 'certificate') {
                     html += `
-                        <button type="button" onclick="selectSearchOrder('${o.folio || ''}'); closeGlobalSearchDropdown();" class="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-100 dark:hover:bg-[#282834] flex items-center justify-between group transition cursor-pointer">
+                        <button type="button" onclick="executeSearchResult(${idx})" class="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-100 dark:hover:bg-[#282834] flex items-center justify-between group transition cursor-pointer">
                             <div class="flex items-center gap-2.5 min-w-0">
-                                <div class="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/50 flex items-center justify-center text-emerald-600 dark:text-emerald-400 flex-shrink-0">
+                                <div class="w-7 h-7 rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/50 flex items-center justify-center text-amber-600 dark:text-amber-400 flex-shrink-0">
                                     <i class="fa-solid fa-certificate text-xs"></i>
                                 </div>
                                 <div class="min-w-0">
-                                    <p class="font-bold text-slate-800 dark:text-zinc-100 font-mono truncate">${o.folio || 'FOLIO'} &bull; ${o.client_name || ''}</p>
-                                    <p class="text-[10px] text-slate-400 dark:text-zinc-400 truncate">${o.service_type || 'MIP'} &bull; ${o.service_date || ''}</p>
+                                    <p class="font-bold text-slate-800 dark:text-zinc-100 font-mono truncate">${item.certFolio} &bull; ${item.clientName}</p>
+                                    <p class="text-[10px] text-slate-400 dark:text-zinc-400 truncate">Orden: ${item.orderFolio} ${item.validityDate ? `&bull; Vigencia: ${item.validityDate}` : ''}</p>
                                 </div>
                             </div>
-                            <span class="text-[9px] font-bold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">Ir a Orden</span>
+                            <span class="text-[9px] font-bold bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 px-2 py-0.5 rounded-full border border-amber-200 dark:border-amber-800">Ver Certificado</span>
                         </button>
                     `;
-                });
-                html += `</div></div>`;
-            }
-
-            // Químicos
-            if (matchedChems.length > 0) {
-                html += `<div class="border-t border-slate-100 dark:border-[#282834] pt-2"><p class="px-2 text-[10px] font-black uppercase tracking-wider text-teal-600 dark:text-teal-400 flex items-center gap-1.5"><i class="fa-solid fa-flask-vial text-[9px]"></i> Químicos y Plaguicidas (${matchedChems.length})</p><div class="mt-1 space-y-1">`;
-                matchedChems.forEach(ch => {
+                } else if (item.type === 'order') {
                     html += `
-                        <button type="button" onclick="selectSearchChemical('${(ch.commercial_name || '').replace(/'/g, "\\'")}'); closeGlobalSearchDropdown();" class="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-100 dark:hover:bg-[#282834] flex items-center justify-between group transition cursor-pointer">
+                        <button type="button" onclick="executeSearchResult(${idx})" class="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-100 dark:hover:bg-[#282834] flex items-center justify-between group transition cursor-pointer">
+                            <div class="flex items-center gap-2.5 min-w-0">
+                                <div class="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/50 flex items-center justify-center text-emerald-600 dark:text-emerald-400 flex-shrink-0">
+                                    <i class="fa-solid fa-file-signature text-xs"></i>
+                                </div>
+                                <div class="min-w-0">
+                                    <p class="font-bold text-slate-800 dark:text-zinc-100 font-mono truncate">${item.folio} &bull; ${item.clientName}</p>
+                                    <p class="text-[10px] text-slate-400 dark:text-zinc-400 truncate">${item.serviceType} &bull; Fecha: ${item.serviceDate}</p>
+                                </div>
+                            </div>
+                            <span class="text-[9px] font-bold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">Abrir Orden</span>
+                        </button>
+                    `;
+                } else if (item.type === 'chemical') {
+                    html += `
+                        <button type="button" onclick="executeSearchResult(${idx})" class="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-100 dark:hover:bg-[#282834] flex items-center justify-between group transition cursor-pointer">
                             <div class="flex items-center gap-2.5 min-w-0">
                                 <div class="w-7 h-7 rounded-lg bg-teal-50 dark:bg-teal-950/40 border border-teal-200 dark:border-teal-900/50 flex items-center justify-center text-teal-600 dark:text-teal-400 flex-shrink-0">
-                                    <i class="fa-solid fa-flask text-xs"></i>
+                                    <i class="fa-solid fa-flask-vial text-xs"></i>
                                 </div>
                                 <div class="min-w-0">
-                                    <p class="font-bold text-slate-800 dark:text-zinc-100 truncate">${ch.commercial_name || ''}</p>
-                                    <p class="text-[10px] text-slate-400 dark:text-zinc-400 truncate">${ch.active_ingredient || ''} &bull; RSCO: ${ch.rsco || 'S/R'}</p>
+                                    <p class="font-bold text-slate-800 dark:text-zinc-100 truncate">${item.name}</p>
+                                    <p class="text-[10px] text-slate-400 dark:text-zinc-400 truncate">${item.active} &bull; RSCO: ${item.rsco}</p>
                                 </div>
                             </div>
-                            <span class="text-[9px] font-bold bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 px-2 py-0.5 rounded-full border border-teal-200 dark:border-teal-800">COFEPRIS</span>
+                            <span class="text-[9px] font-bold bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 px-2 py-0.5 rounded-full border border-teal-200 dark:border-teal-800">Ver Químico</span>
                         </button>
                     `;
-                });
-                html += `</div></div>`;
-            }
-
-            // Plagas
-            if (matchedPests.length > 0) {
-                html += `<div class="border-t border-slate-100 dark:border-[#282834] pt-2"><p class="px-2 text-[10px] font-black uppercase tracking-wider text-purple-600 dark:text-purple-400 flex items-center gap-1.5"><i class="fa-solid fa-bug text-[9px]"></i> Catálogo Plagas MIP (${matchedPests.length})</p><div class="mt-1 space-y-1">`;
-                matchedPests.forEach(p => {
+                } else if (item.type === 'pest') {
                     html += `
-                        <button type="button" onclick="selectSearchPest('${(p.common_name || '').replace(/'/g, "\\'")}'); closeGlobalSearchDropdown();" class="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-100 dark:hover:bg-[#282834] flex items-center justify-between group transition cursor-pointer">
+                        <button type="button" onclick="executeSearchResult(${idx})" class="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-100 dark:hover:bg-[#282834] flex items-center justify-between group transition cursor-pointer">
                             <div class="flex items-center gap-2.5 min-w-0">
                                 <div class="w-7 h-7 rounded-lg bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-900/50 flex items-center justify-center text-purple-600 dark:text-purple-400 flex-shrink-0">
-                                    <i class="fa-solid fa-shield-virus text-xs"></i>
+                                    <i class="fa-solid fa-bug text-xs"></i>
                                 </div>
                                 <div class="min-w-0">
-                                    <p class="font-bold text-slate-800 dark:text-zinc-100 truncate">${p.common_name || ''}</p>
-                                    <p class="text-[10px] text-slate-400 dark:text-zinc-400 italic truncate">${p.scientific_name || ''}</p>
+                                    <p class="font-bold text-slate-800 dark:text-zinc-100 truncate">${item.name}</p>
+                                    <p class="text-[10px] text-slate-400 dark:text-zinc-400 italic truncate">${item.sci} &bull; ${item.category}</p>
                                 </div>
                             </div>
-                            <span class="text-[9px] font-bold bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 px-2 py-0.5 rounded-full border border-purple-200 dark:border-purple-800">Ver Ficha</span>
+                            <span class="text-[9px] font-bold bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 px-2 py-0.5 rounded-full border border-purple-200 dark:border-purple-800">Ficha MIP</span>
                         </button>
                     `;
-                });
-                html += `</div></div>`;
-            }
+                }
+            });
 
             dropdown.innerHTML = html;
             dropdown.classList.remove('hidden');
+        }
+
+        function executeSearchResult(idx) {
+            const item = currentSearchResults[idx];
+            if (!item) return;
+            closeGlobalSearchDropdown();
+
+            if (item.type === 'module') {
+                if (item.action === 'guia') {
+                    openSystemUserGuideModal();
+                } else {
+                    switchTab(item.tab);
+                }
+            } else if (item.type === 'client') {
+                switchTab('tab-clientes');
+                const searchInput = document.getElementById('search-clients-input');
+                if (searchInput) {
+                    searchInput.value = item.name;
+                    setTimeout(() => {
+                        searchInput.dispatchEvent(new Event('input', { bubbles: true }));
+                    }, 150);
+                }
+                if (item.id && typeof openEditClientModal === 'function') {
+                    setTimeout(() => openEditClientModal(item.id), 250);
+                }
+            } else if (item.type === 'order') {
+                switchTab('tab-ordenes');
+                const searchInput = document.getElementById('search-orders');
+                if (searchInput) {
+                    searchInput.value = item.folio;
+                    setTimeout(() => {
+                        searchInput.dispatchEvent(new Event('input', { bubbles: true }));
+                    }, 150);
+                }
+                if (item.id && typeof openEditServiceModal === 'function') {
+                    setTimeout(() => openEditServiceModal(item.id), 250);
+                }
+            } else if (item.type === 'certificate') {
+                switchTab('tab-ordenes');
+                const searchInput = document.getElementById('search-orders');
+                if (searchInput) {
+                    searchInput.value = item.certFolio;
+                    setTimeout(() => {
+                        searchInput.dispatchEvent(new Event('input', { bubbles: true }));
+                    }, 150);
+                }
+                if (item.serviceId && typeof openEditServiceModal === 'function') {
+                    setTimeout(() => openEditServiceModal(item.serviceId), 250);
+                }
+            } else if (item.type === 'chemical') {
+                switchTab('tab-quimicos');
+                const searchInput = document.getElementById('search-chem-input');
+                if (searchInput) {
+                    searchInput.value = item.name;
+                    setTimeout(() => {
+                        searchInput.dispatchEvent(new Event('input', { bubbles: true }));
+                    }, 150);
+                }
+                if (item.id && typeof openEditChemicalModal === 'function') {
+                    setTimeout(() => openEditChemicalModal(item.id), 250);
+                }
+            } else if (item.type === 'pest') {
+                switchTab('tab-mip');
+                const searchInput = document.getElementById('search-plagas-input');
+                if (searchInput) {
+                    searchInput.value = item.name;
+                    setTimeout(() => {
+                        searchInput.dispatchEvent(new Event('input', { bubbles: true }));
+                    }, 150);
+                }
+            }
         }
 
         function closeGlobalSearchDropdown() {
@@ -5066,44 +5139,9 @@
             const input = document.getElementById('global-dashboard-search');
             if (input) input.value = '';
             closeGlobalSearchDropdown();
+            currentSearchResults = [];
             const clearBtn = document.getElementById('btn-clear-global-search');
             if (clearBtn) clearBtn.classList.add('hidden');
-        }
-
-        function selectSearchClient(id, name) {
-            switchTab('tab-clientes');
-            const searchInput = document.getElementById('search-clients-input');
-            if (searchInput) {
-                searchInput.value = name;
-                searchInput.dispatchEvent(new Event('input', { bubbles: true }));
-            }
-        }
-
-        function selectSearchOrder(folio) {
-            switchTab('tab-ordenes');
-            const searchInput = document.getElementById('search-orders');
-            if (searchInput) {
-                searchInput.value = folio;
-                searchInput.dispatchEvent(new Event('input', { bubbles: true }));
-            }
-        }
-
-        function selectSearchChemical(name) {
-            switchTab('tab-quimicos');
-            const searchInput = document.getElementById('search-chem-input');
-            if (searchInput) {
-                searchInput.value = name;
-                searchInput.dispatchEvent(new Event('input', { bubbles: true }));
-            }
-        }
-
-        function selectSearchPest(name) {
-            switchTab('tab-mip');
-            const searchInput = document.getElementById('search-plagas-input');
-            if (searchInput) {
-                searchInput.value = name;
-                searchInput.dispatchEvent(new Event('input', { bubbles: true }));
-            }
         }
 
         function updateHeaderDateDisplay() {
@@ -5202,12 +5240,12 @@
                 const res = await fetch('/api/v1/dashboard/summary');
                 if(!res.ok) return;
                 const data = await res.json();
-                document.getElementById('stat-clients').innerText = data.total_clients;
-                document.getElementById('stat-branches').innerText = data.total_branches;
-                document.getElementById('stat-technicians').innerText = data.total_technicians;
-                document.getElementById('stat-total-orders').innerText = data.total_orders;
-                document.getElementById('stat-exp-7').innerText = data.expiring_7_days;
-                document.getElementById('stat-exp-30').innerText = data.expiring_30_days;
+                const sc = document.getElementById('stat-clients'); if (sc) sc.innerText = data.total_clients;
+                const sb = document.getElementById('stat-branches'); if (sb) sb.innerText = data.total_branches;
+                const st = document.getElementById('stat-technicians'); if (st) st.innerText = data.total_technicians;
+                const so = document.getElementById('stat-total-orders'); if (so) so.innerText = data.total_orders;
+                const s7 = document.getElementById('stat-exp-7'); if (s7) s7.innerText = data.expiring_7_days;
+                const s30 = document.getElementById('stat-exp-30'); if (s30) s30.innerText = data.expiring_30_days;
             } catch(e) { console.error(e); }
         }
 
@@ -10779,21 +10817,24 @@
             setTextZoom(savedZoom);
         }
 
-        // Verificación inicial de sesión, accesibilidad y tema (claro / obscuro)
+        // Verificación inicial de sesión, accesibilidad, precarga de datos y tema (claro / obscuro)
         initThemeMode();
         initTextZoom();
         checkAuthSession();
         updateHeaderDateDisplay();
+        preloadGlobalSearchIndex();
         document.addEventListener('DOMContentLoaded', () => {
             initThemeMode();
             initTextZoom();
             checkAuthSession();
             updateHeaderDateDisplay();
+            preloadGlobalSearchIndex();
         });
         window.addEventListener('load', () => {
             initThemeMode();
             checkAuthSession();
             updateHeaderDateDisplay();
+            preloadGlobalSearchIndex();
         });
     </script>
 </body>
