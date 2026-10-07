@@ -1267,6 +1267,16 @@
                     <label class="block font-semibold text-slate-700 mb-1">Observaciones NOM-256</label>
                     <textarea id="edit-service-obs" rows="2" class="w-full bg-white border border-slate-300 rounded-lg p-2"></textarea>
                 </div>
+                <!-- Sección Químicos y Métodos en Modal de Edición -->
+                <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-2">
+                    <div class="flex justify-between items-center">
+                        <label class="block font-bold text-slate-800 text-[11px] uppercase">Químicos Dosificados y Métodos de Aplicación:</label>
+                        <button type="button" onclick="addEditChemicalRow()" class="text-[11px] bg-brand-600 hover:bg-brand-700 text-white font-semibold px-2 py-0.5 rounded flex items-center gap-1">
+                            <i class="fa-solid fa-plus"></i> Añadir Químico
+                        </button>
+                    </div>
+                    <div id="edit-chemicals-container" class="space-y-2"></div>
+                </div>
                 <div class="flex justify-end gap-2 pt-2 border-t border-slate-100">
                     <button type="button" onclick="closeEditServiceModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2 px-3 rounded-lg text-xs">Cancelar</button>
                     <button type="submit" class="bg-brand-600 hover:bg-brand-700 text-white font-bold py-2 px-4 rounded-lg text-xs shadow-sm">Guardar Cambios</button>
@@ -3457,6 +3467,13 @@
                                     <i class="fa-solid fa-plus"></i> Añadir Químico
                                 </button>
                             </div>
+                        </div>
+                        <div class="hidden md:grid md:grid-cols-6 gap-2 text-[11px] font-bold text-slate-500 uppercase px-1">
+                            <div class="col-span-2">Producto Comercial / Ingrediente Activo</div>
+                            <div>Dosis Autorizada</div>
+                            <div>Método de Aplicación</div>
+                            <div>Zona Tratada</div>
+                            <div>Área / Acción</div>
                         </div>
                         <div id="chemicals-rows-container" class="space-y-2"></div>
                     </div>
@@ -7114,11 +7131,80 @@
                 document.getElementById('edit-service-summary').value = srv.results_summary || '';
                 document.getElementById('edit-service-obs').value = srv.observations || '';
 
+                // Cargar químicos aplicados en el modal de edición
+                const editChemContainer = document.getElementById('edit-chemicals-container');
+                if (editChemContainer) {
+                    editChemContainer.innerHTML = '';
+                    const appliedChems = (srv.certificate && srv.certificate.applied_chemicals) ? srv.certificate.applied_chemicals : [];
+                    if (appliedChems.length) {
+                        appliedChems.forEach(ac => {
+                            addEditChemicalRow(ac.chemical_id, ac.dose_applied, ac.application_method, ac.treated_zones_description, ac.area_type);
+                        });
+                    } else {
+                        addEditChemicalRow();
+                    }
+                }
+
                 document.getElementById('edit-service-modal-subtitle').innerText = `${srv.folio} - ${srv.branch ? srv.branch.name : ''}`;
                 document.getElementById('modal-edit-service').classList.remove('hidden');
             } catch (err) {
                 alert('Error: ' + err.message);
             }
+        }
+
+        function addEditChemicalRow(selectedChemId = null, dose = '', method = '', zone = '', area = 'Interior') {
+            const container = document.getElementById('edit-chemicals-container');
+            if (!container) return;
+            const rowId = 'edit-chem-row-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
+            const chemOptions = cachedChemicals.map(c => 
+                `<option value="${c.id}" ${selectedChemId === c.id ? 'selected' : ''}>${c.commercial_name} (${c.active_ingredient})</option>`
+            ).join('');
+
+            const firstChem = selectedChemId ? cachedChemicals.find(c => c.id === selectedChemId) : cachedChemicals[0];
+            const defMethod = method || (firstChem && firstChem.compatible_methods ? firstChem.compatible_methods.split(',')[0].trim() : 'Aspersión Manual');
+            const defDose = dose || (firstChem && firstChem.authorized_dose_per_liter ? firstChem.authorized_dose_per_liter : '10 ml / Litro');
+            const defZone = zone || 'Áreas comunes e interiores';
+
+            const div = document.createElement('div');
+            div.id = rowId;
+            div.className = "edit-chem-row-item grid grid-cols-1 md:grid-cols-6 gap-2 bg-white p-2 rounded-lg border border-slate-200 items-center text-xs";
+            div.innerHTML = `
+                <div class="md:col-span-2">
+                    <select class="edit-chem-select w-full bg-slate-50 border border-slate-300 rounded p-1" onchange="onEditChemicalSelectionChanged(this)">${chemOptions}</select>
+                </div>
+                <div>
+                    <input type="text" placeholder="Dosis" value="${defDose}" class="edit-chem-dose w-full bg-slate-50 border border-slate-300 rounded p-1" />
+                </div>
+                <div>
+                    <input type="text" placeholder="Método" value="${defMethod}" class="edit-chem-method w-full bg-slate-50 border border-slate-300 rounded p-1 font-medium text-slate-800" />
+                </div>
+                <div>
+                    <input type="text" placeholder="Zona" value="${defZone}" class="edit-chem-zone w-full bg-slate-50 border border-slate-300 rounded p-1" />
+                </div>
+                <div class="flex items-center gap-1">
+                    <select class="edit-chem-area w-full bg-slate-50 border border-slate-300 rounded p-1">
+                        <option value="Interior" ${area === 'Interior' ? 'selected' : ''}>Interior</option>
+                        <option value="Exterior" ${area === 'Exterior' ? 'selected' : ''}>Exterior</option>
+                        <option value="Perimetral" ${area === 'Perimetral' ? 'selected' : ''}>Perimetral</option>
+                    </select>
+                    <button type="button" onclick="document.getElementById('${rowId}').remove()" class="text-rose-600 hover:text-rose-800 p-1" title="Quitar químico"><i class="fa-solid fa-trash"></i></button>
+                </div>
+            `;
+            container.appendChild(div);
+        }
+
+        function onEditChemicalSelectionChanged(selectElem) {
+            const chemId = selectElem.value;
+            const chem = cachedChemicals.find(c => c.id === chemId);
+            if (!chem) return;
+            const row = selectElem.closest('.edit-chem-row-item');
+            if (!row) return;
+
+            const doseInput = row.querySelector('.edit-chem-dose');
+            const methodInput = row.querySelector('.edit-chem-method');
+
+            if (doseInput && chem.authorized_dose_per_liter) doseInput.value = chem.authorized_dose_per_liter;
+            if (methodInput && chem.compatible_methods) methodInput.value = chem.compatible_methods.split(',')[0].trim();
         }
 
         function closeEditServiceModal() {
@@ -7128,6 +7214,27 @@
         async function handleUpdateService(e) {
             e.preventDefault();
             const serviceId = document.getElementById('edit-service-id').value;
+
+            // Recopilar químicos editados
+            const editChemRows = document.querySelectorAll('#edit-chemicals-container .edit-chem-row-item');
+            const chemicals_applied = [];
+            editChemRows.forEach(row => {
+                const sel = row.querySelector('.edit-chem-select');
+                if (!sel || !sel.value) return;
+                const dose = row.querySelector('.edit-chem-dose')?.value || "10 ml / Litro";
+                const method = row.querySelector('.edit-chem-method')?.value || "Aspersión Manual";
+                const area = row.querySelector('.edit-chem-area')?.value || "Interior";
+                const zone = row.querySelector('.edit-chem-zone')?.value || "Áreas comunes e interiores";
+
+                chemicals_applied.push({
+                    chemical_id: sel.value,
+                    dose_applied: dose,
+                    area_type: area,
+                    treated_zones_description: zone,
+                    application_method: method.trim() || "Aspersión Manual"
+                });
+            });
+
             const payload = {
                 folio: document.getElementById('edit-service-folio').value.trim(),
                 certificate_folio: document.getElementById('edit-cert-folio').value.trim(),
@@ -7137,7 +7244,8 @@
                 sanitary_responsible_name: document.getElementById('edit-service-resp-name').value.trim(),
                 sanitary_license_number: document.getElementById('edit-service-license').value.trim(),
                 results_summary: document.getElementById('edit-service-summary').value.trim(),
-                observations: document.getElementById('edit-service-obs').value.trim()
+                observations: document.getElementById('edit-service-obs').value.trim(),
+                chemicals_applied: chemicals_applied.length ? chemicals_applied : undefined
             };
 
             try {
@@ -8083,15 +8191,22 @@
             const rowId = 'chem-row-' + Date.now();
             const chemOptions = cachedChemicals.map(c => `<option value="${c.id}">${c.commercial_name} (${c.active_ingredient}) - ${c.authorized_dose_per_liter}</option>`).join('');
 
+            const firstChem = cachedChemicals[0] || null;
+            const defaultMethod = firstChem && firstChem.compatible_methods ? firstChem.compatible_methods.split(',')[0].trim() : 'Aspersión Manual';
+            const defaultDose = firstChem && firstChem.authorized_dose_per_liter ? firstChem.authorized_dose_per_liter : '10 ml / Litro';
+
             const div = document.createElement('div');
             div.id = rowId;
-            div.className = "grid grid-cols-1 md:grid-cols-5 gap-2 bg-white p-2.5 rounded-lg border border-slate-200 items-center text-xs";
+            div.className = "chem-row-item grid grid-cols-1 md:grid-cols-6 gap-2 bg-white p-2.5 rounded-lg border border-slate-200 items-center text-xs";
             div.innerHTML = `
                 <div class="md:col-span-2">
-                    <select class="chem-select w-full bg-slate-50 border border-slate-300 rounded p-1.5">${chemOptions}</select>
+                    <select class="chem-select w-full bg-slate-50 border border-slate-300 rounded p-1.5" onchange="onChemicalSelectionChanged(this)">${chemOptions}</select>
                 </div>
                 <div>
-                    <input type="text" placeholder="Dosis (ej. 10ml/1L)" value="10 ml / Litro" class="chem-dose w-full bg-slate-50 border border-slate-300 rounded p-1.5" />
+                    <input type="text" placeholder="Dosis (ej. 10ml/1L)" value="${defaultDose}" class="chem-dose w-full bg-slate-50 border border-slate-300 rounded p-1.5" />
+                </div>
+                <div>
+                    <input type="text" placeholder="Método (ej. Aspersión, Nebulización, Termonebulización, Gel, Inyección)" value="${defaultMethod}" class="chem-method w-full bg-slate-50 border border-slate-300 rounded p-1.5 font-medium text-slate-800" />
                 </div>
                 <div>
                     <input type="text" placeholder="Zona (ej. Cocinas)" value="Áreas comunes e interiores" class="chem-zone w-full bg-slate-50 border border-slate-300 rounded p-1.5" />
@@ -8102,10 +8217,28 @@
                         <option value="Exterior">Exterior</option>
                         <option value="Perimetral">Perimetral</option>
                     </select>
-                    <button type="button" onclick="document.getElementById('${rowId}').remove()" class="text-rose-600 hover:text-rose-800 p-1"><i class="fa-solid fa-trash"></i></button>
+                    <button type="button" onclick="document.getElementById('${rowId}').remove()" class="text-rose-600 hover:text-rose-800 p-1" title="Quitar químico"><i class="fa-solid fa-trash"></i></button>
                 </div>
             `;
             container.appendChild(div);
+        }
+
+        function onChemicalSelectionChanged(selectElem) {
+            const chemId = selectElem.value;
+            const chem = cachedChemicals.find(c => c.id === chemId);
+            if (!chem) return;
+            const row = selectElem.closest('.chem-row-item');
+            if (!row) return;
+
+            const doseInput = row.querySelector('.chem-dose');
+            const methodInput = row.querySelector('.chem-method');
+
+            if (doseInput && chem.authorized_dose_per_liter) {
+                doseInput.value = chem.authorized_dose_per_liter;
+            }
+            if (methodInput && chem.compatible_methods) {
+                methodInput.value = chem.compatible_methods.split(',')[0].trim();
+            }
         }
 
         async function handleCreateService(e) {
@@ -8114,15 +8247,22 @@
             btn.disabled = true;
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generando...';
 
-            const chemRows = document.querySelectorAll('#chemicals-rows-container > div');
+            const chemRows = document.querySelectorAll('#chemicals-rows-container .chem-row-item, #chemicals-rows-container > div');
             const chemicals_applied = [];
             chemRows.forEach(row => {
+                const sel = row.querySelector('.chem-select');
+                if (!sel || !sel.value) return;
+                const dose = row.querySelector('.chem-dose')?.value || "10 ml / Litro";
+                const method = row.querySelector('.chem-method')?.value || "Aspersión Manual";
+                const area = row.querySelector('.chem-area')?.value || "Interior";
+                const zone = row.querySelector('.chem-zone')?.value || "Áreas comunes e interiores";
+
                 chemicals_applied.push({
-                    chemical_id: row.querySelector('.chem-select').value,
-                    dose_applied: row.querySelector('.chem-dose').value,
-                    area_type: row.querySelector('.chem-area').value,
-                    treated_zones_description: row.querySelector('.chem-zone').value,
-                    application_method: "Aspersión Manual"
+                    chemical_id: sel.value,
+                    dose_applied: dose,
+                    area_type: area,
+                    treated_zones_description: zone,
+                    application_method: method.trim() || "Aspersión Manual"
                 });
             });
 
