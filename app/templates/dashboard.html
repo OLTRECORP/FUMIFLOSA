@@ -6721,14 +6721,29 @@
         let filteredOrdersList = [];
         let ordersCurrentPage = 1;
         let ordersPageSize = 20;
+        let lastCreatedServiceId = null;
 
         async function loadOrders() {
             try {
-                const res = await fetch('/api/v1/services?limit=500');
-                cachedOrdersList = await res.json();
+                const res = await fetch('/api/v1/services?limit=500&t=' + Date.now(), {
+                    cache: 'no-store',
+                    headers: { 'Cache-Control': 'no-cache' }
+                });
+                if (res.ok) {
+                    const freshOrders = await res.json();
+                    if (Array.isArray(freshOrders)) {
+                        cachedOrdersList = freshOrders;
+                        // Ordenar por created_at descendente o service_start_date descendente para garantizar que las órdenes y certificados nuevos estén siempre al inicio
+                        cachedOrdersList.sort((a, b) => {
+                            const timeA = new Date(a.created_at || a.service_start_date || 0).getTime();
+                            const timeB = new Date(b.created_at || b.service_start_date || 0).getTime();
+                            return timeB - timeA;
+                        });
+                    }
+                }
                 applyOrdersFilter();
             } catch(e) { 
-                console.error(e); 
+                console.error("Error al cargar órdenes de servicio:", e); 
             }
         }
 
@@ -6853,10 +6868,15 @@
                     }
                 }
 
+                const isRecentlyCreated = (lastCreatedServiceId && o.id === lastCreatedServiceId);
+
                 return `
-                <tr class="hover:bg-slate-50 ${isOrderCancelled ? 'bg-rose-50/20' : ''}">
+                <tr class="hover:bg-slate-50 transition-colors ${isRecentlyCreated ? 'bg-emerald-50/70 border-l-4 border-l-emerald-500 ring-1 ring-emerald-200' : (isOrderCancelled ? 'bg-rose-50/20' : '')}">
                     <td class="p-3 font-mono font-bold text-slate-900">
-                        ${o.folio}
+                        <div class="flex items-center gap-1.5 flex-wrap">
+                            <span>${o.folio}</span>
+                            ${isRecentlyCreated ? '<span class="bg-emerald-600 text-white font-black text-[9px] px-1.5 py-0.5 rounded-full inline-flex items-center gap-1 shadow-xs tracking-wider animate-pulse"><i class="fa-solid fa-sparkles"></i> NUEVO</span>' : ''}
+                        </div>
                         <div class="mt-0.5">${statusBadge}</div>
                     </td>
                     <td class="p-3">${certCell}</td>
@@ -8701,10 +8721,38 @@
                 }
 
                 closeCertificatePreviewModal();
-                alert(`¡Servicio y Certificado NOM-256 generados exitosamente!\nFolio Orden: ${data.folio}\nFolio Certificado: ${data.certificate.certificate_folio}`);
-                window.open(`/api/v1/services/${data.id}/pdf`, '_blank');
+                const certFolioStr = (data.certificate && data.certificate.certificate_folio) ? data.certificate.certificate_folio : 'Generado';
+                alert(`¡Servicio y Certificado NOM-256 generados exitosamente!\nFolio Orden: ${data.folio}\nFolio Certificado: ${certFolioStr}`);
+                
+                if (data.id) {
+                    window.open(`/api/v1/services/${data.id}/pdf`, '_blank');
+                }
+
+                // Guardar ID recién creado para destacarlo visualmente
+                lastCreatedServiceId = data.id;
+
+                // Prepend de inmediato en cachedOrdersList para renderizado instantáneo
+                if (data && data.id) {
+                    const idx = cachedOrdersList.findIndex(o => o.id === data.id);
+                    if (idx >= 0) cachedOrdersList.splice(idx, 1);
+                    cachedOrdersList.unshift(data);
+                }
+
+                // Resetear filtros de búsqueda y página para que aparezca en el primer renglón
+                const searchInput = document.getElementById('orders-search-input');
+                if (searchInput) searchInput.value = '';
+                const statusFilter = document.getElementById('orders-status-filter');
+                if (statusFilter) statusFilter.value = 'all';
+                ordersCurrentPage = 1;
+
+                // Limpiar campos variables del formulario de servicio
+                const resEl = document.getElementById('srv-results');
+                if (resEl) resEl.value = '';
+                const obsEl = document.getElementById('srv-obs');
+                if (obsEl) obsEl.value = '';
+
                 switchTab('tab-ordenes');
-                loadOrders();
+                await loadOrders();
                 loadDashboardData();
             } catch(err) {
                 alert('Error al generar: ' + err.message);

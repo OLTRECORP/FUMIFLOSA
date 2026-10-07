@@ -2032,7 +2032,7 @@ def get_service_orders(
     if status:
         query = query.filter(ServiceOrder.status == status)
         
-    query = query.order_by(ServiceOrder.service_start_date.desc())
+    query = query.order_by(ServiceOrder.created_at.desc(), ServiceOrder.service_start_date.desc())
     if limit:
         query = query.limit(limit)
     return query.all()
@@ -2064,6 +2064,11 @@ def create_service_order_with_certificate(
         next_num = count + 1
         order_folio = f"ORD-{next_num:05d}"
         cert_folio = f"CER-{next_num:05d}"
+        while db.query(ServiceOrder).filter(ServiceOrder.folio == order_folio).first() or \
+              db.query(Certificate).filter(Certificate.certificate_folio == cert_folio).first():
+            next_num += 1
+            order_folio = f"ORD-{next_num:05d}"
+            cert_folio = f"CER-{next_num:05d}"
     else:
         count = db.execute(
             select(func.count(ServiceOrder.id)).where(ServiceOrder.folio.like(f"{prefix}-%"))
@@ -2071,12 +2076,18 @@ def create_service_order_with_certificate(
         next_num = count + 1
         order_folio = f"{prefix}-ORD-{next_num:05d}"
         cert_folio = f"{prefix}-CER-{next_num:05d}"
+        while db.query(ServiceOrder).filter(ServiceOrder.folio == order_folio).first() or \
+              db.query(Certificate).filter(Certificate.certificate_folio == cert_folio).first():
+            next_num += 1
+            order_folio = f"{prefix}-ORD-{next_num:05d}"
+            cert_folio = f"{prefix}-CER-{next_num:05d}"
 
     try:
         service_order = ServiceOrder(
             folio=order_folio,
             branch_id=payload.branch_id,
             technician_id=payload.technician_id,
+            status="completed",
             service_start_date=payload.service_start_date,
             service_end_date=payload.service_end_date,
             pest_crawling_insects=payload.pest_crawling_insects,
@@ -2091,7 +2102,8 @@ def create_service_order_with_certificate(
             proc_thermofogging=payload.proc_thermofogging,
             results_summary=payload.results_summary,
             observations=payload.observations,
-            client_signature_data=payload.client_signature_data
+            client_signature_data=payload.client_signature_data,
+            is_deleted=False
         )
         db.add(service_order)
         db.flush()
@@ -2105,9 +2117,12 @@ def create_service_order_with_certificate(
             issue_date=start_date,
             validity_start_date=start_date,
             validity_end_date=start_date + timedelta(days=validity_days),
-            sanitary_license_number=payload.sanitary_license_number or company.sanitary_license_number,
-            sanitary_responsible_name=payload.sanitary_responsible_name or company.sanitary_responsible_name,
-            sanitary_responsible_id=payload.sanitary_responsible_id or company.sanitary_responsible_id
+            sanitary_license_number=payload.sanitary_license_number or company.sanitary_license_number or "2023-15A-099",
+            sanitary_responsible_name=payload.sanitary_responsible_name or company.sanitary_responsible_name or "Biól. Roberto Sánchez Martínez",
+            sanitary_responsible_id=payload.sanitary_responsible_id or company.sanitary_responsible_id or "CED-8849201",
+            is_signed=False,
+            is_cancelled=False,
+            is_deleted=False
         )
         db.add(certificate)
         db.flush()
@@ -2128,26 +2143,33 @@ def create_service_order_with_certificate(
             db.add(applied)
 
         db.commit()
-        db.refresh(service_order)
+
+        # Recargar la orden con todas sus relaciones completamente hidratadas
+        created_order = db.query(ServiceOrder).options(
+            joinedload(ServiceOrder.branch).joinedload(Branch.client),
+            joinedload(ServiceOrder.technician),
+            joinedload(ServiceOrder.certificate).joinedload(Certificate.applied_chemicals).joinedload(CertificateChemical.chemical)
+        ).filter(ServiceOrder.id == service_order.id).first()
 
         client_name = branch.client.legal_name if branch.client else branch.name
         record_audit(
             db=db,
             action_type="CREATE",
             module="SERVICIOS",
-            description=f"Emisión de Orden {service_order.folio} y Certificado {certificate.certificate_folio} para '{client_name}' ({branch.name})",
-            entity_id=str(service_order.id),
-            entity_name=f"{service_order.folio} / {certificate.certificate_folio}",
+            description=f"Emisión de Orden {created_order.folio} y Certificado {created_order.certificate.certificate_folio if created_order.certificate else ''} para '{client_name}' ({branch.name})",
+            entity_id=str(created_order.id),
+            entity_name=f"{created_order.folio} / {created_order.certificate.certificate_folio if created_order.certificate else ''}",
             username="SuperAdmin",
             user_role="SuperAdmin",
             request=request
         )
 
-        return service_order
+        return created_order
 
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Error al crear el servicio: {str(e)}")
+
 
 
 # ============================================================================

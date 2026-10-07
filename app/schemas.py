@@ -285,6 +285,8 @@ class CertificateResponse(BaseModel):
     signed_by_name: Optional[str] = None
     signed_by_rfc: Optional[str] = None
     verification_uuid: Optional[str] = None
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
     model_config = ConfigDict(from_attributes=True)
 
 
@@ -393,6 +395,8 @@ class ServiceOrderResponse(BaseModel):
     branch: Optional[BranchResponse] = None
     technician: Optional[UserResponse] = None
     certificate: Optional[CertificateResponse] = None
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
     model_config = ConfigDict(from_attributes=True)
 
 
