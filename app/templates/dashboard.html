@@ -1337,57 +1337,34 @@
 
                 </div>
 
-                <!-- SECCIÓN DE FIRMA DIGITAL Y ASENTAMIENTO -->
-                <div class="bg-slate-50 dark:bg-[#202028] border-2 border-slate-200 dark:border-[#333340] rounded-2xl p-4 sm:p-5 space-y-3">
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                <!-- CERTIFICACIÓN SANITARIA Y OPCIÓN DE FIRMA DIGITAL SAT -->
+                <div class="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-[#1b2620] dark:to-[#16201b] border border-emerald-200 dark:border-emerald-800/50 rounded-2xl p-4 sm:p-5 space-y-3">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 flex items-center justify-center text-lg font-bold flex-shrink-0">
+                            <i class="fa-solid fa-stamp"></i>
+                        </div>
                         <div>
                             <h4 class="font-bold text-slate-900 dark:text-zinc-100 text-xs sm:text-sm flex items-center gap-2">
-                                <i class="fa-solid fa-signature text-emerald-600 text-base"></i>
-                                Asentamiento de Firma Digital de Conformidad
+                                Certificación Sanitaria Oficial NOM-256-SSA1-2012
                             </h4>
-                            <p class="text-[11px] text-slate-500 dark:text-zinc-400">
-                                Firma con el dedo en pantalla táctil, lápiz óptico o ratón para asentar la firma oficial de recepción.
+                            <p class="text-[11px] text-slate-600 dark:text-zinc-400">
+                                La orden y certificado se emitirán con la acreditación y firma oficial del Responsable Sanitario (<strong class="text-slate-800 dark:text-zinc-200">Marco Antonio Flores Sáenz</strong>, Licencia 08 17 19 SA 0001).
                             </p>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <button type="button" onclick="clearPreviewSignature()" class="px-3 py-1.5 bg-white dark:bg-zinc-800 hover:bg-slate-100 dark:hover:bg-zinc-700 border border-slate-300 dark:border-zinc-600 text-slate-700 dark:text-zinc-200 rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-xs transition">
-                                <i class="fa-solid fa-eraser text-rose-500"></i> Borrar Firma
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Lienzo Interactivo de Firma -->
-                    <div class="relative w-full">
-                        <canvas id="canvas-preview-signature" width="800" height="150" class="w-full h-36 bg-white rounded-xl border-2 border-dashed border-slate-300 dark:border-zinc-600 cursor-crosshair touch-none shadow-inner"></canvas>
-                        <div id="preview-sig-watermark" class="pointer-events-none absolute inset-0 flex items-center justify-center text-slate-300 dark:text-zinc-600 text-xs font-semibold select-none">
-                            <span class="flex items-center gap-1.5"><i class="fa-solid fa-pen-nib"></i> Dibuja la firma aquí</span>
-                        </div>
-                    </div>
-
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pt-1">
-                        <div class="flex items-center gap-2">
-                            <span id="preview-signature-status" class="text-[11px] text-slate-400 font-medium italic flex items-center gap-1">
-                                <i class="fa-solid fa-pen-nib"></i> Lienzo listo para firmar
-                            </span>
-                        </div>
-                        <div class="w-full sm:w-80">
-                            <input type="text" id="preview-signer-name" placeholder="Aclaración / Nombre de quien firma (opcional)" class="w-full bg-white dark:bg-zinc-800 border border-slate-300 dark:border-zinc-700 rounded-lg px-2.5 py-1 text-xs" />
                         </div>
                     </div>
 
                     <!-- Opción Adicional: Sello FIEL / SAT -->
-                    <div class="pt-2 border-t border-slate-200 dark:border-zinc-700 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                    <div class="pt-2.5 border-t border-emerald-200/80 dark:border-emerald-800/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                         <label class="flex items-center gap-2 cursor-pointer text-xs text-slate-700 dark:text-zinc-300">
                             <input type="checkbox" id="preview-sign-fiel-chk" onchange="togglePreviewFielPass()" class="rounded text-brand-600 focus:ring-brand-500" />
-                            <span class="font-bold flex items-center gap-1">
-                                <i class="fa-solid fa-stamp text-amber-600"></i> Estampar también Firma Electrónica Criptográfica SAT (e.firma NOM-256)
+                            <span class="font-bold flex items-center gap-1.5">
+                                <i class="fa-solid fa-certificate text-emerald-600"></i> Estampar también Firma Digital Criptográfica SAT (e.firma NOM-256)
                             </span>
                         </label>
                         <div id="preview-fiel-pass-wrapper" class="hidden w-full sm:w-auto">
-                            <input type="password" id="preview-fiel-pass" placeholder="Contraseña de FIEL" class="bg-white dark:bg-zinc-800 border border-amber-300 rounded-lg px-2.5 py-1 text-xs font-mono" />
+                            <input type="password" id="preview-fiel-pass" placeholder="Contraseña de la FIEL (SAT)" class="bg-white dark:bg-zinc-800 border border-emerald-300 rounded-lg px-3 py-1.5 text-xs font-mono" />
                         </div>
                     </div>
-
                 </div>
 
             </div>
@@ -1397,8 +1374,8 @@
                 <button type="button" onclick="closeCertificatePreviewModal()" class="w-full sm:w-auto px-4 py-2 bg-slate-200 hover:bg-slate-300 dark:bg-zinc-700 text-slate-700 dark:text-zinc-200 font-bold rounded-xl text-xs flex items-center justify-center gap-2 transition">
                     <i class="fa-solid fa-pen-to-square"></i> Modificar Datos (Volver al Formulario)
                 </button>
-                <button type="button" id="btn-preview-confirm-generate" onclick="confirmAndGenerateServiceWithSignature()" class="w-full sm:w-auto px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-xl text-xs flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transition">
-                    <i class="fa-solid fa-file-circle-check"></i> Generar Orden y Certificado Oficial con Firma
+                <button type="button" id="btn-preview-confirm-generate" onclick="confirmAndGenerateService()" class="w-full sm:w-auto px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-xl text-xs flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transition">
+                    <i class="fa-solid fa-file-circle-check"></i> Generar Orden y Certificado Oficial
                 </button>
             </div>
 
@@ -3711,7 +3688,7 @@
                             <i class="fa-solid fa-eye"></i> Visualizar Certificado (Vista Previa)
                         </button>
                         <button type="submit" id="btn-submit-service" class="bg-brand-600 hover:bg-brand-700 text-white font-bold py-2.5 px-6 rounded-lg text-xs flex items-center justify-center gap-2 shadow-sm transition">
-                            <i class="fa-solid fa-signature"></i> Revisar Certificado y Generar con Firma
+                            <i class="fa-solid fa-file-circle-check"></i> Revisar y Generar Certificado
                         </button>
                     </div>
                 </form>
@@ -8445,108 +8422,8 @@
         }
 
         // ====================================================================
-        // VISTA PREVIA Y FIRMA DEL CERTIFICADO NOM-256 ANTES DE EMITIR
+        // VISTA PREVIA Y APROBACIÓN DEL CERTIFICADO NOM-256 ANTES DE EMITIR
         // ====================================================================
-        let previewSigCanvas = null;
-        let previewSigCtx = null;
-        let isDrawingPreviewSig = false;
-        let hasPreviewSigStrokes = false;
-
-        function getCanvasCoords(canvas, evt) {
-            const rect = canvas.getBoundingClientRect();
-            const clientX = (evt.touches && evt.touches.length > 0) ? evt.touches[0].clientX : evt.clientX;
-            const clientY = (evt.touches && evt.touches.length > 0) ? evt.touches[0].clientY : evt.clientY;
-            const scaleX = canvas.width / rect.width;
-            const scaleY = canvas.height / rect.height;
-            return {
-                x: (clientX - rect.left) * scaleX,
-                y: (clientY - rect.top) * scaleY
-            };
-        }
-
-        function initPreviewSignatureCanvas() {
-            previewSigCanvas = document.getElementById('canvas-preview-signature');
-            if (!previewSigCanvas) return;
-            previewSigCtx = previewSigCanvas.getContext('2d');
-            
-            // Ajustar resolución interna del canvas
-            previewSigCtx.strokeStyle = '#0f172a';
-            previewSigCtx.lineWidth = 2.5;
-            previewSigCtx.lineCap = 'round';
-            previewSigCtx.lineJoin = 'round';
-
-            // Eventos de Ratón
-            previewSigCanvas.onmousedown = (e) => {
-                isDrawingPreviewSig = true;
-                hasPreviewSigStrokes = true;
-                const coords = getCanvasCoords(previewSigCanvas, e);
-                previewSigCtx.beginPath();
-                previewSigCtx.moveTo(coords.x, coords.y);
-                updatePreviewSigStatus();
-            };
-
-            previewSigCanvas.onmousemove = (e) => {
-                if (!isDrawingPreviewSig) return;
-                const coords = getCanvasCoords(previewSigCanvas, e);
-                previewSigCtx.lineTo(coords.x, coords.y);
-                previewSigCtx.stroke();
-            };
-
-            window.addEventListener('mouseup', () => { isDrawingPreviewSig = false; });
-            previewSigCanvas.onmouseleave = () => { isDrawingPreviewSig = false; };
-
-            // Eventos Táctiles (Smartphones y Tablets / iPads)
-            previewSigCanvas.ontouchstart = (e) => {
-                e.preventDefault();
-                isDrawingPreviewSig = true;
-                hasPreviewSigStrokes = true;
-                const coords = getCanvasCoords(previewSigCanvas, e);
-                previewSigCtx.beginPath();
-                previewSigCtx.moveTo(coords.x, coords.y);
-                updatePreviewSigStatus();
-            };
-
-            previewSigCanvas.ontouchmove = (e) => {
-                e.preventDefault();
-                if (!isDrawingPreviewSig) return;
-                const coords = getCanvasCoords(previewSigCanvas, e);
-                previewSigCtx.lineTo(coords.x, coords.y);
-                previewSigCtx.stroke();
-            };
-
-            previewSigCanvas.ontouchend = (e) => {
-                e.preventDefault();
-                isDrawingPreviewSig = false;
-            };
-            previewSigCanvas.ontouchcancel = (e) => {
-                e.preventDefault();
-                isDrawingPreviewSig = false;
-            };
-        }
-
-        function clearPreviewSignature() {
-            if (!previewSigCanvas || !previewSigCtx) return;
-            previewSigCtx.clearRect(0, 0, previewSigCanvas.width, previewSigCanvas.height);
-            hasPreviewSigStrokes = false;
-            updatePreviewSigStatus();
-        }
-
-        function updatePreviewSigStatus() {
-            const statusElem = document.getElementById('preview-signature-status');
-            const watermarkElem = document.getElementById('preview-sig-watermark');
-            if (watermarkElem) {
-                watermarkElem.style.display = hasPreviewSigStrokes ? 'none' : 'flex';
-            }
-            if (!statusElem) return;
-            if (hasPreviewSigStrokes) {
-                statusElem.className = "text-[11px] text-emerald-600 font-bold flex items-center gap-1";
-                statusElem.innerHTML = `<i class="fa-solid fa-check"></i> Firma digital asentada en lienzo`;
-            } else {
-                statusElem.className = "text-[11px] text-slate-400 font-medium italic flex items-center gap-1";
-                statusElem.innerHTML = `<i class="fa-solid fa-pen-nib"></i> Lienzo listo para firmar`;
-            }
-        }
-
         function togglePreviewFielPass() {
             const chk = document.getElementById('preview-sign-fiel-chk');
             const wrapper = document.getElementById('preview-fiel-pass-wrapper');
@@ -8703,32 +8580,16 @@
             document.getElementById('prev-results').innerText = document.getElementById('srv-results')?.value || 'Tratamiento preventivo y correctivo aplicado satisfactoriamente en zonas críticas.';
             document.getElementById('prev-obs').innerText = document.getElementById('srv-obs')?.value || 'Mantener ventilación natural y respetar tiempo de reentrada.';
 
-            // Inicializar o limpiar lienzo de firma
-            setTimeout(() => {
-                initPreviewSignatureCanvas();
-                clearPreviewSignature();
-                const signerInput = document.getElementById('preview-signer-name');
-                if (signerInput) {
-                    signerInput.value = branchObj ? (branchObj.responsible_contact_name || '') : '';
-                }
-            }, 80);
-
             // Mostrar Modal
             document.getElementById('modal-preview-certificate').classList.remove('hidden');
         }
 
-        async function confirmAndGenerateServiceWithSignature() {
+        async function confirmAndGenerateService() {
             const confirmBtn = document.getElementById('btn-preview-confirm-generate');
             confirmBtn.disabled = true;
             confirmBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generando y Guardando...';
 
-            // 1. Obtener datos de firma
-            let signatureData = null;
-            if (hasPreviewSigStrokes && previewSigCanvas) {
-                signatureData = previewSigCanvas.toDataURL('image/png');
-            }
-
-            // 2. Extraer químicos aplicados
+            // Extraer químicos aplicados
             const chemRows = document.querySelectorAll('#chemicals-rows-container .chem-row-item, #chemicals-rows-container > div');
             const chemicals_applied = [];
             chemRows.forEach(row => {
@@ -8754,7 +8615,7 @@
             if (!branchId || !clientId) {
                 alert('Por favor selecciona un Cliente Matriz y una Sucursal válida.');
                 confirmBtn.disabled = false;
-                confirmBtn.innerHTML = '<i class="fa-solid fa-file-circle-check"></i> Generar Orden y Certificado Oficial con Firma';
+                confirmBtn.innerHTML = '<i class="fa-solid fa-file-circle-check"></i> Generar Orden y Certificado Oficial';
                 return;
             }
 
@@ -8783,14 +8644,10 @@
                 } catch (autoErr) {
                     alert('No se pudo vincular la sede matriz: ' + autoErr.message);
                     confirmBtn.disabled = false;
-                    confirmBtn.innerHTML = '<i class="fa-solid fa-file-circle-check"></i> Generar Orden y Certificado Oficial con Firma';
+                    confirmBtn.innerHTML = '<i class="fa-solid fa-file-circle-check"></i> Generar Orden y Certificado Oficial';
                     return;
                 }
             }
-
-            const signerName = document.getElementById('preview-signer-name')?.value?.trim();
-            const obsText = document.getElementById('srv-obs').value;
-            const finalObs = signerName ? `${obsText}\n[Firma de Recepción asentada por: ${signerName}]` : obsText;
 
             const payload = {
                 branch_id: branchId,
@@ -8809,8 +8666,8 @@
                 proc_ulv_fogging: document.getElementById('srv-proc-ulv').checked,
                 proc_thermofogging: document.getElementById('srv-proc-thermo').checked,
                 results_summary: document.getElementById('srv-results').value,
-                observations: finalObs,
-                client_signature_data: signatureData,
+                observations: document.getElementById('srv-obs').value,
+                client_signature_data: null,
                 sanitary_license_number: document.getElementById('srv-license').value || null,
                 sanitary_responsible_name: document.getElementById('srv-resp-name').value || null,
                 sanitary_responsible_id: document.getElementById('srv-resp-id').value || null,
@@ -8844,7 +8701,7 @@
                 }
 
                 closeCertificatePreviewModal();
-                alert(`¡Servicio y Certificado NOM-256 generados exitosamente con firma!\nFolio Orden: ${data.folio}\nFolio Certificado: ${data.certificate.certificate_folio}`);
+                alert(`¡Servicio y Certificado NOM-256 generados exitosamente!\nFolio Orden: ${data.folio}\nFolio Certificado: ${data.certificate.certificate_folio}`);
                 window.open(`/api/v1/services/${data.id}/pdf`, '_blank');
                 switchTab('tab-ordenes');
                 loadOrders();
@@ -8853,7 +8710,7 @@
                 alert('Error al generar: ' + err.message);
             } finally {
                 confirmBtn.disabled = false;
-                confirmBtn.innerHTML = '<i class="fa-solid fa-file-circle-check"></i> Generar Orden y Certificado Oficial con Firma';
+                confirmBtn.innerHTML = '<i class="fa-solid fa-file-circle-check"></i> Generar Orden y Certificado Oficial';
             }
         }
 
