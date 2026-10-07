@@ -1214,7 +1214,7 @@
 
     <!-- MODAL DE EDICIÓN DE ORDEN / CERTIFICADO -->
     <div id="modal-edit-service" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-xl w-full p-6 space-y-4 border border-slate-200 max-h-[90vh] overflow-y-auto">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full p-6 space-y-4 border border-slate-200 max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center border-b border-slate-100 pb-3">
                 <div class="flex items-center gap-2">
                     <div class="w-8 h-8 bg-blue-100 text-blue-700 rounded-lg flex items-center justify-center text-sm font-bold">
@@ -1222,7 +1222,7 @@
                     </div>
                     <div>
                         <h3 class="text-sm font-bold text-slate-900">Editar Servicio y Certificado NOM-256</h3>
-                        <p id="edit-service-modal-subtitle" class="text-[11px] text-slate-500">Modificación de folios, fechas y observaciones</p>
+                        <p id="edit-service-modal-subtitle" class="text-[11px] text-slate-500">Modificación de folios, fechas, observaciones, químicos y lugares tratados</p>
                     </div>
                 </div>
                 <button onclick="closeEditServiceModal()" class="text-slate-400 hover:text-slate-600 p-1"><i class="fa-solid fa-xmark text-base"></i></button>
@@ -1270,10 +1270,17 @@
                 <!-- Sección Químicos y Métodos en Modal de Edición -->
                 <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-2">
                     <div class="flex justify-between items-center">
-                        <label class="block font-bold text-slate-800 text-[11px] uppercase">Químicos Dosificados y Métodos de Aplicación:</label>
+                        <label class="block font-bold text-slate-800 text-[11px] uppercase">Químicos Dosificados, Lugares Tratados y Métodos de Aplicación:</label>
                         <button type="button" onclick="addEditChemicalRow()" class="text-[11px] bg-brand-600 hover:bg-brand-700 text-white font-semibold px-2 py-0.5 rounded flex items-center gap-1">
                             <i class="fa-solid fa-plus"></i> Añadir Químico
                         </button>
+                    </div>
+                    <div class="hidden md:grid md:grid-cols-6 gap-2 text-[10px] font-bold text-slate-500 uppercase px-1">
+                        <div class="col-span-2">Producto Comercial / Activo</div>
+                        <div>Dosis</div>
+                        <div>Método de Aplicación</div>
+                        <div>Lugar / Zonas Tratadas</div>
+                        <div>Área / Quitar</div>
                     </div>
                     <div id="edit-chemicals-container" class="space-y-2"></div>
                 </div>
