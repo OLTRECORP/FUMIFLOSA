@@ -1,5 +1,6 @@
 import io
 import os
+import base64
 from datetime import date, datetime
 from typing import Optional, Any, List, Dict
 from pathlib import Path
@@ -7,7 +8,7 @@ from pathlib import Path
 from reportlab.lib.pagesizes import letter, landscape
 from reportlab.lib import colors
 from reportlab.platypus import (
-    SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, KeepTogether
+    SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, KeepTogether, Image
 )
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_CENTER, TA_RIGHT, TA_LEFT, TA_JUSTIFY
@@ -399,10 +400,11 @@ class OfficialCertificatePDFGenerator:
                 f"<font face='Courier' size='4.0'>{cert.digital_signature_seal}</font>"
             )
         else:
+            sig_note = " &nbsp;|&nbsp; <b>Firma Digital en Sitio:</b> Asentada y Registrada" if getattr(order, 'client_signature_data', None) else ""
             fiel_box_html = (
                 f"<b>CONSTANCIA DIGITAL DE VALIDEZ SANITARIA OFICIAL (NOM-256-SSA1-2012 / COFEPRIS)</b><br/>"
                 f"<b>Folio Digital:</b> {cert.certificate_folio} &nbsp;|&nbsp; <b>ID Verificación UUID:</b> {cert.verification_uuid or cert.id}<br/>"
-                f"<b>Responsable Sanitario:</b> {cert.sanitary_responsible_name or responsible_title} (RFC: {comp_rfc}) &nbsp;|&nbsp; <b>Licencia Sanitaria:</b> {license_no}<br/>"
+                f"<b>Responsable Sanitario:</b> {cert.sanitary_responsible_name or responsible_title} (RFC: {comp_rfc}) &nbsp;|&nbsp; <b>Licencia Sanitaria:</b> {license_no}{sig_note}<br/>"
                 f"<b>Cadena de Autenticidad Oficial:</b><br/>"
                 f"<font face='Courier' size='4.0'>||{cert.certificate_folio}|{issue_str}|{comp_rfc}|{license_no}|{client_display}|NOM-256-SSA1-2012||</font><br/>"
                 f"<b>Registro de Emisión:</b> Certificado Oficial registrado en Plataforma FLOSA. Validez plena para inspección sanitaria COFEPRIS / Escanee el código QR para validar autenticidad en tiempo real."
@@ -776,10 +778,27 @@ class OfficialWorkOrderPDFGenerator:
         elements.append(Spacer(1, 12))
 
         # 6. FIRMAS DE CONFORMIDAD OPERATIVA (EN CAMPO)
+        client_sig_cell = [
+            Paragraph(f"_____________________________<br/><b>{branch.responsible_contact_name or 'Responsable en Sitio'}</b><br/>Recepción y Conformidad del Cliente<br/>Firma y Sello de la Unidad", subtitle_style)
+        ]
+        if getattr(order, 'client_signature_data', None):
+            try:
+                raw_sig = str(order.client_signature_data)
+                if "," in raw_sig:
+                    raw_sig = raw_sig.split(",", 1)[1]
+                sig_bytes = base64.b64decode(raw_sig)
+                sig_img = Image(io.BytesIO(sig_bytes), width=120, height=45)
+                client_sig_cell = [
+                    sig_img,
+                    Paragraph(f"<b>{branch.responsible_contact_name or 'Responsable en Sitio'}</b><br/>Recepción y Conformidad del Cliente<br/><font size='5.5' color='#059669'>[Firma Digital de Conformidad Registrada]</font>", subtitle_style)
+                ]
+            except Exception:
+                pass
+
         sig_data = [
             [
                 Paragraph(f"_____________________________<br/><b>{tech_full_name}</b><br/>Responsable Técnico Operativo<br/>No. De Licencia Sanitaria: {license_no}", subtitle_style),
-                Paragraph(f"_____________________________<br/><b>{branch.responsible_contact_name or 'Responsable en Sitio'}</b><br/>Recepción y Conformidad del Cliente<br/>Firma y Sello de la Unidad", subtitle_style)
+                client_sig_cell
             ]
         ]
         sig_table = Table(sig_data, colWidths=[270, 270])

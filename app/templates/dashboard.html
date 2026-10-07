@@ -1212,6 +1212,199 @@
         </div>
     </div>
 
+    <!-- ============================================================= -->
+    <!-- MODAL: VISTA PREVIA Y FIRMA DEL CERTIFICADO NOM-256 -->
+    <!-- ============================================================= -->
+    <div id="modal-preview-certificate" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4 hidden animate-fadeIn">
+        <div class="bg-white dark:bg-[#1a1a20] rounded-2xl shadow-2xl max-w-4xl w-full border border-slate-200 dark:border-[#2e2e38] max-h-[92vh] flex flex-col overflow-hidden">
+            <!-- Encabezado del Modal -->
+            <div class="bg-gradient-to-r from-slate-900 via-brand-900 to-indigo-950 p-4 text-white flex justify-between items-center border-b border-slate-800">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 bg-brand-500/20 text-brand-300 rounded-xl flex items-center justify-center text-lg font-bold border border-brand-500/30">
+                        <i class="fa-solid fa-file-contract"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm sm:text-base font-bold text-white flex items-center gap-2">
+                            Vista Previa del Certificado Sanitario NOM-256
+                            <span class="bg-amber-400 text-slate-950 text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">Revisión & Firma</span>
+                        </h3>
+                        <p class="text-[11px] text-slate-300">Verifica minuciosamente los datos oficiales antes de generar y emitir la orden final</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeCertificatePreviewModal()" class="text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-white/10 transition">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <!-- Cuerpo del Modal (Contenedor con scroll) -->
+            <div class="overflow-y-auto p-4 sm:p-6 space-y-4 text-xs">
+                
+                <!-- Tarjeta Principal con Diseño de Certificado Oficial -->
+                <div class="bg-amber-50/20 border-2 border-amber-200/80 dark:border-amber-900/40 rounded-2xl p-4 sm:p-5 shadow-inner space-y-4">
+                    
+                    <!-- Fila 1: Membrete Oficial y Folios Estimados -->
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-3 border-b border-amber-200 dark:border-amber-900/40">
+                        <div class="flex items-center gap-3">
+                            <div class="w-12 h-12 bg-white rounded-xl shadow-xs border border-slate-200 flex items-center justify-center p-1">
+                                <i class="fa-solid fa-shield-virus text-brand-600 text-2xl"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-black text-slate-900 dark:text-zinc-100 text-sm tracking-tight" id="prev-comp-name">FUMIGACIONES FLORES S.A. DE C.V.</h4>
+                                <p class="text-[11px] text-slate-600 dark:text-zinc-400 font-medium">Licencia Sanitaria COFEPRIS: <strong class="text-slate-800 dark:text-zinc-200" id="prev-license">08 17 19 SA 0001</strong></p>
+                                <p class="text-[10px] text-slate-500 dark:text-zinc-400">Responsable: <span id="prev-resp-name">Marco Antonio Flores Sáenz</span> | Cédula: <span id="prev-resp-id">1234567</span></p>
+                            </div>
+                        </div>
+                        <div class="text-left sm:text-right bg-white dark:bg-zinc-800/80 p-2.5 rounded-xl border border-slate-200 dark:border-zinc-700 shadow-xs">
+                            <p class="text-[10px] uppercase font-bold text-slate-500">Folios Estimados:</p>
+                            <p class="font-mono font-black text-brand-700 dark:text-brand-400 text-xs" id="prev-folio-display">ORD-00000 / CER-00000</p>
+                            <div class="text-[10px] text-slate-600 dark:text-zinc-400 mt-0.5">
+                                Vigencia NOM-256: <span class="font-bold text-emerald-700 dark:text-emerald-400" id="prev-validity-display">30 días naturales</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Fila 2: Datos del Establecimiento / Cliente y Sucursal -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 bg-white dark:bg-zinc-800/60 p-3.5 rounded-xl border border-slate-200 dark:border-zinc-700 text-xs">
+                        <div class="space-y-1">
+                            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
+                                <i class="fa-solid fa-building text-brand-600"></i> Cliente Matriz & Facturación
+                            </p>
+                            <p class="font-bold text-slate-900 dark:text-zinc-100 text-sm" id="prev-client-name">-</p>
+                            <p class="text-slate-600 dark:text-zinc-300">RFC: <span class="font-mono font-semibold" id="prev-client-rfc">-</span></p>
+                            <p class="text-slate-600 dark:text-zinc-300">Contacto: <span id="prev-client-contact">-</span></p>
+                        </div>
+                        <div class="space-y-1 md:border-l md:border-slate-100 md:dark:border-zinc-700 md:pl-3">
+                            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
+                                <i class="fa-solid fa-location-dot text-rose-600"></i> Sucursal / Inmueble Tratado
+                            </p>
+                            <p class="font-bold text-slate-900 dark:text-zinc-100 text-sm" id="prev-branch-name">-</p>
+                            <p class="text-slate-600 dark:text-zinc-300 text-[11px] leading-tight" id="prev-branch-address">-</p>
+                            <p class="text-slate-500 dark:text-zinc-400 text-[10px]">Teléfono: <span id="prev-branch-phone">-</span> | Responsable en Sitio: <span id="prev-branch-resp">-</span></p>
+                        </div>
+                    </div>
+
+                    <!-- Fila 3: Técnico Asignado, Fecha y Plagas Diagnosticadas -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3 bg-white dark:bg-zinc-800/60 p-3.5 rounded-xl border border-slate-200 dark:border-zinc-700 text-xs">
+                        <div>
+                            <p class="text-[10px] font-bold text-slate-500 uppercase">Técnico Aplicador (STPS / DC-3):</p>
+                            <p class="font-bold text-slate-900 dark:text-zinc-100" id="prev-tech-name">-</p>
+                            <p class="text-[10px] text-slate-500 mt-1">Horario de Servicio:</p>
+                            <p class="font-medium text-slate-700 dark:text-zinc-300 text-[11px]" id="prev-dates-range">-</p>
+                        </div>
+                        <div class="md:col-span-2">
+                            <p class="text-[10px] font-bold text-slate-500 uppercase mb-1">Plagas Diagnosticadas a Controlar:</p>
+                            <div class="flex flex-wrap gap-1.5" id="prev-pests-container"></div>
+                            <p class="text-[10px] font-bold text-slate-500 uppercase mt-2 mb-1">Procedimientos Aplicados:</p>
+                            <div class="flex flex-wrap gap-1.5" id="prev-procs-container"></div>
+                        </div>
+                    </div>
+
+                    <!-- Fila 4: Tabla de Químicos Dosificados -->
+                    <div class="space-y-2">
+                        <div class="flex justify-between items-center">
+                            <p class="text-[11px] font-bold uppercase text-slate-800 dark:text-zinc-200 flex items-center gap-1.5">
+                                <i class="fa-solid fa-flask-vial text-brand-600"></i> Químicos Dosificados y Zonas de Aplicación (NOM-256)
+                            </p>
+                            <span class="text-[10px] text-slate-500 italic">Verificados conforme a registro sanitario</span>
+                        </div>
+                        <div class="overflow-x-auto rounded-xl border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800/80 shadow-xs">
+                            <table class="w-full text-left text-[11px]">
+                                <thead class="bg-slate-100 dark:bg-zinc-700/60 text-slate-700 dark:text-zinc-200 font-bold uppercase text-[10px] border-b border-slate-200 dark:border-zinc-700">
+                                    <tr>
+                                        <th class="p-2 sm:p-2.5">Producto Comercial / Activo</th>
+                                        <th class="p-2 sm:p-2.5">No. RSCO / CICOPLAFEST</th>
+                                        <th class="p-2 sm:p-2.5">Dosis</th>
+                                        <th class="p-2 sm:p-2.5">Lugar / Zonas Tratadas</th>
+                                        <th class="p-2 sm:p-2.5">Método de Aplicación</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="prev-chems-table-body" class="divide-y divide-slate-100 dark:divide-zinc-700/60"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Fila 5: Resultados y Observaciones -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 bg-white dark:bg-zinc-800/60 p-3 rounded-xl border border-slate-200 dark:border-zinc-700 text-xs">
+                        <div>
+                            <p class="text-[10px] font-bold text-slate-500 uppercase">Resultados Obtenidos:</p>
+                            <p class="text-slate-700 dark:text-zinc-300 text-[11px] italic" id="prev-results">-</p>
+                        </div>
+                        <div>
+                            <p class="text-[10px] font-bold text-slate-500 uppercase">Observaciones & Reentrada:</p>
+                            <p class="text-slate-700 dark:text-zinc-300 text-[11px] italic" id="prev-obs">-</p>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- SECCIÓN DE FIRMA DIGITAL Y ASENTAMIENTO -->
+                <div class="bg-slate-50 dark:bg-[#202028] border-2 border-slate-200 dark:border-[#333340] rounded-2xl p-4 sm:p-5 space-y-3">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                        <div>
+                            <h4 class="font-bold text-slate-900 dark:text-zinc-100 text-xs sm:text-sm flex items-center gap-2">
+                                <i class="fa-solid fa-signature text-emerald-600 text-base"></i>
+                                Asentamiento de Firma Digital de Conformidad
+                            </h4>
+                            <p class="text-[11px] text-slate-500 dark:text-zinc-400">
+                                Firma con el dedo en pantalla táctil, lápiz óptico o ratón para asentar la firma oficial de recepción.
+                            </p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button type="button" onclick="clearPreviewSignature()" class="px-3 py-1.5 bg-white dark:bg-zinc-800 hover:bg-slate-100 dark:hover:bg-zinc-700 border border-slate-300 dark:border-zinc-600 text-slate-700 dark:text-zinc-200 rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-xs transition">
+                                <i class="fa-solid fa-eraser text-rose-500"></i> Borrar Firma
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Lienzo Interactivo de Firma -->
+                    <div class="relative w-full">
+                        <canvas id="canvas-preview-signature" width="800" height="150" class="w-full h-36 bg-white rounded-xl border-2 border-dashed border-slate-300 dark:border-zinc-600 cursor-crosshair touch-none shadow-inner"></canvas>
+                        <div id="preview-sig-watermark" class="pointer-events-none absolute inset-0 flex items-center justify-center text-slate-300 dark:text-zinc-600 text-xs font-semibold select-none">
+                            <span class="flex items-center gap-1.5"><i class="fa-solid fa-pen-nib"></i> Dibuja la firma aquí</span>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pt-1">
+                        <div class="flex items-center gap-2">
+                            <span id="preview-signature-status" class="text-[11px] text-slate-400 font-medium italic flex items-center gap-1">
+                                <i class="fa-solid fa-pen-nib"></i> Lienzo listo para firmar
+                            </span>
+                        </div>
+                        <div class="w-full sm:w-80">
+                            <input type="text" id="preview-signer-name" placeholder="Aclaración / Nombre de quien firma (opcional)" class="w-full bg-white dark:bg-zinc-800 border border-slate-300 dark:border-zinc-700 rounded-lg px-2.5 py-1 text-xs" />
+                        </div>
+                    </div>
+
+                    <!-- Opción Adicional: Sello FIEL / SAT -->
+                    <div class="pt-2 border-t border-slate-200 dark:border-zinc-700 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                        <label class="flex items-center gap-2 cursor-pointer text-xs text-slate-700 dark:text-zinc-300">
+                            <input type="checkbox" id="preview-sign-fiel-chk" onchange="togglePreviewFielPass()" class="rounded text-brand-600 focus:ring-brand-500" />
+                            <span class="font-bold flex items-center gap-1">
+                                <i class="fa-solid fa-stamp text-amber-600"></i> Estampar también Firma Electrónica Criptográfica SAT (e.firma NOM-256)
+                            </span>
+                        </label>
+                        <div id="preview-fiel-pass-wrapper" class="hidden w-full sm:w-auto">
+                            <input type="password" id="preview-fiel-pass" placeholder="Contraseña de FIEL" class="bg-white dark:bg-zinc-800 border border-amber-300 rounded-lg px-2.5 py-1 text-xs font-mono" />
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- Footer con Botones de Acción -->
+            <div class="p-4 bg-slate-50 dark:bg-[#15151a] border-t border-slate-200 dark:border-[#2e2e38] flex flex-col sm:flex-row justify-between items-center gap-3">
+                <button type="button" onclick="closeCertificatePreviewModal()" class="w-full sm:w-auto px-4 py-2 bg-slate-200 hover:bg-slate-300 dark:bg-zinc-700 text-slate-700 dark:text-zinc-200 font-bold rounded-xl text-xs flex items-center justify-center gap-2 transition">
+                    <i class="fa-solid fa-pen-to-square"></i> Modificar Datos (Volver al Formulario)
+                </button>
+                <button type="button" id="btn-preview-confirm-generate" onclick="confirmAndGenerateServiceWithSignature()" class="w-full sm:w-auto px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-xl text-xs flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transition">
+                    <i class="fa-solid fa-file-circle-check"></i> Generar Orden y Certificado Oficial con Firma
+                </button>
+            </div>
+
+        </div>
+    </div>
+
     <!-- MODAL DE EDICIÓN DE ORDEN / CERTIFICADO -->
     <div id="modal-edit-service" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
         <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full p-6 space-y-4 border border-slate-200 max-h-[90vh] overflow-y-auto">
@@ -3513,9 +3706,12 @@
                         </div>
                     </div>
 
-                    <div class="flex justify-end gap-3 pt-2 border-t border-slate-200">
-                        <button type="submit" id="btn-submit-service" class="bg-brand-600 hover:bg-brand-700 text-white font-bold py-2.5 px-6 rounded-lg text-xs flex items-center gap-2 shadow-sm transition">
-                            <i class="fa-solid fa-check"></i> Generar Orden y Certificado Oficial
+                    <div class="flex flex-col sm:flex-row justify-end gap-3 pt-2 border-t border-slate-200">
+                        <button type="button" onclick="openCertificatePreviewModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-5 rounded-lg text-xs flex items-center justify-center gap-2 shadow-sm transition">
+                            <i class="fa-solid fa-eye"></i> Visualizar Certificado (Vista Previa)
+                        </button>
+                        <button type="submit" id="btn-submit-service" class="bg-brand-600 hover:bg-brand-700 text-white font-bold py-2.5 px-6 rounded-lg text-xs flex items-center justify-center gap-2 shadow-sm transition">
+                            <i class="fa-solid fa-signature"></i> Revisar Certificado y Generar con Firma
                         </button>
                     </div>
                 </form>
@@ -8248,12 +8444,291 @@
             }
         }
 
-        async function handleCreateService(e) {
-            e.preventDefault();
-            const btn = document.getElementById('btn-submit-service');
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generando...';
+        // ====================================================================
+        // VISTA PREVIA Y FIRMA DEL CERTIFICADO NOM-256 ANTES DE EMITIR
+        // ====================================================================
+        let previewSigCanvas = null;
+        let previewSigCtx = null;
+        let isDrawingPreviewSig = false;
+        let hasPreviewSigStrokes = false;
 
+        function getCanvasCoords(canvas, evt) {
+            const rect = canvas.getBoundingClientRect();
+            const clientX = (evt.touches && evt.touches.length > 0) ? evt.touches[0].clientX : evt.clientX;
+            const clientY = (evt.touches && evt.touches.length > 0) ? evt.touches[0].clientY : evt.clientY;
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            return {
+                x: (clientX - rect.left) * scaleX,
+                y: (clientY - rect.top) * scaleY
+            };
+        }
+
+        function initPreviewSignatureCanvas() {
+            previewSigCanvas = document.getElementById('canvas-preview-signature');
+            if (!previewSigCanvas) return;
+            previewSigCtx = previewSigCanvas.getContext('2d');
+            
+            // Ajustar resolución interna del canvas
+            previewSigCtx.strokeStyle = '#0f172a';
+            previewSigCtx.lineWidth = 2.5;
+            previewSigCtx.lineCap = 'round';
+            previewSigCtx.lineJoin = 'round';
+
+            // Eventos de Ratón
+            previewSigCanvas.onmousedown = (e) => {
+                isDrawingPreviewSig = true;
+                hasPreviewSigStrokes = true;
+                const coords = getCanvasCoords(previewSigCanvas, e);
+                previewSigCtx.beginPath();
+                previewSigCtx.moveTo(coords.x, coords.y);
+                updatePreviewSigStatus();
+            };
+
+            previewSigCanvas.onmousemove = (e) => {
+                if (!isDrawingPreviewSig) return;
+                const coords = getCanvasCoords(previewSigCanvas, e);
+                previewSigCtx.lineTo(coords.x, coords.y);
+                previewSigCtx.stroke();
+            };
+
+            window.addEventListener('mouseup', () => { isDrawingPreviewSig = false; });
+            previewSigCanvas.onmouseleave = () => { isDrawingPreviewSig = false; };
+
+            // Eventos Táctiles (Smartphones y Tablets / iPads)
+            previewSigCanvas.ontouchstart = (e) => {
+                e.preventDefault();
+                isDrawingPreviewSig = true;
+                hasPreviewSigStrokes = true;
+                const coords = getCanvasCoords(previewSigCanvas, e);
+                previewSigCtx.beginPath();
+                previewSigCtx.moveTo(coords.x, coords.y);
+                updatePreviewSigStatus();
+            };
+
+            previewSigCanvas.ontouchmove = (e) => {
+                e.preventDefault();
+                if (!isDrawingPreviewSig) return;
+                const coords = getCanvasCoords(previewSigCanvas, e);
+                previewSigCtx.lineTo(coords.x, coords.y);
+                previewSigCtx.stroke();
+            };
+
+            previewSigCanvas.ontouchend = (e) => {
+                e.preventDefault();
+                isDrawingPreviewSig = false;
+            };
+            previewSigCanvas.ontouchcancel = (e) => {
+                e.preventDefault();
+                isDrawingPreviewSig = false;
+            };
+        }
+
+        function clearPreviewSignature() {
+            if (!previewSigCanvas || !previewSigCtx) return;
+            previewSigCtx.clearRect(0, 0, previewSigCanvas.width, previewSigCanvas.height);
+            hasPreviewSigStrokes = false;
+            updatePreviewSigStatus();
+        }
+
+        function updatePreviewSigStatus() {
+            const statusElem = document.getElementById('preview-signature-status');
+            const watermarkElem = document.getElementById('preview-sig-watermark');
+            if (watermarkElem) {
+                watermarkElem.style.display = hasPreviewSigStrokes ? 'none' : 'flex';
+            }
+            if (!statusElem) return;
+            if (hasPreviewSigStrokes) {
+                statusElem.className = "text-[11px] text-emerald-600 font-bold flex items-center gap-1";
+                statusElem.innerHTML = `<i class="fa-solid fa-check"></i> Firma digital asentada en lienzo`;
+            } else {
+                statusElem.className = "text-[11px] text-slate-400 font-medium italic flex items-center gap-1";
+                statusElem.innerHTML = `<i class="fa-solid fa-pen-nib"></i> Lienzo listo para firmar`;
+            }
+        }
+
+        function togglePreviewFielPass() {
+            const chk = document.getElementById('preview-sign-fiel-chk');
+            const wrapper = document.getElementById('preview-fiel-pass-wrapper');
+            if (!chk || !wrapper) return;
+            if (chk.checked) {
+                wrapper.classList.remove('hidden');
+            } else {
+                wrapper.classList.add('hidden');
+            }
+        }
+
+        function closeCertificatePreviewModal() {
+            const modal = document.getElementById('modal-preview-certificate');
+            if (modal) modal.classList.add('hidden');
+        }
+
+        function openCertificatePreviewModal() {
+            const clientId = document.getElementById('srv-client-id')?.value;
+            const branchId = document.getElementById('srv-branch-id')?.value;
+
+            if (!clientId || !branchId) {
+                alert('Por favor selecciona primero un Cliente Matriz y una Sucursal antes de visualizar el certificado.');
+                return;
+            }
+
+            // Datos de Empresa y Folio
+            const comp = cachedCompany || {};
+            const compName = comp.company_name || "FUMIGACIONES FLORES S.A. DE C.V.";
+            const compLicense = document.getElementById('srv-license')?.value || comp.sanitary_license_number || "08 17 19 SA 0001";
+            const compResp = document.getElementById('srv-resp-name')?.value || comp.sanitary_responsible_name || "Marco Antonio Flores Sáenz";
+            const compRespId = document.getElementById('srv-resp-id')?.value || comp.sanitary_responsible_id || "Lic. Sanitaria 08 17 19 SA 0001";
+
+            document.getElementById('prev-comp-name').innerText = compName;
+            document.getElementById('prev-license').innerText = compLicense;
+            document.getElementById('prev-resp-name').innerText = compResp;
+            document.getElementById('prev-resp-id').innerText = compRespId;
+
+            // Folios Proyectados
+            const count = (cachedOrdersList && cachedOrdersList.length) ? cachedOrdersList.length + 1 : 1;
+            const padNum = String(count).padStart(5, '0');
+            const prefix = (document.getElementById('srv-prefix')?.value || 'ORD').trim();
+            const projOrder = prefix === 'ORD' ? `ORD-${padNum}` : `${prefix}-ORD-${padNum}`;
+            const projCert = prefix === 'ORD' ? `CER-${padNum}` : `${prefix}-CER-${padNum}`;
+            document.getElementById('prev-folio-display').innerText = `${projOrder} / ${projCert}`;
+
+            // Fechas
+            const startVal = document.getElementById('srv-start-date')?.value;
+            const endVal = document.getElementById('srv-end-date')?.value;
+            const startDate = startVal ? new Date(startVal) : new Date();
+            const endDate = endVal ? new Date(endVal) : new Date(startDate.getTime() + 2 * 3600 * 1000);
+            
+            const validityEndDate = new Date(startDate.getTime() + 30 * 24 * 3600 * 1000);
+            const formatDate = (d) => d.toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' });
+            const formatTime = (d) => d.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
+
+            document.getElementById('prev-validity-display').innerText = `${formatDate(startDate)} al ${formatDate(validityEndDate)} (30 días)`;
+            document.getElementById('prev-dates-range').innerText = `${formatDate(startDate)} ${formatTime(startDate)} a ${formatTime(endDate)}`;
+
+            // Cliente y Sucursal
+            const clientObj = cachedClients.find(c => c.id === clientId);
+            let branchObj = null;
+            if (branchId.startsWith('CLIENT_ROOT:')) {
+                branchObj = {
+                    name: `Matriz Principal (${clientObj ? clientObj.legal_name : 'Sede'})`,
+                    address: `Domicilio Fiscal Matriz - RFC: ${clientObj ? clientObj.rfc : ''}`,
+                    phone: "Sin teléfono registrado",
+                    responsible_contact_name: clientObj ? (clientObj.contact_name || clientObj.legal_name) : "Responsable Matriz"
+                };
+            } else {
+                branchObj = cachedBranches.find(b => b.id === branchId);
+            }
+
+            document.getElementById('prev-client-name').innerText = clientObj ? clientObj.legal_name : 'Cliente no especificado';
+            document.getElementById('prev-client-rfc').innerText = clientObj ? clientObj.rfc : 'XAXX010101000';
+            document.getElementById('prev-client-contact').innerText = clientObj ? (clientObj.contact_name || 'No especificado') : '-';
+
+            document.getElementById('prev-branch-name').innerText = branchObj ? branchObj.name : 'Sucursal Principal';
+            document.getElementById('prev-branch-address').innerText = branchObj ? (branchObj.address || 'Domicilio del Inmueble') : 'Domicilio de la Sucursal';
+            document.getElementById('prev-branch-phone').innerText = branchObj ? (branchObj.phone || 'S/N') : 'S/N';
+            document.getElementById('prev-branch-resp').innerText = branchObj ? (branchObj.responsible_contact_name || clientObj?.legal_name || 'Responsable en Sitio') : 'Responsable en Sitio';
+
+            // Técnico
+            const techId = document.getElementById('srv-tech-id')?.value;
+            const techObj = cachedTechnicians.find(t => t.id === techId);
+            document.getElementById('prev-tech-name').innerText = techObj ? `${techObj.full_name} (${techObj.role || 'Técnico Aplicador'})` : 'Técnico Aplicador Autorizado';
+
+            // Plagas Diagnosticadas
+            const pestsContainer = document.getElementById('prev-pests-container');
+            pestsContainer.innerHTML = '';
+            const pests = [];
+            if (document.getElementById('srv-pest-crawling')?.checked) pests.push({ label: 'Insectos Rastreros (Cucarachas, Hormigas)', color: 'bg-amber-100 text-amber-800 border-amber-200' });
+            if (document.getElementById('srv-pest-rodents')?.checked) pests.push({ label: 'Roedores (Ratas, Ratones)', color: 'bg-rose-100 text-rose-800 border-rose-200' });
+            if (document.getElementById('srv-pest-flying')?.checked) pests.push({ label: 'Insectos Voladores (Moscas, Mosquitos)', color: 'bg-blue-100 text-blue-800 border-blue-200' });
+            const pestOthers = document.getElementById('srv-pest-others')?.value?.trim();
+            if (pestOthers) pests.push({ label: `Específica: ${pestOthers}`, color: 'bg-purple-100 text-purple-800 border-purple-200' });
+            
+            if (!pests.length) pests.push({ label: 'Manejo Integral Preventivo', color: 'bg-slate-100 text-slate-700 border-slate-200' });
+            pests.forEach(p => {
+                pestsContainer.innerHTML += `<span class="inline-block border px-2 py-0.5 rounded-md text-[10px] font-bold ${p.color}">${p.label}</span>`;
+            });
+
+            // Procedimientos
+            const procsContainer = document.getElementById('prev-procs-container');
+            procsContainer.innerHTML = '';
+            const procs = [];
+            if (document.getElementById('srv-proc-asp')?.checked) procs.push('Aspersión Manual');
+            if (document.getElementById('srv-proc-baits')?.checked) procs.push('Cebado');
+            if (document.getElementById('srv-proc-traps')?.checked) procs.push('Trampas de Captura');
+            if (document.getElementById('srv-proc-gels')?.checked) procs.push('Gel Cucarachicida');
+            if (document.getElementById('srv-proc-ulv')?.checked) procs.push('Nebulización Fría ULV');
+            if (document.getElementById('srv-proc-thermo')?.checked) procs.push('Termonebulización');
+            if (!procs.length) procs.push('Aspersión y Control Focalizado');
+            procs.forEach(pr => {
+                procsContainer.innerHTML += `<span class="inline-block bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-md text-[10px] font-semibold text-slate-700">${pr}</span>`;
+            });
+
+            // Químicos Dosificados
+            const chemsTbody = document.getElementById('prev-chems-table-body');
+            chemsTbody.innerHTML = '';
+            const chemRows = document.querySelectorAll('#chemicals-rows-container .chem-row-item, #chemicals-rows-container > div');
+            let addedCount = 0;
+
+            chemRows.forEach(row => {
+                const sel = row.querySelector('.chem-select');
+                if (!sel || !sel.value) return;
+                const chemId = sel.value;
+                const chemObj = cachedChemicals.find(c => c.id === chemId);
+                const dose = row.querySelector('.chem-dose')?.value || (chemObj?.authorized_dose_per_liter || "10 ml / Litro");
+                const method = row.querySelector('.chem-method')?.value || "Aspersión Manual";
+                const area = row.querySelector('.chem-area')?.value || "Interior";
+                const zone = row.querySelector('.chem-zone')?.value || "Áreas comunes e interiores";
+
+                const commName = chemObj ? chemObj.commercial_name : 'Químico Autorizado';
+                const actIng = chemObj ? chemObj.active_ingredient : 'Ingrediente Activo';
+                const cico = chemObj ? chemObj.cicoplafest_number : 'RSCO-URB-MEZC-111-00-02-40';
+
+                chemsTbody.innerHTML += `
+                    <tr class="hover:bg-slate-50/80 dark:hover:bg-zinc-800">
+                        <td class="p-2 sm:p-2.5 font-bold text-slate-900 dark:text-zinc-100">${commName} <span class="block text-[10px] font-normal text-slate-500">(${actIng})</span></td>
+                        <td class="p-2 sm:p-2.5 font-mono text-[10px] text-slate-600 dark:text-zinc-300">${cico}</td>
+                        <td class="p-2 sm:p-2.5 font-semibold text-brand-700 dark:text-brand-400">${dose}</td>
+                        <td class="p-2 sm:p-2.5 text-slate-700 dark:text-zinc-300"><span class="font-bold text-slate-900 dark:text-zinc-100">${area}:</span> ${zone}</td>
+                        <td class="p-2 sm:p-2.5 font-bold text-slate-800 dark:text-zinc-200">${method}</td>
+                    </tr>
+                `;
+                addedCount++;
+            });
+
+            if (addedCount === 0) {
+                chemsTbody.innerHTML = `<tr><td colspan="5" class="p-3 text-center text-slate-400 italic">No se agregaron químicos. Se dosificará insecticida por defecto del catálogo.</td></tr>`;
+            }
+
+            // Resultados y Observaciones
+            document.getElementById('prev-results').innerText = document.getElementById('srv-results')?.value || 'Tratamiento preventivo y correctivo aplicado satisfactoriamente en zonas críticas.';
+            document.getElementById('prev-obs').innerText = document.getElementById('srv-obs')?.value || 'Mantener ventilación natural y respetar tiempo de reentrada.';
+
+            // Inicializar o limpiar lienzo de firma
+            setTimeout(() => {
+                initPreviewSignatureCanvas();
+                clearPreviewSignature();
+                const signerInput = document.getElementById('preview-signer-name');
+                if (signerInput) {
+                    signerInput.value = branchObj ? (branchObj.responsible_contact_name || '') : '';
+                }
+            }, 80);
+
+            // Mostrar Modal
+            document.getElementById('modal-preview-certificate').classList.remove('hidden');
+        }
+
+        async function confirmAndGenerateServiceWithSignature() {
+            const confirmBtn = document.getElementById('btn-preview-confirm-generate');
+            confirmBtn.disabled = true;
+            confirmBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generando y Guardando...';
+
+            // 1. Obtener datos de firma
+            let signatureData = null;
+            if (hasPreviewSigStrokes && previewSigCanvas) {
+                signatureData = previewSigCanvas.toDataURL('image/png');
+            }
+
+            // 2. Extraer químicos aplicados
             const chemRows = document.querySelectorAll('#chemicals-rows-container .chem-row-item, #chemicals-rows-container > div');
             const chemicals_applied = [];
             chemRows.forEach(row => {
@@ -8277,17 +8752,17 @@
             const clientId = document.getElementById('srv-client-id')?.value;
 
             if (!branchId || !clientId) {
-                alert('Por favor selecciona un Cliente Matriz y una Sucursal válida para generar la orden y certificado.');
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fa-solid fa-check"></i> Generar Orden y Certificado Oficial';
+                alert('Por favor selecciona un Cliente Matriz y una Sucursal válida.');
+                confirmBtn.disabled = false;
+                confirmBtn.innerHTML = '<i class="fa-solid fa-file-circle-check"></i> Generar Orden y Certificado Oficial con Firma';
                 return;
             }
 
-            // Si se seleccionó la Sede Matriz Principal sin sucursal previa, crear automáticamente la sucursal de Matriz
+            // Auto-crear unidad matriz si se seleccionó la matriz principal sin sucursal previa
             if (branchId.startsWith('CLIENT_ROOT:')) {
                 const clientObj = cachedClients.find(c => c.id === clientId);
                 try {
-                    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Registrando unidad Matriz...';
+                    confirmBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Vinculando unidad Matriz...';
                     const autoBrRes = await fetch('/api/v1/branches', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -8307,11 +8782,15 @@
                     await loadClientsAndBranches();
                 } catch (autoErr) {
                     alert('No se pudo vincular la sede matriz: ' + autoErr.message);
-                    btn.disabled = false;
-                    btn.innerHTML = '<i class="fa-solid fa-check"></i> Generar Orden y Certificado Oficial';
+                    confirmBtn.disabled = false;
+                    confirmBtn.innerHTML = '<i class="fa-solid fa-file-circle-check"></i> Generar Orden y Certificado Oficial con Firma';
                     return;
                 }
             }
+
+            const signerName = document.getElementById('preview-signer-name')?.value?.trim();
+            const obsText = document.getElementById('srv-obs').value;
+            const finalObs = signerName ? `${obsText}\n[Firma de Recepción asentada por: ${signerName}]` : obsText;
 
             const payload = {
                 branch_id: branchId,
@@ -8330,7 +8809,8 @@
                 proc_ulv_fogging: document.getElementById('srv-proc-ulv').checked,
                 proc_thermofogging: document.getElementById('srv-proc-thermo').checked,
                 results_summary: document.getElementById('srv-results').value,
-                observations: document.getElementById('srv-obs').value,
+                observations: finalObs,
+                client_signature_data: signatureData,
                 sanitary_license_number: document.getElementById('srv-license').value || null,
                 sanitary_responsible_name: document.getElementById('srv-resp-name').value || null,
                 sanitary_responsible_id: document.getElementById('srv-resp-id').value || null,
@@ -8338,22 +8818,48 @@
             };
 
             try {
+                confirmBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Registrando Certificado Oficial...';
                 const res = await fetch('/api/v1/services', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
                 const data = await res.json();
-                if(!res.ok) throw new Error(data.detail || 'Error al guardar');
-                alert(`¡Servicio registrado exitosamente!\nFolio Orden: ${data.folio}\nFolio Certificado: ${data.certificate.certificate_folio}`);
+                if (!res.ok) throw new Error(data.detail || 'Error al guardar el servicio');
+
+                // Si se solicitó firma criptográfica SAT
+                const fielChk = document.getElementById('preview-sign-fiel-chk');
+                if (fielChk && fielChk.checked && data.certificate && data.certificate.id) {
+                    try {
+                        confirmBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Estampando Sello SAT...';
+                        const pwd = document.getElementById('preview-fiel-pass')?.value || '';
+                        await fetch(`/api/v1/certificates/${data.certificate.id}/sign`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ password: pwd })
+                        });
+                    } catch(fielErr) {
+                        console.warn("Firma SAT posterior:", fielErr);
+                    }
+                }
+
+                closeCertificatePreviewModal();
+                alert(`¡Servicio y Certificado NOM-256 generados exitosamente con firma!\nFolio Orden: ${data.folio}\nFolio Certificado: ${data.certificate.certificate_folio}`);
                 window.open(`/api/v1/services/${data.id}/pdf`, '_blank');
                 switchTab('tab-ordenes');
+                loadOrders();
+                loadDashboardData();
             } catch(err) {
-                alert('Error: ' + err.message);
+                alert('Error al generar: ' + err.message);
             } finally {
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fa-solid fa-check"></i> Generar Orden y Certificado Oficial';
+                confirmBtn.disabled = false;
+                confirmBtn.innerHTML = '<i class="fa-solid fa-file-circle-check"></i> Generar Orden y Certificado Oficial con Firma';
             }
+        }
+
+        async function handleCreateService(e) {
+            e.preventDefault();
+            openCertificatePreviewModal();
         }
 
         async function handleCreateClient(e) {
