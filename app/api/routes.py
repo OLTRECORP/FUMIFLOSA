@@ -1,4 +1,5 @@
 import io
+import os
 import re
 import uuid
 import zipfile
@@ -91,6 +92,21 @@ def get_or_create_company_config(db: Session) -> CompanyConfig:
         db.commit()
         db.refresh(config)
     return config
+
+
+def extract_request_base_url(request: Optional[Request] = None) -> str:
+    """Extrae la URL base pública del host actual para que los códigos QR apunten al dominio correcto."""
+    for env_k in ("PUBLIC_APP_URL", "APP_URL", "RENDER_EXTERNAL_URL"):
+        val = os.getenv(env_k)
+        if val and val.strip():
+            return val.strip().rstrip("/")
+    if request:
+        proto = request.headers.get("x-forwarded-proto") or request.url.scheme or "https"
+        host = request.headers.get("x-forwarded-host") or request.headers.get("host")
+        if host:
+            return f"{proto}://{host}".rstrip("/")
+    return "https://fumiflosa-saas-api.onrender.com"
+
 
 
 # ============================================================================
@@ -2213,6 +2229,7 @@ def duplicate_service_order(
 def send_certificate_email(
     service_id: uuid.UUID,
     payload: SendEmailRequest = SendEmailRequest(),
+    request: Request = None,
     db: Session = Depends(get_db)
 ):
     """
@@ -2239,7 +2256,9 @@ def send_certificate_email(
         )
 
     try:
-        pdf_bytes = OfficialCertificatePDFGenerator.generate(order, order.certificate)
+        company = get_or_create_company_config(db)
+        base_url = extract_request_base_url(request)
+        pdf_bytes = OfficialCertificatePDFGenerator.generate(order, order.certificate, company=company, base_url=base_url)
         result = OfficialCertificateEmailService.send_certificate_email(
             order=order,
             cert=order.certificate,
@@ -2825,7 +2844,7 @@ def cancel_service_certificate(
 
 
 @router.get("/certificates/{certificate_id}/pdf")
-def export_direct_certificate_pdf(certificate_id: uuid.UUID, db: Session = Depends(get_db)):
+def export_direct_certificate_pdf(certificate_id: uuid.UUID, request: Request = None, db: Session = Depends(get_db)):
     """Descarga el Certificado Oficial de Servicio NOM-256 por ID de certificado."""
     cert = db.query(Certificate).options(
         joinedload(Certificate.service_order).joinedload(ServiceOrder.branch).joinedload(Branch.client),
@@ -2837,7 +2856,8 @@ def export_direct_certificate_pdf(certificate_id: uuid.UUID, db: Session = Depen
         raise HTTPException(status_code=404, detail="Certificado u Orden no encontrada.")
 
     company = get_or_create_company_config(db)
-    pdf_bytes = OfficialCertificatePDFGenerator.generate(cert.service_order, cert, company=company)
+    base_url = extract_request_base_url(request)
+    pdf_bytes = OfficialCertificatePDFGenerator.generate(cert.service_order, cert, company=company, base_url=base_url)
     filename = f"Certificado_{cert.certificate_folio}.pdf"
     return Response(
         content=pdf_bytes,
@@ -2847,7 +2867,7 @@ def export_direct_certificate_pdf(certificate_id: uuid.UUID, db: Session = Depen
 
 
 @router.get("/services/{service_id}/pdf")
-def export_service_certificate_pdf(service_id: uuid.UUID, db: Session = Depends(get_db)):
+def export_service_certificate_pdf(service_id: uuid.UUID, request: Request = None, db: Session = Depends(get_db)):
     """Genera y descarga el PDF oficial conforme a la NOM-256-SSA1-2012 (Certificado Sanitario)."""
     order = db.query(ServiceOrder).options(
         joinedload(ServiceOrder.branch).joinedload(Branch.client),
@@ -2859,7 +2879,8 @@ def export_service_certificate_pdf(service_id: uuid.UUID, db: Session = Depends(
         raise HTTPException(status_code=404, detail="Orden o Certificado no encontrado.")
 
     company = get_or_create_company_config(db)
-    pdf_bytes = OfficialCertificatePDFGenerator.generate(order, order.certificate, company=company)
+    base_url = extract_request_base_url(request)
+    pdf_bytes = OfficialCertificatePDFGenerator.generate(order, order.certificate, company=company, base_url=base_url)
     
     filename = f"Certificado_{order.certificate.certificate_folio}.pdf"
     return Response(
@@ -3004,7 +3025,7 @@ def get_matrix_services_history(client_id: uuid.UUID, db: Session = Depends(get_
 
 
 @router.get("/portal/matrix/{client_id}/certificates/zip")
-def download_matrix_certificates_zip(client_id: uuid.UUID, db: Session = Depends(get_db)):
+def download_matrix_certificates_zip(client_id: uuid.UUID, request: Request = None, db: Session = Depends(get_db)):
     """Genera en memoria un archivo ZIP con todos los PDFs de certificados de la matriz."""
     client = db.query(Client).filter(Client.id == client_id).first()
     if not client:
@@ -3020,12 +3041,13 @@ def download_matrix_certificates_zip(client_id: uuid.UUID, db: Session = Depends
     ).all()
 
     company = get_or_create_company_config(db)
+    base_url = extract_request_base_url(request)
 
     zip_buffer = io.BytesIO()
     with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
         for order in orders:
             if order.certificate:
-                pdf_data = OfficialCertificatePDFGenerator.generate(order, order.certificate, company=company)
+                pdf_data = OfficialCertificatePDFGenerator.generate(order, order.certificate, company=company, base_url=base_url)
                 file_name = f"{order.branch.name.replace(' ', '_')}_{order.certificate.certificate_folio}.pdf"
                 zip_file.writestr(file_name, pdf_data)
 
@@ -3259,23 +3281,46 @@ def verify_certificate_lookup(
     uuid: Optional[str] = Query(None, alias="uuid"),
     db: Session = Depends(get_db)
 ):
-    """Búsqueda pública de verificación oficial para lectura de código QR y validación ciudadana."""
+    """Búsqueda pública de verificación oficial para lectura de código QR y validación ciudadana / sanitaria."""
     query = db.query(Certificate).options(
         joinedload(Certificate.service_order).joinedload(ServiceOrder.branch).joinedload(Branch.client),
+        joinedload(Certificate.service_order).joinedload(ServiceOrder.technician),
         joinedload(Certificate.applied_chemicals).joinedload(CertificateChemical.chemical)
     ).filter(Certificate.is_deleted == False)
 
     cert = None
-    if folio:
+    if folio and folio.strip():
         clean_folio = folio.strip()
-        cert = query.filter(
-            func.lower(Certificate.certificate_folio) == clean_folio.lower()
-        ).first()
-        # Intentar coincidencia parcial o por número si no coincide exacto
-        if not cert and "-" in clean_folio:
-            suffix = clean_folio.split("-")[-1]
-            cert = query.filter(Certificate.certificate_folio.ilike(f"%{suffix}")).first()
-    elif uuid:
+        # 1. Coincidencia exacta con folio de certificado
+        cert = query.filter(func.lower(Certificate.certificate_folio) == clean_folio.lower()).first()
+
+        # 2. Coincidencia con folio de orden de servicio
+        if not cert:
+            cert = query.join(Certificate.service_order).filter(
+                func.lower(ServiceOrder.folio) == clean_folio.lower()
+            ).first()
+
+        # 3. Coincidencia parcial o por sufijo numérico
+        if not cert:
+            num_match = re.search(r'\d+', clean_folio)
+            if num_match:
+                suffix = num_match.group()
+                cert = query.filter(
+                    or_(
+                        Certificate.certificate_folio.ilike(f"%{suffix}%"),
+                        Certificate.certificate_folio.ilike(f"%{clean_folio}%")
+                    )
+                ).first()
+                if not cert:
+                    cert = query.join(Certificate.service_order).filter(
+                        or_(
+                            ServiceOrder.folio.ilike(f"%{suffix}%"),
+                            ServiceOrder.folio.ilike(f"%{clean_folio}%")
+                        )
+                    ).first()
+
+    # Si no se encontró por folio o no se especificó folio, buscar por UUID si está disponible
+    if not cert and uuid and str(uuid).strip():
         clean_uuid = str(uuid).strip()
         parsed_uuid = None
         try:
@@ -3290,7 +3335,7 @@ def verify_certificate_lookup(
         cert = query.filter(or_(*conditions)).first()
 
         if not cert:
-            # Fallback por compatibilidad con drivers SQLite vs PostgreSQL
+            # Fallback por compatibilidad de tipos SQLite / Postgres
             all_active = query.all()
             cert = next((c for c in all_active if str(c.id).lower() == clean_uuid.lower() or str(c.verification_uuid or '').lower() == clean_uuid.lower()), None)
 
@@ -3300,8 +3345,12 @@ def verify_certificate_lookup(
     order = cert.service_order
     branch = order.branch if order else None
     client = branch.client if branch else None
+    technician = order.technician if order else None
     today = date.today()
     is_valid_dates = bool(cert.validity_start_date and cert.validity_end_date and (cert.validity_start_date <= today <= cert.validity_end_date))
+    days_remaining = (cert.validity_end_date - today).days if cert.validity_end_date else 0
+    if days_remaining < 0:
+        days_remaining = 0
 
     company = FielSATService.get_or_create_company_settings(db)
 
@@ -3329,6 +3378,7 @@ def verify_certificate_lookup(
             "issue_date": cert.issue_date.strftime("%d/%m/%Y") if cert.issue_date else "-",
             "validity_start_date": cert.validity_start_date.strftime("%d/%m/%Y") if cert.validity_start_date else "-",
             "validity_end_date": cert.validity_end_date.strftime("%d/%m/%Y") if cert.validity_end_date else "-",
+            "days_remaining": days_remaining,
             "is_currently_valid": is_valid_dates and not cert.is_cancelled,
             "is_cancelled": bool(cert.is_cancelled),
             "cancellation_reason": cert.cancellation_reason,
@@ -3345,8 +3395,17 @@ def verify_certificate_lookup(
             "client_rfc": client.rfc if client else "",
             "branch_name": branch.name if branch else "Sucursal General",
             "branch_address": branch.address if branch else "Domicilio Registrado",
-            "sanitary_license_number": cert.sanitary_license_number or company.sanitary_license_number or "08 17 19 SA 0001",
-            "sanitary_responsible_name": cert.sanitary_responsible_name or company.sanitary_responsible_name or "MARCO ANTONIO FLORES SÁENZ",
+            "branch_phone": getattr(branch, 'phone', None) or getattr(client, 'phone', None) or "",
+            "branch_contact": getattr(branch, 'responsible_contact_name', None) or "",
+            "technician_name": technician.full_name if technician else "Técnico Certificado FUMIFLOSA",
+            "technician_stps": getattr(technician, 'stps_credential_id', None) or "STPS-DC3-ACREDITADO",
+            "pests_diagnosed": getattr(order, 'pests_diagnosed', None) or "Cucarachas, Rastreros, Arácnidos",
+            "procedures_applied": getattr(order, 'procedures_applied', None) or "Aspersión perimetral e interior",
+            "reentry_hours": getattr(cert, 'reentry_safety_hours', None) or getattr(order, 'reentry_safety_hours', None) or 2,
+            "sanitary_license_number": cert.sanitary_license_number or getattr(company, 'sanitary_license_number', None) or "08 17 19 SA 0001",
+            "sanitary_responsible_name": cert.sanitary_responsible_name or getattr(company, 'sanitary_responsible_name', None) or "MARCO ANTONIO FLORES SÁENZ",
+            "company_name": getattr(company, 'company_name', None) or "FLOSA Control de Plagas",
+            "company_rfc": getattr(company, 'company_rfc', None) or "FOMS630329EA5",
             "applied_chemicals": chemicals_data
         }
     }

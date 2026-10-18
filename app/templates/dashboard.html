@@ -6890,6 +6890,9 @@
                             ${o.certificate ? `
                             <a href="/api/v1/certificates/${o.certificate.id}/pdf" target="_blank" title="Descargar Certificado Oficial Sanitario NOM-256" class="inline-flex items-center gap-1 bg-brand-50 hover:bg-brand-100 text-brand-700 font-bold px-2 py-1 rounded border border-brand-200 text-xs shadow-xs">
                                 <i class="fa-solid fa-file-pdf"></i> Certificado
+                            </a>
+                            <a href="/verificar?folio=${encodeURIComponent(o.certificate.certificate_folio || '')}&uuid=${encodeURIComponent(o.certificate.verification_uuid || o.certificate.id)}" target="_blank" title="Validar lectura de Código QR (Visualización Oficial)" class="inline-flex items-center gap-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold px-2 py-1 rounded border border-emerald-300 text-xs shadow-xs">
+                                <i class="fa-solid fa-qrcode text-emerald-600"></i> Validar QR
                             </a>` : ''}
                             <a href="/api/v1/services/${o.id}/order-pdf" target="_blank" title="Descargar Hoja Técnica de Orden de Servicio" class="inline-flex items-center gap-1 bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold px-2 py-1 rounded border border-slate-300 text-xs shadow-xs">
                                 <i class="fa-solid fa-file-lines text-slate-500"></i> Orden

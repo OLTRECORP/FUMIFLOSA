@@ -68,16 +68,16 @@ class OfficialCertificatePDFGenerator:
     """
 
     @classmethod
-    def generate(cls, order: ServiceOrder, cert: Certificate, company: Optional[CompanyConfig] = None) -> bytes:
+    def generate(cls, order: ServiceOrder, cert: Certificate, company: Optional[CompanyConfig] = None, base_url: Optional[str] = None) -> bytes:
         try:
-            return cls._generate_canvas(order, cert, company)
+            return cls._generate_canvas(order, cert, company, base_url)
         except Exception as err:
             import traceback
             traceback.print_exc()
-            return cls._generate_fallback(order, cert, company, str(err))
+            return cls._generate_fallback(order, cert, company, str(err), base_url)
 
     @classmethod
-    def _generate_canvas(cls, order: ServiceOrder, cert: Certificate, company: Optional[CompanyConfig] = None) -> bytes:
+    def _generate_canvas(cls, order: ServiceOrder, cert: Certificate, company: Optional[CompanyConfig] = None, base_url: Optional[str] = None) -> bytes:
         buffer = io.BytesIO()
         c = canvas.Canvas(buffer, pagesize=landscape(letter))
         page_width, page_height = landscape(letter)  # 792.0 x 612.0
@@ -361,8 +361,20 @@ class OfficialCertificatePDFGenerator:
         # 8. CONSTANCIA DIGITAL OFICIAL Y FIRMA ELECTRÓNICA AVANZADA (DISEÑO IDÉNTICO Y HOMOGÉNEO)
         is_signed = getattr(cert, 'is_signed', False) and bool(getattr(cert, 'digital_signature_seal', None))
         
+        # Determinar URL base pública para el Código QR
+        clean_base = (base_url or "").strip().rstrip("/")
+        if not clean_base:
+            env_url = os.getenv("PUBLIC_APP_URL") or os.getenv("APP_URL") or os.getenv("RENDER_EXTERNAL_URL")
+            if env_url:
+                clean_base = env_url.strip().rstrip("/")
+            else:
+                clean_base = "https://fumiflosa-saas-api.onrender.com"
+
+        cert_folio_val = getattr(cert, 'certificate_folio', None) or (f"CER-{order.folio.split('-')[-1]}" if order and getattr(order, 'folio', None) else "CER-00001")
+        uuid_val = str(getattr(cert, 'verification_uuid', None) or cert.id)
+        
         # QR Oficial en esquina inferior izquierda (x=84, y=114, tamaño 52x52)
-        qr_data = f"https://fumiflosa.mx/verificar?folio={cert.certificate_folio}&uuid={cert.verification_uuid or cert.id}&rfc={cert.signed_by_rfc or comp_rfc}"
+        qr_data = f"{clean_base}/verificar?folio={cert_folio_val}&uuid={uuid_val}"
         qr_widget = QrCodeWidget(qr_data)
         qr_widget.barWidth = 52
         qr_widget.barHeight = 52
@@ -447,11 +459,31 @@ class OfficialCertificatePDFGenerator:
         return buffer.getvalue()
 
     @classmethod
-    def _generate_fallback(cls, order: ServiceOrder, cert: Certificate, company: Optional[CompanyConfig], error_msg: str) -> bytes:
+    def _generate_fallback(cls, order: ServiceOrder, cert: Certificate, company: Optional[CompanyConfig], error_msg: str, base_url: Optional[str] = None) -> bytes:
         """Genera un certificado de emergencia estructurado en caso de error imprevisto."""
         buf = io.BytesIO()
         c = canvas.Canvas(buf, pagesize=landscape(letter))
         w, h = landscape(letter)
+
+        clean_base = (base_url or "").strip().rstrip("/")
+        if not clean_base:
+            env_url = os.getenv("PUBLIC_APP_URL") or os.getenv("APP_URL") or os.getenv("RENDER_EXTERNAL_URL")
+            clean_base = env_url.strip().rstrip("/") if env_url else "https://fumiflosa-saas-api.onrender.com"
+
+        cert_folio_val = getattr(cert, 'certificate_folio', None) or (f"CER-{order.folio.split('-')[-1]}" if order and getattr(order, 'folio', None) else "CER-00001")
+        uuid_val = str(getattr(cert, 'verification_uuid', None) or (cert.id if cert else ''))
+        qr_data = f"{clean_base}/verificar?folio={cert_folio_val}&uuid={uuid_val}"
+        try:
+            qr_widget = QrCodeWidget(qr_data)
+            qr_widget.barWidth = 45
+            qr_widget.barHeight = 45
+            qr_drawing = Drawing(45, 45)
+            qr_drawing.add(qr_widget)
+            renderPDF.draw(qr_drawing, c, 40, 80)
+            c.setFont("Helvetica", 6)
+            c.drawString(40, 70, "Escanear para validar")
+        except Exception:
+            pass
 
         c.setStrokeColor(colors.HexColor("#738C7B"))
         c.setLineWidth(2)

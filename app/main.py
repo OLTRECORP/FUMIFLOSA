@@ -116,6 +116,7 @@ def get_client_portal_page(portal_slug: str):
 @app.get("/verificar", response_class=HTMLResponse, tags=["Verificación Oficial"])
 @app.get("/verify", response_class=HTMLResponse, tags=["Verificación Oficial"])
 @app.get("/verificar/{folio}", response_class=HTMLResponse, tags=["Verificación Oficial"])
+@app.get("/verify/{folio}", response_class=HTMLResponse, tags=["Verificación Oficial"])
 def get_verify_page(folio: Optional[str] = None):
     """Sirve la página oficial de validación pública de certificados sanitarios (QR)."""
     if VERIFY_HTML_PATH.exists():
