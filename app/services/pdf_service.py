@@ -400,12 +400,24 @@ class OfficialCertificatePDFGenerator:
         )
         
         sign_dt_str = cert.signed_at.strftime('%Y-%m-%d %H:%M:%S UTC') if getattr(cert, 'signed_at', None) else date.today().strftime('%Y-%m-%d')
+        
+        # Determinar Razón Social de la FIEL (sin responsable sanitario en la firma digital)
+        fiel_razon_social = getattr(company, 'company_name', None) or "FUMIFLOSA S.A. DE C.V."
+        if getattr(cert, 'signed_by_name', None):
+            s_name = cert.signed_by_name.strip()
+            # Si el valor guardado no es el nombre de persona física del responsable sanitario, usarlo
+            sanitary_str = getattr(cert, 'sanitary_responsible_name', '') or ''
+            if s_name.lower() != sanitary_str.lower() and 'flores' not in s_name.lower() and 'biól' not in s_name.lower():
+                fiel_razon_social = s_name
+
+        fiel_rfc_val = getattr(cert, 'signed_by_rfc', None) or getattr(company, 'rfc', None) or "FOMS630329EA5"
+
         if is_signed:
             fiel_box_html = (
                 f"<b>FIRMA ELECTRÓNICA AVANZADA (e.firma / FIEL del SAT) - CONSTANCIA OFICIAL NOM-256</b><br/>"
                 f"<b>Serie SAT:</b> {cert.certificate_serial_number or '30001000000500003416'} &nbsp;|&nbsp; "
                 f"<b>Fecha Sellado:</b> {sign_dt_str} &nbsp;|&nbsp; "
-                f"<b>Firmante:</b> {cert.signed_by_name or responsible_title} (RFC: {cert.signed_by_rfc or comp_rfc})<br/>"
+                f"<b>Razón Social FIEL:</b> {fiel_razon_social} (RFC: {fiel_rfc_val})<br/>"
                 f"<b>Cadena Original:</b><br/>"
                 f"<font face='Courier' size='4.0'>{cert.original_chain or '||...||'}</font><br/>"
                 f"<b>Sello Digital Criptográfico (RSA-SHA256):</b><br/>"
@@ -416,9 +428,9 @@ class OfficialCertificatePDFGenerator:
             fiel_box_html = (
                 f"<b>CONSTANCIA DIGITAL DE VALIDEZ SANITARIA OFICIAL (NOM-256-SSA1-2012 / COFEPRIS)</b><br/>"
                 f"<b>Folio Digital:</b> {cert.certificate_folio} &nbsp;|&nbsp; <b>ID Verificación UUID:</b> {cert.verification_uuid or cert.id}<br/>"
-                f"<b>Responsable Sanitario:</b> {cert.sanitary_responsible_name or responsible_title} (RFC: {comp_rfc}) &nbsp;|&nbsp; <b>Licencia Sanitaria:</b> {license_no}{sig_note}<br/>"
+                f"<b>Razón Social Emisora (FIEL):</b> {fiel_razon_social} (RFC: {fiel_rfc_val}) &nbsp;|&nbsp; <b>Licencia Sanitaria:</b> {license_no}{sig_note}<br/>"
                 f"<b>Cadena de Autenticidad Oficial:</b><br/>"
-                f"<font face='Courier' size='4.0'>||{cert.certificate_folio}|{issue_str}|{comp_rfc}|{license_no}|{client_display}|NOM-256-SSA1-2012||</font><br/>"
+                f"<font face='Courier' size='4.0'>||{cert.certificate_folio}|{issue_str}|{fiel_rfc_val}|{license_no}|{client_display}|NOM-256-SSA1-2012||</font><br/>"
                 f"<b>Registro de Emisión:</b> Certificado Oficial registrado en Plataforma FLOSA. Validez plena para inspección sanitaria COFEPRIS / Escanee el código QR para validar autenticidad en tiempo real."
             )
 

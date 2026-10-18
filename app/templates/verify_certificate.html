@@ -323,7 +323,7 @@
                         <span id="fiel-date" class="font-mono font-semibold text-slate-800 text-[11px]"></span>
                     </div>
                     <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
-                        <span class="text-slate-400 block text-[10px] uppercase font-bold">Firmante y RFC</span>
+                        <span class="text-slate-400 block text-[10px] uppercase font-bold">Razón Social FIEL / RFC</span>
                         <span id="fiel-signer" class="font-bold text-slate-800 text-[11px] truncate block"></span>
                     </div>
                 </div>
@@ -577,7 +577,7 @@
 
             document.getElementById('fiel-serial').innerText = cert.sat_serial_number || '30001000000500003416';
             document.getElementById('fiel-date').innerText = cert.signed_at || cert.issue_date || '-';
-            document.getElementById('fiel-signer').innerText = `${cert.signed_by || 'MARCO ANTONIO FLORES SÁENZ'} (${cert.signer_rfc || 'FOMS630329EA5'})`;
+            document.getElementById('fiel-signer').innerText = `${cert.fiel_razon_social || cert.signed_by || cert.company_name || 'FUMIFLOSA S.A. DE C.V.'} (${cert.signer_rfc || cert.fiel_rfc || cert.company_rfc || 'FOMS630329EA5'})`;
             document.getElementById('fiel-chain').innerText = cert.original_chain || '||08 17 19 SA 0001|FOMS630329EA5|...||';
             document.getElementById('fiel-seal').innerText = cert.digital_signature_seal || 'Sello pendiente de estampar';
 

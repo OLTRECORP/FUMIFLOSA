@@ -3353,6 +3353,26 @@ def verify_certificate_lookup(
         days_remaining = 0
 
     company = FielSATService.get_or_create_company_settings(db)
+    comp_config = get_or_create_company_config(db)
+
+    # Razón Social de la FIEL (el usuario solicitó exclusivamente la razón social de la FIEL, nunca el responsable sanitario en la firma digital)
+    fiel_razon_social = (
+        getattr(company, 'fiel_holder_name', None) or 
+        getattr(comp_config, 'company_name', None) or 
+        getattr(company, 'company_name', None) or 
+        "FUMIFLOSA S.A. DE C.V."
+    )
+    fiel_rfc = (
+        getattr(company, 'fiel_rfc', None) or 
+        getattr(comp_config, 'rfc', None) or 
+        getattr(company, 'company_rfc', None) or 
+        "FOMS630329EA5"
+    )
+
+    signed_by_val = cert.signed_by_name
+    sanitary_resp_name = cert.sanitary_responsible_name or getattr(company, 'sanitary_responsible_name', None) or "MARCO ANTONIO FLORES SÁENZ"
+    if not signed_by_val or signed_by_val.strip().lower() == sanitary_resp_name.strip().lower() or "flores" in signed_by_val.lower() or "biól" in signed_by_val.lower():
+        signed_by_val = fiel_razon_social
 
     chemicals_data = []
     if cert.applied_chemicals:
@@ -3385,8 +3405,10 @@ def verify_certificate_lookup(
             "cancelled_at": cert.cancelled_at.strftime("%d/%m/%Y %H:%M") if cert.cancelled_at else None,
             "is_signed_digitally": bool(cert.is_signed and cert.digital_signature_seal),
             "signed_at": cert.signed_at.strftime("%d/%m/%Y %H:%M:%S UTC") if cert.signed_at else None,
-            "signed_by": cert.signed_by_name or getattr(company, 'sanitary_responsible_name', None) or "MARCO ANTONIO FLORES SÁENZ",
-            "signer_rfc": cert.signed_by_rfc or getattr(company, 'company_rfc', None) or getattr(company, 'fiel_rfc', None) or "FOMS630329EA5",
+            "signed_by": signed_by_val,
+            "signer_rfc": cert.signed_by_rfc or fiel_rfc,
+            "fiel_razon_social": fiel_razon_social,
+            "fiel_rfc": fiel_rfc,
             "sat_serial_number": cert.certificate_serial_number or "30001000000500003416",
             "original_chain": cert.original_chain,
             "digital_signature_seal": cert.digital_signature_seal,
@@ -3428,6 +3450,18 @@ def verify_certificate_authenticity(certificate_id: uuid.UUID, db: Session = Dep
     is_valid_dates = (cert.validity_start_date <= today <= cert.validity_end_date)
 
     company = FielSATService.get_or_create_company_settings(db)
+    comp_config = get_or_create_company_config(db)
+
+    fiel_razon_social = (
+        getattr(company, 'fiel_holder_name', None) or 
+        getattr(comp_config, 'company_name', None) or 
+        getattr(company, 'company_name', None) or 
+        "FUMIFLOSA S.A. DE C.V."
+    )
+    signed_by_val = cert.signed_by_name
+    sanitary_resp_name = cert.sanitary_responsible_name or getattr(company, 'sanitary_responsible_name', None) or "MARCO ANTONIO FLORES SÁENZ"
+    if not signed_by_val or signed_by_val.strip().lower() == sanitary_resp_name.strip().lower() or "flores" in signed_by_val.lower() or "biól" in signed_by_val.lower():
+        signed_by_val = fiel_razon_social
 
     return CertificateVerificationResponse(
         is_valid=True,
@@ -3439,8 +3473,8 @@ def verify_certificate_authenticity(certificate_id: uuid.UUID, db: Session = Dep
         is_currently_valid=is_valid_dates,
         is_signed_digitally=cert.is_signed,
         signed_at=cert.signed_at,
-        signed_by=cert.signed_by_name,
-        signer_rfc=cert.signed_by_rfc,
+        signed_by=signed_by_val,
+        signer_rfc=cert.signed_by_rfc or getattr(company, 'fiel_rfc', None) or getattr(comp_config, 'rfc', None) or "FOMS630329EA5",
         sat_serial_number=cert.certificate_serial_number,
         company_name=company.company_name,
         branch_name=branch.name if branch else "N/A",
