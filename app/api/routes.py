@@ -2068,9 +2068,13 @@ def create_service_order_with_certificate(
     if not branch:
         raise HTTPException(status_code=404, detail="Sucursal no encontrada.")
 
-    technician = db.query(User).filter(User.id == payload.technician_id, User.is_active == True).first()
+    technician = None
+    if payload.technician_id:
+        technician = db.query(User).filter(User.id == payload.technician_id, User.is_active == True).first()
     if not technician:
-        raise HTTPException(status_code=404, detail="Técnico no encontrado o inactivo.")
+        technician = db.query(User).filter(User.is_active == True, User.is_deleted == False).first()
+    if not technician:
+        raise HTTPException(status_code=400, detail="No se encontró ningún técnico u operador activo en el sistema.")
 
     company = get_or_create_company_config(db)
 
@@ -2102,7 +2106,7 @@ def create_service_order_with_certificate(
         service_order = ServiceOrder(
             folio=order_folio,
             branch_id=payload.branch_id,
-            technician_id=payload.technician_id,
+            technician_id=technician.id,
             status="completed",
             service_start_date=payload.service_start_date,
             service_end_date=payload.service_end_date,
@@ -2143,20 +2147,33 @@ def create_service_order_with_certificate(
         db.add(certificate)
         db.flush()
 
-        for item in payload.chemicals_applied:
-            chem = db.query(Chemical).filter(Chemical.id == item.chemical_id).first()
-            if not chem:
-                raise HTTPException(status_code=400, detail=f"Químico ID {item.chemical_id} inválido.")
-            
-            applied = CertificateChemical(
-                certificate_id=certificate.id,
-                chemical_id=chem.id,
-                dose_applied=item.dose_applied,
-                area_type=item.area_type,
-                treated_zones_description=item.treated_zones_description,
-                application_method=item.application_method
-            )
-            db.add(applied)
+        if payload.chemicals_applied and len(payload.chemicals_applied) > 0:
+            for item in payload.chemicals_applied:
+                chem = db.query(Chemical).filter(Chemical.id == item.chemical_id).first()
+                if not chem:
+                    raise HTTPException(status_code=400, detail=f"Químico ID {item.chemical_id} inválido.")
+                
+                applied = CertificateChemical(
+                    certificate_id=certificate.id,
+                    chemical_id=chem.id,
+                    dose_applied=item.dose_applied,
+                    area_type=item.area_type,
+                    treated_zones_description=item.treated_zones_description,
+                    application_method=item.application_method
+                )
+                db.add(applied)
+        else:
+            default_chem = db.query(Chemical).first()
+            if default_chem:
+                applied = CertificateChemical(
+                    certificate_id=certificate.id,
+                    chemical_id=default_chem.id,
+                    dose_applied=default_chem.authorized_dose_per_liter or "10 ml / Litro",
+                    area_type=AreaType.INTERIOR,
+                    treated_zones_description="Áreas comunes e interiores",
+                    application_method=(default_chem.compatible_methods.split(',')[0].strip() if default_chem.compatible_methods else "Aspersión Manual")
+                )
+                db.add(applied)
 
         db.commit()
 

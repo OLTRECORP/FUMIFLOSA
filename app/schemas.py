@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime, date
 from typing import List, Optional, Dict, Any
-from pydantic import BaseModel, ConfigDict, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
 from app.models import UserRole, BranchClassification, AreaType
 
@@ -319,7 +319,7 @@ class RSCOSearchResult(BaseModel):
 
 class ServiceOrderCreate(BaseModel):
     branch_id: uuid.UUID
-    technician_id: uuid.UUID
+    technician_id: Optional[uuid.UUID] = None
     folio_prefix: Optional[str] = Field("IMSS", description="Prefijo institucional")
     service_start_date: datetime
     service_end_date: datetime
@@ -346,7 +346,14 @@ class ServiceOrderCreate(BaseModel):
     sanitary_license_number: Optional[str] = None
     sanitary_responsible_name: Optional[str] = None
     sanitary_responsible_id: Optional[str] = None
-    chemicals_applied: List[CertificateChemicalCreate]
+    chemicals_applied: Optional[List[CertificateChemicalCreate]] = []
+
+    @field_validator("technician_id", mode="before")
+    @classmethod
+    def coerce_empty_tech_to_none(cls, v):
+        if v == "" or v is None:
+            return None
+        return v
 
 
 class ServiceOrderUpdate(BaseModel):

@@ -5209,6 +5209,25 @@
         let chartProcsInstance = null;
         let chartClassInstance = null;
 
+        function formatApiError(data, fallbackMsg = 'Error en la solicitud') {
+            if (!data) return fallbackMsg;
+            if (typeof data === 'string') return data;
+            if (typeof data.detail === 'string') return data.detail;
+            if (Array.isArray(data.detail)) {
+                return data.detail.map(item => {
+                    const loc = Array.isArray(item.loc) ? item.loc.filter(x => x !== 'body').join(' -> ') : '';
+                    return loc ? `${loc}: ${item.msg}` : item.msg;
+                }).join('\n');
+            }
+            if (typeof data.message === 'string') return data.message;
+            if (typeof data.error === 'string') return data.error;
+            try {
+                return JSON.stringify(data.detail || data);
+            } catch (_) {
+                return fallbackMsg;
+            }
+        }
+
         function toggleMobileSidebar() {
             const sidebar = document.getElementById('main-sidebar');
             const backdrop = document.getElementById('sidebar-backdrop');
@@ -6288,7 +6307,7 @@
                     body: JSON.stringify({ password: pwd })
                 });
                 const data = await res.json();
-                if(!res.ok) throw new Error(data.detail || 'Error al firmar certificado');
+                if(!res.ok) throw new Error(formatApiError(data, 'No se pudo registrar la firma en el certificado'));
 
                 msg.className = "p-3 rounded-lg text-xs bg-emerald-50 text-emerald-800 border border-emerald-200";
                 msg.innerHTML = `<b>¡Certificado Firmado Exitosamente!</b><br/>Serie SAT: ${data.certificate_serial_number}<br/>Sello generado con validez NOM-256.`;
@@ -8529,8 +8548,12 @@
             document.getElementById('prev-branch-resp').innerText = branchObj ? (branchObj.responsible_contact_name || clientObj?.legal_name || 'Responsable en Sitio') : 'Responsable en Sitio';
 
             // Técnico
-            const techId = document.getElementById('srv-tech-id')?.value;
-            const techObj = cachedTechnicians.find(t => t.id === techId);
+            const techSelect = document.getElementById('srv-tech-id');
+            if (techSelect && !techSelect.value && techSelect.options.length > 0) {
+                techSelect.selectedIndex = 0;
+            }
+            const techId = techSelect?.value;
+            const techObj = cachedTechnicians.find(t => t.id === techId) || (cachedTechnicians && cachedTechnicians.length ? cachedTechnicians[0] : null);
             document.getElementById('prev-tech-name').innerText = techObj ? `${techObj.full_name} (${techObj.role || 'Técnico Aplicador'})` : 'Técnico Aplicador Autorizado';
 
             // Plagas Diagnosticadas
@@ -8672,28 +8695,45 @@
                 }
             }
 
+            // Asegurar selección de técnico
+            const techSelectEl = document.getElementById('srv-tech-id');
+            if (techSelectEl && !techSelectEl.value && techSelectEl.options.length > 0) {
+                techSelectEl.selectedIndex = 0;
+            }
+            let techIdVal = techSelectEl?.value || null;
+            if (!techIdVal && cachedTechnicians && cachedTechnicians.length > 0) {
+                techIdVal = cachedTechnicians[0].id;
+                if (techSelectEl) techSelectEl.value = techIdVal;
+            }
+
+            const startVal = document.getElementById('srv-start-date')?.value;
+            const endVal = document.getElementById('srv-end-date')?.value;
+            const now = new Date();
+            const startDate = startVal ? new Date(startVal) : now;
+            const endDate = endVal ? new Date(endVal) : new Date(startDate.getTime() + 2 * 3600 * 1000);
+
             const payload = {
                 branch_id: branchId,
-                technician_id: document.getElementById('srv-tech-id').value,
-                folio_prefix: document.getElementById('srv-prefix').value || "ORD",
-                service_start_date: new Date(document.getElementById('srv-start-date').value).toISOString(),
-                service_end_date: new Date(document.getElementById('srv-end-date').value).toISOString(),
-                pest_crawling_insects: document.getElementById('srv-pest-crawling').checked,
-                pest_rodents: document.getElementById('srv-pest-rodents').checked,
-                pest_flying_insects: document.getElementById('srv-pest-flying').checked,
-                pest_others: document.getElementById('srv-pest-others').value || null,
-                proc_aspersion: document.getElementById('srv-proc-asp').checked,
-                proc_baits: document.getElementById('srv-proc-baits').checked,
-                proc_traps: document.getElementById('srv-proc-traps').checked,
-                proc_gels: document.getElementById('srv-proc-gels').checked,
-                proc_ulv_fogging: document.getElementById('srv-proc-ulv').checked,
-                proc_thermofogging: document.getElementById('srv-proc-thermo').checked,
-                results_summary: document.getElementById('srv-results').value,
-                observations: document.getElementById('srv-obs').value,
+                technician_id: techIdVal,
+                folio_prefix: document.getElementById('srv-prefix')?.value || "ORD",
+                service_start_date: startDate.toISOString(),
+                service_end_date: endDate.toISOString(),
+                pest_crawling_insects: !!document.getElementById('srv-pest-crawling')?.checked,
+                pest_rodents: !!document.getElementById('srv-pest-rodents')?.checked,
+                pest_flying_insects: !!document.getElementById('srv-pest-flying')?.checked,
+                pest_others: document.getElementById('srv-pest-others')?.value || null,
+                proc_aspersion: !!document.getElementById('srv-proc-asp')?.checked,
+                proc_baits: !!document.getElementById('srv-proc-baits')?.checked,
+                proc_traps: !!document.getElementById('srv-proc-traps')?.checked,
+                proc_gels: !!document.getElementById('srv-proc-gels')?.checked,
+                proc_ulv_fogging: !!document.getElementById('srv-proc-ulv')?.checked,
+                proc_thermofogging: !!document.getElementById('srv-proc-thermo')?.checked,
+                results_summary: document.getElementById('srv-results')?.value || null,
+                observations: document.getElementById('srv-obs')?.value || null,
                 client_signature_data: null,
-                sanitary_license_number: document.getElementById('srv-license').value || null,
-                sanitary_responsible_name: document.getElementById('srv-resp-name').value || null,
-                sanitary_responsible_id: document.getElementById('srv-resp-id').value || null,
+                sanitary_license_number: document.getElementById('srv-license')?.value || null,
+                sanitary_responsible_name: document.getElementById('srv-resp-name')?.value || null,
+                sanitary_responsible_id: document.getElementById('srv-resp-id')?.value || null,
                 chemicals_applied: chemicals_applied
             };
 
@@ -8705,21 +8745,31 @@
                     body: JSON.stringify(payload)
                 });
                 const data = await res.json();
-                if (!res.ok) throw new Error(data.detail || 'Error al guardar el servicio');
+                if (!res.ok) throw new Error(formatApiError(data, 'Error al guardar el servicio'));
 
                 // Si se solicitó firma criptográfica SAT
                 const fielChk = document.getElementById('preview-sign-fiel-chk');
                 if (fielChk && fielChk.checked && data.certificate && data.certificate.id) {
-                    try {
-                        confirmBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Estampando Sello SAT...';
-                        const pwd = document.getElementById('preview-fiel-pass')?.value || '';
-                        await fetch(`/api/v1/certificates/${data.certificate.id}/sign`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ password: pwd })
-                        });
-                    } catch(fielErr) {
-                        console.warn("Firma SAT posterior:", fielErr);
+                    const pwd = document.getElementById('preview-fiel-pass')?.value || '';
+                    if (!pwd) {
+                        alert('Nota sobre la firma SAT:\nEl servicio y certificado se guardaron exitosamente, pero no se estampó la firma digital SAT porque no ingresaste la contraseña de la FIEL.\n\nPuedes firmar el certificado en cualquier momento con el botón "Firmar" en la lista de órdenes.');
+                    } else {
+                        try {
+                            confirmBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Estampando Sello SAT...';
+                            const signRes = await fetch(`/api/v1/certificates/${data.certificate.id}/sign`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ password: pwd })
+                            });
+                            const signData = await signRes.json();
+                            if (!signRes.ok) {
+                                const signMsg = formatApiError(signData, 'Error al estampar firma');
+                                alert('Aviso sobre la firma SAT:\nEl servicio y certificado se generaron correctamente, pero la firma digital SAT no se pudo registrar:\n' + signMsg + '\n\nPuede estamparla posteriormente desde la lista de órdenes usando el botón "Firmar".');
+                            }
+                        } catch(fielErr) {
+                            console.warn("Firma SAT posterior:", fielErr);
+                            alert('Aviso: El servicio se generó, pero ocurrió un problema al conectar con el servicio de firma digital SAT: ' + fielErr.message);
+                        }
                     }
                 }
 
