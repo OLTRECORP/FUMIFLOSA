@@ -7,7 +7,9 @@ from app.config import settings
 # Ajustar compatibilidad de URL en caso de que Render use postgres:// en lugar de postgresql://
 db_url = settings.DATABASE_URL
 if db_url.startswith("postgres://"):
-    db_url = db_url.replace("postgres://", "postgresql://", 1)
+    db_url = db_url.replace("postgres://", "postgresql+psycopg2://", 1)
+elif db_url.startswith("postgresql://") and not db_url.startswith("postgresql+"):
+    db_url = db_url.replace("postgresql://", "postgresql+psycopg2://", 1)
 
 if "sqlite" in db_url:
     engine = create_engine(
