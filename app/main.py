@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 from typing import Optional
 from fastapi import FastAPI
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 
@@ -117,8 +117,11 @@ def get_client_portal_page(portal_slug: str):
 @app.get("/verify", response_class=HTMLResponse, tags=["Verificación Oficial"])
 @app.get("/verificar/{folio}", response_class=HTMLResponse, tags=["Verificación Oficial"])
 @app.get("/verify/{folio}", response_class=HTMLResponse, tags=["Verificación Oficial"])
-def get_verify_page(folio: Optional[str] = None):
+def get_verify_page(response: Response, folio: Optional[str] = None):
     """Sirve la página oficial de validación pública de certificados sanitarios (QR)."""
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate, max-age=0"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
     if VERIFY_HTML_PATH.exists():
         with open(VERIFY_HTML_PATH, "r", encoding="utf-8") as f:
             return f.read()
@@ -131,5 +134,6 @@ def health_check():
     return {
         "status": "healthy",
         "service": settings.PROJECT_NAME,
-        "environment": settings.ENVIRONMENT
+        "environment": settings.ENVIRONMENT,
+        "build_version": "v2.1-qr-only-no-search"
     }
