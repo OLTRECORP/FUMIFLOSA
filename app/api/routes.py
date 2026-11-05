@@ -3421,7 +3421,7 @@ def verify_certificate_lookup(
             "cancellation_reason": cert.cancellation_reason,
             "cancelled_at": cert.cancelled_at.strftime("%d/%m/%Y %H:%M") if cert.cancelled_at else None,
             "is_signed_digitally": bool(cert.is_signed and cert.digital_signature_seal),
-            "signed_at": cert.signed_at.strftime("%d/%m/%Y %H:%M:%S UTC") if cert.signed_at else None,
+            "signed_at": None,
             "signed_by": signed_by_val,
             "signer_rfc": cert.signed_by_rfc or fiel_rfc,
             "fiel_razon_social": fiel_razon_social,
